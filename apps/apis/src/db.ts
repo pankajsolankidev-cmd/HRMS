@@ -1,5 +1,16 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import postgres from "postgres";
+import { drizzle } from 'drizzle-orm/node-postgres'
+import { Pool } from 'pg'
+import { users } from "././db/schema"
 
-const sql = postgres(process.env.DATABASE_URL || "", { ssl: "require" });
-export const db = drizzle(sql);
+const schema = { users }
+
+const pool = new Pool({
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT),
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  ssl: process.env.DB_SSL === 'true'
+})
+
+export const db = drizzle(pool, { schema })
