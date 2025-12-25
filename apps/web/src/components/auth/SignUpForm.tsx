@@ -38,7 +38,7 @@ export default function SignUpForm() {
     setSuccess("");
 
     try {
-      await axios.post("http://192.168.1.33:4000/auth/signup", formData, {
+      await axios.post("http://192.168.1.33:4000/signup", formData, {
         headers: { "Content-Type": "application/json" },
       });
 

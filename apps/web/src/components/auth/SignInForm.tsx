@@ -34,7 +34,7 @@ export default function SignInForm() {
 
     try {
       const res = await axios.post(
-        "http://192.168.1.33:4000/auth/login",
+        "http://192.168.1.33:4000/signin",
         formData,
         {
           headers: { "Content-Type": "application/json" },
