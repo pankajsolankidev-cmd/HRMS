@@ -1,15 +1,37 @@
-import express from "express";
-import cors from "cors";
+import Fastify from "fastify";
+import cors from "@fastify/cors";
+import swagger from "@fastify/swagger";
+import swaggerUI from "@fastify/swagger-ui";
+import authRoutes from "./auth/auth.routes";
 
-const app = express();
+const app = Fastify();
 
-app.use(cors());
-app.use(express.json());
+app.register(cors);
 
-app.get("/health", (_req, res) => {
-  res.json({ status: "API is running 🚀" });
+app.register(swagger, {
+  openapi: {
+    info: {
+      title: "HRM API",
+      version: "1.0.0",
+      description: "API documentation for HRM system",
+    },
+  },
 });
 
-app.listen(4000, () => {
-  console.log("API running on http://localhost:4000");
+app.register(swaggerUI, {
+  routePrefix: "/docs",
+});
+
+app.register(authRoutes);
+
+app.get("/health", async (_request, _reply) => {
+  return { status: "API is running 🚀" };
+});
+
+app.listen({ port: 4000 }, (err, address) => {
+  if (err) {
+    console.error(err);
+    process.exit(1);
+  }
+  console.log(`API running on ${address}`);
 });
