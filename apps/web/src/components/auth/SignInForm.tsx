@@ -21,8 +21,29 @@ export default function SignInForm() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+
+  const validate = () => {
+    if (!formData.email) return "Email is required";
+    if (!/\S+@\S+\.\S+/.test(formData.email))
+      return "Invalid email address";
+
+    if (!formData.password) return "Password is required";
+    if (formData.password.length < 6)
+      return "Password must be at least 6 characters";
+
+    return "";
+  };
+
+ 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    const validationError = validate();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setLoading(true);
     setError("");
 
@@ -47,23 +68,19 @@ export default function SignInForm() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
-      {/* 🔒 FIXED CARD */}
-<div className="relative w-full max-w-4xl h-[500px] bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
+      <div className="relative w-full max-w-4xl h-[500px] bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
         
-        {/* 🔥 LEFT OVERLAY PANEL */}
+        {/* LEFT OVERLAY */}
         <motion.div
           initial={{ x: "0%" }}
           animate={{ x: "0%" }}
-          exit={{ x: "100%" }}
-          transition={{ duration: 0.45, ease: "easeInOut" }}
+          transition={{ duration: 0.45 }}
           className="absolute left-0 top-0 h-full w-1/2 bg-black text-white z-20 hidden md:flex flex-col justify-center items-center p-8"
-          style={{ willChange: "transform" }}
         >
           <h2 className="text-3xl font-semibold mb-4">New Here?</h2>
           <p className="text-sm text-center mb-6">
             Create an account to access all features.
           </p>
-
           <Link
             to="/signup"
             className="px-6 py-2 rounded-lg text-black bg-white font-medium hover:bg-yellow-300 transition"
@@ -72,13 +89,10 @@ export default function SignInForm() {
           </Link>
         </motion.div>
 
-        {/* BASE GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 h-full">
-          
-          {/* LEFT PLACEHOLDER */}
           <div className="hidden md:block" />
 
-          {/* RIGHT FORM */}
+          {/* FORM */}
           <div className="p-6 sm:p-8 flex flex-col justify-center">
             <h1 className="text-2xl font-semibold text-gray-800 dark:text-white">
               Sign In

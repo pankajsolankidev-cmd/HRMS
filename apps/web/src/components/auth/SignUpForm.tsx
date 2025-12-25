@@ -23,8 +23,37 @@ export default function SignUpForm() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const validate = () => {
+    if (!formData.username.trim())
+      return "Username is required";
+
+    if (formData.username.trim().length < 3)
+      return "Username must be at least 3 characters";
+
+    if (!formData.email.trim())
+      return "Email is required";
+
+    if (!/\S+@\S+\.\S+/.test(formData.email))
+      return "Enter a valid email address";
+
+    if (!formData.password)
+      return "Password is required";
+
+    if (formData.password.length < 6)
+      return "Password must be at least 6 characters";
+
+    return "";
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    const validationError = validate();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setLoading(true);
     setError("");
     setSuccess("");
@@ -47,17 +76,15 @@ export default function SignUpForm() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
-      {/* 🔒 FIXED CARD */}
-<div className="relative w-full max-w-4xl h-[500px] bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
-        
-        {/* 🔥 RIGHT OVERLAY PANEL */}
+      <div className="relative w-full max-w-4xl h-[500px] bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
+
+        {/* RIGHT OVERLAY PANEL */}
         <motion.div
           initial={{ x: "0%" }}
           animate={{ x: "0%" }}
           exit={{ x: "-100%" }}
           transition={{ duration: 0.45, ease: "easeInOut" }}
           className="absolute right-0 top-0 h-full w-1/2 bg-black text-white z-20 hidden md:flex flex-col justify-center items-center p-8"
-          style={{ willChange: "transform" }}
         >
           <h2 className="text-3xl font-semibold mb-4">Welcome Back!</h2>
           <p className="text-sm text-center mb-6">
@@ -72,17 +99,20 @@ export default function SignUpForm() {
           </Link>
         </motion.div>
 
-        {/* BASE GRID (STATIC) */}
         <div className="grid grid-cols-1 md:grid-cols-2 h-full">
-          
+
           {/* LEFT FORM */}
           <div className="p-6 sm:p-8 flex flex-col justify-center">
             <h1 className="text-2xl font-semibold text-gray-800 dark:text-white">
               Sign Up
             </h1>
 
-            {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
-            {success && <p className="text-green-500 text-sm mt-4">{success}</p>}
+            {error && (
+              <p className="text-red-500 text-sm mt-4">{error}</p>
+            )}
+            {success && (
+              <p className="text-green-500 text-sm mt-4">{success}</p>
+            )}
 
             <form className="space-y-5 mt-6" onSubmit={handleSubmit}>
               <div>
@@ -140,7 +170,6 @@ export default function SignUpForm() {
             </form>
           </div>
 
-          {/* RIGHT PLACEHOLDER */}
           <div className="hidden md:block" />
         </div>
       </div>
