@@ -29,8 +29,11 @@ export default async function authRoutes(app: FastifyInstance) {
         { expiresIn: "1d" }
       );
       return { token };
-    } catch (err: any) {
-      return reply.status(400).send({ error: err.message });
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        return reply.status(400).send({ error: err.message });
+      }
+      return reply.status(400).send({ error: "Unknown error" });
     }
   });
 
