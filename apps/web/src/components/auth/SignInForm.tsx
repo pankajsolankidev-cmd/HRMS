@@ -44,12 +44,13 @@ export default function SignInForm() {
 
       const token = res.data.token;
 
-      // ✅ clear old tokens
+      //  clear old tokens
       localStorage.removeItem("token");
-      // ✅ store based on remember me
+      // store based on remember me
       localStorage.setItem("token", token);
 
       window.location.href = "/dashboard";
+
     } catch (err: any) {
       setError(err.response?.data?.message || "Invalid credentials");
     } finally {
@@ -130,7 +131,7 @@ export default function SignInForm() {
               </div>
             </div>
 
-            {/* ✅ Forgot Password Link */}
+            {/*  Forgot Password Link */}
             <div className="flex justify-end">
               <Link
                 to="/forget-password"
@@ -139,7 +140,7 @@ export default function SignInForm() {
                 Forgot password?
               </Link>
             </div>
-
+            
             <button
               type="submit"
               disabled={loading}

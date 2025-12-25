@@ -15,14 +15,10 @@ export default function UserDropdown() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // ✅ JWT remove
+
     localStorage.removeItem("token");
-
-    // ✅ Optional: clear user data
     localStorage.removeItem("user");
-    sessionStorage.removeItem("token");
-
-    // ✅ Redirect to signin
+    sessionStorage.removeItem("token");    
     navigate("/signin");
   };
 

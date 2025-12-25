@@ -31,7 +31,6 @@ export default function SignUpForm() {
     }));
   };
 
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
@@ -39,7 +38,7 @@ export default function SignUpForm() {
     setSuccess("");
 
     try {
-      await axios.post("http://192.168.1.33:4000/auth/register", formData, {
+      await axios.post("http://192.168.1.33:4000/auth/signup", formData, {
         headers: { "Content-Type": "application/json" },
       });
 

@@ -6,7 +6,7 @@ import Input from "../form/input/InputField";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 const ResetPassword = () => {
-  const { token } = useParams<{ token: string }>(); // ✅ token from URL
+  const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);

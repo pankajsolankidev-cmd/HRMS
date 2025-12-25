@@ -49,6 +49,7 @@ const ForgetPassword = () => {
         <form className="space-y-5" onSubmit={handleSubmit}>
           <div>
             <Label>Email *</Label>
+            <input></input>
             <Input
               type="email"
               name="email"
