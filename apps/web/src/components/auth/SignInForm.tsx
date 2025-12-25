@@ -8,6 +8,8 @@ import { motion } from "framer-motion";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>("");
 
   const [formData, setFormData] = useState<{
     email: string;
@@ -16,9 +18,6 @@ export default function SignInForm() {
     email: "",
     password: "",
   });
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -69,7 +68,7 @@ export default function SignInForm() {
           transition={{ duration: 0.45, ease: "easeInOut" }}
           // ✅ FIX: z-10 keeps panel above form
           className="relative z-10 hidden md:flex flex-col justify-center items-center bg-black text-white p-8"
-          style={{ willChange: "transform" }} // optional polish
+          style={{ willChange: "transform" }} 
         >
           <h2 className="text-3xl font-semibold mb-4">New Here?</h2>
           <p className="text-sm text-center opacity-90 mb-6">
@@ -130,7 +129,17 @@ export default function SignInForm() {
                 </span>
               </div>
             </div>
-            
+
+            {/* ✅ Forgot Password Link */}
+            <div className="flex justify-end">
+              <Link
+                to="/forget-password"
+                className="text-sm text-gray-600 dark:text-gray-400 hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
+
             <button
               type="submit"
               disabled={loading}

@@ -8,6 +8,5 @@ export default function ProtectedRoute() {
     return <Navigate to="/signin" replace />;
   }
 
-  // ✅ Token present → allow access
   return <Outlet />;
 }
