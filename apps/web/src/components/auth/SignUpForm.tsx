@@ -1,16 +1,14 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import axios from "axios";
+import { useMutation } from "@tanstack/react-query";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
+import { signUpApi } from "../../api/post";
 
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   const [formData, setFormData] = useState({
     username: "",
@@ -24,61 +22,42 @@ export default function SignUpForm() {
   };
 
   const validate = () => {
-    if (!formData.username.trim())
-      return "Username is required";
-
-    if (formData.username.trim().length < 3)
-      return "Username must be at least 3 characters";
-
-    if (!formData.email.trim())
-      return "Email is required";
-
+    if (!formData.username) return "Username is required";
+    if (!formData.email) return "Email is required";
     if (!/\S+@\S+\.\S+/.test(formData.email))
-      return "Enter a valid email address";
-
-    if (!formData.password)
-      return "Password is required";
-
+      return "Invalid email address";
+    if (!formData.password) return "Password is required";
     if (formData.password.length < 6)
       return "Password must be at least 6 characters";
-
     return "";
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    const validationError = validate();
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-    setSuccess("");
-
-    try {
-      await axios.post("http://192.168.1.33:4000/signup", formData, {
-        headers: { "Content-Type": "application/json" },
-      });
-
-      setSuccess("Account created successfully. Please sign in.");
+  const signUpMutation = useMutation({
+    mutationFn: signUpApi,
+    onSuccess: () => {
       setTimeout(() => {
         window.location.href = "/signin";
       }, 1500);
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Signup failed. Try again.");
-    } finally {
-      setLoading(false);
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const msg = validate();
+    if (msg) {
+      throw new Error(msg);
     }
+
+    signUpMutation.mutate(formData);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+      {/* 🔒 FIXED CARD */}
       <div className="relative w-full max-w-4xl h-[500px] bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
 
-        {/* RIGHT OVERLAY PANEL */}
+        {/* 🔥 RIGHT OVERLAY PANEL (UNCHANGED) */}
         <motion.div
           initial={{ x: "0%" }}
           animate={{ x: "0%" }}
@@ -107,11 +86,19 @@ export default function SignUpForm() {
               Sign Up
             </h1>
 
-            {error && (
-              <p className="text-red-500 text-sm mt-4">{error}</p>
+            {/* ✅ TanStack error */}
+            {signUpMutation.isError && (
+              <p className="text-red-500 text-sm mt-4">
+                {(signUpMutation.error as any)?.response?.data?.message ||
+                  (signUpMutation.error as Error).message}
+              </p>
             )}
-            {success && (
-              <p className="text-green-500 text-sm mt-4">{success}</p>
+
+            {/* ✅ TanStack success */}
+            {signUpMutation.isSuccess && (
+              <p className="text-green-500 text-sm mt-4">
+                Account created successfully. Redirecting...
+              </p>
             )}
 
             <form className="space-y-5 mt-6" onSubmit={handleSubmit}>
@@ -162,10 +149,10 @@ export default function SignUpForm() {
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={signUpMutation.isPending}
                 className="w-full py-3 bg-black text-white rounded-lg"
               >
-                {loading ? "Signing Up..." : "Sign Up"}
+                {signUpMutation.isPending ? "Signing Up..." : "Sign Up"}
               </button>
             </form>
           </div>

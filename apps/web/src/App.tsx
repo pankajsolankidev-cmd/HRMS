@@ -10,6 +10,8 @@ import { ScrollToTop } from "./components/common/ScrollToTop";
 import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
 import ResetPassword from "./components/auth/ResetPassword";
 import PublicRoute from "./pages/OtherPage/PublicRoute";
+import Employee from "./pages/EmployeeTable/Employee";
+import AddEmployee from "./pages/EmployeeTable/AddEmployee";
 
 function AppRoutes() {
   return (
@@ -27,7 +29,9 @@ function AppRoutes() {
       {/* 🔐 PROTECTED ROUTES (only when logged in) */}
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
-          <Route path="/dashboard" element={<Home />} />
+        <Route path="/dashboard" element={<Home />} />
+        <Route path="/employees" element={<Employee />}/>
+        <Route path="/add-employee" element={<AddEmployee />}/>
           
         </Route>
       </Route>
