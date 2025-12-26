@@ -18,7 +18,7 @@ if (!DB_HOST || !DB_USER || !DB_PASSWORD || !DB_NAME) {
 }
 
 export default {
-  schema: './src/db/schema.ts',
+  schema: './src/db/schema',
   out: './drizzle',
   dialect: 'postgresql',
   dbCredentials: {

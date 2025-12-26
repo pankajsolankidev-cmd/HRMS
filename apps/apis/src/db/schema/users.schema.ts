@@ -3,8 +3,7 @@ import {
   uuid,
   varchar,
   text,
-  timestamp,
-  index
+  timestamp
 } from 'drizzle-orm/pg-core'
 
 export const users = pgTable('users', {
@@ -19,9 +18,3 @@ export const users = pgTable('users', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()
 })
-
-
-
-export const schema = {
-  users
-}
