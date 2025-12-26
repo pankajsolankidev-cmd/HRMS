@@ -32,11 +32,10 @@ function AppRoutes() {
         <Route path="/dashboard" element={<Home />} />
         <Route path="/employees" element={<Employee />}/>
         <Route path="/add-employee" element={<AddEmployee />}/>
-          
+        <Route path="/employees/:id" element={<AddEmployee />}/>
         </Route>
       </Route>
 
-      {/* ❌ NOT FOUND */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

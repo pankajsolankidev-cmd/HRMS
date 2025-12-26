@@ -1,107 +1,144 @@
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useForm, Controller } from "react-hook-form";
+
 import Label from "../form/Label";
 import Select from "../form/Select";
 import DatePicker from "../form/date-picker";
 import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
+
+import { getEmployeeById } from "../../api/get";
 import { addEmployee } from "../../api/post";
-import { useNavigate } from "react-router";
+import { updateEmployee } from "../../api/put";
+import { useNavigate, useParams } from "react-router";
+
+type AddEmployeeFormValues = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  position: string;
+  joiningDate: string;
+
+  department: string;
+  manager: string;
+  buddy: string;
+
+  systemType: string;
+  documents: string[];
+  welcomeChannels: string[];
+};
 
 const AddEmpForm = () => {
-  /* ================= BASIC FIELDS ================= */
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [position, setPosition] = useState("");
-  const [joiningDate, setJoiningDate] = useState("");
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
 
-  /* ================= IDS ================= */
-  const [department, setDepartment] = useState("");
-  const [manager, setManager] = useState("");
-  const [buddy, setBuddy] = useState("");
+  const { control, register, handleSubmit, reset } =
+    useForm<AddEmployeeFormValues>({
+      defaultValues: {
+        documents: ["offer_letter"],
+        welcomeChannels: [],
+      },
+    });
 
-  /* ================= SYSTEMS ================= */
-  const [systemType, setSystemType] = useState("");
+  const { data: employeeData } = useQuery({
+    queryKey: ["employee", id],
+    queryFn: () => getEmployeeById(id!),
+    enabled: isEditMode,
+  });
 
-  /* ================= CHECKBOX STATES ================= */
-  const [documents, setDocuments] = useState<string[]>(["offer_letter"]);
-  const [welcomeChannels, setWelcomeChannels] = useState<string[]>([]);
+  useEffect(() => {
+  if (employeeData) {
+    reset({
+      firstName: employeeData.firstName ?? "",
+      lastName: employeeData.lastName ?? "",
+      email: employeeData.email ?? "",
+      position: employeeData.position ?? "",
+      joiningDate: employeeData.joiningDate ?? "",
 
-  /* ================= HELPERS ================= */
+      department: String(employeeData.departmentId ?? ""),
+      manager: String(employeeData.managerId ?? ""),
+      buddy: String(employeeData.buddyId ?? ""),
+
+      systemType: employeeData.systems?.[0] ?? "",
+
+      documents: [
+        employeeData.documents?.generateOfferLetter && "offer_letter",
+        employeeData.documents?.generateAppointmentLetter &&
+          "appointment_letter",
+      ].filter(Boolean) as string[],
+
+      welcomeChannels: employeeData.welcome
+        ? Object.keys(employeeData.welcome).filter(
+            (k) => employeeData.welcome[k]
+          )
+        : [],
+    });
+  }
+}, [employeeData, reset]);
+
+
   const toggleValue = (
     value: string,
-    setter: React.Dispatch<React.SetStateAction<string[]>>
+    current: string[] = [],
+    onChange: (val: string[]) => void
   ) => {
-    setter((prev) =>
-      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+    onChange(
+      current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value]
     );
   };
 
-  /* ================= MUTATION ================= */
-  const { mutate: createEmployee, isPending } = useMutation({
+  const addMutation = useMutation({
     mutationFn: addEmployee,
     onSuccess: () => {
       alert("Employee added successfully");
-      resetForm();                  // ✅ clear all state
-    navigate("/employees"); 
-    },
-    onError: () => {
-      alert("Failed to add employee");
+      navigate("/employees");
     },
   });
-  const navigate = useNavigate();
 
-const resetForm = () => {
-  setFirstName("");
-  setLastName("");
-  setEmail("");
-  setPosition("");
-  setJoiningDate("");
-
-  setDepartment("");
-  setManager("");
-  setBuddy("");
-  setSystemType("");
-
-  setDocuments([]);
-  setWelcomeChannels([]);
-};
+  const updateMutation = useMutation({
+    mutationFn: updateEmployee,
+    onSuccess: () => {
+      alert("Employee updated successfully");
+      navigate("/employees");
+    },
+  });
 
 
-  /* ================= SUBMIT ================= */
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const onSubmit = (data: AddEmployeeFormValues) => {
     const payload = {
-      firstName,
-      lastName,
-      email,
-      position,
-      departmentId: Number(department),
-      joiningDate,
-      managerId: Number(manager),
-      buddyId: Number(buddy),
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      position: data.position,
+      departmentId: Number(data.department),
+      joiningDate: data.joiningDate,
+      managerId: Number(data.manager),
+      buddyId: Number(data.buddy),
 
       welcome: {
-        gmail: welcomeChannels.includes("gmail"),
-        whatsapp: welcomeChannels.includes("whatsapp"),
-        slack: welcomeChannels.includes("slack"),
+        gmail: data.welcomeChannels.includes("gmail"),
+        whatsapp: data.welcomeChannels.includes("whatsapp"),
+        slack: data.welcomeChannels.includes("slack"),
       },
 
-      systems: systemType ? [systemType] : [],
+      systems: data.systemType ? [data.systemType] : [],
 
       documents: {
-        generateOfferLetter: documents.includes("offer_letter"),
-        generateAppointmentLetter: documents.includes("appointment_letter"),
+        generateOfferLetter: data.documents.includes("offer_letter"),
+        generateAppointmentLetter:
+          data.documents.includes("appointment_letter"),
       },
     };
 
-    console.log("FINAL PAYLOAD 👉", payload);
-    createEmployee(payload);
+    isEditMode
+      ? updateMutation.mutate({ id: id!, payload })
+      : addMutation.mutate(payload);
   };
 
-  /* ================= OPTIONS ================= */
   const departmentOptions = [
     { value: "1", label: "HR" },
     { value: "2", label: "Engineering" },
@@ -121,24 +158,25 @@ const resetForm = () => {
   const systemOptions = [
     { value: "Desktop", label: "Desktop" },
     { value: "Laptop", label: "Laptop" },
+    { value: "Laptop", label: "Laptop" },
+
   ];
 
   return (
-    <form className="space-y-8" onSubmit={handleSubmit}>
-      {/* HEADER */}
-      <div className="flex justify-end ">
+    <form className="space-y-8" onSubmit={handleSubmit(onSubmit)}>
+  
+      <div className="flex justify-end">
         <button
           type="submit"
-          disabled={isPending}
+          disabled={addMutation.isPending || updateMutation.isPending}
           className="rounded-lg bg-black px-4 py-2 text-white disabled:opacity-50"
         >
-          {isPending ? "Adding..." : "Add"}
+          {isEditMode ? "Edit" : "Add"}
         </button>
       </div>
 
-      {/* GRID */}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        {/* LEFT */}
+      
         <div className="space-y-6">
           <div className="rounded-xl border bg-white p-6">
             <h2 className="mb-6 text-lg font-semibold">Basic Information</h2>
@@ -146,94 +184,138 @@ const resetForm = () => {
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
                 <Label>First Name</Label>
-                <Input
-                  placeholder="first name"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                />
+                <Input {...register("firstName")} />
               </div>
 
               <div>
                 <Label>Last Name</Label>
-                <Input
-                placeholder="last name"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                />
+                <Input {...register("lastName")} />
               </div>
 
               <div className="md:col-span-2">
                 <Label>Email</Label>
-                <Input
-                  placeholder="email@test.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+                <Input {...register("email")} />
               </div>
 
               <div>
                 <Label>Position</Label>
-                <Input
-                placeholder="Software developer"
-                  value={position}
-                  onChange={(e) => setPosition(e.target.value)}
-                />
+                <Input {...register("position")} />
               </div>
 
               <div>
                 <Label>Department</Label>
-                <Select options={departmentOptions} onChange={setDepartment} />
+                <Controller
+                  name="department"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      options={departmentOptions}
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
               </div>
 
               <div>
-                {" "}
-                <Label>Joining Date</Label>{" "}
-                <DatePicker
-                  id="joiningDate"
-                  placeholder="dd-mm-yyyy"
-                  onChange={(dates) => {
-                    if (dates.length > 0) {
-                      setJoiningDate(dates[0].toISOString().split("T")[0]);
-                    }
-                  }}
-                />{" "}
+                <Label>Joining Date</Label>
+                <Controller
+                  name="joiningDate"
+                  control={control}
+                  render={({ field }) => (
+                    <DatePicker
+                      id="joiningDate"
+                      defaultDate={field.value}
+                      onChange={(dates) =>
+                        dates[0] &&
+                        field.onChange(dates[0].toISOString().split("T")[0])
+                      }
+                    />
+                  )}
+                />
               </div>
 
               <div>
                 <Label>Manager</Label>
-                <Select options={managerOptions} onChange={setManager} />
+                <Controller
+                  name="manager"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      options={managerOptions}
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
               </div>
 
               <div className="md:col-span-2">
                 <Label>Onboarding Buddy</Label>
-                <Select options={buddyOptions} onChange={setBuddy} />
+                <Controller
+                  name="buddy"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      options={buddyOptions}
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
               </div>
             </div>
           </div>
         </div>
 
-        {/* RIGHT */}
+  
         <div className="space-y-6">
           <div className="rounded-xl border bg-white p-6">
             <h2 className="mb-4 text-lg font-semibold">Document Generation</h2>
             <div className="grid grid-cols-2">
-            <Checkbox
-              label="Offer Letter"
-              checked={documents.includes("offer_letter")}
-              onChange={() => toggleValue("offer_letter", setDocuments)}
-            />
-            <Checkbox
-              label="Appointment Letter"
-              checked={documents.includes("appointment_letter")}
-              onChange={() => toggleValue("appointment_letter", setDocuments)}
-            />
+              <Controller
+                name="documents"
+                control={control}
+                render={({ field }) => (
+                  <>
+                    <Checkbox
+                      label="Offer Letter"
+                      checked={field.value.includes("offer_letter")}
+                      onChange={() =>
+                        toggleValue("offer_letter", field.value, field.onChange)
+                      }
+                    />
+                    <Checkbox
+                      label="Appointment Letter"
+                      checked={field.value.includes("appointment_letter")}
+                      onChange={() =>
+                        toggleValue(
+                          "appointment_letter",
+                          field.value,
+                          field.onChange
+                        )
+                      }
+                    />
+                  </>
+                )}
+              />
             </div>
           </div>
 
           <div className="rounded-xl border bg-white p-6">
             <h2 className="mb-4 text-lg font-semibold">System Allocation</h2>
             <Label>System</Label>
-            <Select options={systemOptions} onChange={setSystemType} />
+            <Controller
+              name="systemType"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  options={systemOptions}
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
+            />
           </div>
 
           <div className="rounded-xl border bg-white p-6">
@@ -241,15 +323,34 @@ const resetForm = () => {
               Welcome Communication
             </h2>
             <Label>Welcome Message sent</Label>
+
             <div className="mt-5 grid grid-cols-3">
-            {["gmail", "whatsapp", "slack"].map((c) => (
-              <Checkbox
-                key={c}
-                label={c.toUpperCase()}
-                checked={welcomeChannels.includes(c)}
-                onChange={() => toggleValue(c, setWelcomeChannels)}
+              <Controller
+                name="welcomeChannels"
+                control={control}
+                render={({ field }) => {
+                  const value: string[] = field.value ?? [];
+
+                  return (
+                    <>
+                      {["gmail", "whatsapp", "slack"].map((c) => (
+                        <Checkbox
+                          key={c}
+                          label={c.toUpperCase()}
+                          checked={value.includes(c)}
+                          onChange={(checked) =>
+                            field.onChange(
+                              checked
+                                ? [...value, c]
+                                : value.filter((v) => v !== c)
+                            )
+                          }
+                        />
+                      ))}
+                    </>
+                  );
+                }}
               />
-            ))}
             </div>
           </div>
         </div>

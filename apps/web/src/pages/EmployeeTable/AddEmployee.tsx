@@ -1,17 +1,28 @@
+import { useParams } from "react-router";
+
 import ComponentCard from "../../components/common/ComponentCard";
 import PageMeta from "../../components/common/PageMeta";
 import AddEmpForm from "../../components/Employee/AddEmpForm";
 
 export default function AddEmployee() {
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
+
   return (
     <>
       <PageMeta
-        title="React.js Basic Tables Dashboard | TailAdmin - Next.js Admin Dashboard Template"
-        description="This is React.js Basic Tables Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
+        title={
+          isEditMode
+            ? "Edit Employee | TailAdmin - React Dashboard"
+            : "Add Employee | TailAdmin - React Dashboard"
+        }
+        description={
+          isEditMode ? "Edit employee details" : "Add a new employee"
+        }
       />
-      {/* <PageBreadcrumb pageTitle="Basic Tables" /> */}
+
       <div className="space-y-6">
-        <ComponentCard title="Add Employee">
+        <ComponentCard title={isEditMode ? "Edit Employee" : "Add Employee"}>
           <AddEmpForm />
         </ComponentCard>
       </div>
