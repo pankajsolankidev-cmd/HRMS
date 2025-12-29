@@ -10,6 +10,7 @@ import swaggerUI from "@fastify/swagger-ui";
 
 import authRoutes from "./auth/auth.routes";
 import employeeRoutes from "./modules/employees/employee.routes";
+import cookie from '@fastify/cookie'
 
 const app = Fastify({ logger: true });
 
@@ -35,6 +36,9 @@ app.register(swaggerUI, {
 
 app.register(authRoutes);
 app.register(employeeRoutes);
+app.register(cookie)
+
+
 
 app.get("/health", async () => {
   return { status: "API is running 🚀" };
