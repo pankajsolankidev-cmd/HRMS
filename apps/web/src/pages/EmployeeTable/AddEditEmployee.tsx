@@ -9,7 +9,7 @@ export default function AddEmployee() {
   const isEditMode = Boolean(id);
 
   return (
-    <>
+    <div className="dark:bg-gray-900">
       <PageMeta
         title={
           isEditMode
@@ -21,11 +21,11 @@ export default function AddEmployee() {
         }
       />
 
-      <div className="space-y-6">
+      <div className="space-y-6 dark:bg-gray-800">
         <ComponentCard title={isEditMode ? "Edit Employee" : "Add Employee"}>
           <AddEmpForm />
         </ComponentCard>
       </div>
-    </>
+      </div>
   );
 }

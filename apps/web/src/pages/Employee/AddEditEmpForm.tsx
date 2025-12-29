@@ -2,8 +2,6 @@ import { useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
 
-
-
 import { getEmployeeById } from "../../api/get";
 import { addEmployee } from "../../api/post";
 import { updateEmployee } from "../../api/put";
@@ -157,25 +155,35 @@ const AddEmpForm = () => {
   const systemOptions = [
     { value: "Desktop", label: "Desktop" },
     { value: "Laptop", label: "Laptop" },
-    { value: "Laptop", label: "Laptop" },
   ];
 
   return (
-    <form className="space-y-8" onSubmit={handleSubmit(onSubmit)}>
+    <form
+      className="space-y-8 text-gray-900 dark:text-gray-100"
+      onSubmit={handleSubmit(onSubmit)}
+    >
       <div className="flex justify-end">
         <button
           type="submit"
           disabled={addMutation.isPending || updateMutation.isPending}
-          className="rounded-lg bg-black px-4 py-2 text-white disabled:opacity-50"
+          className="
+            rounded-lg px-4 py-2
+            bg-black text-white
+            dark:bg-white dark:text-black
+            disabled:opacity-50
+          "
         >
           {isEditMode ? "Edit" : "Add"}
         </button>
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        {/* LEFT COLUMN */}
         <div className="space-y-6">
-          <div className="rounded-xl border bg-white p-6">
-            <h2 className="mb-6 text-lg font-semibold">Basic Information</h2>
+          <div className="rounded-xl border bg-white dark:bg-gray-900 dark:border-gray-700 p-6">
+            <h2 className="mb-6 text-lg font-semibold">
+              Basic Information
+            </h2>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
@@ -264,9 +272,13 @@ const AddEmpForm = () => {
           </div>
         </div>
 
+        {/* RIGHT COLUMN */}
         <div className="space-y-6">
-          <div className="rounded-xl border bg-white p-6">
-            <h2 className="mb-4 text-lg font-semibold">Document Generation</h2>
+          <div className="rounded-xl border bg-white dark:bg-gray-900 dark:border-gray-700 p-6">
+            <h2 className="mb-4 text-lg font-semibold">
+              Document Generation
+            </h2>
+
             <div className="grid grid-cols-2">
               <Controller
                 name="documents"
@@ -297,8 +309,10 @@ const AddEmpForm = () => {
             </div>
           </div>
 
-          <div className="rounded-xl border bg-white p-6">
-            <h2 className="mb-4 text-lg font-semibold">System Allocation</h2>
+          <div className="rounded-xl border bg-white dark:bg-gray-900 dark:border-gray-700 p-6">
+            <h2 className="mb-4 text-lg font-semibold">
+              System Allocation
+            </h2>
             <Label>System</Label>
             <Controller
               name="systemType"
@@ -313,7 +327,7 @@ const AddEmpForm = () => {
             />
           </div>
 
-          <div className="rounded-xl border bg-white p-6">
+          <div className="rounded-xl border bg-white dark:bg-gray-900 dark:border-gray-700 p-6">
             <h2 className="mb-4 text-lg font-semibold">
               Welcome Communication
             </h2>

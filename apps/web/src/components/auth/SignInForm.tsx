@@ -55,7 +55,7 @@ export default function SignInForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+    <div className="w-500 min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
       <div className="relative w-full max-w-4xl h-[500px] bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
         {/* LEFT OVERLAY */}
         <motion.div
@@ -63,7 +63,7 @@ export default function SignInForm() {
           animate={{ x: "0%" }}
           exit={{ x: "100%" }}
           transition={{ duration: 0.45, ease: "easeInOut" }}
-          className="absolute left-0 top-0 h-full w-1/2 bg-black text-white z-20 hidden md:flex flex-col justify-center items-center p-8"
+          className="absolute left-0 top-0 h-full w-1/2 bg-black dark:bg-gray-800 text-white z-20 hidden md:flex flex-col justify-center items-center p-8"
         >
           <h2 className="text-3xl font-semibold mb-4">New Here?</h2>
           <p className="text-sm text-center mb-6">
@@ -78,7 +78,7 @@ export default function SignInForm() {
           </Link>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 h-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 h-full dark:bg-gray-950 dark:text-gray-400">
           <div className="hidden md:block" />
 
           <div className="p-6 sm:p-8 flex flex-col justify-center">
