@@ -54,7 +54,7 @@ const ResetPassword = () => {
 
     try {
       await axios.post(
-        `http://192.168.1.33:4000/auth/reset-password/${token}`,
+        `http://192.168.1.35:4000/auth/reset-password/${token}`,
         { password: formData.password },
         {
           headers: { "Content-Type": "application/json" },

@@ -2,7 +2,7 @@ import type React from "react";
 
 interface CheckboxProps {
   label?: string;
-  checked: boolean;
+  checked?: boolean;
   className?: string;
   id?: string;
   onChange: (checked: boolean) => void;

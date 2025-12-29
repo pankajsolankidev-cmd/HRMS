@@ -47,67 +47,85 @@ export default function BasicTableOne() {
   }, []);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
       <Table>
         {/* ---------- HEADER ---------- */}
-        <TableHeader>
-          <TableRow className="bg-gray-50">
-            <TableCell className="px-6 py-4 text-sm font-semibold text-gray-700">
+        <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+          <TableRow className="bg-gray-50 dark:bg-white/[0.02]">
+            <TableCell
+              isHeader
+              className="px-6 py-4 text-sm font-medium text-gray-500 dark:text-gray-400"
+            >
               Name
             </TableCell>
-            <TableCell className="px-6 py-4 text-sm font-semibold text-gray-700">
+            <TableCell
+              isHeader
+              className="px-6 py-4 text-sm font-medium text-gray-500 dark:text-gray-400"
+            >
               Email
             </TableCell>
-            <TableCell className="px-6 py-4 text-sm font-semibold text-gray-700">
+            <TableCell
+              isHeader
+              className="px-6 py-4 text-sm font-medium text-gray-500 dark:text-gray-400"
+            >
               Position
             </TableCell>
-            <TableCell className="px-6 py-4 text-sm font-semibold text-gray-700">
+            <TableCell
+              isHeader
+              className="px-6 py-4 text-sm font-medium text-gray-500 dark:text-gray-400"
+            >
               Joining Date
             </TableCell>
-            <TableCell className="px-6 py-4 text-sm font-semibold text-gray-700">
+            <TableCell
+              isHeader
+              className="px-6 py-4 text-sm font-medium text-gray-500 dark:text-gray-400"
+            >
               Onboarding Buddy
             </TableCell>
-            <TableCell className="px-6 py-4 text-sm font-semibold text-gray-700">
+            <TableCell
+              isHeader
+              className="px-6 py-4 text-sm font-medium text-gray-500 dark:text-gray-400"
+            >
               Action
             </TableCell>
           </TableRow>
         </TableHeader>
 
         {/* ---------- BODY ---------- */}
-        <TableBody>
+        <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
           {employees.map((emp) => (
             <TableRow
               key={emp.id}
-              className="hover:bg-gray-50 transition-colors"
+              className="hover:bg-gray-50 transition-colors dark:hover:bg-white/[0.04]"
             >
               {/* Name */}
               <TableCell className="px-6 py-5">
-                <div className="flex flex-col gap-1">
-                  <span className="text-sm font-medium text-gray-900">
-                    {emp.firstName} {emp.lastName}
-                  </span>
-                </div>
+                <span className="text-sm font-medium text-gray-800 dark:text-white/90">
+                  {emp.firstName} {emp.lastName}
+                </span>
               </TableCell>
 
               {/* Email */}
               <TableCell className="px-6 py-5">
-                <span className="text-sm text-gray-700">{emp.email}</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  {emp.email}
+                </span>
               </TableCell>
 
               {/* Position */}
               <TableCell className="px-6 py-5">
-                <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+                <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">
                   {emp.position}
                 </span>
               </TableCell>
 
               {/* Joining Date */}
-              <TableCell className="px-6 py-5 text-sm text-gray-600">
+              <TableCell className="px-6 py-5 text-sm text-gray-500 dark:text-gray-400">
                 {emp.joiningDate}
               </TableCell>
 
               {/* Onboarding Buddy */}
-              <TableCell className="px-6 py-5 text-sm text-gray-600">
+              <TableCell className="px-6 py-5 text-sm text-gray-500 dark:text-gray-400">
                 {emp.onboardingBuddy}
               </TableCell>
 
@@ -115,13 +133,13 @@ export default function BasicTableOne() {
               <TableCell className="px-6 py-5">
                 <div className="flex justify-end gap-3">
                   <button
-                    className="text-blue-600 hover:text-blue-800"
+                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                     title="Edit"
                   >
                     <IconEdit size={18} />
                   </button>
                   <button
-                    className="text-red-600 hover:text-red-800"
+                    className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                     title="Delete"
                   >
                     <IconTrash size={18} />

@@ -18,7 +18,7 @@ const ForgetPassword = () => {
 
     try {
       await axios.post(
-        "http://192.168.1.33:4000/auth/forgot-password",
+        "http://192.168.1.35:4000/auth/forgot-password",
         { email },
         {
           headers: { "Content-Type": "application/json" },

@@ -2,7 +2,7 @@ import { useParams } from "react-router";
 
 import ComponentCard from "../../components/common/ComponentCard";
 import PageMeta from "../../components/common/PageMeta";
-import AddEmpForm from "../../components/Employee/AddEmpForm";
+import AddEmpForm from "../Employee/AddEditEmpForm";
 
 export default function AddEmployee() {
   const { id } = useParams();

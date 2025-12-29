@@ -2,16 +2,17 @@ import { useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
 
-import Label from "../form/Label";
-import Select from "../form/Select";
-import DatePicker from "../form/date-picker";
-import Input from "../form/input/InputField";
-import Checkbox from "../form/input/Checkbox";
+
 
 import { getEmployeeById } from "../../api/get";
 import { addEmployee } from "../../api/post";
 import { updateEmployee } from "../../api/put";
 import { useNavigate, useParams } from "react-router";
+import Input from "../../components/form/input/InputField";
+import Select from "../../components/form/Select";
+import Label from "../../components/form/Label";
+import DatePicker from "../../components/form/date-picker";
+import Checkbox from "../../components/form/input/Checkbox";
 
 type AddEmployeeFormValues = {
   firstName: string;
@@ -49,35 +50,34 @@ const AddEmpForm = () => {
   });
 
   useEffect(() => {
-  if (employeeData) {
-    reset({
-      firstName: employeeData.firstName ?? "",
-      lastName: employeeData.lastName ?? "",
-      email: employeeData.email ?? "",
-      position: employeeData.position ?? "",
-      joiningDate: employeeData.joiningDate ?? "",
+    if (employeeData) {
+      reset({
+        firstName: employeeData.firstName ?? "",
+        lastName: employeeData.lastName ?? "",
+        email: employeeData.email ?? "",
+        position: employeeData.position ?? "",
+        joiningDate: employeeData.joiningDate ?? "",
 
-      department: String(employeeData.departmentId ?? ""),
-      manager: String(employeeData.managerId ?? ""),
-      buddy: String(employeeData.buddyId ?? ""),
+        department: String(employeeData.departmentId ?? ""),
+        manager: String(employeeData.managerId ?? ""),
+        buddy: String(employeeData.buddyId ?? ""),
 
-      systemType: employeeData.systems?.[0] ?? "",
+        systemType: employeeData.systems?.[0] ?? "",
 
-      documents: [
-        employeeData.documents?.generateOfferLetter && "offer_letter",
-        employeeData.documents?.generateAppointmentLetter &&
-          "appointment_letter",
-      ].filter(Boolean) as string[],
+        documents: [
+          employeeData.documents?.generateOfferLetter && "offer_letter",
+          employeeData.documents?.generateAppointmentLetter &&
+            "appointment_letter",
+        ].filter(Boolean) as string[],
 
-      welcomeChannels: employeeData.welcome
-        ? Object.keys(employeeData.welcome).filter(
-            (k) => employeeData.welcome[k]
-          )
-        : [],
-    });
-  }
-}, [employeeData, reset]);
-
+        welcomeChannels: employeeData.welcome
+          ? Object.keys(employeeData.welcome).filter(
+              (k) => employeeData.welcome[k]
+            )
+          : [],
+      });
+    }
+  }, [employeeData, reset]);
 
   const toggleValue = (
     value: string,
@@ -106,7 +106,6 @@ const AddEmpForm = () => {
       navigate("/employees");
     },
   });
-
 
   const onSubmit = (data: AddEmployeeFormValues) => {
     const payload = {
@@ -159,12 +158,10 @@ const AddEmpForm = () => {
     { value: "Desktop", label: "Desktop" },
     { value: "Laptop", label: "Laptop" },
     { value: "Laptop", label: "Laptop" },
-
   ];
 
   return (
     <form className="space-y-8" onSubmit={handleSubmit(onSubmit)}>
-  
       <div className="flex justify-end">
         <button
           type="submit"
@@ -176,7 +173,6 @@ const AddEmpForm = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-      
         <div className="space-y-6">
           <div className="rounded-xl border bg-white p-6">
             <h2 className="mb-6 text-lg font-semibold">Basic Information</h2>
@@ -184,22 +180,22 @@ const AddEmpForm = () => {
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
                 <Label>First Name</Label>
-                <Input {...register("firstName")} />
+                <Input placeholder="first name" {...register("firstName")} />
               </div>
 
               <div>
                 <Label>Last Name</Label>
-                <Input {...register("lastName")} />
+                <Input placeholder="last name" {...register("lastName")} />
               </div>
 
               <div className="md:col-span-2">
                 <Label>Email</Label>
-                <Input {...register("email")} />
+                <Input placeholder="email@abc.com" {...register("email")} />
               </div>
 
               <div>
                 <Label>Position</Label>
-                <Input {...register("position")} />
+                <Input placeholder="position" {...register("position")} />
               </div>
 
               <div>
@@ -268,7 +264,6 @@ const AddEmpForm = () => {
           </div>
         </div>
 
-  
         <div className="space-y-6">
           <div className="rounded-xl border bg-white p-6">
             <h2 className="mb-4 text-lg font-semibold">Document Generation</h2>

@@ -9,6 +9,8 @@ type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   name?: string;
   placeholder?: string;
   value?: string | number; 
+  required?: boolean;
+  label?: string;
 };
 
 const Input = forwardRef<HTMLInputElement, InputProps>(

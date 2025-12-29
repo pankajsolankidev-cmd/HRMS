@@ -2,6 +2,8 @@ import { useState } from "react";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { useNavigate } from "react-router";
+import Cookies from "js-cookie";
+
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -16,9 +18,7 @@ export default function UserDropdown() {
 
   const handleLogout = () => {
 
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    sessionStorage.removeItem("token");    
+    Cookies.remove("access");  
     navigate("/signin");
   };
 

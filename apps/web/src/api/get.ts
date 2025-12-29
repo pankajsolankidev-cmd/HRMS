@@ -9,3 +9,4 @@ export const getEmployeeById = async (id: string) => {
   const res = await api.get(`/employees/${id}`);
   return res.data;
 };
+

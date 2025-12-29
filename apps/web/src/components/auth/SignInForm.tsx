@@ -1,60 +1,63 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useMutation } from "@tanstack/react-query";
-import Label from "../form/Label";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import Input from "../form/input/InputField";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
 import { signInApi } from "../../api/post";
+import Label from "../form/Label";
+import Cookies from "js-cookie";
+
+/* ---------------- ZOD SCHEMA ---------------- */
+const signInSchema = z.object({
+  email: z.string().min(1, "Email is required").email("Invalid email address"),
+
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(6, "Password must be at least 6 characters"),
+});
+
+type SignInFormValues = z.infer<typeof signInSchema>;
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
 
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const validate = () => {
-    if (!formData.email) return "Email is required";
-    if (!/\S+@\S+\.\S+/.test(formData.email))
-      return "Invalid email address";
-    if (!formData.password) return "Password is required";
-    if (formData.password.length < 6)
-      return "Password must be at least 6 characters";
-    return "";
-  };
-
-  const signInMutation = useMutation({
-    mutationFn: signInApi,
-    onSuccess: (res) => {
-      localStorage.setItem("token", res.data.token);
-      window.location.href = "/dashboard";
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignInFormValues>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: {
+      email: "",
+      password: "",
     },
   });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const navigate = useNavigate();
+  const signInMutation = useMutation({
+    mutationFn: signInApi,
+    onSuccess: (res) => {
+      const token = res.data.accessToken;
+      console.log(res);
+      Cookies.set("access", token);
+      console.log("Sign In Successful");
+      navigate("/dashboard", { replace: true });
+    },
+  });
 
-    const msg = validate();
-    if (msg) {
-      throw new Error(msg);
-    }
-
-    signInMutation.mutate(formData);
+  const onSubmit = (data: SignInFormValues) => {
+    signInMutation.mutate(data);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
-      {/* 🔒 FIXED CARD */}
       <div className="relative w-full max-w-4xl h-[500px] bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
-
-        {/* 🔥 LEFT OVERLAY PANEL (UNCHANGED) */}
+        {/* LEFT OVERLAY */}
         <motion.div
           initial={{ x: "0%" }}
           animate={{ x: "0%" }}
@@ -75,18 +78,14 @@ export default function SignInForm() {
           </Link>
         </motion.div>
 
-        {/* BASE GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 h-full">
-
           <div className="hidden md:block" />
 
-          {/* RIGHT FORM */}
           <div className="p-6 sm:p-8 flex flex-col justify-center">
             <h1 className="text-2xl font-semibold text-gray-800 dark:text-white">
               Sign In
             </h1>
 
-            {/* ✅ TanStack error */}
             {signInMutation.isError && (
               <p className="text-red-500 text-sm mt-4">
                 {(signInMutation.error as any)?.response?.data?.message ||
@@ -94,39 +93,36 @@ export default function SignInForm() {
               </p>
             )}
 
-            <form className="space-y-5 mt-8" onSubmit={handleSubmit}>
-              <div>
-                <Label>Email *</Label>
-                <Input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="info@gmail.com"
-                />
-              </div>
+            <form className="space-y-5 mt-8" onSubmit={handleSubmit(onSubmit)}>
+              <Label>Email *</Label>
+              <Input
+                type="email"
+                placeholder="info@gmail.com"
+                {...register("email")}
+                error={!!errors.email}
+                hint={errors.email?.message}
+              />
 
-              <div>
+              <div className="relative">
                 <Label>Password *</Label>
-                <div className="relative">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="Enter your password"
-                  />
-                  <span
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer"
-                  >
-                    {showPassword ? (
-                      <EyeSlashIcon className="w-5 h-5 text-gray-500" />
-                    ) : (
-                      <EyeIcon className="w-5 h-5 text-gray-500" />
-                    )}
-                  </span>
-                </div>
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  {...register("password")}
+                  error={!!errors.password}
+                  hint={errors.password?.message}
+                />
+
+                <span
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer"
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon className="w-5 h-5 mt-6 text-gray-500" />
+                  ) : (
+                    <EyeIcon className="w-5 h-5 mt-6 text-gray-500" />
+                  )}
+                </span>
               </div>
 
               <div className="flex justify-end">

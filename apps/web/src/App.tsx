@@ -11,7 +11,7 @@ import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
 import ResetPassword from "./components/auth/ResetPassword";
 import PublicRoute from "./pages/OtherPage/PublicRoute";
 import Employee from "./pages/EmployeeTable/Employee";
-import AddEmployee from "./pages/EmployeeTable/AddEmployee";
+import AddEmployee from "./pages/EmployeeTable/AddEditEmployee";
 
 function AppRoutes() {
   return (
