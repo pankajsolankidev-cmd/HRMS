@@ -42,10 +42,9 @@ export default function SignInForm() {
   const signInMutation = useMutation({
     mutationFn: signInApi,
     onSuccess: (res) => {
-      const token = res.data.accessToken;
       console.log(res);
+      const token = res.data.accessToken;
       Cookies.set("access", token);
-      console.log("Sign In Successful");
       navigate("/dashboard", { replace: true });
     },
   });
@@ -127,7 +126,7 @@ export default function SignInForm() {
 
               <div className="flex justify-end">
                 <Link
-                  to="/forget-password"
+                  to="/forgot-password"
                   className="text-sm text-gray-600 dark:text-gray-400 hover:underline"
                 >
                   Forgot password?

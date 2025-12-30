@@ -28,6 +28,7 @@ type ResetPasswordFormData = z.infer<
 
 const ResetPassword = () => {
   const { token } = useParams<{ token: string }>();
+
   const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -42,20 +43,24 @@ const ResetPassword = () => {
   });
 
   const mutation = useMutation({
-    mutationFn: (data: ResetPasswordFormData) => {
-      if (!token) throw new Error("Invalid reset token");
-      return resetPassword({
-        token,
-        password: data.password,
-      });
-    },
-    onSuccess: () => {
-      reset();
-      setTimeout(() => {
-        navigate("/signin");
-      }, 2000);
-    },
-  });
+  mutationFn: (data: ResetPasswordFormData) => {
+    console.log("🔁 Sending key to backend:", token);
+
+    if (!token) throw new Error("Invalid reset token");
+
+    return resetPassword({
+      key: token,              
+      newPassword: data.password,
+    });
+  },
+  onSuccess: () => {
+    reset();
+    setTimeout(() => {
+      navigate("/signin");
+    }, 2000);
+  },
+});
+
 
   const onSubmit = (data: ResetPasswordFormData) => {
     mutation.mutate(data);

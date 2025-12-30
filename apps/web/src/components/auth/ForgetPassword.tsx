@@ -1,4 +1,5 @@
-import { Link } from "react-router";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -21,6 +22,9 @@ type ForgetPasswordFormData = z.infer<
 >;
 
 const ForgetPassword = () => {
+  const navigate = useNavigate();
+
+  const [key, setKey] = useState<string | null>(null);
 
   const {
     register,
@@ -34,8 +38,16 @@ const ForgetPassword = () => {
   const mutation = useMutation({
     mutationFn: (data: ForgetPasswordFormData) =>
       forgetPassword(data.email),
-    onSuccess: () => {
+
+    onSuccess: (data: any) => {
       reset();
+
+      // 👇 DEV / manual testing only
+      if (data?.key) {
+        setKey(data.key);
+      }
+
+      console.log("Backend response 👉", data);
     },
   });
 
@@ -90,6 +102,19 @@ const ForgetPassword = () => {
             {mutation.isPending ? "Sending..." : "Send Reset Link"}
           </button>
         </form>
+
+        {/* 👇 DEV ONLY: Redirect button */}
+        {key && (
+          <button
+            onClick={() => navigate(`/reset-password/${key}`)}
+            className="mt-4 w-full py-2 rounded-lg border border-gray-300
+              text-sm font-medium text-gray-700
+              hover:bg-gray-100
+              dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+          >
+            Go to Reset Password Page
+          </button>
+        )}
 
         <div className="mt-6 text-center">
           <Link
