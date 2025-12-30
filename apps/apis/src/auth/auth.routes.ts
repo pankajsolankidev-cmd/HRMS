@@ -177,9 +177,7 @@ export default async function authRoutes(app: FastifyInstance) {
       expiresAt: new Date(Date.now() + 15 * 60 * 1000),
     });
 
-    console.log(
-      `Reset link: http://localhost:5173/reset-password?token=${resetToken}`
-    );
+    
 
     return reply.send({
       message: "If the email exists, a reset link will be sent",
