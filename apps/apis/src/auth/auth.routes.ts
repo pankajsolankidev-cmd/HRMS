@@ -9,7 +9,7 @@ import { refreshTokens } from "../db/schema/refresh-tokens.schema";
 import { passwordResetTokens } from "../db/schema/password-reset-tokens.schema";
 import { db } from "../db";
 
-import { generateResetToken } from "./password-reset.service";
+import { generateResetKey } from "./password-reset.service";
 
 import type {
   AuthSignUpDto,
@@ -149,11 +149,11 @@ export default async function authRoutes(app: FastifyInstance) {
       });
     }
 
-    const resetToken = generateResetToken();
+    const resetKey = generateResetKey();
 
     await db.insert(passwordResetTokens).values({
       userId: user.id,
-      token: resetToken,
+      key:resetKey,
       expiresAt: new Date(Date.now() + 15 * 60 * 1000),
     });
 
@@ -163,21 +163,21 @@ export default async function authRoutes(app: FastifyInstance) {
   });
 
   app.post("/auth/reset-password", async (request, reply) => {
-    const { token, newPassword } = request.body as {
-      token: string;
+    const { key, newPassword } = request.body as {
+      key: string;
       newPassword: string;
     };
 
-    if (!token || !newPassword) {
+    if (!key || !newPassword) {
       return reply.status(400).send({
-        error: "Token and new password are required",
+        error: "key and new password are required",
       });
     }
 
     const [record] = await db
       .select()
       .from(passwordResetTokens)
-      .where(eq(passwordResetTokens.token, token));
+      .where(eq(passwordResetTokens.key, key));
 
     if (!record || record.isAccepted || record.expiresAt < new Date()) {
       return reply.status(400).send({

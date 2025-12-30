@@ -22,7 +22,7 @@ export const employees = pgTable("employees", {
   departmentId: integer("department_id"),
   joiningDate: date("joining_date").notNull(),
 
-  managerId: uuid("manager_id"), // self reference handled at app level
+  managerId: uuid("manager_id"),
 
   welcomewithWhatsapp: boolean("welcomewith_whatsapp").default(false).notNull(),
   welcomewithGmail: boolean("welcomewith_gmail").default(false).notNull(),
@@ -35,7 +35,7 @@ export const employees = pgTable("employees", {
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-    
+
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
