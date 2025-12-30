@@ -1,36 +1,46 @@
-import { useState } from "react";
 import { Link } from "react-router";
-import axios from "axios";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 
+import { z } from "zod";
+import { forgetPassword } from "../../api/post";
+
+const forgetPasswordSchema = z.object({
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+});
+
+type ForgetPasswordFormData = z.infer<
+  typeof forgetPasswordSchema
+>;
+
 const ForgetPassword = () => {
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    setMessage("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<ForgetPasswordFormData>({
+    resolver: zodResolver(forgetPasswordSchema),
+  });
 
-    try {
-      await axios.post(
-        "http://192.168.1.35:4000/auth/forgot-password",
-        { email },
-        {
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+  const mutation = useMutation({
+    mutationFn: (data: ForgetPasswordFormData) =>
+      forgetPassword(data.email),
+    onSuccess: () => {
+      reset();
+    },
+  });
 
-      setMessage("Password reset link has been sent to your email.");
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
+  const onSubmit = (data: ForgetPasswordFormData) => {
+    mutation.mutate(data);
   };
 
   return (
@@ -39,32 +49,45 @@ const ForgetPassword = () => {
         <h1 className="text-2xl font-semibold text-gray-800 dark:text-white mb-2">
           Forgot Password
         </h1>
+
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
           Enter your registered email and we’ll send you a reset link.
         </p>
 
-        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-        {message && <p className="text-green-500 text-sm mb-4">{message}</p>}
+        {mutation.isError && (
+          <p className="text-red-500 text-sm mb-4">
+            {(mutation.error as any)?.response?.data?.message ||
+              "Something went wrong"}
+          </p>
+        )}
 
-        <form className="space-y-5" onSubmit={handleSubmit}>
+        {mutation.isSuccess && (
+          <p className="text-green-500 text-sm mb-4">
+            Password reset link has been sent to your email.
+          </p>
+        )}
+
+        <form
+          className="space-y-5 dark:text-gray-400"
+          onSubmit={handleSubmit(onSubmit)}
+        >
           <div>
             <Label>Email *</Label>
-            <input></input>
             <Input
               type="email"
-              name="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               placeholder="info@gmail.com"
+              {...register("email")}
+              error={!!errors.email}
+              hint={errors.email?.message}
             />
           </div>
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-black text-white rounded-lg hover:opacity-90 transition"
+            disabled={mutation.isPending}
+            className="w-full py-3 bg-black text-white rounded-lg hover:opacity-90 transition disabled:opacity-50"
           >
-            {loading ? "Sending..." : "Send Reset Link"}
+            {mutation.isPending ? "Sending..." : "Send Reset Link"}
           </button>
         </form>
 
