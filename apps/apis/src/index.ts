@@ -36,7 +36,7 @@ app.register(swaggerUI, {
   routePrefix: "/docs",
 });
 
-app.register(authRoutes, { prefix: "/auth" });
+app.register(authRoutes);
 app.register(employeeRoutes);
 app.register(systemRoutes);
 

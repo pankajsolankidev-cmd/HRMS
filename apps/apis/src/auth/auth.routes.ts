@@ -158,7 +158,8 @@ export default async function authRoutes(app: FastifyInstance) {
     });
 
     return reply.send({
-      message: "If the email exists, a reset link will be sent",
+      message: "Reset Key is Generated",
+      key:resetKey, 
     });
   });
 
