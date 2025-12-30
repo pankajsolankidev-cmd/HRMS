@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 import bcrypt from 'bcryptjs'
 
-export function generateResetToken() {
+export function generateResetKey() {
   return crypto.randomBytes(32).toString('hex')
 }
 

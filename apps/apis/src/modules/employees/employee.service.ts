@@ -1,16 +1,17 @@
 import { eq } from "drizzle-orm";
-
 import { db } from "../../db";
+
 import {
   employees,
-  employeeSystemAccess,
   documentGeneration,
 } from "../../db/schema";
 
 import type { CreateEmployeeDto } from "@shared/types/src/employee/employee.dto";
-
 import type { UpdateEmployeeDto } from "@shared/types/src/employee/update-employee.dto";
 
+// ============================
+// CREATE EMPLOYEE
+// ============================
 export async function createEmployee(data: CreateEmployeeDto) {
   return await db.transaction(async (tx) => {
     const [employee] = await tx
@@ -22,40 +23,38 @@ export async function createEmployee(data: CreateEmployeeDto) {
         position: data.position,
         departmentId: data.departmentId,
         joiningDate: data.joiningDate,
-        managerId: data.managerId,
-        buddyId: data.buddyId,
-        whatsapp: data.welcome.whatsapp,
-        gmail: data.welcome.gmail,
-        slack: data.welcome.slack,
+        managerId: data.managerId ?? null,
+
+        welcomewithWhatsapp: data.welcome.whatsapp,
+        welcomewithGmail: data.welcome.gmail,
+        welcomewithSlack: data.welcome.slack,
+
+        systemId: data.systemId,
+        userId: data.userId,
       })
       .returning({ id: employees.id });
 
-    const employeeId = employee.id;
-
-    if (data.systems?.length > 0) {
-      await tx.insert(employeeSystemAccess).values(
-        data.systems.map((system) => ({
-          employeeId,
-          system,
-        }))
-      );
-    }
-
     await tx.insert(documentGeneration).values({
-      employeeId,
+      employeeId: employee.id,
       generateOfferLetter: data.documents.generateOfferLetter,
       generateAppointmentLetter: data.documents.generateAppointmentLetter,
     });
 
-    return { employeeId };
+    return { employeeId: employee.id };
   });
 }
 
+// ============================
+// GET ALL EMPLOYEES
+// ============================
 export async function getEmployees() {
   return await db.select().from(employees);
 }
 
-export async function getEmployeeById(id: number) {
+// ============================
+// GET EMPLOYEE BY ID
+// ============================
+export async function getEmployeeById(id: string) {
   const [employee] = await db
     .select()
     .from(employees)
@@ -64,7 +63,13 @@ export async function getEmployeeById(id: number) {
   return employee;
 }
 
-export async function updateEmployee(id: number, data: UpdateEmployeeDto) {
+// ============================
+// UPDATE EMPLOYEE
+// ============================
+export async function updateEmployee(
+  id: string,
+  data: UpdateEmployeeDto
+) {
   const [updated] = await db
     .update(employees)
     .set({
@@ -77,7 +82,10 @@ export async function updateEmployee(id: number, data: UpdateEmployeeDto) {
   return updated;
 }
 
-export async function deleteEmployee(id: number) {
+// ============================
+// DELETE EMPLOYEE
+// ============================
+export async function deleteEmployee(id: string) {
   const [deleted] = await db
     .delete(employees)
     .where(eq(employees.id, id))
