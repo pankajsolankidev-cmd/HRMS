@@ -70,7 +70,7 @@ export default async function authRoutes(app: FastifyInstance) {
           error: "User with this email or username already exists",
         });
       }
-      console.error(err);
+      console.error("Signup error:", err);
       return reply.status(500).send({ error: "Internal server error" });
     }
   });
@@ -90,8 +90,8 @@ export default async function authRoutes(app: FastifyInstance) {
       return reply.status(401).send({ error: "Invalid credentials" });
     }
 
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) {
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
       return reply.status(401).send({ error: "Invalid credentials" });
     }
 
@@ -129,9 +129,9 @@ export default async function authRoutes(app: FastifyInstance) {
     const tokens = await db.select().from(refreshTokens);
 
     for (const record of tokens) {
-      const valid = await compareToken(refreshToken, record.tokenHash);
+      const isValid = await compareToken(refreshToken, record.tokenHash);
+      if (!isValid) continue;
 
-      if (!valid) continue;
       if (record.expiresAt < new Date()) {
         return reply.status(401).send({ error: "Refresh token expired" });
       }
@@ -203,9 +203,9 @@ export default async function authRoutes(app: FastifyInstance) {
     const tokens = await db.select().from(passwordResetTokens);
 
     for (const record of tokens) {
-      const valid = await compareResetToken(token, record.tokenHash);
+      const isValid = await compareResetToken(token, record.tokenHash);
+      if (!isValid) continue;
 
-      if (!valid) continue;
       if (record.used || record.expiresAt < new Date()) {
         return reply.status(400).send({
           error: "Reset token is invalid or expired",
