@@ -3,9 +3,10 @@ export interface UpdateEmployeeDto {
   lastName?: string
   position?: string
   departmentId?: number
-  managerId?: number
-  buddyId?: number
-  whatsapp?: boolean
-  gmail?: boolean
-  slack?: boolean
+  managerId?: string | null
+  systemId?: string
+
+  welcomewithWhatsapp?: boolean
+  welcomewithGmail?: boolean
+  welcomewithSlack?: boolean
 }

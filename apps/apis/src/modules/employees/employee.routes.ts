@@ -9,10 +9,11 @@ import {
 } from "./employee.service";
 
 import type { CreateEmployeeDto } from "@shared/types/src/employee/employee.dto";
-
 import type { UpdateEmployeeDto } from "@shared/types/src/employee/update-employee.dto";
 
 export default async function employeeRoutes(app: FastifyInstance) {
+
+  // CREATE
   app.post("/employees", async (request, reply) => {
     const body = request.body as CreateEmployeeDto;
 
@@ -35,15 +36,17 @@ export default async function employeeRoutes(app: FastifyInstance) {
     }
   });
 
+  // GET ALL
   app.get("/employees", async (_request, reply) => {
     const data = await getEmployees();
     return reply.send(data);
   });
 
+  // GET BY ID
   app.get("/employees/:id", async (request, reply) => {
     const { id } = request.params as { id: string };
 
-    const employee = await getEmployeeById(Number(id));
+    const employee = await getEmployeeById(id);
 
     if (!employee) {
       return reply.status(404).send({ error: "Employee not found" });
@@ -52,11 +55,12 @@ export default async function employeeRoutes(app: FastifyInstance) {
     return reply.send(employee);
   });
 
+  // UPDATE
   app.put("/employees/:id", async (request, reply) => {
     const { id } = request.params as { id: string };
     const body = request.body as UpdateEmployeeDto;
 
-    const updated = await updateEmployee(Number(id), body);
+    const updated = await updateEmployee(id, body);
 
     if (!updated) {
       return reply.status(404).send({ error: "Employee not found" });
@@ -67,10 +71,11 @@ export default async function employeeRoutes(app: FastifyInstance) {
     });
   });
 
+  // DELETE
   app.delete("/employees/:id", async (request, reply) => {
     const { id } = request.params as { id: string };
 
-    const deleted = await deleteEmployee(Number(id));
+    const deleted = await deleteEmployee(id);
 
     if (!deleted) {
       return reply.status(404).send({ error: "Employee not found" });

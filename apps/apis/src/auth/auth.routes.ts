@@ -6,14 +6,10 @@ import crypto from "crypto";
 
 import { users } from "../db/schema/users.schema";
 import { refreshTokens } from "../db/schema/refresh-tokens.schema";
-import { passwordResetTokens } from "../db/schema";
+import { passwordResetTokens } from "../db/schema/password-reset-tokens.schema";
 import { db } from "../db";
 
-import {
-  generateResetToken,
-  hashResetToken,
-  compareResetToken,
-} from "./password-reset.service";
+import { generateResetToken } from "./password-reset.service";
 
 import type {
   AuthSignUpDto,
@@ -30,14 +26,6 @@ function generateRefreshToken() {
   return crypto.randomBytes(64).toString("hex");
 }
 
-async function hashToken(token: string) {
-  return bcrypt.hash(token, 10);
-}
-
-async function compareToken(token: string, hash: string) {
-  return bcrypt.compare(token, hash);
-}
-
 export default async function authRoutes(app: FastifyInstance) {
   app.post("/signup", async (request, reply) => {
     const { username, email, password } = request.body as AuthSignUpDto;
@@ -52,11 +40,7 @@ export default async function authRoutes(app: FastifyInstance) {
       const [user] = await db
         .insert(users)
         .values({ username, email, password: hashedPassword })
-        .returning({
-          id: users.id,
-          username: users.username,
-          email: users.email,
-        });
+        .returning({ id: users.id, email: users.email });
 
       const accessToken = generateAccessToken({
         id: user.id,
@@ -70,7 +54,6 @@ export default async function authRoutes(app: FastifyInstance) {
           error: "User with this email or username already exists",
         });
       }
-      console.error("Signup error:", err);
       return reply.status(500).send({ error: "Internal server error" });
     }
   });
@@ -79,19 +62,18 @@ export default async function authRoutes(app: FastifyInstance) {
     const { email, password } = request.body as AuthSignInDto;
 
     if (!email || !password) {
-      return reply.status(400).send({
-        error: "Email and password are required",
-      });
+      return reply
+        .status(400)
+        .send({ error: "Email and password are required" });
     }
 
     const [user] = await db.select().from(users).where(eq(users.email, email));
-
     if (!user) {
       return reply.status(401).send({ error: "Invalid credentials" });
     }
 
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    if (!isValidPassword) {
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) {
       return reply.status(401).send({ error: "Invalid credentials" });
     }
 
@@ -101,59 +83,59 @@ export default async function authRoutes(app: FastifyInstance) {
     });
 
     const refreshToken = generateRefreshToken();
-    const refreshTokenHash = await hashToken(refreshToken);
 
     await db.insert(refreshTokens).values({
       userId: user.id,
-      tokenHash: refreshTokenHash,
+      token: refreshToken,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
-    reply.setCookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax",
-      path: "/auth/refresh",
+    return reply.send({
+      accessToken,
+      refreshToken,
     });
-
-    return reply.send({ accessToken });
   });
 
   app.post("/auth/refresh", async (request, reply) => {
-    const refreshToken = request.cookies.refreshToken;
+    const { refreshToken } = request.body as { refreshToken: string };
 
     if (!refreshToken) {
       return reply.status(401).send({ error: "Refresh token missing" });
     }
 
-    const tokens = await db.select().from(refreshTokens);
+    const [record] = await db
+      .select()
+      .from(refreshTokens)
+      .where(eq(refreshTokens.token, refreshToken));
 
-    for (const record of tokens) {
-      const isValid = await compareToken(refreshToken, record.tokenHash);
-      if (!isValid) continue;
-
-      if (record.expiresAt < new Date()) {
-        return reply.status(401).send({ error: "Refresh token expired" });
-      }
-
-      const [user] = await db
-        .select()
-        .from(users)
-        .where(eq(users.id, record.userId));
-
-      const newAccessToken = generateAccessToken({
-        id: user.id,
-        email: user.email,
-      });
-
-      return reply.send({ accessToken: newAccessToken });
+    if (!record || record.expiresAt < new Date()) {
+      return reply
+        .status(401)
+        .send({ error: "Invalid or expired refresh token" });
     }
 
-    return reply.status(401).send({ error: "Invalid refresh token" });
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, record.userId));
+
+    const newAccessToken = generateAccessToken({
+      id: user.id,
+      email: user.email,
+    });
+
+    return reply.send({ accessToken: newAccessToken });
   });
 
-  app.post("/auth/logout", async (_request, reply) => {
-    reply.clearCookie("refreshToken", { path: "/auth/refresh" });
+  app.post("/auth/logout", async (request, reply) => {
+    const { refreshToken } = request.body as { refreshToken: string };
+
+    if (refreshToken) {
+      await db
+        .delete(refreshTokens)
+        .where(eq(refreshTokens.token, refreshToken));
+    }
+
     return reply.send({ message: "Logged out" });
   });
 
@@ -161,7 +143,6 @@ export default async function authRoutes(app: FastifyInstance) {
     const { email } = request.body as { email: string };
 
     const [user] = await db.select().from(users).where(eq(users.email, email));
-
     if (!user) {
       return reply.send({
         message: "If the email exists, a reset link will be sent",
@@ -169,15 +150,12 @@ export default async function authRoutes(app: FastifyInstance) {
     }
 
     const resetToken = generateResetToken();
-    const tokenHash = await hashResetToken(resetToken);
 
     await db.insert(passwordResetTokens).values({
       userId: user.id,
-      tokenHash,
+      token: resetToken,
       expiresAt: new Date(Date.now() + 15 * 60 * 1000),
     });
-
-    
 
     return reply.send({
       message: "If the email exists, a reset link will be sent",
@@ -196,33 +174,32 @@ export default async function authRoutes(app: FastifyInstance) {
       });
     }
 
-    const tokens = await db.select().from(passwordResetTokens);
+    const [record] = await db
+      .select()
+      .from(passwordResetTokens)
+      .where(eq(passwordResetTokens.token, token));
 
-    for (const record of tokens) {
-      const isValid = await compareResetToken(token, record.tokenHash);
-      if (!isValid) continue;
-
-      if (record.used || record.expiresAt < new Date()) {
-        return reply.status(400).send({
-          error: "Reset token is invalid or expired",
-        });
-      }
-
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-      await db
-        .update(users)
-        .set({ password: hashedPassword })
-        .where(eq(users.id, record.userId));
-
-      await db
-        .update(passwordResetTokens)
-        .set({ used: true })
-        .where(eq(passwordResetTokens.id, record.id));
-
-      return reply.send({ message: "Password reset successful" });
+    if (!record || record.isAccepted || record.expiresAt < new Date()) {
+      return reply.status(400).send({
+        error: "Reset token is invalid or expired",
+      });
     }
 
-    return reply.status(400).send({ error: "Invalid reset token" });
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await db
+      .update(users)
+      .set({ password: hashedPassword })
+      .where(eq(users.id, record.userId));
+
+    await db
+      .update(passwordResetTokens)
+      .set({
+        isAccepted: true,
+        acceptedAt: new Date(),
+      })
+      .where(eq(passwordResetTokens.id, record.id));
+
+    return reply.send({ message: "Password reset successful" });
   });
 }

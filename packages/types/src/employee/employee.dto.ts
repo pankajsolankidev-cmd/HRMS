@@ -3,18 +3,20 @@ export interface CreateEmployeeDto {
   lastName: string
   email: string
   position: string
+
   departmentId?: number
   joiningDate: string
-  managerId?: number
-  buddyId?: number
+
+  managerId?: string | null
+
+  systemId: string
+  userId: string
 
   welcome: {
     whatsapp: boolean
     gmail: boolean
     slack: boolean
   }
-
-  systems: string[]
 
   documents: {
     generateOfferLetter: boolean

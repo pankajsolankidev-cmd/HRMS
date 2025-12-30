@@ -1,11 +1,4 @@
-import {
-  pgTable,
-  uuid,
-  text,
-  timestamp,
-  boolean
-} from 'drizzle-orm/pg-core'
-
+import { pgTable, uuid, text, timestamp, boolean } from 'drizzle-orm/pg-core'
 import { users } from './users.schema'
 
 export const passwordResetTokens = pgTable('password_reset_tokens', {
@@ -15,11 +8,10 @@ export const passwordResetTokens = pgTable('password_reset_tokens', {
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
 
-  tokenHash: text('token_hash').notNull(),
+  token: text('token').notNull(),
 
   expiresAt: timestamp('expires_at').notNull(),
-
-  used: boolean('used').default(false).notNull(),
-
+  acceptedAt: timestamp('accepted_at'),
+  isAccepted: boolean('is_accepted').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull()
 })
