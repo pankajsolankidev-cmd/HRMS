@@ -8,7 +8,6 @@ import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
 import { signUpApi } from "../../api/post";
 import { useState } from "react";
-import Label from "../form/Label";
 
 /* ---------------- ZOD SCHEMA ---------------- */
 const signUpSchema = z.object({
@@ -105,16 +104,17 @@ export default function SignUpForm() {
             )}
 
             <form className="space-y-5 mt-6" onSubmit={handleSubmit(onSubmit)}>
-              <Label>Username *</Label>
+
               <Input
+              label="Username *"
                 placeholder="Enter your full name"
                 {...register("username")}
                 error={!!errors.username}
                 hint={errors.username?.message}
               />
 
-              <Label>Email *</Label>
               <Input
+              label="Email *"
                 type="email"
                 placeholder="Enter your email"
                 {...register("email")}
@@ -123,8 +123,8 @@ export default function SignUpForm() {
               />
 
               <div className="relative">
-                <Label>Password *</Label>
                 <Input
+                label="Password *"
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   {...register("password")}

@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
-
+import type { AxiosError } from "axios";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
@@ -12,9 +12,7 @@ import { resetPassword } from "../../api/post";
 
 const resetPasswordSchema = z
   .object({
-    password: z
-      .string()
-      .min(6, "Password must be at least 6 characters"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -22,9 +20,7 @@ const resetPasswordSchema = z
     message: "Passwords do not match",
   });
 
-type ResetPasswordFormData = z.infer<
-  typeof resetPasswordSchema
->;
+type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
 const ResetPassword = () => {
   const { token } = useParams<{ token: string }>();
@@ -43,24 +39,20 @@ const ResetPassword = () => {
   });
 
   const mutation = useMutation({
-  mutationFn: (data: ResetPasswordFormData) => {
-    console.log("🔁 Sending key to backend:", token);
-
-    if (!token) throw new Error("Invalid reset token");
-
-    return resetPassword({
-      key: token,              
-      newPassword: data.password,
-    });
-  },
-  onSuccess: () => {
-    reset();
-    setTimeout(() => {
-      navigate("/signin");
-    }, 2000);
-  },
-});
-
+    mutationFn: (data: ResetPasswordFormData) => {
+      if (!token) throw new Error("Invalid reset token");
+      return resetPassword({
+        key: token,
+        newPassword: data.password,
+      });
+    },
+    onSuccess: () => {
+      reset();
+      setTimeout(() => {
+        navigate("/signin");
+      }, 2000);
+    },
+  });
 
   const onSubmit = (data: ResetPasswordFormData) => {
     mutation.mutate(data);
@@ -79,8 +71,8 @@ const ResetPassword = () => {
 
         {mutation.isError && (
           <p className="text-red-500 text-sm mb-4">
-            {(mutation.error as any)?.response?.data?.message ||
-              "Reset link expired or invalid"}
+            {(mutation.error as AxiosError<{ message?: string }>)?.response?.data
+          ?.message || "Reset link expired or invalid"}
           </p>
         )}
 
@@ -90,15 +82,13 @@ const ResetPassword = () => {
           </p>
         )}
 
-        <form
-          className="space-y-5"
-          onSubmit={handleSubmit(onSubmit)}
-        >
-
+        <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
           <div>
-            <Label>New Password *</Label>
+
             <div className="relative">
               <Input
+                required
+                label="New Password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter new password"
                 {...register("password")}
@@ -119,8 +109,9 @@ const ResetPassword = () => {
           </div>
 
           <div>
-            <Label>Confirm Password *</Label>
             <Input
+              required
+              label="Confirm Password"
               type={showPassword ? "text" : "password"}
               placeholder="Confirm new password"
               {...register("confirmPassword")}

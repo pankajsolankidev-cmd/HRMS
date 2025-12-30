@@ -7,7 +7,6 @@ const api = axios.create({
   withCredentials: true,
 });
 
-/* ================= REQUEST ================= */
 api.interceptors.request.use((config) => {
   const token = Cookies.get("access");
   if (token) {
@@ -16,7 +15,6 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-/* ================= RESPONSE ================= */
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
@@ -44,18 +42,4 @@ api.interceptors.response.use(
 
 export default api;
 
-
-// // api/axios.ts
-// import axios from "axios";
-
-// const api = axios.create({
-//   baseURL: "http://192.168.1.35:4000",
-//   withCredentials: true,
-// });
-// api.interceptors.response.use(
-//   (response) => response,
-//   (error) => Promise.reject(error)
-// );
-
-// export default api;
 

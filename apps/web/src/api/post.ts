@@ -41,7 +41,6 @@ export const resetPassword = async (params: {
   return res.data;
 };
 
-
 export const addEmployee = async (payload: any) => {
   const res = await api.post("/employees", payload);
   return res.data;

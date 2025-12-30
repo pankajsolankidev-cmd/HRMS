@@ -9,6 +9,7 @@ import Input from "../form/input/InputField";
 
 import { z } from "zod";
 import { forgetPassword } from "../../api/post";
+import type { AxiosError } from "axios";
 
 const forgetPasswordSchema = z.object({
   email: z
@@ -17,9 +18,7 @@ const forgetPasswordSchema = z.object({
     .email("Enter a valid email address"),
 });
 
-type ForgetPasswordFormData = z.infer<
-  typeof forgetPasswordSchema
->;
+type ForgetPasswordFormData = z.infer<typeof forgetPasswordSchema>;
 
 const ForgetPassword = () => {
   const navigate = useNavigate();
@@ -36,18 +35,14 @@ const ForgetPassword = () => {
   });
 
   const mutation = useMutation({
-    mutationFn: (data: ForgetPasswordFormData) =>
-      forgetPassword(data.email),
+    mutationFn: (data: ForgetPasswordFormData) => forgetPassword(data.email),
 
     onSuccess: (data: any) => {
       reset();
 
-      // 👇 DEV / manual testing only
       if (data?.key) {
         setKey(data.key);
       }
-
-      console.log("Backend response 👉", data);
     },
   });
 
@@ -68,8 +63,8 @@ const ForgetPassword = () => {
 
         {mutation.isError && (
           <p className="text-red-500 text-sm mb-4">
-            {(mutation.error as any)?.response?.data?.message ||
-              "Something went wrong"}
+            {(mutation.error as AxiosError<{ message?: string }>)?.response
+              ?.data?.message || "Reset link expired or invalid"}
           </p>
         )}
 
@@ -84,8 +79,9 @@ const ForgetPassword = () => {
           onSubmit={handleSubmit(onSubmit)}
         >
           <div>
-            <Label>Email *</Label>
             <Input
+              required
+              label="Email"
               type="email"
               placeholder="info@gmail.com"
               {...register("email")}
@@ -103,7 +99,6 @@ const ForgetPassword = () => {
           </button>
         </form>
 
-        {/* 👇 DEV ONLY: Redirect button */}
         {key && (
           <button
             onClick={() => navigate(`/reset-password/${key}`)}
