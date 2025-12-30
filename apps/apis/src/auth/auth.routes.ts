@@ -6,6 +6,7 @@ import crypto from "crypto";
 
 import { users } from "../db/schema/users.schema";
 import { refreshTokens } from "../db/schema/refresh-tokens.schema";
+<<<<<<< HEAD
 import { passwordResetTokens } from "../db/schema";
 import { db } from "../db";
 
@@ -14,6 +15,9 @@ import {
   hashResetToken,
   compareResetToken,
 } from "./password-reset.service";
+=======
+import { db } from "../db";
+>>>>>>> main
 
 import type {
   AuthSignUpDto,
@@ -51,7 +55,15 @@ export default async function authRoutes(app: FastifyInstance) {
     try {
       const [user] = await db
         .insert(users)
+<<<<<<< HEAD
         .values({ username, email, password: hashedPassword })
+=======
+        .values({
+          username,
+          email,
+          password: hashedPassword,
+        })
+>>>>>>> main
         .returning({
           id: users.id,
           username: users.username,
@@ -70,6 +82,10 @@ export default async function authRoutes(app: FastifyInstance) {
           error: "User with this email or username already exists",
         });
       }
+<<<<<<< HEAD
+=======
+
+>>>>>>> main
       console.error("Signup error:", err);
       return reply.status(500).send({ error: "Internal server error" });
     }
@@ -91,6 +107,10 @@ export default async function authRoutes(app: FastifyInstance) {
     }
 
     const isValidPassword = await bcrypt.compare(password, user.password);
+<<<<<<< HEAD
+=======
+
+>>>>>>> main
     if (!isValidPassword) {
       return reply.status(401).send({ error: "Invalid credentials" });
     }
@@ -109,6 +129,7 @@ export default async function authRoutes(app: FastifyInstance) {
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
+<<<<<<< HEAD
     reply.setCookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: false,
@@ -121,6 +142,16 @@ export default async function authRoutes(app: FastifyInstance) {
 
   app.post("/auth/refresh", async (request, reply) => {
     const refreshToken = request.cookies.refreshToken;
+=======
+    return reply.status(200).send({
+      accessToken,
+      refreshToken,
+    });
+  });
+
+  app.post("/auth/refresh", async (request, reply) => {
+    const { refreshToken } = request.body as { refreshToken: string };
+>>>>>>> main
 
     if (!refreshToken) {
       return reply.status(401).send({ error: "Refresh token missing" });
@@ -130,8 +161,14 @@ export default async function authRoutes(app: FastifyInstance) {
 
     for (const record of tokens) {
       const isValid = await compareToken(refreshToken, record.tokenHash);
+<<<<<<< HEAD
       if (!isValid) continue;
 
+=======
+
+      if (!isValid) continue;
+
+>>>>>>> main
       if (record.expiresAt < new Date()) {
         return reply.status(401).send({ error: "Refresh token expired" });
       }
@@ -151,6 +188,7 @@ export default async function authRoutes(app: FastifyInstance) {
 
     return reply.status(401).send({ error: "Invalid refresh token" });
   });
+<<<<<<< HEAD
 
   app.post("/auth/logout", async (_request, reply) => {
     reply.clearCookie("refreshToken", {
@@ -228,5 +266,10 @@ export default async function authRoutes(app: FastifyInstance) {
     }
 
     return reply.status(400).send({ error: "Invalid reset token" });
+=======
+
+  app.post("/auth/logout", async (_request, reply) => {
+    return reply.send({ message: "Logged out" });
+>>>>>>> main
   });
 }
