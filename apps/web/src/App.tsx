@@ -18,6 +18,7 @@ import PublicRoute from "./pages/OtherPage/PublicRoute";
 import Employee from "./pages/EmployeeTable/Employee";
 import AddEmployee from "./pages/EmployeeTable/AddEditEmployee";
 import AuthLayout from "./pages/AuthPages/AuthPageLayout";
+import ComponentCrud from "./pages/Component/ComponentCrud";
 
 function AppRoutes() {
   return (
@@ -40,6 +41,8 @@ function AppRoutes() {
           <Route path="/employees" element={<Employee />} />
           <Route path="/add-employee" element={<AddEmployee />} />
           <Route path="/employees/:id" element={<AddEmployee />} />
+          <Route path="/component" element={<ComponentCrud/>} />
+          {/* <Route path="/component/:id" element={<Component/>} /> */}
         </Route>
       </Route>
 
