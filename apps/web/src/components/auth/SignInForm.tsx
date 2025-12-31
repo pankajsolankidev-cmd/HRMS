@@ -42,7 +42,6 @@ export default function SignInForm() {
   const signInMutation = useMutation({
     mutationFn: signInApi,
     onSuccess: (res) => {
-      console.log(res);
       const token = res.accessToken;
       Cookies.set("access", token);
       navigate("/dashboard", { replace: true });
@@ -94,7 +93,8 @@ export default function SignInForm() {
 
             <form className="space-y-5 mt-8" onSubmit={handleSubmit(onSubmit)}>
               <Input
-              label="Email *"
+              required
+              label="Email"
                 type="email"
                 placeholder="info@gmail.com"
                 {...register("email")}
@@ -104,7 +104,8 @@ export default function SignInForm() {
 
               <div className="relative">
                 <Input
-                label="Password *"
+                required
+                label="Password "
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   {...register("password")}

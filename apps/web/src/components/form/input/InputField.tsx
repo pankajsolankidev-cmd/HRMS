@@ -43,7 +43,6 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
     return (
       <div className="space-y-1.5">
-        {/* ✅ LABEL */}
         {label && (
           <label
             htmlFor={inputId}
@@ -54,7 +53,6 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           </label>
         )}
 
-        {/* ✅ INPUT */}
         <input
           ref={ref}
           id={inputId}
@@ -64,7 +62,6 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           {...rest}
         />
 
-        {/* ✅ HINT / ERROR TEXT */}
         {hint && (
           <p
             className={`text-xs ${

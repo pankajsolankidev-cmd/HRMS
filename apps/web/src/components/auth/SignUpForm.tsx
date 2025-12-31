@@ -106,7 +106,8 @@ export default function SignUpForm() {
             <form className="space-y-5 mt-6" onSubmit={handleSubmit(onSubmit)}>
 
               <Input
-              label="Username *"
+              required
+              label="Username"
                 placeholder="Enter your full name"
                 {...register("username")}
                 error={!!errors.username}
@@ -114,7 +115,8 @@ export default function SignUpForm() {
               />
 
               <Input
-              label="Email *"
+              required
+              label="Email"
                 type="email"
                 placeholder="Enter your email"
                 {...register("email")}
@@ -124,7 +126,8 @@ export default function SignUpForm() {
 
               <div className="relative">
                 <Input
-                label="Password *"
+                required
+                label="Password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   {...register("password")}

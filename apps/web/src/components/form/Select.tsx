@@ -26,7 +26,6 @@ const Select: React.FC<SelectProps> = ({
 }) => {
   return (
     <div className="space-y-1.5">
-      {/* ✅ LABEL */}
       {label && (
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           {label}
@@ -34,7 +33,6 @@ const Select: React.FC<SelectProps> = ({
         </label>
       )}
 
-      {/* ✅ SELECT */}
       <select
         className={`
           h-11 w-full rounded-lg border px-4 py-2.5 text-sm
