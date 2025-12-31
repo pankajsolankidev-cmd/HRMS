@@ -11,9 +11,16 @@ import type {
   CreateSystemDto,
   UpdateSystemDto,
 } from "@shared/types/src/system/system.dto";
+import { verifyAccessToken } from "../../middlewares/auth.middlewares";
 
 export default async function systemRoutes(app: FastifyInstance) {
-  app.post("/systems", async (request, reply) => {
+  const secured = {
+    preHandler: verifyAccessToken,
+    schema: {
+      security: [{ bearerAuth: [] }]
+    }
+  }
+  app.post("/systems",secured, async (request, reply) => {
     const body = request.body as CreateSystemDto;
 
     const system = await createSystem(body);
@@ -21,11 +28,11 @@ export default async function systemRoutes(app: FastifyInstance) {
     return reply.status(201).send(system);
   });
 
-  app.get("/systems", async () => {
+  app.get("/systems",secured, async () => {
     return await getSystems();
   });
 
-  app.get("/systems/:id", async (request, reply) => {
+  app.get("/systems/:id",secured, async (request, reply) => {
     const { id } = request.params as { id: string };
 
     const system = await getSystemById(id);
@@ -36,7 +43,7 @@ export default async function systemRoutes(app: FastifyInstance) {
     return system;
   });
 
-  app.put("/systems/:id", async (request, reply) => {
+  app.put("/systems/:id",secured, async (request, reply) => {
     const { id } = request.params as { id: string };
     const body = request.body as UpdateSystemDto;
 
@@ -50,7 +57,7 @@ export default async function systemRoutes(app: FastifyInstance) {
     };
   });
 
-  app.delete("/systems/:id", async (request, reply) => {
+  app.delete("/systems/:id",secured, async (request, reply) => {
     const { id } = request.params as { id: string };
 
     const deleted = await deleteSystem(id);

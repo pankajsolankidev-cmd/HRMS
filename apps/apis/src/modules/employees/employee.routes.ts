@@ -11,39 +11,48 @@ import {
 import type { CreateEmployeeDto } from "@shared/types/src/employee/employee.dto";
 import type { UpdateEmployeeDto } from "@shared/types/src/employee/update-employee.dto";
 
+import { verifyAccessToken } from "../../middlewares/auth.middlewares";
+
 export default async function employeeRoutes(app: FastifyInstance) {
+  const secured = {
+    preHandler: verifyAccessToken,
+    schema: {
+      security: [{ bearerAuth: [] }],
+    },
+  };
+  app.post(
+    "/employees",
+    secured,
 
-  // CREATE
-  app.post("/employees", async (request, reply) => {
-    const body = request.body as CreateEmployeeDto;
+    async (request, reply) => {
+      const body = request.body as CreateEmployeeDto;
 
-    try {
-      const result = await createEmployee(body);
+      try {
+        const result = await createEmployee(body);
 
-      return reply.status(201).send({
-        message: "Employee created successfully",
-        employeeId: result.employeeId,
-      });
-    } catch (err: any) {
-      if (err?.code === "23505") {
-        return reply.status(409).send({
-          error: "Employee with this email already exists",
+        return reply.status(201).send({
+          message: "Employee created successfully",
+          employeeId: result.employeeId,
         });
+      } catch (err: any) {
+        if (err?.code === "23505") {
+          return reply.status(409).send({
+            error: "Employee with this email already exists",
+          });
+        }
+
+        console.error("Create employee error:", err);
+        return reply.status(500).send({ error: "Internal server error" });
       }
-
-      console.error("Create employee error:", err);
-      return reply.status(500).send({ error: "Internal server error" });
     }
-  });
+  );
 
-  // GET ALL
-  app.get("/employees", async (_request, reply) => {
+  app.get("/employees", secured, async (_request, reply) => {
     const data = await getEmployees();
     return reply.send(data);
   });
 
-  // GET BY ID
-  app.get("/employees/:id", async (request, reply) => {
+  app.get("/employees/:id", secured, async (request, reply) => {
     const { id } = request.params as { id: string };
 
     const employee = await getEmployeeById(id);
@@ -55,8 +64,7 @@ export default async function employeeRoutes(app: FastifyInstance) {
     return reply.send(employee);
   });
 
-  // UPDATE
-  app.put("/employees/:id", async (request, reply) => {
+  app.put("/employees/:id", secured, async (request, reply) => {
     const { id } = request.params as { id: string };
     const body = request.body as UpdateEmployeeDto;
 
@@ -71,8 +79,7 @@ export default async function employeeRoutes(app: FastifyInstance) {
     });
   });
 
-  // DELETE
-  app.delete("/employees/:id", async (request, reply) => {
+  app.delete("/employees/:id", secured, async (request, reply) => {
     const { id } = request.params as { id: string };
 
     const deleted = await deleteEmployee(id);

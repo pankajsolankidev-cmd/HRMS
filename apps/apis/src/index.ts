@@ -11,6 +11,7 @@ import cookie from "@fastify/cookie";
 import authRoutes from "../src/auth/auth.routes";
 import employeeRoutes from "./modules/employees/employee.routes";
 import systemRoutes from "./modules/systems/system.routes";
+import authPlugin from "./plugins/auth.plugin";
 
 const app = Fastify({ logger: true });
 
@@ -25,19 +26,32 @@ app.register(cookie);
 app.register(swagger, {
   openapi: {
     info: {
-      title: "HRM API",
-      version: "1.0.0",
-      description: "API documentation for HRM system",
+      title: 'HRM API',
+      version: '1.0.0'
     },
-  },
-});
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT'
+        }
+      }
+    }
+  }
+})
+
 
 app.register(swaggerUI, {
   routePrefix: "/docs",
 });
-
+app.register(authPlugin);
 app.register(authRoutes);
-app.register(employeeRoutes);
+app.register(employeeRoutes,{
+  schema:{
+    security: [{ bearerAuth: [] }]
+  }
+});
 app.register(systemRoutes);
 
 app.get("/health", async () => {
