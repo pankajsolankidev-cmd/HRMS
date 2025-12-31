@@ -12,6 +12,7 @@ import authRoutes from "../src/auth/auth.routes";
 import employeeRoutes from "./modules/employees/employee.routes";
 import systemRoutes from "./modules/systems/system.routes";
 import authPlugin from "./plugins/auth.plugin";
+import componentRoutes from "./modules/components/component.routes";
 
 const app = Fastify({ logger: true });
 
@@ -53,6 +54,7 @@ app.register(employeeRoutes,{
   }
 });
 app.register(systemRoutes);
+app.register(componentRoutes);
 
 app.get("/health", async () => {
   return { status: "API is running 🚀" };
