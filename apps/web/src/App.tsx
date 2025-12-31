@@ -1,4 +1,9 @@
-import { BrowserRouter as Router,Routes,Route,useLocation} from "react-router";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router";
 import { AnimatePresence } from "framer-motion";
 import SignInForm from "./components/auth/SignInForm";
 import SignUpForm from "./components/auth/SignUpForm";
@@ -10,29 +15,34 @@ import { ScrollToTop } from "./components/common/ScrollToTop";
 import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
 import ResetPassword from "./components/auth/ResetPassword";
 import PublicRoute from "./pages/OtherPage/PublicRoute";
+import Employee from "./pages/EmployeeTable/Employee";
+import AddEmployee from "./pages/EmployeeTable/AddEditEmployee";
+import AuthLayout from "./pages/AuthPages/AuthPageLayout";
 
 function AppRoutes() {
   return (
     <Routes>
-
-      {/* 🔓 PUBLIC ROUTES (only when NOT logged in) */}
+      {/* 🔓 PUBLIC ROUTES */}
       <Route element={<PublicRoute />}>
+      <Route element={<AuthLayout/>}>
         <Route path="/" element={<SignInForm />} />
         <Route path="/signin" element={<SignInForm />} />
         <Route path="/signup" element={<SignUpForm />} />
-        <Route path="/forget-password" element={<ForgetPassword />} />
+        <Route path="/forgot-password" element={<ForgetPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
       </Route>
+      </Route>
 
-      {/* 🔐 PROTECTED ROUTES (only when logged in) */}
+      {/* 🔐 PROTECTED ROUTES */}
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Home />} />
-          
+          <Route path="/employees" element={<Employee />} />
+          <Route path="/add-employee" element={<AddEmployee />} />
+          <Route path="/employees/:id" element={<AddEmployee />} />
         </Route>
       </Route>
 
-      {/* ❌ NOT FOUND */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

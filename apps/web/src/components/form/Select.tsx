@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React from "react";
 
 interface Option {
   value: string;
@@ -7,57 +7,55 @@ interface Option {
 
 interface SelectProps {
   options: Option[];
+  value?: string;
   placeholder?: string;
   onChange: (value: string) => void;
   className?: string;
-  defaultValue?: string;
+  label?: string;
+  required?: boolean;
 }
 
 const Select: React.FC<SelectProps> = ({
   options,
+  value = "",
   placeholder = "Select an option",
   onChange,
   className = "",
-  defaultValue = "",
+  label,
+  required,
 }) => {
-  // Manage the selected value
-  const [selectedValue, setSelectedValue] = useState<string>(defaultValue);
-
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    setSelectedValue(value);
-    onChange(value); // Trigger parent handler
-  };
-
   return (
-    <select
-      className={`h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 pr-11 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 ${
-        selectedValue
-          ? "text-gray-800 dark:text-white/90"
-          : "text-gray-400 dark:text-gray-400"
-      } ${className}`}
-      value={selectedValue}
-      onChange={handleChange}
-    >
-      {/* Placeholder option */}
-      <option
-        value=""
-        disabled
-        className="text-gray-700 dark:bg-gray-900 dark:text-gray-400"
+    <div className="space-y-1.5">
+      {label && (
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          {label}
+          {required && <span className="text-red-500 ml-0.5">*</span>}
+        </label>
+      )}
+
+      <select
+        className={`
+          h-11 w-full rounded-lg border px-4 py-2.5 text-sm
+          bg-white dark:bg-gray-900
+          text-gray-900 dark:text-gray-100
+          border-gray-300 dark:border-gray-700
+          focus:outline-none focus:ring-2 focus:ring-black/20
+          ${className}
+        `}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
       >
-        {placeholder}
-      </option>
-      {/* Map over options */}
-      {options.map((option) => (
-        <option
-          key={option.value}
-          value={option.value}
-          className="text-gray-700 dark:bg-gray-900 dark:text-gray-400"
-        >
-          {option.label}
+        <option value="" disabled>
+          {placeholder}
         </option>
-      ))}
-    </select>
+
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 };
 

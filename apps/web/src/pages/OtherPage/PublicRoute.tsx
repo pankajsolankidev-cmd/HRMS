@@ -1,11 +1,11 @@
-import { Navigate, Outlet } from "react-router";
+import { Outlet, useNavigate } from "react-router";
+import Cookies from "js-cookie";
 
 export default function PublicRoute() {
-  const token =
-    localStorage.getItem("token") || sessionStorage.getItem("token");
-
+  const navigate = useNavigate();
+  const token = Cookies.get("access");
   if (token) {
-    return <Navigate to="/dashboard" replace />;
+    navigate("/dashboard", { replace: true });
   }
   return <Outlet />;
 }

@@ -1,20 +1,32 @@
-import React from "react";
+import { Outlet } from "react-router";
+import { ThemeToggleButton } from "../../components/common/ThemeToggleButton";
 
-import ThemeTogglerTwo from "../../components/common/ThemeTogglerTwo";
-
-export default function AuthLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AuthLayout() {
+  const toggleDarkMode = () => {
+    document.documentElement.classList.toggle("dark");
+  };
   return (
-    <div className="relative p-6 bg-white z-1 dark:bg-gray-900 sm:p-0">
+    <div className="relative p-6 bg-white dark:bg-gray-900 sm:p-0">
       <div className="relative flex flex-col justify-center w-full h-screen lg:flex-row dark:bg-gray-900 sm:p-0">
-        {children}
-        <div className="fixed z-50 hidden bottom-6 right-6 sm:block">
-          <ThemeTogglerTwo />
-        </div>
+        <Outlet />
       </div>
+      <button
+        onClick={toggleDarkMode}
+        className="
+          fixed bottom-6 right-6 z-[9999]
+          flex items-center justify-center
+          w-12 h-12
+          rounded-full
+          bg-black text-white
+          dark:bg-white dark:text-black
+          shadow-lg
+          transition
+          hover:scale-105
+          active:scale-95
+          "
+      >
+        <ThemeToggleButton />
+      </button>
     </div>
   );
 }

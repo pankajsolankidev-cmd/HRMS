@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router";
 import { useSidebar } from "../context/SidebarContext";
 import GridIcon from "../icons/grid.svg?react";
 import HorizontaLDots from "../icons/horizontal-dots.svg?react";
+import { UserCircleIcon } from "@heroicons/react/24/outline";
 
 // Assume these icons are imported from an icon library
 
@@ -18,6 +19,10 @@ const navItems: NavItem[] = [
     icon: <GridIcon />,
     name: "Dashboard",
     path: "/dashboard",
+  },{
+    icon: (<UserCircleIcon />),
+    name: "Employees",
+    path: "/employees",
   }
 ];
 
@@ -190,7 +195,7 @@ const AppSidebar: React.FC = () => {
           !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
         }`}
       >
-        <Link to="/">
+        <Link to="/dashboard">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               <img
