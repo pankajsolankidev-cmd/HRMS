@@ -1,4 +1,4 @@
-import { IconEdit, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import DataTable from "../../components/tables/BasicTables/DataTable";
@@ -80,11 +80,26 @@ export default function GetComponentTable() {
   ];
 
   return (
-    <DataTable
-      columns={columns}
-      data={components}
-      isLoading={isLoading}
-      isError={isError}
-    />
+    <div className="space-y-4">
+      <div className="flex justify-end items-center">
+        
+
+        <button
+          onClick={() => navigate("/components/new")}
+          className="flex right-0 items-center gap-2 rounded-lg bg-black px-4 py-2 text-white
+                     dark:bg-white dark:text-black"
+        >
+          <IconPlus size={18} />
+          Add Component
+        </button>
+      </div>
+
+      <DataTable
+        columns={columns}
+        data={components}
+        isLoading={isLoading}
+        isError={isError}
+      />
+    </div>
   );
 }

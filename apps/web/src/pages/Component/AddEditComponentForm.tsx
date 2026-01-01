@@ -23,7 +23,7 @@ export default function AddEditComponentForm() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const isEdit = Boolean(id);
+  const isEdit = Boolean(id && id!="new");
 
   const {
     register,

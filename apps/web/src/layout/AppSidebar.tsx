@@ -34,11 +34,8 @@ const navItems: NavItem[] = [
   {
     icon: <UserCircleIcon />,
     name: "Component",
-    subItems: [
-      { name: "Add-Edit-Component", path: "/add-component" },
-      { name: "Components Detail", path: "/components" },
-    ],
-  },
+    path:"/components"
+  }
 ];
 
 const AppSidebar: React.FC = () => {
