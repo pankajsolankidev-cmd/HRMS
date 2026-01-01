@@ -5,8 +5,6 @@ import GridIcon from "../icons/grid.svg?react";
 import HorizontaLDots from "../icons/horizontal-dots.svg?react";
 import { UserCircleIcon } from "@heroicons/react/24/outline";
 
-// Assume these icons are imported from an icon library
-
 type NavItem = {
   name: string;
   icon: React.ReactNode;
@@ -23,7 +21,12 @@ const navItems: NavItem[] = [
     icon: (<UserCircleIcon />),
     name: "Employees",
     path: "/employees",
-  }
+  },
+  {
+    icon: (<UserCircleIcon />),
+    name: "System",
+    path: "/systems",
+  },
 ];
 
 const AppSidebar: React.FC = () => {
@@ -39,7 +42,6 @@ const AppSidebar: React.FC = () => {
   );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // const isActive = (path: string) => location.pathname === path;
   const isActive = useCallback(
     (path: string) => location.pathname === path,
     [location.pathname]

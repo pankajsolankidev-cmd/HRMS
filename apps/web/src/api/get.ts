@@ -10,3 +10,19 @@ export const getEmployeeById = async (id: string) => {
   return res.data;
 };
 
+export const getComponents = async () => {
+  const res = await api.get("/components");
+  return res.data; 
+};
+
+export const getSystems = async () => {
+  const res = await api.get("/systems");
+  return res.data;
+};
+
+export const getSystemById = async (id: string) => {
+  const res = await api.get(`/systems/${id}`);
+  return res.data;
+};
+
+

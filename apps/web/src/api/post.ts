@@ -45,3 +45,16 @@ export const addEmployee = async (payload: any) => {
   const res = await api.post("/employees", payload);
   return res.data;
 };
+
+export const addSystem = async (payload: {
+  name: string;
+  description: string;
+  components: string[]; 
+}) => {
+  return api.post("/systems", {
+    name: payload.name,
+    description: payload.description,
+    componentIds: payload.components, 
+  });
+};
+

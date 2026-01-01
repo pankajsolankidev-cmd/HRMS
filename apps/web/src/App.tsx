@@ -18,11 +18,12 @@ import PublicRoute from "./pages/OtherPage/PublicRoute";
 import Employee from "./pages/EmployeeTable/Employee";
 import AddEmployee from "./pages/EmployeeTable/AddEditEmployee";
 import AuthLayout from "./pages/AuthPages/AuthPageLayout";
+import System from "./pages/SystemTable/System";
+import AddEditSystem from "./pages/SystemTable/AddEditSystem";
 
 function AppRoutes() {
   return (
     <Routes>
-      {/* 🔓 PUBLIC ROUTES */}
       <Route element={<PublicRoute />}>
       <Route element={<AuthLayout/>}>
         <Route path="/" element={<SignInForm />} />
@@ -33,13 +34,15 @@ function AppRoutes() {
       </Route>
       </Route>
 
-      {/* 🔐 PROTECTED ROUTES */}
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Home />} />
           <Route path="/employees" element={<Employee />} />
           <Route path="/add-employee" element={<AddEmployee />} />
           <Route path="/employees/:id" element={<AddEmployee />} />
+          <Route path="/systems" element={<System />} />
+          <Route path="/systems/:id" element={<AddEditSystem />} />
+
         </Route>
       </Route>
 

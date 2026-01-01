@@ -45,7 +45,7 @@ export default function DataTable<T>({
                 <TableCell
                   key={index}
                   isHeader
-                  className="px-6 py-4 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400"
+                  className=" px-6 py-4 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400"
                 >
                   {col.header}
                 </TableCell>
@@ -60,7 +60,7 @@ export default function DataTable<T>({
                 className="hover:bg-gray-50 dark:hover:bg-gray-800/40"
               >
                 {columns.map((col, colIndex) => (
-                  <TableCell key={colIndex} className="px-6 py-5">
+                  <TableCell key={colIndex} className=" px-6 py-5">
                     {col.cell(row)}
                   </TableCell>
                 ))}
