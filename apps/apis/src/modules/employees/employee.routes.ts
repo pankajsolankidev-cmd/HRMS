@@ -8,6 +8,12 @@ import {
   deleteEmployee,
 } from "./employee.service";
 
+import {
+  createEmployeeSchema,
+  updateEmployeeSchema,
+  getEmployeeByIdSchema,
+} from "./employee.schema";
+
 import type { CreateEmployeeDto } from "@shared/types/src/employee/employee.dto";
 import type { UpdateEmployeeDto } from "@shared/types/src/employee/update-employee.dto";
 
@@ -20,76 +26,123 @@ export default async function employeeRoutes(app: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
   };
+
   app.post(
     "/employees",
-    secured,
-
+    {
+      ...secured,
+      schema: {
+        ...secured.schema,
+        ...createEmployeeSchema,
+      },
+    },
     async (request, reply) => {
       const body = request.body as CreateEmployeeDto;
 
       try {
         const result = await createEmployee(body);
-
-        return reply.status(201).send({
+        return reply.code(201).send({
           message: "Employee created successfully",
           employeeId: result.employeeId,
         });
       } catch (err: any) {
         if (err?.code === "23505") {
-          return reply.status(409).send({
+          return reply.code(409).send({
             error: "Employee with this email already exists",
           });
         }
-
-        console.error("Create employee error:", err);
-        return reply.status(500).send({ error: "Internal server error" });
+        request.log.error(err);
+        return reply.code(500).send({ error: "Internal server error" });
       }
     }
   );
 
-  app.get("/employees", secured, async (_request, reply) => {
-    const data = await getEmployees();
-    return reply.send(data);
-  });
-
-  app.get("/employees/:id", secured, async (request, reply) => {
-    const { id } = request.params as { id: string };
-
-    const employee = await getEmployeeById(id);
-
-    if (!employee) {
-      return reply.status(404).send({ error: "Employee not found" });
+  app.get(
+    "/employees",
+    {
+      ...secured,
+      schema: {
+        ...secured.schema,
+        tags: ["Employees"],
+      },
+    },
+    async () => {
+      return await getEmployees();
     }
+  );
 
-    return reply.send(employee);
-  });
+  app.get(
+    "/employees/:id",
+    {
+      ...secured,
+      schema: {
+        ...secured.schema,
+        ...getEmployeeByIdSchema,
+      },
+    },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const employee = await getEmployeeById(id);
 
-  app.put("/employees/:id", secured, async (request, reply) => {
-    const { id } = request.params as { id: string };
-    const body = request.body as UpdateEmployeeDto;
+      if (!employee) {
+        return reply.code(404).send({ error: "Employee not found" });
+      }
 
-    const updated = await updateEmployee(id, body);
-
-    if (!updated) {
-      return reply.status(404).send({ error: "Employee not found" });
+      return employee;
     }
+  );
 
-    return reply.send({
-      message: "Employee updated successfully",
-    });
-  });
+  app.put(
+    "/employees/:id",
+    {
+      ...secured,
+      schema: {
+        ...secured.schema,
+        ...updateEmployeeSchema,
+      },
+    },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const body = request.body as UpdateEmployeeDto;
 
-  app.delete("/employees/:id", secured, async (request, reply) => {
-    const { id } = request.params as { id: string };
+      const updated = await updateEmployee(id, body);
+      if (!updated) {
+        return reply.code(404).send({ error: "Employee not found" });
+      }
 
-    const deleted = await deleteEmployee(id);
-
-    if (!deleted) {
-      return reply.status(404).send({ error: "Employee not found" });
+      return {
+        message: "Employee updated successfully",
+      };
     }
+  );
 
-    return reply.send({
-      message: "Employee deleted successfully",
-    });
-  });
+  app.delete(
+    "/employees/:id",
+    {
+      ...secured,
+      schema: {
+        ...secured.schema,
+        tags: ["Employees"],
+        params: {
+          type: "object",
+          required: ["id"],
+          properties: {
+            id: { type: "string" },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+
+      const deleted = await deleteEmployee(id);
+      if (!deleted) {
+        return reply.code(404).send({ error: "Employee not found" });
+      }
+
+      return {
+        message: "Employee deleted successfully",
+      };
+    }
+  );
 }
