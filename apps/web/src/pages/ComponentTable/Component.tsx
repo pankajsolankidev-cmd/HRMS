@@ -1,7 +1,7 @@
 import ComponentCard from "../../components/common/ComponentCard";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
-import ComponentCrud from "./ComponentCrud";
+import GetComponentTable from "../Component/GetComponentTable";
 
 export default function Employee() {
   return (
@@ -13,7 +13,7 @@ export default function Employee() {
       <PageBreadcrumb pageTitle="Employee tables" />
       <div className="space-y-6">
         <ComponentCard title="Employee Details">
-          <ComponentCrud/>
+          <GetComponentTable />
         </ComponentCard>
       </div>
     </>
