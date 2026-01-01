@@ -58,7 +58,6 @@ const AppSidebar: React.FC = () => {
     [location.pathname]
   );
 
-  /* 🔹 calculate submenu height */
   useEffect(() => {
     if (openSubmenu) {
       const key = `${openSubmenu.type}-${openSubmenu.index}`;
@@ -111,7 +110,6 @@ const AppSidebar: React.FC = () => {
                   <>
                     <span className="menu-item-text">{nav.name}</span>
 
-                    {/* 🔽 SUBMENU INDICATOR */}
                     <ChevronDownIcon
                       className={`ml-auto h-4 w-4 transition-transform duration-300
                         ${isOpen ? "rotate-180" : "rotate-0"}
@@ -140,8 +138,6 @@ const AppSidebar: React.FC = () => {
                 </Link>
               )
             )}
-
-            {/* SUBMENU */}
             {nav.subItems && (isExpanded || isHovered || isMobileOpen) && (
               <div
                 ref={(el) => {
