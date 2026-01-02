@@ -1,5 +1,10 @@
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../ui/table";
-
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "../../ui/table";
 
 type Column<T> = {
   header: string;
@@ -21,7 +26,7 @@ export default function DataTable<T>({
 }: DataTableProps<T>) {
   if (isLoading) {
     return (
-      <div className="p-6 text-gray-500 dark:text-gray-400">
+      <div className="p-6 text-center text-gray-500 dark:text-gray-400">
         Loading data...
       </div>
     );
@@ -29,7 +34,7 @@ export default function DataTable<T>({
 
   if (isError) {
     return (
-      <div className="p-6 text-red-600 dark:text-red-400">
+      <div className="p-6 text-center text-red-600 dark:text-red-400">
         Failed to load data
       </div>
     );
@@ -45,7 +50,7 @@ export default function DataTable<T>({
                 <TableCell
                   key={index}
                   isHeader
-                  className="px-6 py-4 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400"
+                  className="px-6 py-4 text-center text-xs font-semibold uppercase text-gray-500 dark:text-gray-400"
                 >
                   {col.header}
                 </TableCell>
@@ -60,8 +65,13 @@ export default function DataTable<T>({
                 className="hover:bg-gray-50 dark:hover:bg-gray-800/40"
               >
                 {columns.map((col, colIndex) => (
-                  <TableCell key={colIndex} className="px-6 py-5">
-                    {col.cell(row)}
+                  <TableCell
+                    key={colIndex}
+                    className="px-6 py-5 text-center align-middle"
+                  >
+                    <div className="flex items-center justify-center">
+                      {col.cell(row)}
+                    </div>
                   </TableCell>
                 ))}
               </TableRow>

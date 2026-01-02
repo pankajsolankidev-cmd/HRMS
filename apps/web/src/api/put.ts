@@ -6,3 +6,11 @@ export const updateEmployee = async ({id,payload,}: {
   const res = await api.put(`/employees/${id}`, payload);
   return res.data;
 };
+
+export const updateComponent = async ({id,payload,}: {
+  id: string;
+  payload: any;
+}) => {
+  const res = await api.put(`/components/${id}`, payload);
+  return res.data;
+};

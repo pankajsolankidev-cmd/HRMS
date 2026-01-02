@@ -8,7 +8,6 @@ import Input from "../form/input/InputField";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
 import { signInApi } from "../../api/post";
-import Label from "../form/Label";
 import Cookies from "js-cookie";
 
 /* ---------------- ZOD SCHEMA ---------------- */
