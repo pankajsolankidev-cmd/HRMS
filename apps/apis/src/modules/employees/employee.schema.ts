@@ -29,18 +29,22 @@ export const createEmployeeSchema = {
       joiningDate: { type: "string", format: "date" },
 
       managerId: { type: ["string", "null"] },
-
       systemId: { type: ["string", "null"] },
       userId: { type: ["string", "null"] },
 
       welcome: {
         type: "object",
-        required: ["whatsapp", "gmail", "slack"],
+        required: [
+          "welcomewithWhatsapp",
+          "welcomewithGmail",
+          "welcomewithSlack",
+        ],
         properties: {
-          whatsapp: { type: "boolean" },
-          gmail: { type: "boolean" },
-          slack: { type: "boolean" },
+          welcomewithWhatsapp: { type: "boolean" },
+          welcomewithGmail: { type: "boolean" },
+          welcomewithSlack: { type: "boolean" },
         },
+        additionalProperties: false,
       },
 
       documents: {
@@ -50,16 +54,18 @@ export const createEmployeeSchema = {
           generateOfferLetter: { type: "boolean" },
           generateAppointmentLetter: { type: "boolean" },
         },
+        additionalProperties: false,
       },
     },
+    additionalProperties: false,
   },
 
   response: {
     201: {
       type: "object",
       properties: {
-        message: { type: "string" },
         employeeId: { type: "string" },
+        userId: { type: "string" },
       },
     },
     409: errorResponse,
@@ -111,10 +117,11 @@ export const updateEmployeeSchema = {
       welcome: {
         type: "object",
         properties: {
-          whatsapp: { type: "boolean" },
-          gmail: { type: "boolean" },
-          slack: { type: "boolean" },
+          welcomewithWhatsapp: { type: "boolean" },
+          welcomewithGmail: { type: "boolean" },
+          welcomewithSlack: { type: "boolean" },
         },
+        additionalProperties: false,
       },
 
       documents: {
@@ -123,11 +130,19 @@ export const updateEmployeeSchema = {
           generateOfferLetter: { type: "boolean" },
           generateAppointmentLetter: { type: "boolean" },
         },
+        additionalProperties: false,
       },
     },
+    additionalProperties: false,
   },
 
   response: {
+    200: {
+      type: "object",
+      properties: {
+        id: { type: "string" },
+      },
+    },
     404: errorResponse,
     500: errorResponse,
   },
