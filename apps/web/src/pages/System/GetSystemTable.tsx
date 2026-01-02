@@ -6,7 +6,6 @@ import DataTable from "../../components/tables/BasicTables/DataTable";
 import { getSystems } from "../../api/get";
 import { deleteSystem } from "../../api/delete";
 import Chip from "../../components/common/Chip";
-import { useEffect } from "react";
 
 type SystemComponent = {
   id: string;
@@ -32,9 +31,7 @@ export default function GetSystemTable() {
     queryKey: ["systems"],
     queryFn: getSystems,
   });
-  useEffect(()=>{
-    console.log(systems)
-  },[systems])
+
   const { mutate: removeSystem } = useMutation({
     mutationFn: deleteSystem,
     onSuccess: () => {
