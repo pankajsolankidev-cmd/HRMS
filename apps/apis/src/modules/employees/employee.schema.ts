@@ -5,6 +5,9 @@ const errorResponse = {
   },
 };
 
+/* =====================================================
+   CREATE EMPLOYEE
+===================================================== */
 export const createEmployeeSchema = {
   tags: ["Employees"],
   security: [{ bearerAuth: [] }],
@@ -30,19 +33,25 @@ export const createEmployeeSchema = {
       joiningDate: { type: "string", format: "date" },
 
       managerId: { type: ["string", "null"] },
+      systemId: { type: ["string", "null"] },
 
-      systemId: { type: "string", nullable: true },
-
+      /* employees table */
       welcome: {
         type: "object",
-        required: ["whatsapp", "gmail", "slack"],
+        required: [
+          "welcomewithWhatsapp",
+          "welcomewithGmail",
+          "welcomewithSlack",
+        ],
         properties: {
-          whatsapp: { type: "boolean" },
-          gmail: { type: "boolean" },
-          slack: { type: "boolean" },
+          welcomewithWhatsapp: { type: "boolean" },
+          welcomewithGmail: { type: "boolean" },
+          welcomewithSlack: { type: "boolean" },
         },
+        additionalProperties: false,
       },
 
+      /* document_generation table */
       documents: {
         type: "object",
         required: ["generateOfferLetter", "generateAppointmentLetter"],
@@ -50,15 +59,18 @@ export const createEmployeeSchema = {
           generateOfferLetter: { type: "boolean" },
           generateAppointmentLetter: { type: "boolean" },
         },
+        additionalProperties: false,
       },
     },
+    additionalProperties: false,
   },
+
   response: {
     201: {
       type: "object",
       properties: {
-        message: { type: "string" },
         employeeId: { type: "string" },
+        userId: { type: "string" },
       },
     },
     409: errorResponse,
@@ -66,11 +78,17 @@ export const createEmployeeSchema = {
   },
 };
 
+/* =====================================================
+   GET ALL EMPLOYEES
+===================================================== */
 export const getEmployeesSchema = {
   tags: ["Employees"],
   security: [{ bearerAuth: [] }],
 };
 
+/* =====================================================
+   GET EMPLOYEE BY ID
+===================================================== */
 export const getEmployeeByIdSchema = {
   tags: ["Employees"],
   security: [{ bearerAuth: [] }],
@@ -86,6 +104,9 @@ export const getEmployeeByIdSchema = {
   },
 };
 
+/* =====================================================
+   UPDATE EMPLOYEE (PATCH)
+===================================================== */
 export const updateEmployeeSchema = {
   tags: ["Employees"],
   security: [{ bearerAuth: [] }],
@@ -97,6 +118,7 @@ export const updateEmployeeSchema = {
       id: { type: "string" },
     },
   },
+
   body: {
     type: "object",
     properties: {
@@ -105,15 +127,47 @@ export const updateEmployeeSchema = {
       position: { type: "string" },
       departmentId: { type: "number" },
       managerId: { type: ["string", "null"] },
-      systemId: { type: "string" },
+      systemId: { type: ["string", "null"] },
+
+      /* employees table */
+      welcome: {
+        type: "object",
+        properties: {
+          welcomewithWhatsapp: { type: "boolean" },
+          welcomewithGmail: { type: "boolean" },
+          welcomewithSlack: { type: "boolean" },
+        },
+        additionalProperties: false,
+      },
+
+      /* document_generation table */
+      documents: {
+        type: "object",
+        properties: {
+          generateOfferLetter: { type: "boolean" },
+          generateAppointmentLetter: { type: "boolean" },
+        },
+        additionalProperties: false,
+      },
     },
+    additionalProperties: false,
   },
+
   response: {
+    200: {
+      type: "object",
+      properties: {
+        id: { type: "string" },
+      },
+    },
     404: errorResponse,
     500: errorResponse,
   },
 };
 
+/* =====================================================
+   DELETE EMPLOYEE
+===================================================== */
 export const deleteEmployeeSchema = {
   tags: ["Employees"],
   security: [{ bearerAuth: [] }],

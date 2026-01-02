@@ -16,7 +16,7 @@ const DEFAULT_EMPLOYEE_PASSWORD: string = (() => {
 })();
 
 export async function createEmployee(data: CreateEmployeeDto) {
-  return await db.transaction(async (tx) => {
+  return db.transaction(async (tx) => {
     const hashedPassword = await bcrypt.hash(DEFAULT_EMPLOYEE_PASSWORD, 10);
 
     const [user] = await tx
@@ -40,9 +40,9 @@ export async function createEmployee(data: CreateEmployeeDto) {
         managerId: data.managerId ?? null,
         systemId: data.systemId ?? null,
 
-        welcomewithWhatsapp: data.welcomewithWhatsapp,
-        welcomewithGmail: data.welcomewithGmail,
-        welcomewithSlack: data.welcomewithSlack,
+        welcomewithWhatsapp: data.welcome.welcomewithWhatsapp,
+        welcomewithGmail: data.welcome.welcomewithGmail,
+        welcomewithSlack: data.welcome.welcomewithSlack,
 
         userId: user.id,
       })
@@ -62,20 +62,77 @@ export async function createEmployee(data: CreateEmployeeDto) {
 }
 
 export async function updateEmployee(id: string, data: UpdateEmployeeDto) {
-  const [updated] = await db
-    .update(employees)
-    .set({
-      ...data,
-      updatedAt: new Date(),
-    })
-    .where(eq(employees.id, id))
-    .returning({ id: employees.id });
+  return db.transaction(async (tx) => {
+    
 
-  return updated;
+    const employeeUpdateData: Partial<typeof employees.$inferInsert> = {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      position: data.position,
+      departmentId: data.departmentId,
+      managerId: data.managerId,
+      systemId: data.systemId,
+
+      welcomewithWhatsapp: data.welcome?.welcomewithWhatsapp,
+      welcomewithGmail: data.welcome?.welcomewithGmail,
+      welcomewithSlack: data.welcome?.welcomewithSlack,
+
+      updatedAt: new Date(),
+    };
+
+    // remove undefined keys
+    Object.keys(employeeUpdateData).forEach(
+      (key) =>
+        employeeUpdateData[key as keyof typeof employeeUpdateData] ===
+          undefined &&
+        delete employeeUpdateData[key as keyof typeof employeeUpdateData]
+    );
+
+    const result = await tx
+      .update(employees)
+      .set(employeeUpdateData)
+      .where(eq(employees.id, id))
+      .returning();
+
+    if (result.length === 0) {
+      throw new Error("Employee not found or nothing to update");
+    }
+
+    /* ===========================
+       DOCUMENT UPDATE
+    =========================== */
+    if (data.documents) {
+      const documentUpdateData: Partial<
+        typeof documentGeneration.$inferInsert
+      > = {
+        generateOfferLetter: data.documents.generateOfferLetter,
+        generateAppointmentLetter:
+          data.documents.generateAppointmentLetter,
+        updatedAt: new Date(),
+      };
+
+      Object.keys(documentUpdateData).forEach(
+        (key) =>
+          documentUpdateData[key as keyof typeof documentUpdateData] ===
+            undefined &&
+          delete documentUpdateData[key as keyof typeof documentUpdateData]
+      );
+
+      await tx
+        .update(documentGeneration)
+        .set(documentUpdateData)
+        .where(eq(documentGeneration.employeeId, id));
+    }
+
+    return {
+      id,
+      message: "Employee updated successfully",
+    };
+  });
 }
 
 export async function getEmployees() {
-  return await db.select().from(employees);
+  return db.select().from(employees);
 }
 
 export async function getEmployeeById(id: string) {
@@ -88,10 +145,16 @@ export async function getEmployeeById(id: string) {
 }
 
 export async function deleteEmployee(id: string) {
-  const [deleted] = await db
-    .delete(employees)
-    .where(eq(employees.id, id))
-    .returning({ id: employees.id });
+  return db.transaction(async (tx) => {
+    await tx
+      .delete(documentGeneration)
+      .where(eq(documentGeneration.employeeId, id));
 
-  return deleted;
+    const [deleted] = await tx
+      .delete(employees)
+      .where(eq(employees.id, id))
+      .returning({ id: employees.id });
+
+    return deleted;
+  });
 }

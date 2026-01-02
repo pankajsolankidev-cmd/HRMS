@@ -6,13 +6,14 @@ export interface CreateEmployeeDto {
 
   departmentId?: number;
   joiningDate: string;
-
   managerId?: string | null;
-  systemId?: string;
+  systemId?: string | null;
 
-  welcomewithWhatsapp: boolean;
-  welcomewithGmail: boolean;
-  welcomewithSlack: boolean;
+  welcome: {
+    welcomewithWhatsapp: boolean;
+    welcomewithGmail: boolean;
+    welcomewithSlack: boolean;
+  };
 
   documents: {
     generateOfferLetter: boolean;
