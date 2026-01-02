@@ -54,3 +54,16 @@ export const addComponent = async (payload: {
   const res = await api.post("/components", payload);
   return res.data;
 };
+
+export const addSystem = async (payload: {
+  name: string;
+  description: string;
+  components: string[];
+}) => {
+  const res = await api.post("/systems", {
+    name: payload.name,
+    description: payload.description,
+    componentIds: payload.components,
+  });
+  return res.data;
+};

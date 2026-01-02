@@ -34,8 +34,13 @@ const navItems: NavItem[] = [
   {
     icon: <UserCircleIcon />,
     name: "Component",
-    path:"/components"
-  }
+    path: "/components",
+  },
+  {
+    icon: <UserCircleIcon />,
+    name: "System",
+    path: "/systems",
+  },
 ];
 
 const AppSidebar: React.FC = () => {
@@ -99,18 +104,15 @@ const AppSidebar: React.FC = () => {
                     : "lg:justify-start"
                 }`}
               >
-                <span className="menu-item-icon-size">
-                  {nav.icon}
-                </span>
+                <span className="menu-item-icon-size">{nav.icon}</span>
 
                 {(isExpanded || isHovered || isMobileOpen) && (
                   <>
                     <span className="menu-item-text">{nav.name}</span>
-
                     <ChevronDownIcon
-                      className={`ml-auto h-4 w-4 transition-transform duration-300
-                        ${isOpen ? "rotate-180" : "rotate-0"}
-                      `}
+                      className={`ml-auto h-4 w-4 transition-transform duration-300 ${
+                        isOpen ? "rotate-180" : "rotate-0"
+                      }`}
                     />
                   </>
                 )}
@@ -125,45 +127,12 @@ const AppSidebar: React.FC = () => {
                       : "menu-item-inactive"
                   }`}
                 >
-                  <span className="menu-item-icon-size">
-                    {nav.icon}
-                  </span>
-
+                  <span className="menu-item-icon-size">{nav.icon}</span>
                   {(isExpanded || isHovered || isMobileOpen) && (
                     <span className="menu-item-text">{nav.name}</span>
                   )}
                 </Link>
               )
-            )}
-            {nav.subItems && (isExpanded || isHovered || isMobileOpen) && (
-              <div
-                ref={(el) => {
-                  subMenuRefs.current[`${menuType}-${index}`] = el;
-                }}
-                className="overflow-hidden transition-all duration-300"
-                style={{
-                  height: isOpen
-                    ? `${subMenuHeight[`${menuType}-${index}`]}px`
-                    : "0px",
-                }}
-              >
-                <ul className="mt-2 space-y-1 ml-9">
-                  {nav.subItems.map((subItem) => (
-                    <li key={subItem.name}>
-                      <Link
-                        to={subItem.path}
-                        className={`menu-dropdown-item ${
-                          isActive(subItem.path)
-                            ? "menu-dropdown-item-active"
-                            : "menu-dropdown-item-inactive"
-                        }`}
-                      >
-                        {subItem.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
             )}
           </li>
         );

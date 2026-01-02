@@ -10,7 +10,6 @@ import { motion } from "framer-motion";
 import { signInApi } from "../../api/post";
 import Cookies from "js-cookie";
 
-/* ---------------- ZOD SCHEMA ---------------- */
 const signInSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
 
@@ -54,7 +53,6 @@ export default function SignInForm() {
   return (
     <div className="w-500 min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
       <div className="relative w-full max-w-4xl h-[500px] bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
-        {/* LEFT OVERLAY */}
         <motion.div
           initial={{ x: "0%" }}
           animate={{ x: "0%" }}
