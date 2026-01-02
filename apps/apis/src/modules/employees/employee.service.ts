@@ -1,19 +1,34 @@
 import { eq } from "drizzle-orm";
-import { db } from "../../db";
+import bcrypt from "bcryptjs";
 
-import {
-  employees,
-  documentGeneration,
-} from "../../db/schema";
+import { db } from "../../db";
+import { employees, documentGeneration, users } from "../../db/schema";
 
 import type { CreateEmployeeDto } from "@shared/types/src/employee/employee.dto";
 import type { UpdateEmployeeDto } from "@shared/types/src/employee/update-employee.dto";
 
-// ============================
-// CREATE EMPLOYEE
-// ============================
+const DEFAULT_EMPLOYEE_PASSWORD: string = (() => {
+  const pwd = process.env.DEFAULT_EMPLOYEE_PASSWORD;
+  if (!pwd) {
+    throw new Error("DEFAULT_EMPLOYEE_PASSWORD is not set in environment");
+  }
+  return pwd;
+})();
+
 export async function createEmployee(data: CreateEmployeeDto) {
   return await db.transaction(async (tx) => {
+    /* ---------- 1️⃣ CREATE USER ---------- */
+    const hashedPassword = await bcrypt.hash(DEFAULT_EMPLOYEE_PASSWORD, 10);
+
+    const [user] = await tx
+      .insert(users)
+      .values({
+        username: `${data.firstName}.${data.lastName}`.toLowerCase(),
+        email: data.email,
+        password: hashedPassword,
+      })
+      .returning({ id: users.id });
+
     const [employee] = await tx
       .insert(employees)
       .values({
@@ -29,8 +44,9 @@ export async function createEmployee(data: CreateEmployeeDto) {
         welcomewithGmail: data.welcome.gmail,
         welcomewithSlack: data.welcome.slack,
 
-        systemId: data.systemId,
-        userId: data.userId,
+        systemId: data.systemId ?? null,
+
+        userId: user.id,
       })
       .returning({ id: employees.id });
 
@@ -40,20 +56,17 @@ export async function createEmployee(data: CreateEmployeeDto) {
       generateAppointmentLetter: data.documents.generateAppointmentLetter,
     });
 
-    return { employeeId: employee.id };
+    return {
+      employeeId: employee.id,
+      userId: user.id,
+    };
   });
 }
 
-// ============================
-// GET ALL EMPLOYEES
-// ============================
 export async function getEmployees() {
   return await db.select().from(employees);
 }
 
-// ============================
-// GET EMPLOYEE BY ID
-// ============================
 export async function getEmployeeById(id: string) {
   const [employee] = await db
     .select()
@@ -63,13 +76,7 @@ export async function getEmployeeById(id: string) {
   return employee;
 }
 
-// ============================
-// UPDATE EMPLOYEE
-// ============================
-export async function updateEmployee(
-  id: string,
-  data: UpdateEmployeeDto
-) {
+export async function updateEmployee(id: string, data: UpdateEmployeeDto) {
   const [updated] = await db
     .update(employees)
     .set({
@@ -82,9 +89,6 @@ export async function updateEmployee(
   return updated;
 }
 
-// ============================
-// DELETE EMPLOYEE
-// ============================
 export async function deleteEmployee(id: string) {
   const [deleted] = await db
     .delete(employees)

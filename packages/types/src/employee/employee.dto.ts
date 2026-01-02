@@ -1,25 +1,24 @@
 export interface CreateEmployeeDto {
-  firstName: string
-  lastName: string
-  email: string
-  position: string
+  firstName: string;
+  lastName: string;
+  email: string;
+  position: string;
 
-  departmentId?: number
-  joiningDate: string
+  departmentId?: number;
+  joiningDate: string;
 
-  managerId?: string | null
+  managerId?: string | null;
 
-  systemId: string
-  userId: string
+  systemId?: string;
 
   welcome: {
-    whatsapp: boolean
-    gmail: boolean
-    slack: boolean
-  }
+    whatsapp: boolean;
+    gmail: boolean;
+    slack: boolean;
+  };
 
   documents: {
-    generateOfferLetter: boolean
-    generateAppointmentLetter: boolean
-  }
+    generateOfferLetter: boolean;
+    generateAppointmentLetter: boolean;
+  };
 }
