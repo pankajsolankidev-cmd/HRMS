@@ -10,6 +10,15 @@ import { passwordResetTokens } from "../db/schema/password-reset-tokens.schema";
 import { db } from "../db";
 
 import { generateResetKey } from "./password-reset.service";
+import {
+  signUpSchema,
+  signInSchema,
+  refreshTokenSchema,
+  logoutSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+} from "./auth.schema";
+
 
 import type {
   AuthSignUpDto,
@@ -27,7 +36,7 @@ function generateRefreshToken() {
 }
 
 export default async function authRoutes(app: FastifyInstance) {
-  app.post("/signup", async (request, reply) => {
+  app.post("/signup", { schema: signUpSchema }, async (request, reply) => {
     const { username, email, password } = request.body as AuthSignUpDto;
 
     if (!username || !email || !password) {
@@ -58,7 +67,7 @@ export default async function authRoutes(app: FastifyInstance) {
     }
   });
 
-  app.post("/signin", async (request, reply) => {
+  app.post("/signin", { schema: signInSchema }, async (request, reply) => {
     const { email, password } = request.body as AuthSignInDto;
 
     if (!email || !password) {
@@ -96,7 +105,7 @@ export default async function authRoutes(app: FastifyInstance) {
     });
   });
 
-  app.post("/auth/refresh", async (request, reply) => {
+  app.post("/auth/refresh", { schema: refreshTokenSchema }, async (request, reply) => {
     const { refreshToken } = request.body as { refreshToken: string };
 
     if (!refreshToken) {
@@ -127,7 +136,7 @@ export default async function authRoutes(app: FastifyInstance) {
     return reply.send({ accessToken: newAccessToken });
   });
 
-  app.post("/auth/logout", async (request, reply) => {
+  app.post("/auth/logout", { schema: logoutSchema }, async (request, reply) => {
     const { refreshToken } = request.body as { refreshToken: string };
 
     if (refreshToken) {
@@ -139,7 +148,7 @@ export default async function authRoutes(app: FastifyInstance) {
     return reply.send({ message: "Logged out" });
   });
 
-  app.post("/auth/forgot-password", async (request, reply) => {
+  app.post("/auth/forgot-password",{ schema: forgotPasswordSchema }, async (request, reply) => {
     const { email } = request.body as { email: string };
 
     const [user] = await db.select().from(users).where(eq(users.email, email));
@@ -163,7 +172,7 @@ export default async function authRoutes(app: FastifyInstance) {
     });
   });
 
-  app.post("/auth/reset-password", async (request, reply) => {
+  app.post("/auth/reset-password", { schema: resetPasswordSchema }, async (request, reply) => {
     const { key, newPassword } = request.body as {
       key: string;
       newPassword: string;

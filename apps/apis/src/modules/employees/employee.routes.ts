@@ -8,11 +8,6 @@ import {
   deleteEmployee,
 } from "./employee.service";
 
-import type { CreateEmployeeDto } from "@shared/types/src/employee/employee.dto";
-import type { UpdateEmployeeDto } from "@shared/types/src/employee/update-employee.dto";
-
-import { verifyAccessToken } from "../../middlewares/auth.middlewares";
-
 import {
   createEmployeeSchema,
   getEmployeesSchema,
@@ -21,12 +16,29 @@ import {
   deleteEmployeeSchema,
 } from "./employee.schema";
 
+import type { CreateEmployeeDto } from "@shared/types/src/employee/employee.dto";
+import type { UpdateEmployeeDto } from "@shared/types/src/employee/update-employee.dto";
+
+import { verifyAccessToken } from "../../middlewares/auth.middlewares";
+
 export default async function employeeRoutes(app: FastifyInstance) {
+  /** 🔐 Common secured config */
+  const secured = {
+    preHandler: verifyAccessToken,
+    schema: {
+      security: [{ bearerAuth: [] }],
+      tags: ["Employees"],
+    },
+  };
+
   app.post(
     "/employees",
     {
-      preHandler: verifyAccessToken,
-      schema: createEmployeeSchema,
+      ...secured,
+      schema: {
+        ...secured.schema,
+        ...createEmployeeSchema,
+      },
     },
     async (request, reply) => {
       const body = request.body as CreateEmployeeDto;
@@ -54,8 +66,11 @@ export default async function employeeRoutes(app: FastifyInstance) {
   app.get(
     "/employees",
     {
-      preHandler: verifyAccessToken,
-      schema: getEmployeesSchema,
+      ...secured,
+      schema: {
+        ...secured.schema,
+        ...getEmployeesSchema,
+      },
     },
     async () => {
       return await getEmployees();
@@ -65,8 +80,11 @@ export default async function employeeRoutes(app: FastifyInstance) {
   app.get(
     "/employees/:id",
     {
-      preHandler: verifyAccessToken,
-      schema: getEmployeeByIdSchema,
+      ...secured,
+      schema: {
+        ...secured.schema,
+        ...getEmployeeByIdSchema,
+      },
     },
     async (request, reply) => {
       const { id } = request.params as { id: string };
@@ -83,8 +101,11 @@ export default async function employeeRoutes(app: FastifyInstance) {
   app.put(
     "/employees/:id",
     {
-      preHandler: verifyAccessToken,
-      schema: updateEmployeeSchema,
+      ...secured,
+      schema: {
+        ...secured.schema,
+        ...updateEmployeeSchema,
+      },
     },
     async (request, reply) => {
       const { id } = request.params as { id: string };
@@ -104,8 +125,11 @@ export default async function employeeRoutes(app: FastifyInstance) {
   app.delete(
     "/employees/:id",
     {
-      preHandler: verifyAccessToken,
-      schema: deleteEmployeeSchema,
+      ...secured,
+      schema: {
+        ...secured.schema,
+        ...deleteEmployeeSchema,
+      },
     },
     async (request, reply) => {
       const { id } = request.params as { id: string };

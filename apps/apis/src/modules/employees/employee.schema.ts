@@ -5,12 +5,8 @@ const errorResponse = {
   },
 };
 
-/* =====================================================
-   CREATE EMPLOYEE
-===================================================== */
 export const createEmployeeSchema = {
   tags: ["Employees"],
-  security: [{ bearerAuth: [] }],
 
   body: {
     type: "object",
@@ -34,8 +30,8 @@ export const createEmployeeSchema = {
 
       managerId: { type: ["string", "null"] },
       systemId: { type: ["string", "null"] },
+      userId: { type: ["string", "null"] },
 
-      /* employees table */
       welcome: {
         type: "object",
         required: [
@@ -51,7 +47,6 @@ export const createEmployeeSchema = {
         additionalProperties: false,
       },
 
-      /* document_generation table */
       documents: {
         type: "object",
         required: ["generateOfferLetter", "generateAppointmentLetter"],
@@ -78,20 +73,13 @@ export const createEmployeeSchema = {
   },
 };
 
-/* =====================================================
-   GET ALL EMPLOYEES
-===================================================== */
 export const getEmployeesSchema = {
   tags: ["Employees"],
-  security: [{ bearerAuth: [] }],
 };
 
-/* =====================================================
-   GET EMPLOYEE BY ID
-===================================================== */
 export const getEmployeeByIdSchema = {
   tags: ["Employees"],
-  security: [{ bearerAuth: [] }],
+
   params: {
     type: "object",
     required: ["id"],
@@ -99,17 +87,14 @@ export const getEmployeeByIdSchema = {
       id: { type: "string" },
     },
   },
+
   response: {
     404: errorResponse,
   },
 };
 
-/* =====================================================
-   UPDATE EMPLOYEE (PATCH)
-===================================================== */
 export const updateEmployeeSchema = {
   tags: ["Employees"],
-  security: [{ bearerAuth: [] }],
 
   params: {
     type: "object",
@@ -129,7 +114,6 @@ export const updateEmployeeSchema = {
       managerId: { type: ["string", "null"] },
       systemId: { type: ["string", "null"] },
 
-      /* employees table */
       welcome: {
         type: "object",
         properties: {
@@ -140,7 +124,6 @@ export const updateEmployeeSchema = {
         additionalProperties: false,
       },
 
-      /* document_generation table */
       documents: {
         type: "object",
         properties: {
@@ -165,12 +148,9 @@ export const updateEmployeeSchema = {
   },
 };
 
-/* =====================================================
-   DELETE EMPLOYEE
-===================================================== */
 export const deleteEmployeeSchema = {
   tags: ["Employees"],
-  security: [{ bearerAuth: [] }],
+
   params: {
     type: "object",
     required: ["id"],
@@ -178,6 +158,7 @@ export const deleteEmployeeSchema = {
       id: { type: "string" },
     },
   },
+
   response: {
     404: errorResponse,
     500: errorResponse,
