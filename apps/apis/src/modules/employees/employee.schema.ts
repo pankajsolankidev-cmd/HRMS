@@ -7,7 +7,6 @@ const errorResponse = {
 
 export const createEmployeeSchema = {
   tags: ["Employees"],
-  security: [{ bearerAuth: [] }],
 
   body: {
     type: "object",
@@ -31,7 +30,8 @@ export const createEmployeeSchema = {
 
       managerId: { type: ["string", "null"] },
 
-      systemId: { type: "string", nullable: true },
+      systemId: { type: ["string", "null"] },
+      userId: { type: ["string", "null"] },
 
       welcome: {
         type: "object",
@@ -53,6 +53,7 @@ export const createEmployeeSchema = {
       },
     },
   },
+
   response: {
     201: {
       type: "object",
@@ -68,12 +69,11 @@ export const createEmployeeSchema = {
 
 export const getEmployeesSchema = {
   tags: ["Employees"],
-  security: [{ bearerAuth: [] }],
 };
 
 export const getEmployeeByIdSchema = {
   tags: ["Employees"],
-  security: [{ bearerAuth: [] }],
+
   params: {
     type: "object",
     required: ["id"],
@@ -81,6 +81,7 @@ export const getEmployeeByIdSchema = {
       id: { type: "string" },
     },
   },
+
   response: {
     404: errorResponse,
   },
@@ -88,7 +89,6 @@ export const getEmployeeByIdSchema = {
 
 export const updateEmployeeSchema = {
   tags: ["Employees"],
-  security: [{ bearerAuth: [] }],
 
   params: {
     type: "object",
@@ -97,6 +97,7 @@ export const updateEmployeeSchema = {
       id: { type: "string" },
     },
   },
+
   body: {
     type: "object",
     properties: {
@@ -105,9 +106,27 @@ export const updateEmployeeSchema = {
       position: { type: "string" },
       departmentId: { type: "number" },
       managerId: { type: ["string", "null"] },
-      systemId: { type: "string" },
+      systemId: { type: ["string", "null"] },
+
+      welcome: {
+        type: "object",
+        properties: {
+          whatsapp: { type: "boolean" },
+          gmail: { type: "boolean" },
+          slack: { type: "boolean" },
+        },
+      },
+
+      documents: {
+        type: "object",
+        properties: {
+          generateOfferLetter: { type: "boolean" },
+          generateAppointmentLetter: { type: "boolean" },
+        },
+      },
     },
   },
+
   response: {
     404: errorResponse,
     500: errorResponse,
@@ -116,7 +135,7 @@ export const updateEmployeeSchema = {
 
 export const deleteEmployeeSchema = {
   tags: ["Employees"],
-  security: [{ bearerAuth: [] }],
+
   params: {
     type: "object",
     required: ["id"],
@@ -124,6 +143,7 @@ export const deleteEmployeeSchema = {
       id: { type: "string" },
     },
   },
+
   response: {
     404: errorResponse,
     500: errorResponse,

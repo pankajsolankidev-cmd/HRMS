@@ -8,6 +8,12 @@ import {
   deleteComponent,
 } from "./component.service";
 
+import {
+  createComponentSchema,
+  updateComponentSchema,
+  getComponentByIdSchema,
+} from "./component.schema";
+
 import type { CreateComponentDto } from "@shared/types/src/components/create-component.dto";
 import type { UpdateComponentDto } from "@shared/types/src/components/update-component.dto";
 
@@ -20,38 +26,100 @@ export default async function componentRoutes(app: FastifyInstance) {
       security: [{ bearerAuth: [] }],
     },
   };
-  app.post("/components", secured, async (request, reply) => {
-    const body = request.body as CreateComponentDto;
-    const component = await createComponent(body);
-    return reply.status(201).send(component);
-  });
 
-  app.get("/components", secured, async (_request, reply) => {
-    return reply.send(await getComponents());
-  });
-
-  app.get("/components/:id", secured, async (request, reply) => {
-    const { id } = request.params as { id: string };
-    const component = await getComponentById(id);
-    if (!component) {
-      return reply.status(404).send({ error: "Component not found" });
+  app.post(
+    "/components",
+    {
+      ...secured,
+      schema: {
+        ...secured.schema,
+        ...createComponentSchema,
+      },
+    },
+    async (request, reply) => {
+      const body = request.body as CreateComponentDto;
+      const component = await createComponent(body);
+      return reply.code(201).send(component);
     }
-    return reply.send(component);
-  });
+  );
 
-  app.put("/components/:id", secured, async (request, reply) => {
-    const { id } = request.params as { id: string };
-    const body = request.body as UpdateComponentDto;
-    const updated = await updateComponent(id, body);
-    if (!updated) {
-      return reply.status(404).send({ error: "Component not found" });
+  app.get(
+    "/components",
+    {
+      ...secured,
+      schema: {
+        ...secured.schema,
+        tags: ["Components"],
+      },
+    },
+    async () => {
+      return await getComponents();
     }
-    return reply.send(updated);
-  });
+  );
 
-  app.delete("/components/:id", secured, async (request, reply) => {
-    const { id } = request.params as { id: string };
-    await deleteComponent(id);
-    return reply.send({ message: "Component deleted successfully" });
-  });
+  app.get(
+    "/components/:id",
+    {
+      ...secured,
+      schema: {
+        ...secured.schema,
+        ...getComponentByIdSchema,
+      },
+    },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const component = await getComponentById(id);
+
+      if (!component) {
+        return reply.status(404).send({ error: "Component not found" });
+      }
+
+      return component;
+    }
+  );
+
+  app.put(
+    "/components/:id",
+    {
+      ...secured,
+      schema: {
+        ...secured.schema,
+        ...updateComponentSchema,
+      },
+    },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const body = request.body as UpdateComponentDto;
+
+      const updated = await updateComponent(id, body);
+      if (!updated) {
+        return reply.status(404).send({ error: "Component not found" });
+      }
+
+      return updated;
+    }
+  );
+
+  app.delete(
+    "/components/:id",
+    {
+      ...secured,
+      schema: {
+        ...secured.schema,
+        tags: ["Components"],
+        params: {
+          type: "object",
+          required: ["id"],
+          properties: {
+            id: { type: "string" },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      await deleteComponent(id);
+      return { message: "Component deleted successfully" };
+    }
+  );
 }
