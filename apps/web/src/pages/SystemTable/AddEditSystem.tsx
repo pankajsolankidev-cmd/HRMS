@@ -6,7 +6,7 @@ import AddEditSystemForm from "../System/AddEditSystemForm";
 
 export default function AddEditSystem() {
   const { id } = useParams();
-  const isEditMode = Boolean(id);
+  const isEditMode = Boolean(id && id!="new");
 
   return (
     <div className="dark:bg-gray-900">
