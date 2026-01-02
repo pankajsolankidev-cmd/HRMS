@@ -28,9 +28,7 @@ export const employees = pgTable("employees", {
   welcomewithGmail: boolean("welcomewith_gmail").default(false).notNull(),
   welcomewithSlack: boolean("welcomewith_slack").default(false).notNull(),
 
-  systemId: uuid("system_id")
-    .notNull()
-    .references(() => systems.id),
+  systemId: uuid("system_id").references(() => systems.id),
 
   userId: uuid("user_id")
     .notNull()
