@@ -18,6 +18,8 @@ import PublicRoute from "./pages/OtherPage/PublicRoute";
 import Employee from "./pages/EmployeeTable/Employee";
 import AddEmployee from "./pages/EmployeeTable/AddEditEmployee";
 import AuthLayout from "./pages/AuthPages/AuthPageLayout";
+import Component from "./pages/ComponentTable/Component";
+import AddEditComponent from "./pages/ComponentTable/AddEditComponent";
 
 function AppRoutes() {
   return (
@@ -34,14 +36,15 @@ function AppRoutes() {
       </Route>
 
       {/* 🔐 PROTECTED ROUTES */}
-      <Route element={<ProtectedRoute />}>
+      {/* <Route element={<ProtectedRoute />}> */}
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Home />} />
           <Route path="/employees" element={<Employee />} />
-          <Route path="/add-employee" element={<AddEmployee />} />
           <Route path="/employees/:id" element={<AddEmployee />} />
-        </Route>
-      </Route>
+          <Route path="/components" element={<Component />} />
+          <Route path="/components/:id" element={<AddEditComponent />} />
+        </Route>  
+      {/* </Route> */}
 
       <Route path="*" element={<NotFound />} />
     </Routes>

@@ -10,8 +10,10 @@ import {
 
 import {
   createEmployeeSchema,
-  updateEmployeeSchema,
+  getEmployeesSchema,
   getEmployeeByIdSchema,
+  updateEmployeeSchema,
+  deleteEmployeeSchema,
 } from "./employee.schema";
 
 import type { CreateEmployeeDto } from "@shared/types/src/employee/employee.dto";
@@ -20,10 +22,12 @@ import type { UpdateEmployeeDto } from "@shared/types/src/employee/update-employ
 import { verifyAccessToken } from "../../middlewares/auth.middlewares";
 
 export default async function employeeRoutes(app: FastifyInstance) {
+  /** 🔐 Common secured config */
   const secured = {
     preHandler: verifyAccessToken,
     schema: {
       security: [{ bearerAuth: [] }],
+      tags: ["Employees"],
     },
   };
 
@@ -41,6 +45,7 @@ export default async function employeeRoutes(app: FastifyInstance) {
 
       try {
         const result = await createEmployee(body);
+
         return reply.code(201).send({
           message: "Employee created successfully",
           employeeId: result.employeeId,
@@ -51,6 +56,7 @@ export default async function employeeRoutes(app: FastifyInstance) {
             error: "Employee with this email already exists",
           });
         }
+
         request.log.error(err);
         return reply.code(500).send({ error: "Internal server error" });
       }
@@ -63,7 +69,7 @@ export default async function employeeRoutes(app: FastifyInstance) {
       ...secured,
       schema: {
         ...secured.schema,
-        tags: ["Employees"],
+        ...getEmployeesSchema,
       },
     },
     async () => {
@@ -82,8 +88,8 @@ export default async function employeeRoutes(app: FastifyInstance) {
     },
     async (request, reply) => {
       const { id } = request.params as { id: string };
-      const employee = await getEmployeeById(id);
 
+      const employee = await getEmployeeById(id);
       if (!employee) {
         return reply.code(404).send({ error: "Employee not found" });
       }
@@ -122,14 +128,7 @@ export default async function employeeRoutes(app: FastifyInstance) {
       ...secured,
       schema: {
         ...secured.schema,
-        tags: ["Employees"],
-        params: {
-          type: "object",
-          required: ["id"],
-          properties: {
-            id: { type: "string" },
-          },
-        },
+        ...deleteEmployeeSchema,
       },
     },
     async (request, reply) => {
