@@ -99,6 +99,8 @@ export default function GetEmpTable() {
   ];
 
   return (
+
+    
     <DataTable
       columns={columns}
       data={employees}

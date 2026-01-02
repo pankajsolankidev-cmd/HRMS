@@ -1,5 +1,9 @@
 import api from "./axios";
-export const updateEmployee = async ({id,payload,}: {
+
+export const updateEmployee = async ({
+  id,
+  payload,
+}: {
   id: string;
   payload: any;
 }) => {
@@ -7,10 +11,32 @@ export const updateEmployee = async ({id,payload,}: {
   return res.data;
 };
 
-export const updateComponent = async ({id,payload,}: {
+export const updateComponent = async ({
+  id,
+  payload,
+}: {
   id: string;
   payload: any;
 }) => {
   const res = await api.put(`/components/${id}`, payload);
+  return res.data;
+};
+
+export const updateSystem = async ({
+  id,
+  payload,
+}: {
+  id: string;
+  payload: {
+    name: string;
+    description: string;
+    components: string[];
+  };
+}) => {
+  const res = await api.put(`/systems/${id}`, {
+    name: payload.name,
+    description: payload.description,
+    componentIds: payload.components,
+  });
   return res.data;
 };
