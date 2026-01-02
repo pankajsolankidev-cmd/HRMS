@@ -17,7 +17,6 @@ const DEFAULT_EMPLOYEE_PASSWORD: string = (() => {
 
 export async function createEmployee(data: CreateEmployeeDto) {
   return await db.transaction(async (tx) => {
-    /* ---------- 1️⃣ CREATE USER ---------- */
     const hashedPassword = await bcrypt.hash(DEFAULT_EMPLOYEE_PASSWORD, 10);
 
     const [user] = await tx
@@ -39,12 +38,11 @@ export async function createEmployee(data: CreateEmployeeDto) {
         departmentId: data.departmentId,
         joiningDate: data.joiningDate,
         managerId: data.managerId ?? null,
-
-        welcomewithWhatsapp: data.welcome.whatsapp,
-        welcomewithGmail: data.welcome.gmail,
-        welcomewithSlack: data.welcome.slack,
-
         systemId: data.systemId ?? null,
+
+        welcomewithWhatsapp: data.welcomewithWhatsapp,
+        welcomewithGmail: data.welcomewithGmail,
+        welcomewithSlack: data.welcomewithSlack,
 
         userId: user.id,
       })
@@ -63,19 +61,6 @@ export async function createEmployee(data: CreateEmployeeDto) {
   });
 }
 
-export async function getEmployees() {
-  return await db.select().from(employees);
-}
-
-export async function getEmployeeById(id: string) {
-  const [employee] = await db
-    .select()
-    .from(employees)
-    .where(eq(employees.id, id));
-
-  return employee;
-}
-
 export async function updateEmployee(id: string, data: UpdateEmployeeDto) {
   const [updated] = await db
     .update(employees)
@@ -87,6 +72,19 @@ export async function updateEmployee(id: string, data: UpdateEmployeeDto) {
     .returning({ id: employees.id });
 
   return updated;
+}
+
+export async function getEmployees() {
+  return await db.select().from(employees);
+}
+
+export async function getEmployeeById(id: string) {
+  const [employee] = await db
+    .select()
+    .from(employees)
+    .where(eq(employees.id, id));
+
+  return employee;
 }
 
 export async function deleteEmployee(id: string) {

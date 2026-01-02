@@ -8,14 +8,11 @@ export interface CreateEmployeeDto {
   joiningDate: string;
 
   managerId?: string | null;
-
   systemId?: string;
 
-  welcome: {
-    whatsapp: boolean;
-    gmail: boolean;
-    slack: boolean;
-  };
+  welcomewithWhatsapp: boolean;
+  welcomewithGmail: boolean;
+  welcomewithSlack: boolean;
 
   documents: {
     generateOfferLetter: boolean;
