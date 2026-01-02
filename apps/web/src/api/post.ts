@@ -1,3 +1,4 @@
+import type { EmployeePayload } from "../pages/Employee/AddEditEmpForm";
 import api from "./axios";
 
 export const signInApi = async (data: {
@@ -41,7 +42,7 @@ export const resetPassword = async (params: {
   return res.data;
 };
 
-export const addEmployee = async (payload: any) => {
+export const addEmployee = async (payload: EmployeePayload) => {
   const res = await api.post("/employees", payload);
   return res.data;
 };

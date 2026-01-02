@@ -1,4 +1,4 @@
-import { IconEdit, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { getEmployees } from "../../api/get";
@@ -37,7 +37,7 @@ export default function GetEmpTable() {
       firstName: u.firstName,
       lastName: u.lastName,
       email: u.email,
-      position: u.company?.title || "Employee",
+      position: u.position || "Employee",
       joiningDate: "2024-01-15",
       onboardingBuddy: "HR Team",
     })) ?? [];
@@ -54,9 +54,7 @@ export default function GetEmpTable() {
     {
       header: "Email",
       cell: (emp: Employee) => (
-        <span className="text-gray-500 dark:text-gray-400">
-          {emp.email}
-        </span>
+        <span className="text-gray-500 dark:text-gray-400">{emp.email}</span>
       ),
     },
     {
@@ -78,7 +76,7 @@ export default function GetEmpTable() {
     {
       header: "Action",
       cell: (emp: Employee) => (
-        <div className="flex gap-3">
+        <div className="flex gap-3 justify-center">
           <IconEdit
             size={20}
             onClick={() => navigate(`/employees/${emp.id}`)}
@@ -99,11 +97,23 @@ export default function GetEmpTable() {
   ];
 
   return (
-    <DataTable
-      columns={columns}
-      data={employees}
-      isLoading={isLoading}
-      isError={isError}
-    />
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <button
+          onClick={() => navigate("/employees/new")}
+          className="flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-white
+                     dark:bg-white dark:text-black"
+        >
+          <IconPlus size={18} />
+          Add System
+        </button>
+      </div>
+      <DataTable
+        columns={columns}
+        data={employees}
+        isLoading={isLoading}
+        isError={isError}
+      />
+    </div>
   );
 }

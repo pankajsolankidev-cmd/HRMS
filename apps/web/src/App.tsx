@@ -22,7 +22,6 @@ import AuthLayout from "./pages/AuthPages/AuthPageLayout";
 function AppRoutes() {
   return (
     <Routes>
-      {/* 🔓 PUBLIC ROUTES */}
       <Route element={<PublicRoute />}>
       <Route element={<AuthLayout/>}>
         <Route path="/" element={<SignInForm />} />
@@ -33,12 +32,10 @@ function AppRoutes() {
       </Route>
       </Route>
 
-      {/* 🔐 PROTECTED ROUTES */}
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Home />} />
           <Route path="/employees" element={<Employee />} />
-          <Route path="/add-employee" element={<AddEmployee />} />
           <Route path="/employees/:id" element={<AddEmployee />} />
         </Route>
       </Route>

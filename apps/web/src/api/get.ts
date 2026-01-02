@@ -10,3 +10,8 @@ export const getEmployeeById = async (id: string) => {
   return res.data;
 };
 
+export const getSystems = async () => {
+  const res = await api.get("/systems");
+  return Array.isArray(res.data) ? res.data : [];
+};
+

@@ -53,14 +53,14 @@ export default function DataTable<T>({
             </TableRow>
           </TableHeader>
 
-          <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
+          <TableBody className=" divide-y divide-gray-100 dark:divide-gray-800">
             {data.map((row, rowIndex) => (
               <TableRow
                 key={rowIndex}
-                className="hover:bg-gray-50 dark:hover:bg-gray-800/40"
+                className=" hover:bg-gray-50 dark:hover:bg-gray-800/40"
               >
                 {columns.map((col, colIndex) => (
-                  <TableCell key={colIndex} className="px-6 py-5">
+                  <TableCell key={colIndex} className="px-6 py-5 text-center">
                     {col.cell(row)}
                   </TableCell>
                 ))}
