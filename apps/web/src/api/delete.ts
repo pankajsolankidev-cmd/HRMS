@@ -14,3 +14,8 @@ export const deleteSystem = async (id: number) => {
   const res = await api.delete(`/systems/${id}`);
   return res.data;
 };
+
+export const deleteLeave = async (id:number) => {
+  const res = await api.delete(`/leaves/${id}`);
+  return res.data;
+}

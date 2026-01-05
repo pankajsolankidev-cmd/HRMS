@@ -29,3 +29,12 @@ export const getSystemById = async (id: string) => {
   const res = await api.get(`/systems/${id}`);
   return res.data;
 };
+
+export const getLeaves = async () => {
+  const res = await api.get("/leaves");
+  return res.data;
+}
+export const getLeaveById = async (id:string) => {
+  const res = await api.get(`/leaves/${id}`);
+  return res.data;
+}

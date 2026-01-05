@@ -67,3 +67,16 @@ export const addSystem = async (payload: {
   });
   return res.data;
 };
+
+export const addLeave = async (payload: {
+  fromDate: string;
+  toDate: string;
+  type: "SICK" | "CASUAL" | "MARRIAGE" | "WFH";
+  dayType: "FULL_DAY" | "FIRST_HALF" | "SECOND_HALF";
+  reason: string;
+  status?: "PENDING" | "APPROVED" | "REJECTED";
+}) => {
+  const res = await api.post("/leaves", payload);
+  return res.data;
+};
+

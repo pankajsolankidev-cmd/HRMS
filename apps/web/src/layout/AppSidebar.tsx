@@ -3,9 +3,13 @@ import { Link, useLocation } from "react-router";
 import { useSidebar } from "../context/SidebarContext";
 import GridIcon from "../icons/grid.svg?react";
 import HorizontaLDots from "../icons/horizontal-dots.svg?react";
+
 import {
   UserCircleIcon,
   ChevronDownIcon,
+  CalendarIcon,
+  PuzzlePieceIcon,
+  FolderIcon,
 } from "@heroicons/react/24/outline";
 
 type NavItem = {
@@ -22,7 +26,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   {
-    icon: <GridIcon />,
+    icon: <GridIcon/>,
     name: "Dashboard",
     path: "/dashboard",
   },
@@ -32,15 +36,20 @@ const navItems: NavItem[] = [
     path: "/employees",
   },
   {
-    icon: <UserCircleIcon />,
+    icon: <PuzzlePieceIcon/>,
     name: "Component",
     path: "/components",
   },
   {
-    icon: <UserCircleIcon />,
+    icon: < FolderIcon />,
     name: "System",
     path: "/systems",
   },
+  {
+    icon: <CalendarIcon />,
+    name: "Leaves",
+    path: "/leaves",
+  }
 ];
 
 const AppSidebar: React.FC = () => {
