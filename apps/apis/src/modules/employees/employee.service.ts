@@ -63,8 +63,6 @@ export async function createEmployee(data: CreateEmployeeDto) {
 
 export async function updateEmployee(id: string, data: UpdateEmployeeDto) {
   return db.transaction(async (tx) => {
-    
-
     const employeeUpdateData: Partial<typeof employees.$inferInsert> = {
       firstName: data.firstName,
       lastName: data.lastName,
@@ -80,7 +78,6 @@ export async function updateEmployee(id: string, data: UpdateEmployeeDto) {
       updatedAt: new Date(),
     };
 
-    // remove undefined keys
     Object.keys(employeeUpdateData).forEach(
       (key) =>
         employeeUpdateData[key as keyof typeof employeeUpdateData] ===
@@ -98,16 +95,12 @@ export async function updateEmployee(id: string, data: UpdateEmployeeDto) {
       throw new Error("Employee not found or nothing to update");
     }
 
-    /* ===========================
-       DOCUMENT UPDATE
-    =========================== */
     if (data.documents) {
       const documentUpdateData: Partial<
         typeof documentGeneration.$inferInsert
       > = {
         generateOfferLetter: data.documents.generateOfferLetter,
-        generateAppointmentLetter:
-          data.documents.generateAppointmentLetter,
+        generateAppointmentLetter: data.documents.generateAppointmentLetter,
         updatedAt: new Date(),
       };
 
@@ -132,16 +125,60 @@ export async function updateEmployee(id: string, data: UpdateEmployeeDto) {
 }
 
 export async function getEmployees() {
-  return db.select().from(employees);
+  const rows = await db
+    .select({
+      id: employees.id,
+      firstName: employees.firstName,
+      lastName: employees.lastName,
+      email: employees.email,
+      position: employees.position,
+      departmentId: employees.departmentId,
+      joiningDate: employees.joiningDate,
+      managerId: employees.managerId,
+      systemId: employees.systemId,
+      userId: employees.userId,
+
+      documents: {
+        generateOfferLetter: documentGeneration.generateOfferLetter,
+        generateAppointmentLetter: documentGeneration.generateAppointmentLetter,
+      },
+    })
+    .from(employees)
+    .leftJoin(
+      documentGeneration,
+      eq(documentGeneration.employeeId, employees.id)
+    );
+
+  return rows;
 }
 
 export async function getEmployeeById(id: string) {
-  const [employee] = await db
-    .select()
+  const rows = await db
+    .select({
+      id: employees.id,
+      firstName: employees.firstName,
+      lastName: employees.lastName,
+      email: employees.email,
+      position: employees.position,
+      departmentId: employees.departmentId,
+      joiningDate: employees.joiningDate,
+      managerId: employees.managerId,
+      systemId: employees.systemId,
+      userId: employees.userId,
+
+      documents: {
+        generateOfferLetter: documentGeneration.generateOfferLetter,
+        generateAppointmentLetter: documentGeneration.generateAppointmentLetter,
+      },
+    })
     .from(employees)
+    .leftJoin(
+      documentGeneration,
+      eq(documentGeneration.employeeId, employees.id)
+    )
     .where(eq(employees.id, id));
 
-  return employee;
+  return rows.length ? rows[0] : null;
 }
 
 export async function deleteEmployee(id: string) {
