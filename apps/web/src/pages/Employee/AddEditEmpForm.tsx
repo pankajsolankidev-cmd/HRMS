@@ -1,18 +1,18 @@
 import { useEffect } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate, useParams } from "react-router";
+import { z } from "zod";
 
 import { getEmployeeById, getSystems } from "../../api/get";
 import { addEmployee } from "../../api/post";
+import { updateEmployee } from "../../api/put";
 
 import Input from "../../components/form/input/InputField";
 import Select from "../../components/form/Select";
 import DatePicker from "../../components/form/date-picker";
 import Checkbox from "../../components/form/input/Checkbox";
-import { updateEmployee } from "../../api/put";
 
 export type EmployeePayload = {
   firstName: string;
@@ -30,24 +30,23 @@ export type EmployeePayload = {
     generateAppointmentLetter: boolean;
   };
 
-   welcome: {
+  welcome: {
     welcomewithGmail: boolean;
     welcomewithWhatsapp: boolean;
     welcomewithSlack: boolean;
   };
 };
-/* ---------------- ZOD SCHEMA ---------------- */
-const addEmployeeSchema = z.object({
-  firstName: z.string().min(1, "Required"),
-  lastName: z.string().min(1, "Required"),
-  email: z.string().email("Invalid email"),
-  position: z.string().min(1, "Required"),
-  joiningDate: z.string().min(1, "Required"),
 
-  // :white_check_mark: UUID string or null
-  department: z.string().nullable().optional(),
-  manager: z.string().nullable().optional(),
-  systemType: z.string().nullable().optional(),
+const employeeSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email address"),
+  position: z.string().min(1, "Position is required"),
+  joiningDate: z.string().min(1, "Joining date is required"),
+
+  departmentId: z.string().nullable().optional(),
+  managerId: z.string().nullable().optional(),
+  systemId: z.string().nullable().optional(),
 
   documents: z.object({
     generateOfferLetter: z.boolean(),
@@ -55,332 +54,325 @@ const addEmployeeSchema = z.object({
   }),
 
   welcome: z.object({
-    gmail: z.boolean(),
-    whatsapp: z.boolean(),
-    slack: z.boolean(),
+    welcomewithGmail: z.boolean(),
+    welcomewithWhatsapp: z.boolean(),
+    welcomewithSlack: z.boolean(),
   }),
 });
+type EmployeeFormValues = z.infer<typeof employeeSchema>;
 
-type AddEmployeeFormValues = z.infer<typeof addEmployeeSchema>;
-type WelcomeKey = "gmail" | "whatsapp" | "slack";
-
-/* ---------------- COMPONENT ---------------- */
 const AddEmpForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditMode = Boolean(id && id !== "new");
 
-  const { control, register, handleSubmit, reset } =
-    useForm<AddEmployeeFormValues>({
-      resolver: zodResolver(addEmployeeSchema),
-      defaultValues: {
-        department: null,
-        manager: null,
-        systemType: null,
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<EmployeeFormValues>({
+    resolver: zodResolver(employeeSchema),
+    defaultValues: {
+      documents: {
+        generateOfferLetter: false,
+        generateAppointmentLetter: false,
+      },
+      welcome: {
+        welcomewithGmail: false,
+        welcomewithWhatsapp: false,
+        welcomewithSlack: false,
+      },
+    },
+  });
+
+  const { data: systems = [] } = useQuery({
+    queryKey: ["systems"],
+    queryFn: getSystems,
+  });
+  const systemOptions = systems.map((s: any) => ({
+    value: s.id,
+    label: s.name,
+  }));
+
+  const { data: employeeData } = useQuery({
+    queryKey: ["employee", id],
+    queryFn: () => getEmployeeById(id!),
+    enabled: isEditMode,
+  });
+
+  useEffect(() => {
+    if (!isEditMode) {
+      reset({
+        firstName: "",
+        lastName: "",
+        email: "",
+        position: "",
+        joiningDate: "",
+        departmentId: null,
+        managerId: null,
+        systemId: null,
         documents: {
           generateOfferLetter: false,
           generateAppointmentLetter: false,
         },
         welcome: {
-          gmail: false,
-          whatsapp: false,
-          slack: false,
+          welcomewithGmail: false,
+          welcomewithWhatsapp: false,
+          welcomewithSlack: false,
         },
-      },
-    });
+      });
+      return;
+    }
 
-  /* ---------------- FETCH EMPLOYEE ---------------- */
-  const { data: employeeData } = useQuery({
-    queryKey: ["employee", id],
-    queryFn: async () => {
-      const res = await getEmployeeById(id!);
-      console.log("EMPLOYEE API RESPONSE =>", res);
-      return res;
-    },
-    enabled: isEditMode,
-  });
-
-  useEffect(() => {
     if (!employeeData) return;
+
     reset({
       firstName: employeeData.firstName ?? "",
       lastName: employeeData.lastName ?? "",
       email: employeeData.email ?? "",
       position: employeeData.position ?? "",
       joiningDate: employeeData.joiningDate ?? "",
-
-      department: employeeData.departmentId ?? null,
-      manager: employeeData.managerId ?? null,
-      systemType: employeeData.systemId ?? null,
-
+      departmentId: null,
+      managerId: employeeData.managerId ?? null,
+      systemId: employeeData.systemId ?? null,
       documents: {
-        generateOfferLetter: !!employeeData.documents?.generateOfferLetter,
+        generateOfferLetter:
+          employeeData.documents?.generateOfferLetter ?? false,
         generateAppointmentLetter:
-          !!employeeData.documents?.generateAppointmentLetter,
+          employeeData.documents?.generateAppointmentLetter ?? false,
       },
-
       welcome: {
-        gmail: !!employeeData.welcomewithGmail,
-        whatsapp: !!employeeData.welcomewithWhatsapp,
-        slack: !!employeeData.welcomewithSlack,
+        welcomewithGmail: employeeData.welcome?.welcomewithGmail ?? false,
+        welcomewithWhatsapp: employeeData.welcome?.welcomewithWhatsapp ?? false,
+        welcomewithSlack: employeeData.welcome?.welcomewithSlack ?? false,
       },
     });
-  }, [employeeData, reset]);
+  }, [isEditMode, employeeData, reset]);
 
-  /* ---------------- FETCH SYSTEMS ---------------- */
-  const { data: systems = [] } = useQuery({
-    queryKey: ["systems"],
-    queryFn: getSystems,
-  });
+  const queryClient = useQueryClient();
 
-  const systemOptions = [
-    { value: "", label: "None" },
-    ...systems.map((s: any) => ({
-      value: s.id, // UUID string
-      label: s.name,
-    })),
-  ];
-
-  /* ---------------- MUTATIONS ---------------- */
   const addMutation = useMutation({
-    mutationFn: (payload: EmployeePayload) => addEmployee(payload),
-    onSuccess: () => navigate("/employees"),
-    onError: (e: any) =>
-      console.error("ADD EMPLOYEE ERROR:", e?.response?.data || e),
+    mutationFn: addEmployee,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      navigate("/employees");
+    },
   });
 
   const updateMutation = useMutation({
-  mutationFn: ({ id, payload }: { id: string; payload: any }) =>
-    updateEmployee({ id, payload }),
-  onSuccess: () => {
-    console.log("✅ EMPLOYEE UPDATED SUCCESSFULLY");
-    navigate("/employees");
-  },
-  onError: (error: any) => {
-    console.error("❌ UPDATE FAILED");
-    console.error("STATUS:", error?.response?.status);
-    console.error("MESSAGE:", error?.response?.data);
-  },
-});
+    mutationFn: updateEmployee,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      navigate("/employees");
+    },
+  });
 
-  /* ---------------- SUBMIT ---------------- */
- const onSubmit = (data: AddEmployeeFormValues) => {
-  console.log("SUBMIT FIRED");
-  if (isEditMode) {
-    // ✅ EDIT PAYLOAD (ONLY editable fields)
-    const updatePayload = {
-      firstName: data.firstName,
-      lastName: data.lastName,
-      position: data.position,
+  const onSubmit = (data: EmployeeFormValues) => {
+    
+    const payload: EmployeePayload = data;
+    if (isEditMode) {
+      updateMutation.mutate({ id: id!, payload });
+    } else {
+      addMutation.mutate(payload);
+    }
+  };
 
-      departmentId: data.department || null,
-      managerId: data.manager || null,
-      systemId: data.systemType || null,
+  const departmentOptions = [
+    { value: "1", label: "HR" },
+    { value: "2", label: "Engineering" },
+  ];
 
-      // ✅ SAME BACKEND FORMAT
-      welcome: {
-        welcomewithGmail: data.welcome.gmail,
-        welcomewithWhatsapp: data.welcome.whatsapp,
-        welcomewithSlack: data.welcome.slack,
-      },
-    };
+  const managerOptions = [
+    { value: "10", label: "John Manager" },
+    { value: "11", label: "Jane Manager" },
+  ];
 
-    console.log("EDIT PAYLOAD =>", updatePayload);
+  const selectClass = "bg-white dark:bg-gray-900 dark:text-gray-400";
 
-    updateMutation.mutate({
-      id: id!,
-      payload: updatePayload as any, // backend update accepts partial
-    });
-  } else {
-    // ✅ ADD PAYLOAD (FULL)
-    const createPayload: EmployeePayload = {
-      firstName: data.firstName,
-      lastName: data.lastName,
-      email: data.email,
-      position: data.position,
-      joiningDate: data.joiningDate,
+  return (
+    <form
+      className="space-y-8 text-gray-900 dark:text-gray-100"
+      onSubmit={handleSubmit(onSubmit)}
+    >
+      <div className="flex justify-end">
+        <button
+          type="submit"
+          disabled={addMutation.isPending || updateMutation.isPending}
+          className="rounded-lg bg-black px-4 py-2 text-white dark:bg-white dark:text-black"
+        >
+          {isEditMode ? "Update" : "Add"}
+        </button>
+      </div>
 
-      departmentId: data.department || null,
-      managerId: data.manager || null,
-      systemId: data.systemType || null,
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <div className="rounded-xl border bg-white p-6 dark:bg-gray-900">
+          <h2 className="mb-6 text-lg font-semibold">Basic Information</h2>
 
-      documents: data.documents,
+          <div className="grid gap-6 md:grid-cols-2">
+            <Input label="First Name" {...register("firstName")} />
+            {errors.firstName && (
+              <p className="text-sm text-red-500">{errors.firstName.message}</p>
+            )}
 
-      welcome: {
-        welcomewithGmail: data.welcome.gmail,
-        welcomewithWhatsapp: data.welcome.whatsapp,
-        welcomewithSlack: data.welcome.slack,
-      },
-    };
+            <Input label="Last Name" {...register("lastName")} />
+            {errors.lastName && (
+              <p className="text-sm text-red-500">{errors.lastName.message}</p>
+            )}
 
-    console.log("ADD PAYLOAD =>", createPayload);
+            <Input label="Email" {...register("email")} />
+            {errors.email && (
+              <p className="text-sm text-red-500">{errors.email.message}</p>
+            )}
 
-    addMutation.mutate(createPayload);
-  }
-};
+            <Input label="Position" {...register("position")} />
+            {errors.position && (
+              <p className="text-sm text-red-500">{errors.position.message}</p>
+            )}
 
+            <Controller
+              name="departmentId"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Department"
+                  options={departmentOptions}
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  className={selectClass}
+                />
+              )}
+            />
 
+            <Controller
+              name="joiningDate"
+              control={control}
+              render={({ field }) => (
+                <DatePicker
+                  label="Joining Date"
+                  id="joiningDate"
+                  defaultDate={field.value}
+                  onChange={(dates) =>
+                    dates[0] &&
+                    field.onChange(dates[0].toISOString().split("T")[0])
+                  }
+                />
+              )}
+            />
+            {errors.joiningDate && (
+              <p className="text-sm text-red-500">
+                {errors.joiningDate.message}
+              </p>
+            )}
 
-  /* ---------------- UI ---------------- */
-    return (
-      <form
-        className="space-y-8 text-gray-900 dark:text-gray-100"
-        onSubmit={handleSubmit(onSubmit)}
-      >
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={addMutation.isPending || updateMutation.isPending}
-            className="rounded-lg bg-black px-4 py-2 text-white dark:bg-white dark:text-black disabled:opacity-50"
-          >
-            {isEditMode ? "Edit" : "Add"}
-          </button>
+            <Controller
+              name="managerId"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Manager"
+                  options={managerOptions}
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  className={selectClass}
+                />
+              )}
+            />
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          {/* ---------------- LEFT ---------------- */}
-          <div className="space-y-6">
-            <div className="rounded-xl border bg-white p-6 dark:bg-gray-900 dark:border-gray-700">
-              <h2 className="mb-6 text-lg font-semibold">Basic Information</h2>
-
-              <div className="grid gap-6 md:grid-cols-2">
-                <Input label="First Name" {...register("firstName")} />
-                <Input label="Last Name" {...register("lastName")} />
-
-                <div className="md:col-span-2">
-                  <Input label="Email" {...register("email")} />
-                </div>
-
-                <Input label="Position" {...register("position")} />
-
-                <Controller
-                  name="department"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      label="Department"
-                      options={[]} // keep your existing options source
-                      value={field.value ?? ""}
-                      onChange={(v) => field.onChange(v || null)}
-                    />
-                  )}
-                />
-
-                <Controller
-                  name="joiningDate"
-                  control={control}
-                  render={({ field }) => (
-                    <DatePicker
-                      label="Joining Date"
-                      id="joiningDate"
-                      defaultDate={field.value}
-                      onChange={(dates) =>
-                        dates[0] &&
-                        field.onChange(dates[0].toISOString().split("T")[0])
-                      }
-                    />
-                  )}
-                />
-
-                <Controller
-                  name="manager"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      label="Manager"
-                      options={[]} // keep your existing options source
-                      value={field.value ?? ""}
-                      onChange={(v) => field.onChange(v || null)}
-                    />
-                  )}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* ---------------- RIGHT ---------------- */}
-          <div className="space-y-6">
-            
-            <div className="rounded-xl border bg-white p-6 dark:bg-gray-900 dark:border-gray-700">
-              <h2 className="mb-4 text-lg font-semibold">Document Generation</h2>
-                  
+        <div className="space-y-6">
+          <div className="rounded-xl border bg-white p-6 dark:bg-gray-900">
+            <h2 className="mb-4 text-lg font-semibold">Documents</h2>
+            <div className="grid grid-cols-2 gap-4">
               <Controller
-                name="documents"
+                name="documents.generateOfferLetter"
                 control={control}
                 render={({ field }) => (
-                  <div className="grid grid-cols-2">
-                    <Checkbox
-                      label="Offer Letter"
-                      checked={field.value.generateOfferLetter}
-                      onChange={(checked) =>
-                        field.onChange({
-                          ...field.value,
-                          generateOfferLetter: checked,
-                        })
-                      }
-                    />
-                    <Checkbox
-                      label="Appointment Letter"
-                      checked={field.value.generateAppointmentLetter}
-                      onChange={(checked) =>
-                        field.onChange({
-                          ...field.value,
-                          generateAppointmentLetter: checked,
-                        })
-                      }
-                    />
-                  </div>
+                  <Checkbox
+                    label="Offer Letter"
+                    checked={field.value}
+                    onChange={field.onChange}
+                  />
                 )}
               />
-            </div>
-
-            <div className="rounded-xl border bg-white p-6 dark:bg-gray-900 dark:border-gray-700">
-              <h2 className="mb-4 text-lg font-semibold">System Allocation</h2>
 
               <Controller
-                name="systemType"
+                name="documents.generateAppointmentLetter"
                 control={control}
                 render={({ field }) => (
-                  <Select
-                    options={systemOptions}
-                    value={field.value ?? ""}
-                    onChange={(v) => field.onChange(v || null)}
+                  <Checkbox
+                    label="Appointment Letter"
+                    checked={field.value}
+                    onChange={field.onChange}
                   />
                 )}
               />
             </div>
+          </div>
+          <div className="rounded-xl border bg-white p-6 dark:bg-gray-900">
+            <h2 className="mb-4 text-lg font-semibold">System Allocation</h2>
 
-            <div className="rounded-xl border bg-white p-6 dark:bg-gray-900 dark:border-gray-700">
-              <h2 className="mb-4 text-lg font-semibold">
-                Welcome Communication
-              </h2>
+            <Controller
+              name="systemId"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="System"
+                  options={systemOptions}
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  className={selectClass}
+                />
+              )}
+            />
+          </div>
 
+          <div className="rounded-xl border bg-white p-6 dark:bg-gray-900">
+            <h2 className="mb-4 text-lg font-semibold">Welcome Channels</h2>
+            <div className="grid grid-cols-3 gap-4">
               <Controller
-                name="welcome"
+                name="welcome.welcomewithGmail"
                 control={control}
                 render={({ field }) => (
-                  <div className="grid grid-cols-3">
-                    {(["gmail", "whatsapp", "slack"] as WelcomeKey[]).map((k) => (
-                      <Checkbox
-                        key={k}
-                        label={k.toUpperCase()}
-                        checked={field.value[k]}
-                        onChange={(checked) =>
-                          field.onChange({
-                            ...field.value,
-                            [k]: checked,
-                          })
-                        }
-                      />
-                    ))}
-                  </div>
+                  <Checkbox
+                    label="GMAIL"
+                    checked={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
+
+              <Controller
+                name="welcome.welcomewithWhatsapp"
+                control={control}
+                render={({ field }) => (
+                  <Checkbox
+                    label="WHATSAPP"
+                    checked={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
+
+              <Controller
+                name="welcome.welcomewithSlack"
+                control={control}
+                render={({ field }) => (
+                  <Checkbox
+                    label="SLACK"
+                    checked={field.value}
+                    onChange={field.onChange}
+                  />
                 )}
               />
             </div>
           </div>
         </div>
-      </form>
-    );
+      </div>
+    </form>
+  );
 };
 
 export default AddEmpForm;

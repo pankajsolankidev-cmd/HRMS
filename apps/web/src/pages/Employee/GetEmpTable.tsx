@@ -13,6 +13,7 @@ type Employee = {
   position: string;
   joiningDate: string;
   onboardingBuddy: string;
+  
 };
 
 export default function GetEmpTable() {
