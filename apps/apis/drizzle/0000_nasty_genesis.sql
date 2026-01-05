@@ -1,24 +1,23 @@
 CREATE TABLE "components" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" varchar(100) NOT NULL,
 	"description" text,
 	"code" varchar(50) NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now(),
 	CONSTRAINT "components_code_unique" UNIQUE("code")
 );
 --> statement-breakpoint
 CREATE TABLE "document_generation" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"employee_id" uuid NOT NULL,
 	"generate_offer_letter" boolean DEFAULT false NOT NULL,
 	"generate_appointment_letter" boolean DEFAULT false NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"updated_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
 CREATE TABLE "employees" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"first_name" varchar(100) NOT NULL,
 	"last_name" varchar(100) NOT NULL,
 	"email" varchar(255) NOT NULL,
@@ -29,53 +28,57 @@ CREATE TABLE "employees" (
 	"welcomewith_whatsapp" boolean DEFAULT false NOT NULL,
 	"welcomewith_gmail" boolean DEFAULT false NOT NULL,
 	"welcomewith_slack" boolean DEFAULT false NOT NULL,
-	"system_id" uuid NOT NULL,
+	"system_id" uuid,
 	"user_id" uuid NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"updated_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
 CREATE TABLE "users" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"username" varchar(100) NOT NULL,
 	"email" varchar(255) NOT NULL,
 	"password" text NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"updated_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
 CREATE TABLE "refresh_tokens" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" uuid NOT NULL,
 	"token" text NOT NULL,
 	"expires_at" timestamp NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
 CREATE TABLE "password_reset_tokens" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" uuid NOT NULL,
-	"token" text NOT NULL,
+	"key" text NOT NULL,
 	"expires_at" timestamp NOT NULL,
 	"accepted_at" timestamp,
 	"is_accepted" boolean DEFAULT false NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
 CREATE TABLE "systems" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" varchar(100) NOT NULL,
 	"description" text,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"updated_at" timestamp DEFAULT now(),
+	CONSTRAINT "systems_name_unique" UNIQUE("name")
 );
 --> statement-breakpoint
 CREATE TABLE "system_components" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"system_id" uuid NOT NULL,
 	"component_id" uuid NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"updated_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
 ALTER TABLE "document_generation" ADD CONSTRAINT "document_generation_employee_id_employees_id_fk" FOREIGN KEY ("employee_id") REFERENCES "public"."employees"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
