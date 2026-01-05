@@ -138,6 +138,12 @@ export async function getEmployees() {
       systemId: employees.systemId,
       userId: employees.userId,
 
+      welcome: {
+        welcomewithWhatsapp: employees.welcomewithWhatsapp,
+        welcomewithGmail: employees.welcomewithGmail,
+        welcomewithSlack: employees.welcomewithSlack,
+      },
+
       documents: {
         generateOfferLetter: documentGeneration.generateOfferLetter,
         generateAppointmentLetter: documentGeneration.generateAppointmentLetter,
@@ -165,6 +171,12 @@ export async function getEmployeeById(id: string) {
       managerId: employees.managerId,
       systemId: employees.systemId,
       userId: employees.userId,
+
+      welcome: {
+        welcomewithWhatsapp: employees.welcomewithWhatsapp,
+        welcomewithGmail: employees.welcomewithGmail,
+        welcomewithSlack: employees.welcomewithSlack,
+      },
 
       documents: {
         generateOfferLetter: documentGeneration.generateOfferLetter,
