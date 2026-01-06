@@ -19,7 +19,6 @@ import {
   resetPasswordSchema,
 } from "./auth.schema";
 
-
 import type {
   AuthSignUpDto,
   AuthSignInDto,
@@ -49,7 +48,10 @@ export default async function authRoutes(app: FastifyInstance) {
       const [user] = await db
         .insert(users)
         .values({ username, email, password: hashedPassword })
-        .returning({ id: users.id, email: users.email });
+        .returning({
+          id: users.id,
+          email: users.email,
+        });
 
       const accessToken = generateAccessToken({
         id: user.id,
@@ -76,7 +78,15 @@ export default async function authRoutes(app: FastifyInstance) {
         .send({ error: "Email and password are required" });
     }
 
-    const [user] = await db.select().from(users).where(eq(users.email, email));
+    const [user] = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        password: users.password,
+      })
+      .from(users)
+      .where(eq(users.email, email));
+
     if (!user) {
       return reply.status(401).send({ error: "Invalid credentials" });
     }
@@ -105,36 +115,47 @@ export default async function authRoutes(app: FastifyInstance) {
     });
   });
 
-  app.post("/auth/refresh", { schema: refreshTokenSchema }, async (request, reply) => {
-    const { refreshToken } = request.body as { refreshToken: string };
+  app.post(
+    "/auth/refresh",
+    { schema: refreshTokenSchema },
+    async (request, reply) => {
+      const { refreshToken } = request.body as { refreshToken: string };
 
-    if (!refreshToken) {
-      return reply.status(401).send({ error: "Refresh token missing" });
+      if (!refreshToken) {
+        return reply.status(401).send({ error: "Refresh token missing" });
+      }
+
+      const [record] = await db
+        .select()
+        .from(refreshTokens)
+        .where(eq(refreshTokens.token, refreshToken));
+
+      if (!record || record.expiresAt < new Date()) {
+        return reply
+          .status(401)
+          .send({ error: "Invalid or expired refresh token" });
+      }
+
+      const [user] = await db
+        .select({
+          id: users.id,
+          email: users.email,
+        })
+        .from(users)
+        .where(eq(users.id, record.userId));
+
+      if (!user) {
+        return reply.status(401).send({ error: "User not found" });
+      }
+
+      const newAccessToken = generateAccessToken({
+        id: user.id,
+        email: user.email,
+      });
+
+      return reply.send({ accessToken: newAccessToken });
     }
-
-    const [record] = await db
-      .select()
-      .from(refreshTokens)
-      .where(eq(refreshTokens.token, refreshToken));
-
-    if (!record || record.expiresAt < new Date()) {
-      return reply
-        .status(401)
-        .send({ error: "Invalid or expired refresh token" });
-    }
-
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, record.userId));
-
-    const newAccessToken = generateAccessToken({
-      id: user.id,
-      email: user.email,
-    });
-
-    return reply.send({ accessToken: newAccessToken });
-  });
+  );
 
   app.post("/auth/logout", { schema: logoutSchema }, async (request, reply) => {
     const { refreshToken } = request.body as { refreshToken: string };
@@ -148,68 +169,82 @@ export default async function authRoutes(app: FastifyInstance) {
     return reply.send({ message: "Logged out" });
   });
 
-  app.post("/auth/forgot-password",{ schema: forgotPasswordSchema }, async (request, reply) => {
-    const { email } = request.body as { email: string };
+  app.post(
+    "/auth/forgot-password",
+    { schema: forgotPasswordSchema },
+    async (request, reply) => {
+      const { email } = request.body as { email: string };
 
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    if (!user) {
+      const [user] = await db
+        .select({
+          id: users.id,
+        })
+        .from(users)
+        .where(eq(users.email, email));
+
+      if (!user) {
+        return reply.send({
+          message: "If the email exists, a reset link will be sent",
+        });
+      }
+
+      const resetKey = generateResetKey();
+
+      await db.insert(passwordResetTokens).values({
+        userId: user.id,
+        key: resetKey,
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+      });
+
       return reply.send({
-        message: "If the email exists, a reset link will be sent",
+        message: "Reset Key is Generated",
+        key: resetKey,
       });
     }
+  );
 
-    const resetKey = generateResetKey();
+  app.post(
+    "/auth/reset-password",
+    { schema: resetPasswordSchema },
+    async (request, reply) => {
+      const { key, newPassword } = request.body as {
+        key: string;
+        newPassword: string;
+      };
 
-    await db.insert(passwordResetTokens).values({
-      userId: user.id,
-      key:resetKey,
-      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
-    });
+      if (!key || !newPassword) {
+        return reply.status(400).send({
+          error: "key and new password are required",
+        });
+      }
 
-    return reply.send({
-      message: "Reset Key is Generated",
-      key:resetKey, 
-    });
-  });
+      const [record] = await db
+        .select()
+        .from(passwordResetTokens)
+        .where(eq(passwordResetTokens.key, key));
 
-  app.post("/auth/reset-password", { schema: resetPasswordSchema }, async (request, reply) => {
-    const { key, newPassword } = request.body as {
-      key: string;
-      newPassword: string;
-    };
+      if (!record || record.isAccepted || record.expiresAt < new Date()) {
+        return reply.status(400).send({
+          error: "Reset token is invalid or expired",
+        });
+      }
 
-    if (!key || !newPassword) {
-      return reply.status(400).send({
-        error: "key and new password are required",
-      });
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      await db
+        .update(users)
+        .set({ password: hashedPassword })
+        .where(eq(users.id, record.userId));
+
+      await db
+        .update(passwordResetTokens)
+        .set({
+          isAccepted: true,
+          acceptedAt: new Date(),
+        })
+        .where(eq(passwordResetTokens.id, record.id));
+
+      return reply.send({ message: "Password reset successful" });
     }
-
-    const [record] = await db
-      .select()
-      .from(passwordResetTokens)
-      .where(eq(passwordResetTokens.key, key));
-
-    if (!record || record.isAccepted || record.expiresAt < new Date()) {
-      return reply.status(400).send({
-        error: "Reset token is invalid or expired",
-      });
-    }
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    await db
-      .update(users)
-      .set({ password: hashedPassword })
-      .where(eq(users.id, record.userId));
-
-    await db
-      .update(passwordResetTokens)
-      .set({
-        isAccepted: true,
-        acceptedAt: new Date(),
-      })
-      .where(eq(passwordResetTokens.id, record.id));
-
-    return reply.send({ message: "Password reset successful" });
-  });
+  );
 }
