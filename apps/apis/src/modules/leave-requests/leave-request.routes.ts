@@ -6,7 +6,13 @@ import {
   updateLeaveRequest,
   deleteLeaveRequest,
 } from "./leave-request.service";
-import { createLeaveRequestSchema } from "./leave-request.schema";
+import {
+  createLeaveRequestSchema,
+  getMyLeaveRequestsSchema,
+  getLeaveRequestByIdSchema,
+  updateLeaveRequestSchema,
+  deleteLeaveRequestSchema,
+} from "./leave-request.schema";
 import {
   CreateLeaveRequestDto,
   UpdateLeaveRequestDto,
@@ -36,6 +42,7 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
   app.get(
     "/leave-requests/me",
     {
+      schema: getMyLeaveRequestsSchema,
       preHandler: authenticate,
     },
     async (request, reply) => {
@@ -48,25 +55,25 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
   );
 
   app.get(
-  "/leave-requests/:id",
-  {
-    preHandler: authenticate,
-  },
-  async (request, reply) => {
-    const userId = request.user!.id;
-    const { id } = request.params as { id: string };
+    "/leave-requests/:id",
+    {
+      schema: getLeaveRequestByIdSchema,
+      preHandler: authenticate,
+    },
+    async (request, reply) => {
+      const userId = request.user!.id;
+      const { id } = request.params as { id: string };
 
-    const leave = await getLeaveRequestById(userId, id);
+      const leave = await getLeaveRequestById(userId, id);
 
-    return reply.send({
-      data: leave,
-    });
-  }
-);
+      return reply.send({ data: leave });
+    }
+  );
 
   app.patch(
     "/leave-requests/:id",
     {
+      schema: updateLeaveRequestSchema,
       preHandler: authenticate,
     },
     async (request, reply) => {
@@ -86,6 +93,7 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
   app.delete(
     "/leave-requests/:id",
     {
+      schema: deleteLeaveRequestSchema,
       preHandler: authenticate,
     },
     async (request, reply) => {
