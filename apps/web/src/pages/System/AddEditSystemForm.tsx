@@ -1,45 +1,27 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useNavigate, useParams } from "react-router";
 import { useEffect } from "react";
 
 import Input from "../../components/form/input/InputField";
-import { addLeave } from "../../api/post";
-import { getLeaveById } from "../../api/get";
-import Select from "../../components/form/Select";
-import DatePicker from "../../components/form/date-picker";
-import { updateLeave } from "../../api/patch";
+import { getSystemById } from "../../api/get";
+import { updateSystem } from "../../api/put";
+import { addSystem } from "../../api/post";
+import { Controller } from "react-hook-form";
+import MultiSelect from "../../components/form/MultiSelect";
+import { getComponents } from "../../api/get";
 
-/* ---------------- OPTIONS ---------------- */
-
-const LEAVE_TYPES = [
-  { label: "Sick", value: "sick" },
-  { label: "Casual", value: "casual" },
-  { label: "Marriage", value: "marriage" },
-  { label: "WFH", value: "wfh" },
-];
-
-const DAY_TYPES = [
-  { label: "Full Day", value: "full_day" },
-  { label: "First Half", value: "first_half" },
-  { label: "Second Half", value: "second_half" },
-];
-
-/* ---------------- ZOD SCHEMA ---------------- */
-
-const leaveSchema = z.object({
-  fromDate: z.string().min(1, "From date is required"),
-  toDate: z.string().min(1, "To date is required"),
-  type: z.enum(["sick", "casual", "marriage", "wfh"]),
-  dayType: z.enum(["full_day", "first_half", "second_half"]),
-  reason: z.string().min(1, "Reason is required"),
+const systemSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  description: z.string().min(1, "Description is required"),
+  components: z.array(z.string()).min(1, "Select at least one component"),
 });
 
-type LeaveFormData = z.infer<typeof leaveSchema>;
+type SystemFormData = z.infer<typeof systemSchema>;
 
-export default function AddEditLeaveForm() {
+export default function AddEditSystemForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -51,65 +33,72 @@ export default function AddEditLeaveForm() {
     handleSubmit,
     reset,
     control,
-    setValue,
     formState: { errors },
-  } = useForm<LeaveFormData>({
-    resolver: zodResolver(leaveSchema),
+  } = useForm<SystemFormData>({
+    resolver: zodResolver(systemSchema),
     defaultValues: {
-      fromDate: "",
-      toDate: "",
-      type: undefined,
-      dayType: undefined,
-      reason: "",
+      name: "",
+      description: "",
     },
   });
 
+  const { data: componentsData = [] } = useQuery({
+    queryKey: ["components"],
+    queryFn: getComponents,
+  });
+  const componentOptions = componentsData.map((c: any) => ({
+    value: c.id,
+    text: c.name,
+  }));
+
   const { data, isLoading } = useQuery({
-    queryKey: ["leave", id],
-    queryFn: () => getLeaveById(id!),
+    queryKey: ["system", id],
+    queryFn: () => getSystemById(id!),
     enabled: isEdit,
   });
 
   useEffect(() => {
-    if (data) {
-      reset({
-        fromDate: data.fromDate,
-        toDate: data.toDate,
-        type: data.type,
-        dayType: data.dayType,
-        reason: data.reason,
-      });
-    }
-  }, [data, reset]);
+  if (data) {
+    reset({
+      name: data.name,
+      description: data.description,
+      components: data.components?.map((c: any) => c.id) ?? [],
+    });
+  }
+}, [data, reset]);
+
 
   const saveMutation = useMutation({
-    mutationFn: (payload: LeaveFormData) =>
-      isEdit ? updateLeave({ id: id!, payload }) : addLeave(payload),
+    mutationFn: (payload: SystemFormData) =>
+      isEdit ? updateSystem({ id: id!, payload }) : addSystem(payload),
+
     onSuccess: () => {
-      console.log(
-      isEdit
-        ? "Leave updated successfully"
-        : "Leave applied successfully"
-    );
-      queryClient.invalidateQueries({ queryKey: ["leaves"] });
-      navigate("/leaves");
+      queryClient.invalidateQueries({ queryKey: ["systems"] });
+
+      setTimeout(() => {
+        navigate("/systems");
+      }, 1200);
     },
   });
 
-  const onSubmit = (formData: LeaveFormData) => {
+  const onSubmit = (formData: SystemFormData) => {
     saveMutation.mutate(formData);
   };
 
   if (isEdit && isLoading) {
-    return <div className="p-6 text-gray-500">Loading leave...</div>;
+    return (
+      <div className="p-6 text-gray-500 dark:text-gray-400">
+        Loading system...
+      </div>
+    );
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="rounded-xl border bg-white p-6 dark:bg-gray-900 dark:border-gray-700 space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">
-            {isEdit ? "Edit Leave" : "Apply Leave"}
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
+            {isEdit ? "Edit System" : "Add System"}
           </h2>
 
           <button
@@ -118,95 +107,68 @@ export default function AddEditLeaveForm() {
             className="rounded-lg bg-black px-4 py-2 text-white
                        dark:bg-white dark:text-black disabled:opacity-50"
           >
-            {saveMutation.isPending ? "Saving..." : isEdit ? "Update" : "Apply"}
+            {saveMutation.isPending ? "Saving..." : isEdit ? "Update" : "Add"}
           </button>
         </div>
 
+        {saveMutation.isSuccess && (
+          <p className="text-sm text-green-600 dark:text-green-400">
+            {isEdit
+              ? "System updated successfully"
+              : "System added successfully"}
+          </p>
+        )}
+
         {saveMutation.isError && (
-          <p className="text-sm text-red-600">Something went wrong</p>
+          <p className="text-sm text-red-600 dark:text-red-400">
+            Something went wrong. Please try again.
+          </p>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Controller
-            name="type"
-            control={control}
-            render={({ field }) => (
-              <Select
-                label="Leave Type"
-                options={LEAVE_TYPES}
-                value={field.value}
-                onChange={field.onChange}
-                error={!!errors.type}
-                hint={errors.type?.message}
-              />
-            )}
-          />
+          <div className="space-y-6">
+            <Input
+              label="System Name"
+              {...register("name")}
+              error={!!errors.name}
+              hint={errors.name?.message}
+            />
 
-          <Controller
-            name="dayType"
-            control={control}
-            render={({ field }) => (
-              <Select
-                label="Day Type"
-                options={DAY_TYPES}
-                value={field.value}
-                onChange={field.onChange}
-                error={!!errors.dayType}
-                hint={errors.dayType?.message}
-              />
-            )}
-          />
+            <Controller
+              name="components"
+              control={control}
+              defaultValue={[]}
+              render={({ field }) => (
+                <MultiSelect
+                  label="Components"
+                  options={componentOptions}
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Select components"
+                />
+              )}
+            />
 
-          <Controller
-            name="fromDate"
-            control={control}
-            render={({ field }) => (
-              <DatePicker
-                id="fromDate"
-                label="From Date"
-                defaultDate={field.value}
-                onChange={(dates) => {
-                  if (dates?.length) {
-                    setValue(
-                      "fromDate",
-                      dates[0].toISOString().split("T")[0],
-                      { shouldValidate: true }
-                    );
-                  }
-                }}
-              />
+            {errors.components && (
+              <p className="text-sm text-red-600">
+                {errors.components.message}
+              </p>
             )}
-          />
+          </div>
 
-          <Controller
-            name="toDate"
-            control={control}
-            render={({ field }) => (
-              <DatePicker
-                id="toDate"
-                label="To Date"
-                defaultDate={field.value}
-                onChange={(dates) => {
-                  if (dates?.length) {
-                    setValue(
-                      "toDate",
-                      dates[0].toISOString().split("T")[0],
-                      { shouldValidate: true }
-                    );
-                  }
-                }}
-              />
-            )}
-          />
-
-          <Input
-            label="Reason"
-            {...register("reason")}
-            error={!!errors.reason}
-            hint={errors.reason?.message}
-          />
+          <div>
+            <Input
+              label="Description"
+              {...register("description")}
+              error={!!errors.description}
+              hint={errors.description?.message}
+            />
+          </div>
         </div>
       </div>
     </form>
   );
 }
+
+
+

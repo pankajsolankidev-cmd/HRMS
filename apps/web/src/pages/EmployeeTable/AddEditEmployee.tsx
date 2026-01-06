@@ -6,7 +6,7 @@ import AddEmpForm from "../Employee/AddEditEmpForm";
 
 export default function AddEmployee() {
   const { id } = useParams();
-  const isEditMode = Boolean(id);
+  const isEditMode = Boolean(id && id!="new");
 
   return (
     <div className="dark:bg-gray-900">
