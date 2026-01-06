@@ -7,7 +7,7 @@ import { useEffect } from "react";
 
 import Input from "../../components/form/input/InputField";
 
-import { addLeave } from "../../api/post";
+import { addLeave, uploadFile } from "../../api/post";
 import { updateLeave } from "../../api/put";
 import { getLeaveById } from "../../api/get";
 import Select from "../../components/form/Select";
@@ -15,32 +15,38 @@ import DatePicker from "../../components/form/date-picker";
 import FileInput from "../../components/form/input/FileInput";
 
 const LEAVE_TYPES = [
-  { label: "Sick", value: "SICK" },
-  { label: "Casual", value: "CASUAL" },
-  { label: "Marriage", value: "MARRIAGE" },
-  { label: "WFH", value: "WFH" },
+  { label: "Sick", value: "sick" },
+  { label: "Casual", value: "casual" },
+  { label: "Marriage", value: "marriage" },
+  { label: "WFH", value: "wfh" },
 ];
 
 const DAY_TYPES = [
-  { label: "Full Day", value: "FULL_DAY" },
-  { label: "First Half", value: "FIRST_HALF" },
-  { label: "Second Half", value: "SECOND_HALF" },
+  { label: "Full Day", value: "full_day" },
+  { label: "First Half", value: "first_half" },
+  { label: "Second Half", value: "second_half" },
 ];
 
 const STATUS_TYPES = [
-  { label: "Pending", value: "PENDING" },
-  { label: "Approved", value: "APPROVED" },
-  { label: "Rejected", value: "REJECTED" },
+  { label: "Pending", value: "pending" },
+  { label: "Approved", value: "approved" },
+  { label: "Rejected", value: "rejected" },
 ];
-
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const leaveSchema = z.object({
   fromDate: z.string().min(1, "From date is required"),
   toDate: z.string().min(1, "To date is required"),
-  type: z.enum(["SICK", "CASUAL", "MARRIAGE", "WFH"]),
-  dayType: z.enum(["FULL_DAY", "FIRST_HALF", "SECOND_HALF"]),
+  type: z.enum(["sick", "casual", "marriage", "wfh"]),
+  dayType: z.enum(["full_day", "first_half", "second_half"]),
   reason: z.string().min(1, "Reason is required"),
-  status: z.enum(["PENDING", "APPROVED", "REJECTED"]).optional(),
-  file: z.any().optional(),
+  status: z.enum(["pending", "approved", "rejected"]).optional(),
+  file: z
+    .instanceof(File)
+    .refine(
+      (file) => file.size <= MAX_FILE_SIZE,
+      "File size must be less than 10MB"
+    )
+    .optional(),
 });
 
 type LeaveFormData = z.infer<typeof leaveSchema>;
@@ -62,7 +68,12 @@ export default function AddEditLeaveForm() {
   } = useForm<LeaveFormData>({
     resolver: zodResolver(leaveSchema),
     defaultValues: {
-      status: "PENDING",
+      status: "pending",
+      fromDate: "",
+      toDate: "",
+      type: undefined,
+      dayType: undefined,
+      reason: "",
     },
   });
 
@@ -95,9 +106,30 @@ export default function AddEditLeaveForm() {
     },
   });
 
-  const onSubmit = (formData: LeaveFormData) => {
-    saveMutation.mutate(formData);
-  };
+  const onSubmit = async (formData: LeaveFormData) => {
+  try {
+    let fileId: string | undefined;
+
+    if (formData.file) {
+      const uploadedFile = await uploadFile(formData.file);
+      fileId = uploadedFile.id; 
+    }
+
+    const payload = {
+      fromDate: formData.fromDate,
+      toDate: formData.toDate,
+      type: formData.type,
+      dayType: formData.dayType,
+      reason: formData.reason,
+      fileId,
+    };
+
+
+    saveMutation.mutate(payload as any);
+  } catch (error) {
+    console.error("Leave submit failed:", error);
+  }
+};
 
   if (isEdit && isLoading) {
     return <div className="p-6 text-gray-500">Loading leave...</div>;
@@ -166,7 +198,9 @@ export default function AddEditLeaveForm() {
                 defaultDate={field.value}
                 onChange={(dates) => {
                   if (dates?.length) {
-                    field.onChange(dates[0].toISOString().split("T")[0]);
+                    setValue("fromDate", dates[0].toISOString().split("T")[0], {
+                      shouldValidate: true,
+                    });
                   }
                 }}
               />
@@ -188,7 +222,9 @@ export default function AddEditLeaveForm() {
                 defaultDate={field.value}
                 onChange={(dates) => {
                   if (dates?.length) {
-                    field.onChange(dates[0].toISOString().split("T")[0]);
+                    setValue("toDate", dates[0].toISOString().split("T")[0], {
+                      shouldValidate: true,
+                    });
                   }
                 }}
               />
@@ -227,10 +263,15 @@ export default function AddEditLeaveForm() {
             onChange={(e) => {
               const file = e.target.files?.[0];
               if (file) {
-                setValue("file", file);
+                setValue("file", file, { shouldValidate: true });
               }
             }}
           />
+          {errors.file && (
+            <p className="text-sm text-red-600">
+              {errors.file.message as string}
+            </p>
+          )}
         </div>
       </div>
     </form>

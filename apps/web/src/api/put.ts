@@ -41,6 +41,7 @@ export const updateSystem = async ({
   return res.data;
 };
 
+
 export const updateLeave = async ({
   id,
   payload,
@@ -49,13 +50,14 @@ export const updateLeave = async ({
   payload: {
     fromDate: string;
     toDate: string;
-    type: string;
-    dayType: string;
+    type: "sick" | "casual" | "marriage" | "wfh";
+    dayType: "full_day" | "first_half" | "second_half";
     reason: string;
-    status?: string;
   };
 }) => {
-  const res = await api.put(`/leaves/${id}`, payload);
+  const res = await api.put(`/leave-requests/${id}`, payload);
   return res.data;
 };
+
+
 

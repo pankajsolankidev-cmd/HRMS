@@ -6,11 +6,11 @@ import DataTable from "../../components/tables/BasicTables/DataTable";
 import { getLeaves } from "../../api/get";
 import { deleteLeave } from "../../api/delete";
 
-export type LeaveType = "SICK" | "CASUAL" | "MARRIAGE" | "WFH";
+export type LeaveType = "sick" | "casual" | "marriage" | "wfh";
 
-export type LeaveDayType = "FULL_DAY" | "FIRST_HALF" | "SECOND_HALF";
+export type LeaveDayType = "full_day" | "first_half" | "second_half";
 
-export type LeaveStatus = "PENDING" | "APPROVED" | "REJECTED";
+export type LeaveStatus = "pending" | "approved" | "rejected";
 
 export type Leave = {
   id: number;
@@ -81,9 +81,9 @@ export default function GetLeaveTable() {
         <div
           className={`rounded-full px-2 py-1 text-xs font-semibold text-center
             ${
-              row.status === "PENDING"
+              row.status === "pending"
                 ? "bg-yellow-100 text-yellow-800"
-                : row.status === "APPROVED"
+                : row.status === "approved"
                 ? "bg-green-100 text-green-800"
                 : "bg-red-100 text-red-800"
             }`}
@@ -96,7 +96,7 @@ export default function GetLeaveTable() {
       header: "Action",
       cell: (row: Leave) => (
         <div className="flex items-center gap-3 justify-center">
-          {row.status === "PENDING" && (
+          {row.status === "pending" && (
             <>
               <IconEdit
                 size={18}
@@ -115,7 +115,7 @@ export default function GetLeaveTable() {
             </>
           )}
 
-          {row.status !== "PENDING" && (
+          {row.status !== "pending" && (
             <span className="text-xs text-gray-400">Locked</span>
           )}
         </div>

@@ -68,15 +68,32 @@ export const addSystem = async (payload: {
   return res.data;
 };
 
-export const addLeave = async (payload: {
+export const uploadFile = async (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await api.post("/files/upload", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  return res.data; 
+};
+
+export type addLeave= {
   fromDate: string;
   toDate: string;
-  type: "SICK" | "CASUAL" | "MARRIAGE" | "WFH";
-  dayType: "FULL_DAY" | "FIRST_HALF" | "SECOND_HALF";
+  type: "sick" | "casual" | "marriage" | "wfh";
+  dayType: "full_day" | "first_half" | "second_half";
   reason: string;
-  status?: "PENDING" | "APPROVED" | "REJECTED";
-}) => {
-  const res = await api.post("/leaves", payload);
+  fileId?: string;   
+};
+
+export const addLeave = async (payload: addLeave) => {
+  const res = await api.post("/leave-requests", payload);
   return res.data;
 };
+
+
 
