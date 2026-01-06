@@ -84,16 +84,16 @@ export const uploadFile = async (file: File) => {
   };
 };
 
-export type addLeave= {
+export type AddLeavePayload = {
   fromDate: string;
   toDate: string;
   type: "sick" | "casual" | "marriage" | "wfh";
   dayType: "full_day" | "first_half" | "second_half";
   reason: string;
-  fileId?: string;   
+  file?: string;
 };
 
-export const addLeave = async (payload: addLeave) => {
+export const addLeave = async (payload: AddLeavePayload) => {
   const res = await api.post("/leave-requests", payload);
   return res.data;
 };

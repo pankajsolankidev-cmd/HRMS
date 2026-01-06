@@ -41,7 +41,6 @@ export const updateSystem = async ({
   return res.data;
 };
 
-
 export const updateLeave = async ({
   id,
   payload,
@@ -55,7 +54,7 @@ export const updateLeave = async ({
     reason: string;
   };
 }) => {
-  const res = await api.put(`/leave-requests/${id}`, payload);
+  const res = await api.patch(`/leave-requests/${id}`, payload);
   return res.data;
 };
 

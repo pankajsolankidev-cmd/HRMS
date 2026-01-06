@@ -6,8 +6,6 @@ import DataTable from "../../components/tables/BasicTables/DataTable";
 import { getLeaves } from "../../api/get";
 import { deleteLeave } from "../../api/delete";
 
-/* ---------------- TYPES ---------------- */
-
 export type LeaveType = "sick" | "casual" | "marriage" | "wfh";
 export type LeaveDayType = "full_day" | "first_half" | "second_half";
 export type LeaveStatus = "pending" | "approved" | "rejected";
@@ -30,8 +28,6 @@ export type Leave = {
   file?: string | null;
 };
 
-/* ---------------- COMPONENT ---------------- */
-
 export default function GetLeaveTable() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -51,8 +47,6 @@ export default function GetLeaveTable() {
       queryClient.invalidateQueries({ queryKey: ["leaves"] });
     },
   });
-
-  /* ---------------- COLUMNS ---------------- */
 
   const columns = [
     {
@@ -104,7 +98,7 @@ export default function GetLeaveTable() {
             <>
               <IconEdit
                 size={18}
-                onClick={() => navigate(`/leaves/${row.id}`)}
+                onClick={() => navigate(`/leave-requests/${row.id}`)}
                 className="cursor-pointer text-blue-600 dark:text-blue-400"
               />
               <IconTrash
@@ -125,8 +119,6 @@ export default function GetLeaveTable() {
     },
   ];
 
-  /* ---------------- UI STATES (NO WHITE PAGE) ---------------- */
-
   if (isLoading) {
     return <div className="p-6 text-gray-500">Loading your leaves…</div>;
   }
@@ -140,7 +132,7 @@ export default function GetLeaveTable() {
       <div className="space-y-4">
         <div className="flex justify-end">
           <button
-            onClick={() => navigate("/leaves/new")}
+            onClick={() => navigate("/leave-requests/new")}
             className="flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-white
                        dark:bg-white dark:text-black"
           >
@@ -156,13 +148,11 @@ export default function GetLeaveTable() {
     );
   }
 
-  /* ---------------- MAIN RENDER ---------------- */
-
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
         <button
-          onClick={() => navigate("/leaves/new")}
+          onClick={() => navigate("/leave-requests/new")}
           className="flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-white
                      dark:bg-white dark:text-black"
         >

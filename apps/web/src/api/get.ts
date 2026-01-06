@@ -32,11 +32,10 @@ export const getSystemById = async (id: string) => {
 
 export const getLeaves = async () => {
   const res = await api.get("/leave-requests/me");
-   console.log("LEAVES API RESPONSE 👉", res.data);
   return Array.isArray(res.data?.data) ? res.data.data : [];
 
 }
 export const getLeaveById = async (id:string) => {
-  const res = await api.get(`/leaves/${id}`);
-  return res.data;
+  const res = await api.get(`/leave-requests/${id}`);
+  return res.data?.data ?? res.data;
 }

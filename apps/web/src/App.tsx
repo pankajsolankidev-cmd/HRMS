@@ -59,8 +59,8 @@ function AppRoutes() {
           <Route path="/systems/:id" element={<AddEditSystem />} />
 
           
-          <Route path="/leaves" element={<Leave />} />
-          <Route path="/leaves/:id" element={<AddEditLeave />} />
+          <Route path="/leave-requests" element={<Leave />} />
+          <Route path="/leave-requests/:id" element={<AddEditLeave />} />
         </Route>
       </Route>
 

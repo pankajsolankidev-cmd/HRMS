@@ -16,6 +16,6 @@ export const deleteSystem = async (id: number) => {
 };
 
 export const deleteLeave = async (id:number) => {
-  const res = await api.delete(`/leaves/${id}`);
+  const res = await api.delete(`/leave-requests/${id}`);
   return res.data;
 }

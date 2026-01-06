@@ -46,7 +46,8 @@ const leaveSchema = z.object({
       (file) => file.size <= MAX_FILE_SIZE,
       "File size must be less than 10MB"
     )
-    .optional(),
+    .optional()
+    .nullable(),
 });
 
 type LeaveFormData = z.infer<typeof leaveSchema>;
@@ -92,44 +93,48 @@ export default function AddEditLeaveForm() {
         dayType: data.dayType,
         reason: data.reason,
         status: data.status,
+        file: null,
       });
     }
   }, [data, reset]);
 
   const saveMutation = useMutation({
-    mutationFn: (payload: LeaveFormData) =>
+    mutationFn: (payload: any) =>
       isEdit ? updateLeave({ id: id!, payload }) : addLeave(payload),
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["leaves"] });
-      navigate("/leaves");
+      navigate("/leave-requests");
     },
+    onError:()=>{
+      console.log("ERRRRRORRRR");
+    }
   });
 
   const onSubmit = async (formData: LeaveFormData) => {
-  try {
-    let filePath: string | undefined;
+    try {
+      let filePath = data?.file; 
 
-    if (formData.file) {
-      const uploadedFile = await uploadFile(formData.file);
-      filePath = uploadedFile.path; 
+      if (formData.file) {
+        const uploadedFile = await uploadFile(formData.file);
+        filePath = uploadedFile.path; 
+      }
+
+      const payload = {
+        fromDate: formData.fromDate,
+        toDate: formData.toDate,
+        type: formData.type,
+        dayType: formData.dayType,
+        reason: formData.reason,
+        file: filePath,
+      };
+
+      saveMutation.mutate(payload as any);
+    } catch (error) {
+      console.error("Leave submit failed:", error);
+      
     }
-
-    const payload = {
-      fromDate: formData.fromDate,
-      toDate: formData.toDate,
-      type: formData.type,
-      dayType: formData.dayType,
-      reason: formData.reason,
-      filePath,
-    };
-
-
-    saveMutation.mutate(payload as any);
-  } catch (error) {
-    console.error("Leave submit failed:", error);
-  }
-};
+  };
 
   if (isEdit && isLoading) {
     return <div className="p-6 text-gray-500">Loading leave...</div>;
@@ -235,7 +240,7 @@ export default function AddEditLeaveForm() {
             <p className="text-sm text-red-600">{errors.toDate.message}</p>
           )}
 
-          {isEdit && (
+          {/* {isEdit && (
             <Controller
               name="status"
               control={control}
@@ -245,10 +250,11 @@ export default function AddEditLeaveForm() {
                   options={STATUS_TYPES}
                   value={field.value}
                   onChange={field.onChange}
+                  
                 />
               )}
             />
-          )}
+          )} */}
 
           <Input
             label="Reason"

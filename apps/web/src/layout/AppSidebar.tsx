@@ -48,7 +48,7 @@ const navItems: NavItem[] = [
   {
     icon: <CalendarIcon />,
     name: "Leaves",
-    path: "/leaves",
+    path: "/leave-requests",
   }
 ];
 
