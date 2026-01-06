@@ -6,16 +6,15 @@ import DataTable from "../../components/tables/BasicTables/DataTable";
 import { getLeaves } from "../../api/get";
 import { deleteLeave } from "../../api/delete";
 
+/* ---------------- TYPES ---------------- */
+
 export type LeaveType = "sick" | "casual" | "marriage" | "wfh";
-
 export type LeaveDayType = "full_day" | "first_half" | "second_half";
-
 export type LeaveStatus = "pending" | "approved" | "rejected";
 
 export type Leave = {
   id: number;
   employeeId: string;
-  employeeName?: string;
 
   fromDate: string;
   toDate: string;
@@ -28,9 +27,10 @@ export type Leave = {
 
   approvedAt?: string | null;
   approvedBy?: string | null;
-
   file?: string | null;
 };
+
+/* ---------------- COMPONENT ---------------- */
 
 export default function GetLeaveTable() {
   const queryClient = useQueryClient();
@@ -52,11 +52,15 @@ export default function GetLeaveTable() {
     },
   });
 
+  /* ---------------- COLUMNS ---------------- */
+
   const columns = [
     {
       header: "Type",
       cell: (row: Leave) => (
-        <div className="font-medium text-center">{row.type}</div>
+        <div className="font-medium text-center capitalize">
+          {row.type}
+        </div>
       ),
     },
     {
@@ -70,7 +74,7 @@ export default function GetLeaveTable() {
     {
       header: "Day Type",
       cell: (row: Leave) => (
-        <div className="font-medium text-center">
+        <div className="font-medium text-center capitalize">
           {row.dayType.replace("_", " ")}
         </div>
       ),
@@ -96,7 +100,7 @@ export default function GetLeaveTable() {
       header: "Action",
       cell: (row: Leave) => (
         <div className="flex items-center gap-3 justify-center">
-          {row.status === "pending" && (
+          {row.status === "pending" ? (
             <>
               <IconEdit
                 size={18}
@@ -113,15 +117,46 @@ export default function GetLeaveTable() {
                 className="cursor-pointer text-red-600 dark:text-red-400"
               />
             </>
-          )}
-
-          {row.status !== "pending" && (
+          ) : (
             <span className="text-xs text-gray-400">Locked</span>
           )}
         </div>
       ),
     },
   ];
+
+  /* ---------------- UI STATES (NO WHITE PAGE) ---------------- */
+
+  if (isLoading) {
+    return <div className="p-6 text-gray-500">Loading your leaves…</div>;
+  }
+
+  if (isError) {
+    return <div className="p-6 text-red-600">Failed to load leaves.</div>;
+  }
+
+  if (leaves.length === 0) {
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-end">
+          <button
+            onClick={() => navigate("/leaves/new")}
+            className="flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-white
+                       dark:bg-white dark:text-black"
+          >
+            <IconPlus size={18} />
+            Apply Leave
+          </button>
+        </div>
+
+        <div className="rounded-lg border p-6 text-center text-gray-500">
+          You haven’t applied for any leave yet.
+        </div>
+      </div>
+    );
+  }
+
+  /* ---------------- MAIN RENDER ---------------- */
 
   return (
     <div className="space-y-4">
@@ -136,12 +171,7 @@ export default function GetLeaveTable() {
         </button>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={leaves}
-        isLoading={isLoading}
-        isError={isError}
-      />
+      <DataTable columns={columns} data={leaves} />
     </div>
   );
 }
