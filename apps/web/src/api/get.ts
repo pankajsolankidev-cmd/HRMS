@@ -31,7 +31,7 @@ export const getSystemById = async (id: string) => {
 };
 
 export const getLeaves = async () => {
-  const res = await api.get("/leaves");
+  const res = await api.get("/leaves/me");
   return res.data;
 }
 export const getLeaveById = async (id:string) => {

@@ -108,11 +108,11 @@ export default function AddEditLeaveForm() {
 
   const onSubmit = async (formData: LeaveFormData) => {
   try {
-    let fileId: string | undefined;
+    let filePath: string | undefined;
 
     if (formData.file) {
       const uploadedFile = await uploadFile(formData.file);
-      fileId = uploadedFile.id; 
+      filePath = uploadedFile.path; 
     }
 
     const payload = {
@@ -121,7 +121,7 @@ export default function AddEditLeaveForm() {
       type: formData.type,
       dayType: formData.dayType,
       reason: formData.reason,
-      fileId,
+      filePath,
     };
 
 

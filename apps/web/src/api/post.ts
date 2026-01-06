@@ -78,7 +78,10 @@ export const uploadFile = async (file: File) => {
     },
   });
 
-  return res.data; 
+  return res.data as {
+    path?: string;
+    url?: string;
+  };
 };
 
 export type addLeave= {
