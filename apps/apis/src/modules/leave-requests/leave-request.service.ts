@@ -55,6 +55,38 @@ export async function getMyLeaveRequests(userId: string) {
     .orderBy(desc(leaveRequests.createdAt));
 }
 
+export async function getLeaveRequestById(
+  userId: string,
+  leaveId: string
+) {
+  // 1️⃣ Resolve employee
+  const [employee] = await db
+    .select({ id: employees.id })
+    .from(employees)
+    .where(eq(employees.userId, userId));
+
+  if (!employee) {
+    throw new Error("Employee not found");
+  }
+
+  // 2️⃣ Fetch leave
+  const [leave] = await db
+    .select()
+    .from(leaveRequests)
+    .where(
+      and(
+        eq(leaveRequests.id, leaveId),
+        eq(leaveRequests.employeeId, employee.id)
+      )
+    );
+
+  if (!leave) {
+    throw new Error("Leave request not found");
+  }
+
+  return leave;
+}
+
 export async function updateLeaveRequest(
   userId: string,
   leaveId: string,

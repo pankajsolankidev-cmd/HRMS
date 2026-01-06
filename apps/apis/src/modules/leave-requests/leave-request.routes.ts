@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import {
   createLeaveRequest,
   getMyLeaveRequests,
+  getLeaveRequestById,
   updateLeaveRequest,
   deleteLeaveRequest,
 } from "./leave-request.service";
@@ -45,6 +46,23 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
       return reply.send({ data: leaves });
     }
   );
+
+  app.get(
+  "/leave-requests/:id",
+  {
+    preHandler: authenticate,
+  },
+  async (request, reply) => {
+    const userId = request.user!.id;
+    const { id } = request.params as { id: string };
+
+    const leave = await getLeaveRequestById(userId, id);
+
+    return reply.send({
+      data: leave,
+    });
+  }
+);
 
   app.patch(
     "/leave-requests/:id",
