@@ -7,10 +7,10 @@ import { useEffect } from "react";
 
 import Input from "../../components/form/input/InputField";
 import { addLeave } from "../../api/post";
-import { updateLeave } from "../../api/put";
 import { getLeaveById } from "../../api/get";
 import Select from "../../components/form/Select";
 import DatePicker from "../../components/form/date-picker";
+import { updateLeave } from "../../api/patch";
 
 /* ---------------- OPTIONS ---------------- */
 

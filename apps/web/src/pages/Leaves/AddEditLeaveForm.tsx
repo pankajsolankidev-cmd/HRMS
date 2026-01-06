@@ -8,11 +8,11 @@ import { useEffect } from "react";
 import Input from "../../components/form/input/InputField";
 
 import { addLeave, uploadFile } from "../../api/post";
-import { updateLeave } from "../../api/put";
 import { getLeaveById } from "../../api/get";
 import Select from "../../components/form/Select";
 import DatePicker from "../../components/form/date-picker";
 import FileInput from "../../components/form/input/FileInput";
+import { updateLeave } from "../../api/patch";
 
 const LEAVE_TYPES = [
   { label: "Sick", value: "sick" },
@@ -239,22 +239,6 @@ export default function AddEditLeaveForm() {
           {errors.toDate && (
             <p className="text-sm text-red-600">{errors.toDate.message}</p>
           )}
-
-          {/* {isEdit && (
-            <Controller
-              name="status"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  label="Status"
-                  options={STATUS_TYPES}
-                  value={field.value}
-                  onChange={field.onChange}
-                  
-                />
-              )}
-            />
-          )} */}
 
           <Input
             label="Reason"
