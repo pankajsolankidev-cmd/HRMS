@@ -13,7 +13,6 @@ type Employee = {
   position: string;
   joiningDate: string;
   onboardingBuddy: string;
-  
 };
 
 export default function GetEmpTable() {
@@ -77,7 +76,7 @@ export default function GetEmpTable() {
     {
       header: "Action",
       cell: (emp: Employee) => (
-        <div className="flex gap-3 justify-center">
+        <div className="flex justify-center gap-3">
           <IconEdit
             size={20}
             onClick={() => navigate(`/employees/${emp.id}`)}
@@ -106,9 +105,10 @@ export default function GetEmpTable() {
                      dark:bg-white dark:text-black"
         >
           <IconPlus size={18} />
-          Add System
+          Add Employee
         </button>
       </div>
+
       <DataTable
         columns={columns}
         data={employees}

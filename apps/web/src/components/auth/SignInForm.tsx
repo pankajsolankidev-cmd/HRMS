@@ -8,10 +8,8 @@ import Input from "../form/input/InputField";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
 import { signInApi } from "../../api/post";
-import Label from "../form/Label";
 import Cookies from "js-cookie";
 
-/* ---------------- ZOD SCHEMA ---------------- */
 const signInSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
 
@@ -55,7 +53,6 @@ export default function SignInForm() {
   return (
     <div className="w-500 min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
       <div className="relative w-full max-w-4xl h-[500px] bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
-        {/* LEFT OVERLAY */}
         <motion.div
           initial={{ x: "0%" }}
           animate={{ x: "0%" }}

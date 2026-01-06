@@ -1,12 +1,19 @@
 export interface UpdateEmployeeDto {
-  firstName?: string
-  lastName?: string
-  position?: string
-  departmentId?: number
-  managerId?: string | null
-  systemId?: string
+  firstName?: string;
+  lastName?: string;
+  position?: string;
+  departmentId?: number;
+  managerId?: string | null;
+  systemId?: string | null;
 
-  welcomewithWhatsapp?: boolean
-  welcomewithGmail?: boolean
-  welcomewithSlack?: boolean
+  welcome?: {
+    welcomewithWhatsapp?: boolean;
+    welcomewithGmail?: boolean;
+    welcomewithSlack?: boolean;
+  };
+
+  documents?: {
+    generateOfferLetter?: boolean;
+    generateAppointmentLetter?: boolean;
+  };
 }

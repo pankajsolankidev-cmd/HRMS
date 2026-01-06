@@ -1,9 +1,8 @@
 import { pgTable, uuid, boolean, timestamp } from "drizzle-orm/pg-core";
 import { employees } from "./employees.schema";
+import { baseColumns } from "../base-columns";
 
 export const documentGeneration = pgTable("document_generation", {
-  id: uuid("id").defaultRandom().primaryKey(),
-
   employeeId: uuid("employee_id")
     .notNull()
     .references(() => employees.id, { onDelete: "cascade" }),
@@ -16,6 +15,5 @@ export const documentGeneration = pgTable("document_generation", {
     .default(false)
     .notNull(),
 
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  ...baseColumns,
 });

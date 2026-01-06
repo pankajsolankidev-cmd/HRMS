@@ -1,19 +1,33 @@
 import { eq } from "drizzle-orm";
-import { db } from "../../db";
+import bcrypt from "bcryptjs";
 
-import {
-  employees,
-  documentGeneration,
-} from "../../db/schema";
+import { db } from "../../db";
+import { employees, documentGeneration, users } from "../../db/schema";
 
 import type { CreateEmployeeDto } from "@shared/types/src/employee/employee.dto";
 import type { UpdateEmployeeDto } from "@shared/types/src/employee/update-employee.dto";
 
-// ============================
-// CREATE EMPLOYEE
-// ============================
+const DEFAULT_EMPLOYEE_PASSWORD: string = (() => {
+  const pwd = process.env.DEFAULT_EMPLOYEE_PASSWORD;
+  if (!pwd) {
+    throw new Error("DEFAULT_EMPLOYEE_PASSWORD is not set in environment");
+  }
+  return pwd;
+})();
+
 export async function createEmployee(data: CreateEmployeeDto) {
-  return await db.transaction(async (tx) => {
+  return db.transaction(async (tx) => {
+    const hashedPassword = await bcrypt.hash(DEFAULT_EMPLOYEE_PASSWORD, 10);
+
+    const [user] = await tx
+      .insert(users)
+      .values({
+        username: `${data.firstName}.${data.lastName}`.toLowerCase(),
+        email: data.email,
+        password: hashedPassword,
+      })
+      .returning({ id: users.id });
+
     const [employee] = await tx
       .insert(employees)
       .values({
@@ -24,13 +38,13 @@ export async function createEmployee(data: CreateEmployeeDto) {
         departmentId: data.departmentId,
         joiningDate: data.joiningDate,
         managerId: data.managerId ?? null,
+        systemId: data.systemId ?? null,
 
-        welcomewithWhatsapp: data.welcome.whatsapp,
-        welcomewithGmail: data.welcome.gmail,
-        welcomewithSlack: data.welcome.slack,
+        welcomewithWhatsapp: data.welcome.welcomewithWhatsapp,
+        welcomewithGmail: data.welcome.welcomewithGmail,
+        welcomewithSlack: data.welcome.welcomewithSlack,
 
-        systemId: data.systemId,
-        userId: data.userId,
+        userId: user.id,
       })
       .returning({ id: employees.id });
 
@@ -40,56 +54,156 @@ export async function createEmployee(data: CreateEmployeeDto) {
       generateAppointmentLetter: data.documents.generateAppointmentLetter,
     });
 
-    return { employeeId: employee.id };
+    return {
+      employeeId: employee.id,
+      userId: user.id,
+    };
   });
 }
 
-// ============================
-// GET ALL EMPLOYEES
-// ============================
-export async function getEmployees() {
-  return await db.select().from(employees);
+export async function updateEmployee(id: string, data: UpdateEmployeeDto) {
+  return db.transaction(async (tx) => {
+    const employeeUpdateData: Partial<typeof employees.$inferInsert> = {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      position: data.position,
+      departmentId: data.departmentId,
+      managerId: data.managerId,
+      systemId: data.systemId,
+
+      welcomewithWhatsapp: data.welcome?.welcomewithWhatsapp,
+      welcomewithGmail: data.welcome?.welcomewithGmail,
+      welcomewithSlack: data.welcome?.welcomewithSlack,
+
+      updatedAt: new Date(),
+    };
+
+    Object.keys(employeeUpdateData).forEach(
+      (key) =>
+        employeeUpdateData[key as keyof typeof employeeUpdateData] ===
+          undefined &&
+        delete employeeUpdateData[key as keyof typeof employeeUpdateData]
+    );
+
+    const result = await tx
+      .update(employees)
+      .set(employeeUpdateData)
+      .where(eq(employees.id, id))
+      .returning();
+
+    if (result.length === 0) {
+      throw new Error("Employee not found or nothing to update");
+    }
+
+    if (data.documents) {
+      const documentUpdateData: Partial<
+        typeof documentGeneration.$inferInsert
+      > = {
+        generateOfferLetter: data.documents.generateOfferLetter,
+        generateAppointmentLetter: data.documents.generateAppointmentLetter,
+        updatedAt: new Date(),
+      };
+
+      Object.keys(documentUpdateData).forEach(
+        (key) =>
+          documentUpdateData[key as keyof typeof documentUpdateData] ===
+            undefined &&
+          delete documentUpdateData[key as keyof typeof documentUpdateData]
+      );
+
+      await tx
+        .update(documentGeneration)
+        .set(documentUpdateData)
+        .where(eq(documentGeneration.employeeId, id));
+    }
+
+    return {
+      id,
+      message: "Employee updated successfully",
+    };
+  });
 }
 
-// ============================
-// GET EMPLOYEE BY ID
-// ============================
-export async function getEmployeeById(id: string) {
-  const [employee] = await db
-    .select()
+export async function getEmployees() {
+  const rows = await db
+    .select({
+      id: employees.id,
+      firstName: employees.firstName,
+      lastName: employees.lastName,
+      email: employees.email,
+      position: employees.position,
+      departmentId: employees.departmentId,
+      joiningDate: employees.joiningDate,
+      managerId: employees.managerId,
+      systemId: employees.systemId,
+      userId: employees.userId,
+
+      welcome: {
+        welcomewithWhatsapp: employees.welcomewithWhatsapp,
+        welcomewithGmail: employees.welcomewithGmail,
+        welcomewithSlack: employees.welcomewithSlack,
+      },
+
+      documents: {
+        generateOfferLetter: documentGeneration.generateOfferLetter,
+        generateAppointmentLetter: documentGeneration.generateAppointmentLetter,
+      },
+    })
     .from(employees)
+    .leftJoin(
+      documentGeneration,
+      eq(documentGeneration.employeeId, employees.id)
+    );
+
+  return rows;
+}
+
+export async function getEmployeeById(id: string) {
+  const rows = await db
+    .select({
+      id: employees.id,
+      firstName: employees.firstName,
+      lastName: employees.lastName,
+      email: employees.email,
+      position: employees.position,
+      departmentId: employees.departmentId,
+      joiningDate: employees.joiningDate,
+      managerId: employees.managerId,
+      systemId: employees.systemId,
+      userId: employees.userId,
+
+      welcome: {
+        welcomewithWhatsapp: employees.welcomewithWhatsapp,
+        welcomewithGmail: employees.welcomewithGmail,
+        welcomewithSlack: employees.welcomewithSlack,
+      },
+
+      documents: {
+        generateOfferLetter: documentGeneration.generateOfferLetter,
+        generateAppointmentLetter: documentGeneration.generateAppointmentLetter,
+      },
+    })
+    .from(employees)
+    .leftJoin(
+      documentGeneration,
+      eq(documentGeneration.employeeId, employees.id)
+    )
     .where(eq(employees.id, id));
 
-  return employee;
+  return rows.length ? rows[0] : null;
 }
 
-// ============================
-// UPDATE EMPLOYEE
-// ============================
-export async function updateEmployee(
-  id: string,
-  data: UpdateEmployeeDto
-) {
-  const [updated] = await db
-    .update(employees)
-    .set({
-      ...data,
-      updatedAt: new Date(),
-    })
-    .where(eq(employees.id, id))
-    .returning({ id: employees.id });
-
-  return updated;
-}
-
-// ============================
-// DELETE EMPLOYEE
-// ============================
 export async function deleteEmployee(id: string) {
-  const [deleted] = await db
-    .delete(employees)
-    .where(eq(employees.id, id))
-    .returning({ id: employees.id });
+  return db.transaction(async (tx) => {
+    await tx
+      .delete(documentGeneration)
+      .where(eq(documentGeneration.employeeId, id));
 
-  return deleted;
+    const [deleted] = await tx
+      .delete(employees)
+      .where(eq(employees.id, id))
+      .returning({ id: employees.id });
+
+    return deleted;
+  });
 }
