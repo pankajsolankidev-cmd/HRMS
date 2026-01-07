@@ -14,3 +14,8 @@ export const deleteSystem = async (id: number) => {
   const res = await api.delete(`/systems/${id}`);
   return res.data;
 };
+
+export const deleteSalaryStructure = async (id: string) => {
+  const res = await api.delete(`/salary-structures/${id}`);
+  return res.data;
+};

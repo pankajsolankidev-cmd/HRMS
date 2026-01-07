@@ -68,3 +68,8 @@ export const addSystem = async (payload: {
   });
   return res.data;
 };
+
+export const addSalaryStructure = async (payload: any) => {
+  const res = await api.post("/salary-structures", payload);
+  return res.data;
+};

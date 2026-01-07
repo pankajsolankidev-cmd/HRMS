@@ -7,6 +7,7 @@ import {
   UserCircleIcon,
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
+import {IconReceiptRupee } from "@tabler/icons-react";
 
 type NavItem = {
   name: string;
@@ -41,6 +42,11 @@ const navItems: NavItem[] = [
     name: "System",
     path: "/systems",
   },
+  {
+    icon:<IconReceiptRupee/>,
+    name:"Salary",
+    path:"/salary-structures",
+  }
 ];
 
 const AppSidebar: React.FC = () => {

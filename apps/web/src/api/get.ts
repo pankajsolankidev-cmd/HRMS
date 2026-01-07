@@ -29,3 +29,13 @@ export const getSystemById = async (id: string) => {
   const res = await api.get(`/systems/${id}`);
   return res.data;
 };
+
+export const getSalaryStructures = async () => {
+  const res = await api.get("/salary-structures");
+  return Array.isArray(res.data) ? res.data : [];
+};
+
+export const getSalaryStructureById = async (id: string) => {
+  const res = await api.get(`/salary-structures/${id}`);
+  return res.data;
+};

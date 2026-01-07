@@ -29,6 +29,8 @@ import System from "./pages/SystemTable/System";
 import AddEditSystem from "./pages/SystemTable/AddEditSystem";
 
 import { ScrollToTop } from "./components/common/ScrollToTop";
+import Salary from "./pages/SalaryTable/Salary";
+import AddEditSalary from "./pages/SalaryTable/AddEditSalary";
 
 function AppRoutes() {
   return (
@@ -55,6 +57,9 @@ function AppRoutes() {
 
           <Route path="/systems" element={<System />} />
           <Route path="/systems/:id" element={<AddEditSystem />} />
+
+          <Route path="/salary-structures" element={<Salary />} />
+          <Route path="/salary-structures/:id" element={<AddEditSalary />} />
         </Route>
       </Route>
 
