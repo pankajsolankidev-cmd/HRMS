@@ -1,3 +1,4 @@
+import type { EmployeePayload } from "../pages/Employee/AddEditEmpForm";
 import api from "./axios";
 
 export const updateEmployee = async ({
@@ -5,7 +6,7 @@ export const updateEmployee = async ({
   payload,
 }: {
   id: string;
-  payload: any;
+  payload: EmployeePayload;
 }) => {
   const res = await api.put(`/employees/${id}`, payload);
   return res.data;

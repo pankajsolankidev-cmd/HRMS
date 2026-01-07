@@ -10,10 +10,9 @@ import {
 
 import { systems } from "./systems.schema";
 import { users } from "./users.schema";
+import { baseColumns } from "../base-columns";
 
 export const employees = pgTable("employees", {
-  id: uuid("id").defaultRandom().primaryKey(),
-
   firstName: varchar("first_name", { length: 100 }).notNull(),
   lastName: varchar("last_name", { length: 100 }).notNull(),
   email: varchar("email", { length: 255 }).notNull(),
@@ -34,6 +33,5 @@ export const employees = pgTable("employees", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
 
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  ...baseColumns,
 });
