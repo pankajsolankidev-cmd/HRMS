@@ -8,6 +8,13 @@
       "when": 1767612386155,
       "tag": "0000_adorable_microbe",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1767765743420,
+      "tag": "0001_plain_puff_adder",
+      "breakpoints": true
     }
   ]
 }
