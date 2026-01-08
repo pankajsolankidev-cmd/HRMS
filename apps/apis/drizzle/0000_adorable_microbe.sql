@@ -1,3 +1,6 @@
+CREATE TYPE "public"."leave_day_type" AS ENUM('full_day', 'first_half', 'second_half');--> statement-breakpoint
+CREATE TYPE "public"."leave_status" AS ENUM('pending', 'approved', 'rejected');--> statement-breakpoint
+CREATE TYPE "public"."leave_type" AS ENUM('sick', 'casual', 'marriage', 'wfh');--> statement-breakpoint
 CREATE TABLE "components" (
 	"name" varchar(100) NOT NULL,
 	"description" text,
@@ -36,12 +39,12 @@ CREATE TABLE "employees" (
 );
 --> statement-breakpoint
 CREATE TABLE "users" (
-	"username" varchar(100) NOT NULL,
-	"email" varchar(255) NOT NULL,
-	"password" text NOT NULL,
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now()
+	"updated_at" timestamp DEFAULT now(),
+	"username" varchar(100) NOT NULL,
+	"email" varchar(255) NOT NULL,
+	"password" text NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "refresh_tokens" (
@@ -81,10 +84,25 @@ CREATE TABLE "system_components" (
 	"updated_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
+CREATE TABLE "leave_requests" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now(),
+	"employee_id" uuid NOT NULL,
+	"from_date" date NOT NULL,
+	"to_date" date NOT NULL,
+	"type" "leave_type" NOT NULL,
+	"day_type" "leave_day_type" NOT NULL,
+	"status" "leave_status" DEFAULT 'pending' NOT NULL,
+	"reason" text,
+	"file" text
+);
+--> statement-breakpoint
 ALTER TABLE "document_generation" ADD CONSTRAINT "document_generation_employee_id_employees_id_fk" FOREIGN KEY ("employee_id") REFERENCES "public"."employees"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "employees" ADD CONSTRAINT "employees_system_id_systems_id_fk" FOREIGN KEY ("system_id") REFERENCES "public"."systems"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "employees" ADD CONSTRAINT "employees_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "refresh_tokens" ADD CONSTRAINT "refresh_tokens_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "password_reset_tokens" ADD CONSTRAINT "password_reset_tokens_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "system_components" ADD CONSTRAINT "system_components_system_id_systems_id_fk" FOREIGN KEY ("system_id") REFERENCES "public"."systems"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "system_components" ADD CONSTRAINT "system_components_component_id_components_id_fk" FOREIGN KEY ("component_id") REFERENCES "public"."components"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "system_components" ADD CONSTRAINT "system_components_component_id_components_id_fk" FOREIGN KEY ("component_id") REFERENCES "public"."components"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "leave_requests" ADD CONSTRAINT "leave_requests_employee_id_employees_id_fk" FOREIGN KEY ("employee_id") REFERENCES "public"."employees"("id") ON DELETE no action ON UPDATE no action;

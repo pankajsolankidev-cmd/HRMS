@@ -13,13 +13,22 @@ import employeeRoutes from "./modules/employees/employee.routes";
 import systemRoutes from "./modules/systems/system.routes";
 import authPlugin from "./plugins/auth.plugin";
 import componentRoutes from "./modules/components/component.routes";
+import leaveRequestRoutes from "./modules/leave-requests/leave-request.routes";
+import fastifyMultipart from "@fastify/multipart";
+import fileRoutes from "./modules/files/file.routes";
 
 const app = Fastify({ logger: true });
+
+app.register(fastifyMultipart, {
+  limits: {
+    fileSize: 10 * 1024 * 1024, 
+  },
+});
 
 app.register(cors, {
   origin: ["http://localhost:5173", "http://192.168.1.33:5173"],
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "PATCH","DELETE", "OPTIONS"],
 });
 
 app.register(cookie);
@@ -55,6 +64,9 @@ app.register(employeeRoutes,{
 });
 app.register(systemRoutes);
 app.register(componentRoutes);
+app.register(leaveRequestRoutes);
+app.register(fileRoutes);
+
 
 app.get("/health", async () => {
   return { status: "API is running 🚀" };
