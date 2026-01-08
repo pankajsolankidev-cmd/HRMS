@@ -5,6 +5,16 @@ import type { ProcessPayrollDto } from "@shared/types/src/payroll/payroll.dto";
 
 export class PayrollService {
   static async process(payload: ProcessPayrollDto, processedBy: string) {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+
+    if (
+      payload.year > currentYear ||
+      (payload.year === currentYear && payload.month > currentMonth)
+    ) {
+      throw new Error("Cannot process payroll for a future month");
+    }
     const [salaryStructure] = await db
       .select()
       .from(salaryStructures)
