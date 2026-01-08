@@ -1,7 +1,9 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "../../db";
 import { payrolls, salaryStructures } from "../../db/schema";
+
 import type { ProcessPayrollDto } from "@shared/types/src/payroll/payroll.dto";
+import type { PayrollFilterDto } from "@shared/types/src/payroll/payroll-filter.dto";
 
 export class PayrollService {
   static async process(payload: ProcessPayrollDto, processedBy: string) {
@@ -15,6 +17,7 @@ export class PayrollService {
     ) {
       throw new Error("Cannot process payroll for a future month");
     }
+
     const [salaryStructure] = await db
       .select()
       .from(salaryStructures)
@@ -46,7 +49,7 @@ export class PayrollService {
       throw new Error("Deductions cannot be greater than salary");
     }
 
-    const net = basicSalary - deductions;
+    const netSalary = basicSalary - deductions;
 
     const [created] = await db
       .insert(payrolls)
@@ -55,10 +58,8 @@ export class PayrollService {
         month: payload.month,
         year: payload.year,
         processedBy,
-
         totalDeductions: deductions.toString(),
-        netSalary: net.toString(),
-
+        netSalary: netSalary.toString(),
         file: payload.file,
         processedAt: new Date(),
       })
@@ -67,8 +68,29 @@ export class PayrollService {
     return created;
   }
 
-  static async getAll() {
-    return db.select().from(payrolls);
+  static async getAll(filters?: PayrollFilterDto) {
+    const conditions = [];
+
+    if (filters?.month) {
+      conditions.push(eq(payrolls.month, filters.month));
+    }
+
+    if (filters?.year) {
+      conditions.push(eq(payrolls.year, filters.year));
+    }
+
+    if (filters?.employeeId) {
+      conditions.push(eq(payrolls.employeeId, filters.employeeId));
+    }
+
+    if (conditions.length === 0) {
+      return db.select().from(payrolls);
+    }
+
+    return db
+      .select()
+      .from(payrolls)
+      .where(and(...conditions));
   }
 
   static async getById(id: string) {
@@ -82,5 +104,23 @@ export class PayrollService {
     }
 
     return payroll;
+  }
+
+  static async getSummary(month: number, year: number) {
+    const [result] = await db
+      .select({
+        totalEarnings: sql<number>`SUM(${payrolls.netSalary})`,
+        employeesProcessed: sql<number>`COUNT(${payrolls.id})`,
+        avgSalary: sql<number>`AVG(${payrolls.netSalary})`,
+        netPayroll: sql<number>`SUM(${payrolls.netSalary})`,
+      })
+      .from(payrolls)
+      .where(and(eq(payrolls.month, month), eq(payrolls.year, year)));
+
+    return {
+      employeesProcessed: Number(result?.employeesProcessed ?? 0),
+      avgSalary: Math.round(Number(result?.avgSalary ?? 0)),
+      netPayroll: Number(result?.netPayroll ?? 0),
+    };
   }
 }

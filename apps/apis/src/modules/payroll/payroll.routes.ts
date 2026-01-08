@@ -12,8 +12,8 @@ export async function payrollRoutes(app: FastifyInstance) {
         const data = await PayrollService.process(req.body, processedBy);
         return reply.code(201).send(data);
       } catch (error: any) {
-        if (error.message === "FUTURE_PAYROLL_NOT_ALLOWED") {
-          return reply.badRequest("Cannot process payroll for a future month");
+        if (error.message === "Cannot process payroll for a future month") {
+          return reply.badRequest(error.message);
         }
 
         if (error.message === "Payroll already processed for this month") {
@@ -29,11 +29,41 @@ export async function payrollRoutes(app: FastifyInstance) {
     }
   );
 
-  app.get("/payrolls", async () => {
-    return PayrollService.getAll();
+  app.get("/payrolls", async (req) => {
+    const { month, year, employeeId } = req.query as {
+      month?: string;
+      year?: string;
+      employeeId?: string;
+    };
+
+    return PayrollService.getAll({
+      month: month ? Number(month) : undefined,
+      year: year ? Number(year) : undefined,
+      employeeId,
+    });
   });
 
-  app.get<{ Params: { id: string } }>("/payrolls/:id", async (req) => {
-    return PayrollService.getById(req.params.id);
+  app.get<{ Params: { id: string } }>("/payrolls/:id", async (req, reply) => {
+    try {
+      return await PayrollService.getById(req.params.id);
+    } catch (error: any) {
+      if (error.message === "Payroll not found") {
+        return reply.notFound(error.message);
+      }
+      throw error;
+    }
+  });
+
+  app.get("/payrolls/summary", async (req, reply) => {
+    const { month, year } = req.query as {
+      month?: string;
+      year?: string;
+    };
+
+    if (!month || !year) {
+      return reply.badRequest("month and year are required");
+    }
+
+    return PayrollService.getSummary(Number(month), Number(year));
   });
 }
