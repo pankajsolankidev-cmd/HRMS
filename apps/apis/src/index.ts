@@ -17,6 +17,7 @@ import leaveRequestRoutes from "./modules/leave-requests/leave-request.routes";
 import fastifyMultipart from "@fastify/multipart";
 import fileRoutes from "./modules/files/file.routes";
 import { salaryStructureRoutes } from "./modules/payroll/salary-structure.routes";
+import { payrollRoutes } from "./modules/payroll/payroll.routes";
 
 const app = Fastify({ logger: true });
 
@@ -68,6 +69,7 @@ app.register(componentRoutes);
 app.register(leaveRequestRoutes);
 app.register(fileRoutes);
 app.register(salaryStructureRoutes);
+app.register(payrollRoutes);
 
 
 app.get("/health", async () => {
