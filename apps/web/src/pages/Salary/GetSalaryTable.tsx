@@ -1,7 +1,7 @@
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useNavigate } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import DataTable from "../../components/tables/BasicTables/DataTable";
+import DataTable, { type Column } from "../../components/tables/BasicTables/DataTable";
 
 import { getEmployees, getSalaryStructures } from "../../api/get";
 import { deleteSalaryStructure } from "../../api/delete";
@@ -50,7 +50,7 @@ export default function GetSalaryTable() {
       queryClient.invalidateQueries({ queryKey: ["salary-structures"] }),
   });
 
-  const columns = [
+const columns: Column<SalaryStructure>[] = [
     {
       header: "Employee",
       cell: (row: SalaryStructure) => (
@@ -75,8 +75,9 @@ export default function GetSalaryTable() {
     },
     {
       header: "Action",
+      align:"center",
       cell: (row: SalaryStructure) => (
-        <div className="flex justify-center gap-3">
+        <div className="flex items-center justify-center gap-3">
           <IconEdit
             size={18}
             onClick={() => navigate(`/salary-structures/${row.id}`)}
@@ -98,15 +99,7 @@ export default function GetSalaryTable() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <button
-          onClick={() => navigate("/salary-structures/new")}
-          className="flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-white dark:bg-white dark:text-black"
-        >
-          <IconPlus size={18} />
-          Add Salary Structure
-        </button>
-      </div>
+      
 
       <DataTable
         columns={columns}

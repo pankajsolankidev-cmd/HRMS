@@ -6,12 +6,13 @@ import {
   TableRow,
 } from "../../ui/table";
 
-type Column<T> = {
+export type Column<T> = {
   header: string;
+  align?: "left" | "center" | "right";
   cell: (row: T) => React.ReactNode;
 };
 
-interface DataTableProps<T> {
+export interface DataTableProps<T> {
   columns: Column<T>[];
   data: T[];
   isLoading?: boolean;
@@ -50,7 +51,9 @@ export default function DataTable<T>({
                 <TableCell
                   key={index}
                   isHeader
-                  className="px-6 py-4 text-center text-xs font-semibold uppercase text-gray-500 dark:text-gray-400"
+                  className={`px-6 py-4 text-${
+                    col.align ?? "left"
+                  } text-xs font-semibold uppercase text-gray-500 dark:text-gray-400`}
                 >
                   {col.header}
                 </TableCell>
@@ -67,11 +70,11 @@ export default function DataTable<T>({
                 {columns.map((col, colIndex) => (
                   <TableCell
                     key={colIndex}
-                    className="px-6 py-5 text-center align-middle"
+                    className={`px-6 py-5 text-${
+                      col.align ?? "left"
+                    } align-middle`}
                   >
-                    <div className="flex items-center justify-center">
-                      {col.cell(row)}
-                    </div>
+                    {col.cell(row)}
                   </TableCell>
                 ))}
               </TableRow>

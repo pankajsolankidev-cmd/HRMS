@@ -5,7 +5,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 import type { AxiosError } from "axios";
-import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { resetPassword } from "../../api/post";

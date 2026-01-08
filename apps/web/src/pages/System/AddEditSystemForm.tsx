@@ -39,6 +39,7 @@ export default function AddEditSystemForm() {
     defaultValues: {
       name: "",
       description: "",
+      components: [],
     },
   });
 
@@ -58,15 +59,14 @@ export default function AddEditSystemForm() {
   });
 
   useEffect(() => {
-  if (data) {
-    reset({
-      name: data.name,
-      description: data.description,
-      components: data.components?.map((c: any) => c.id) ?? [],
-    });
-  }
-}, [data, reset]);
-
+    if (data) {
+      reset({
+        name: data.name,
+        description: data.description,
+        components: data.components?.map((c: any) => c.id) ?? [],
+      });
+    }
+  }, [data, reset]);
 
   const saveMutation = useMutation({
     mutationFn: (payload: SystemFormData) =>
@@ -94,7 +94,11 @@ export default function AddEditSystemForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form
+      noValidate
+      className="space-y-8 text-gray-900 dark:text-gray-100"
+      onSubmit={handleSubmit(onSubmit)}
+    >
       <div className="rounded-xl border bg-white p-6 dark:bg-gray-900 dark:border-gray-700 space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
@@ -128,6 +132,8 @@ export default function AddEditSystemForm() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-6">
             <Input
+              required
+              placeholder="Enter system name"
               label="System Name"
               {...register("name")}
               error={!!errors.name}
@@ -138,26 +144,26 @@ export default function AddEditSystemForm() {
               name="components"
               control={control}
               defaultValue={[]}
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <MultiSelect
                   label="Components"
                   options={componentOptions}
                   value={field.value}
                   onChange={field.onChange}
                   placeholder="Select components"
+                  onBlur={field.onBlur}
+                  required
+                  error={!!errors.components}
+                  hint={errors.components?.message}
                 />
               )}
             />
-
-            {errors.components && (
-              <p className="text-sm text-red-600">
-                {errors.components.message}
-              </p>
-            )}
           </div>
 
           <div>
             <Input
+              required
+              placeholder="Description"
               label="Description"
               {...register("description")}
               error={!!errors.description}

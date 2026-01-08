@@ -70,7 +70,7 @@ export const addSystem = async (payload: {
 };
 
 export const addSalaryStructure = async (payload: any) => {
-  const res = await api.post("/salary-structures", payload);
+  const res = await api.post("/salary", payload);
   return res.data;
 };
 

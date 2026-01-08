@@ -119,6 +119,7 @@ export default function AddEditComponentForm() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Input
+          placeholder="Enter component name"
             label="Component Name"
             {...register("name")}
             error={!!errors.name}
@@ -126,6 +127,7 @@ export default function AddEditComponentForm() {
           />
 
           <Input
+          placeholder="Enter component code"
             label="Component Code"
             {...register("code")}
             error={!!errors.code}
@@ -134,6 +136,7 @@ export default function AddEditComponentForm() {
 
           <div className="md:col-span-2">
             <Input
+            placeholder="Description"
               label="Description"
               {...register("description")}
               error={!!errors.description}

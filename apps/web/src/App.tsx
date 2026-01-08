@@ -33,10 +33,13 @@ import Salary from "./pages/SalaryTable/Salary";
 import AddEditSalary from "./pages/SalaryTable/AddEditSalary";
 import Payroll from "./pages/PayrollTable/Payroll";
 import AddEditPayroll from "./pages/PayrollTable/AddEditPayroll";
+import { Toaster } from "react-hot-toast";
+import RootRedirect from "./pages/OtherPage/RootRedirect";
 
 function AppRoutes() {
   return (
     <Routes>
+      <Route path="/" element={<RootRedirect />} />
       <Route element={<PublicRoute />}>
         <Route element={<AuthLayout />}>
           <Route path="/" element={<SignInForm />} />
@@ -95,6 +98,16 @@ function AnimatedRoutes() {
 export default function App() {
   return (
     <Router>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            marginTop:"60px",
+            fontSize: "14px",
+          },
+        }}
+      />
       <ScrollToTop />
       <AnimatedRoutes />
     </Router>

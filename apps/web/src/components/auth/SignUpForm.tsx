@@ -9,7 +9,6 @@ import { motion } from "framer-motion";
 import { signUpApi } from "../../api/post";
 import { useState } from "react";
 
-/* ---------------- ZOD SCHEMA ---------------- */
 const signUpSchema = z.object({
   username: z
     .string()
@@ -62,7 +61,6 @@ export default function SignUpForm() {
     <div className="w-500 min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
       <div className="relative w-full max-w-4xl h-[500px] bg-white  dark:bg-gray-900  rounded-2xl shadow-lg overflow-hidden">
 
-        {/* 🔥 RIGHT OVERLAY PANEL */}
         <motion.div
           initial={{ x: "0%" }}
           animate={{ x: "0%" }}
@@ -84,7 +82,6 @@ export default function SignUpForm() {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 h-full">
-          {/* LEFT FORM */}
           <div className="p-6 sm:p-8 flex flex-col justify-center  dark:bg-gray-950 dark:text-gray-400">
             <h1 className="text-2xl font-semibold text-gray-800 dark:text-white">
               Sign Up

@@ -170,7 +170,6 @@ const AddEmpForm = () => {
   });
 
   const onSubmit = (data: EmployeeFormValues) => {
-    
     const payload: EmployeePayload = data;
     if (isEditMode) {
       updateMutation.mutate({ id: id!, payload });
@@ -189,47 +188,67 @@ const AddEmpForm = () => {
     { value: "11", label: "Jane Manager" },
   ];
 
-  const selectClass = "bg-white dark:bg-gray-900 dark:text-gray-400";
-
   return (
     <form
       className="space-y-8 text-gray-900 dark:text-gray-100"
       onSubmit={handleSubmit(onSubmit)}
     >
-      <div className="flex justify-end">
-        <button
-          type="submit"
-          disabled={addMutation.isPending || updateMutation.isPending}
-          className="rounded-lg bg-black px-4 py-2 text-white dark:bg-white dark:text-black"
-        >
-          {isEditMode ? "Update" : "Add"}
-        </button>
-      </div>
-
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <div className="flex items-center justify-between lg:col-span-2">
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
+            {isEditMode ? "Edit Employee" : "Add Employee"}
+          </h2>
+
+          <button
+            type="submit"
+            disabled={addMutation.isPending || updateMutation.isPending}
+            className="rounded-lg bg-black px-4 py-2 text-white dark:bg-white dark:text-black disabled:opacity-50"
+          >
+            {addMutation.isPending || updateMutation.isPending
+              ? "Saving..."
+              : isEditMode
+              ? "Update"
+              : "Add"}
+          </button>
+        </div>
+
         <div className="rounded-xl border bg-white p-6 dark:bg-gray-900">
-          <h2 className="mb-6 text-lg font-semibold">Basic Information</h2>
-
           <div className="grid gap-6 md:grid-cols-2">
-            <Input label="First Name" {...register("firstName")} />
-            {errors.firstName && (
-              <p className="text-sm text-red-500">{errors.firstName.message}</p>
-            )}
+            <Input
+              label="First Name"
+              placeholder="Enter Firstname"
+              required
+              {...register("firstName")}
+              error={!!errors.firstName}
+              hint={errors.firstName?.message}
+            />
 
-            <Input label="Last Name" {...register("lastName")} />
-            {errors.lastName && (
-              <p className="text-sm text-red-500">{errors.lastName.message}</p>
-            )}
+            <Input
+              label="Last Name"
+              placeholder="Enter Lastname"
+              required
+              {...register("lastName")}
+              error={!!errors.lastName}
+              hint={errors.lastName?.message}
+            />
 
-            <Input label="Email" {...register("email")} />
-            {errors.email && (
-              <p className="text-sm text-red-500">{errors.email.message}</p>
-            )}
+            <Input
+              label="Email"
+              placeholder="Enter email"
+              required
+              {...register("email")}
+              error={!!errors.email}
+              hint={errors.email?.message}
+            />
 
-            <Input label="Position" {...register("position")} />
-            {errors.position && (
-              <p className="text-sm text-red-500">{errors.position.message}</p>
-            )}
+            <Input
+              label="Position"
+              placeholder="Enter position"
+              required
+              {...register("position")}
+              error={!!errors.position}
+              hint={errors.position?.message}
+            />
 
             <Controller
               name="departmentId"
@@ -240,7 +259,6 @@ const AddEmpForm = () => {
                   options={departmentOptions}
                   value={field.value ?? ""}
                   onChange={field.onChange}
-                  className={selectClass}
                 />
               )}
             />
@@ -248,23 +266,22 @@ const AddEmpForm = () => {
             <Controller
               name="joiningDate"
               control={control}
-              render={({ field }) => (
+              rules={{ required: "Joining Date is required" }}
+              render={({ field, fieldState }) => (
                 <DatePicker
-                  label="Joining Date"
                   id="joiningDate"
+                  label="Joining Date"
                   defaultDate={field.value}
                   onChange={(dates) =>
-                    dates[0] &&
+                    dates?.[0] &&
                     field.onChange(dates[0].toISOString().split("T")[0])
                   }
+                  required
+                  error={!!fieldState.error}
+                  hint={fieldState.error?.message}
                 />
               )}
             />
-            {errors.joiningDate && (
-              <p className="text-sm text-red-500">
-                {errors.joiningDate.message}
-              </p>
-            )}
 
             <Controller
               name="managerId"
@@ -275,7 +292,6 @@ const AddEmpForm = () => {
                   options={managerOptions}
                   value={field.value ?? ""}
                   onChange={field.onChange}
-                  className={selectClass}
                 />
               )}
             />
@@ -311,6 +327,7 @@ const AddEmpForm = () => {
               />
             </div>
           </div>
+
           <div className="rounded-xl border bg-white p-6 dark:bg-gray-900">
             <h2 className="mb-4 text-lg font-semibold">System Allocation</h2>
 
@@ -323,7 +340,6 @@ const AddEmpForm = () => {
                   options={systemOptions}
                   value={field.value ?? ""}
                   onChange={field.onChange}
-                  className={selectClass}
                 />
               )}
             />

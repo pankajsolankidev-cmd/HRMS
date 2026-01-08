@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { getEmployees } from "../../api/get";
 import { deleteEmployee } from "../../api/delete";
+import type { Column } from "../../components/tables/BasicTables/DataTable";
 import DataTable from "../../components/tables/BasicTables/DataTable";
 
 type Employee = {
@@ -38,11 +39,11 @@ export default function GetEmpTable() {
       lastName: u.lastName,
       email: u.email,
       position: u.position || "Employee",
-      joiningDate: "2024-01-15",
+      joiningDate: u.joiningDate,
       onboardingBuddy: "HR Team",
     })) ?? [];
 
-  const columns = [
+  const columns: Column<Employee>[] = [
     {
       header: "Name",
       cell: (emp: Employee) => (
@@ -75,8 +76,9 @@ export default function GetEmpTable() {
     },
     {
       header: "Action",
+      align: "center",
       cell: (emp: Employee) => (
-        <div className="flex justify-center gap-3">
+        <div className="flex items-center justify-center gap-3">
           <IconEdit
             size={20}
             onClick={() => navigate(`/employees/${emp.id}`)}
@@ -98,17 +100,6 @@ export default function GetEmpTable() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <button
-          onClick={() => navigate("/employees/new")}
-          className="flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-white
-                     dark:bg-white dark:text-black"
-        >
-          <IconPlus size={18} />
-          Add Employee
-        </button>
-      </div>
-
       <DataTable
         columns={columns}
         data={employees}

@@ -37,6 +37,12 @@ export default function AddEditSalaryForm() {
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
+    defaultValues: {
+      employeeId: "",
+      basicSalary: 0,
+      description: "",
+      appraisalDate: "",
+    },
   });
 
   const { data: employees = [] } = useQuery({
@@ -82,19 +88,21 @@ export default function AddEditSalaryForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div className="flex justify-end">
-        <button
-          type="submit"
-          className="rounded-lg bg-black px-4 py-2 text-white dark:bg-white dark:text-black"
-        >
-          {isEdit ? "Update" : "Add"}
-        </button>
-      </div>
+    <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="rounded-xl border bg-white p-6 dark:bg-gray-900 dark:border-gray-700">
-        <h2 className="mb-6 text-lg font-semibold">
-          {isEdit ? "Edit Salary Structure" : "Add Salary Structure"}
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
+            {isEdit ? "Edit Salary" : "Add Salary"}
+          </h2>
+
+          <button
+            type="submit"
+            disabled={saveMutation.isPending}
+            className="rounded-lg bg-black px-4 py-2 text-white dark:bg-white dark:text-black disabled:opacity-50"
+          >
+            {saveMutation.isPending ? "Saving..." : isEdit ? "Update" : "Add"}
+          </button>
+        </div>
 
         {saveMutation.isError && (
           <p className="mb-4 text-sm font-medium text-red-600">
@@ -117,13 +125,16 @@ export default function AddEditSalaryForm() {
                 }))}
                 value={field.value}
                 onChange={field.onChange}
+                required
+                error={!!errors.employeeId}
+                hint={errors.employeeId?.message}
               />
             )}
           />
 
           <Input
+            required
             label="Basic Salary"
-            placeholder="basic salary"
             type="number"
             {...register("basicSalary", { valueAsNumber: true })}
             error={!!errors.basicSalary}
@@ -131,6 +142,7 @@ export default function AddEditSalaryForm() {
           />
 
           <Input
+            required
             label="Description"
             placeholder="description"
             {...register("description")}

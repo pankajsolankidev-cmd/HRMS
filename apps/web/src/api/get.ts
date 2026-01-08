@@ -31,15 +31,35 @@ export const getSystemById = async (id: string) => {
 };
 
 export const getSalaryStructures = async () => {
-  const res = await api.get("/salary-structures");
+  const res = await api.get("/salary");
   return Array.isArray(res.data) ? res.data : [];
 };
 
 export const getSalaryStructureById = async (id: string) => {
-  const res = await api.get(`/salary-structures/${id}`);
+  const res = await api.get(`/salary/${id}`);
   return res.data;
 };
 export const getPayrolls = async () => {
   const res = await api.get("/payrolls");
   return Array.isArray(res.data) ? res.data : [];
 };
+
+export const getPayrollById = async (id: string) => {
+  const res = await api.get(`/payrolls/${id}`);
+  return res.data;
+};
+
+export const getPayrollsByMonthYear = async (
+  month: number,
+  year: number
+) => {
+  const res = await api.get("/payrolls", {
+    params: {
+      month: String(month), 
+      year: String(year),   
+    },
+  });
+
+  return Array.isArray(res.data) ? res.data : [];
+};
+
