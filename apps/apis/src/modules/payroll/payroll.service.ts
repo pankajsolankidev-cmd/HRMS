@@ -138,9 +138,8 @@ export class PayrollService {
 
     const updateData: any = {};
 
-    if (payload.employeeId !== undefined) {
-      updateData.employeeId = payload.employeeId;
-    }
+    const employeeId = payload.employeeId ?? existing.employeeId;
+    updateData.employeeId = employeeId;
 
     if (payload.month !== undefined) {
       updateData.month = payload.month;
@@ -151,11 +150,26 @@ export class PayrollService {
     }
 
     if (payload.totalDeductions !== undefined) {
-      updateData.totalDeductions = payload.totalDeductions.toString();
-    }
+      const [salaryStructure] = await db
+        .select()
+        .from(salaryStructures)
+        .where(eq(salaryStructures.employeeId, employeeId));
 
-    if (payload.netSalary !== undefined) {
-      updateData.netSalary = payload.netSalary.toString();
+      if (!salaryStructure) {
+        throw new Error("Salary structure not found for employee");
+      }
+
+      const basicSalary = Number(salaryStructure.basicSalary);
+      const deductions = Number(payload.totalDeductions);
+
+      if (deductions > basicSalary) {
+        throw new Error("Deductions cannot be greater than salary");
+      }
+
+      const netSalary = basicSalary - deductions;
+
+      updateData.totalDeductions = deductions.toString();
+      updateData.netSalary = netSalary.toString();
     }
 
     if (payload.file !== undefined) {
