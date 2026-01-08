@@ -39,3 +39,7 @@ export const getSalaryStructureById = async (id: string) => {
   const res = await api.get(`/salary-structures/${id}`);
   return res.data;
 };
+export const getPayrolls = async () => {
+  const res = await api.get("/payrolls");
+  return Array.isArray(res.data) ? res.data : [];
+};
