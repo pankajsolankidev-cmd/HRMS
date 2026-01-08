@@ -2,7 +2,7 @@ import { pgTable, uuid, integer, numeric, timestamp, text, uniqueIndex } from "d
 import { employees } from "./employees.schema";
 import { baseColumns } from "../base-columns";
 
-export const salaryStructures = pgTable("salary_structures", {
+export const salaryStructures = pgTable("salary", {
   ...baseColumns,
 
   employeeId: uuid("employee_id")
