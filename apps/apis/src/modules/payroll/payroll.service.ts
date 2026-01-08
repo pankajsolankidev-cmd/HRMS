@@ -2,7 +2,10 @@ import { and, eq, sql } from "drizzle-orm";
 import { db } from "../../db";
 import { payrolls, salaryStructures } from "../../db/schema";
 
-import type { ProcessPayrollDto } from "@shared/types/src/payroll/payroll.dto";
+import type {
+  ProcessPayrollDto,
+  UpdatePayrollDto,
+} from "@shared/types/src/payroll/payroll.dto";
 import type { PayrollFilterDto } from "@shared/types/src/payroll/payroll-filter.dto";
 
 export class PayrollService {
@@ -109,7 +112,6 @@ export class PayrollService {
   static async getSummary(month: number, year: number) {
     const [result] = await db
       .select({
-        totalEarnings: sql<number>`SUM(${payrolls.netSalary})`,
         employeesProcessed: sql<number>`COUNT(${payrolls.id})`,
         avgSalary: sql<number>`AVG(${payrolls.netSalary})`,
         netPayroll: sql<number>`SUM(${payrolls.netSalary})`,
@@ -122,5 +124,68 @@ export class PayrollService {
       avgSalary: Math.round(Number(result?.avgSalary ?? 0)),
       netPayroll: Number(result?.netPayroll ?? 0),
     };
+  }
+
+  static async update(id: string, payload: UpdatePayrollDto) {
+    const [existing] = await db
+      .select()
+      .from(payrolls)
+      .where(eq(payrolls.id, id));
+
+    if (!existing) {
+      throw new Error("Payroll not found");
+    }
+
+    const updateData: any = {};
+
+    if (payload.employeeId !== undefined) {
+      updateData.employeeId = payload.employeeId;
+    }
+
+    if (payload.month !== undefined) {
+      updateData.month = payload.month;
+    }
+
+    if (payload.year !== undefined) {
+      updateData.year = payload.year;
+    }
+
+    if (payload.totalDeductions !== undefined) {
+      updateData.totalDeductions = payload.totalDeductions.toString();
+    }
+
+    if (payload.netSalary !== undefined) {
+      updateData.netSalary = payload.netSalary.toString();
+    }
+
+    if (payload.file !== undefined) {
+      updateData.file = payload.file;
+    }
+
+    const [updated] = await db
+      .update(payrolls)
+      .set(updateData)
+      .where(eq(payrolls.id, id))
+      .returning();
+
+    return updated;
+  }
+
+  static async delete(id: string) {
+    const [existing] = await db
+      .select()
+      .from(payrolls)
+      .where(eq(payrolls.id, id));
+
+    if (!existing) {
+      throw new Error("Payroll not found");
+    }
+
+    const [deleted] = await db
+      .delete(payrolls)
+      .where(eq(payrolls.id, id))
+      .returning();
+
+    return deleted;
   }
 }
