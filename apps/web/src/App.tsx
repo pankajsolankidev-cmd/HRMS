@@ -29,6 +29,8 @@ import System from "./pages/SystemTable/System";
 import AddEditSystem from "./pages/SystemTable/AddEditSystem";
 
 import { ScrollToTop } from "./components/common/ScrollToTop";
+import Leave from "./pages/LeaveTable/Leave";
+import AddEditLeave from "./pages/LeaveTable/AddEditLeave";
 
 function AppRoutes() {
   return (
@@ -55,6 +57,10 @@ function AppRoutes() {
 
           <Route path="/systems" element={<System />} />
           <Route path="/systems/:id" element={<AddEditSystem />} />
+
+          
+          <Route path="/leave-requests" element={<Leave />} />
+          <Route path="/leave-requests/:id" element={<AddEditLeave />} />
         </Route>
       </Route>
 

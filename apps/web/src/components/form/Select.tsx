@@ -13,6 +13,8 @@ interface SelectProps {
   className?: string;
   label?: string;
   required?: boolean;
+  error?: boolean;
+  hint?: string;
 }
 
 const Select: React.FC<SelectProps> = ({
@@ -23,6 +25,7 @@ const Select: React.FC<SelectProps> = ({
   className = "",
   label,
   required,
+  
 }) => {
   return (
     <div className="space-y-1.5">
