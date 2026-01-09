@@ -13,6 +13,7 @@ import Input from "../../components/form/input/InputField";
 import Select from "../../components/form/Select";
 import DatePicker from "../../components/form/date-picker";
 import Checkbox from "../../components/form/input/Checkbox";
+import toast from "react-hot-toast";
 
 export type EmployeePayload = {
   firstName: string;
@@ -156,16 +157,33 @@ const AddEmpForm = () => {
   const addMutation = useMutation({
     mutationFn: addEmployee,
     onSuccess: () => {
+      toast.success(
+         "Employee Added successfully"
+      );
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       navigate("/employees");
     },
+    onError:(error : any)=>{
+      toast.error(
+        error?.response?.data?.message || "Fill proper value"
+      );
+    },
+
   });
 
   const updateMutation = useMutation({
     mutationFn: updateEmployee,
     onSuccess: () => {
+      toast.success(
+         "Employee updated successfully"
+      );
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       navigate("/employees");
+    },
+    onError:(error : any)=>{
+      toast.error(
+        error?.response?.data?.message || "Fill proper value"
+      );
     },
   });
 

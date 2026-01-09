@@ -7,6 +7,7 @@ import DataTable, {
 import { deleteComponent } from "../../api/delete";
 import { getComponents } from "../../api/get";
 import { useNavigate } from "react-router";
+import toast from "react-hot-toast";
 
 type Component = {
   id: number;
@@ -31,7 +32,16 @@ export default function GetComponentTable() {
   const { mutate: removeComponent } = useMutation({
     mutationFn: deleteComponent,
     onSuccess: () => {
+      toast.success(
+        "Component Deleted Successfully"
+      );
       queryClient.invalidateQueries({ queryKey: ["components"] });
+    },
+    onError: (error: any) => {
+      toast.error(
+        error?.response?.data?.message ||
+          "Something went wrong. Please try again."
+      );
     },
   });
   const columns: Column<Component>[] = [

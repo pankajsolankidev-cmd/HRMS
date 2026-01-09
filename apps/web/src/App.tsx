@@ -63,8 +63,8 @@ function AppRoutes() {
           <Route path="/systems" element={<System />} />
           <Route path="/systems/:id" element={<AddEditSystem />} />
 
-          <Route path="/salary-structures" element={<Salary />} />
-          <Route path="/salary-structures/:id" element={<AddEditSalary />} />
+          <Route path="/salary" element={<Salary />} />
+          <Route path="/salary/:id" element={<AddEditSalary />} />
 
           <Route path="/payrolls" element={<Payroll />} />
           <Route path="/payrolls/:id" element={<AddEditPayroll />} />

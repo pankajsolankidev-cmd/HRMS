@@ -1,10 +1,7 @@
 import type { EmployeePayload } from "../pages/Employee/AddEditEmpForm";
 import api from "./axios";
 
-export const signInApi = async (data: {
-  email: string;
-  password: string;
-}) => {
+export const signInApi = async (data: { email: string; password: string }) => {
   const res = await api.post("/signin", data);
   return res.data;
 };
@@ -76,7 +73,7 @@ export const addSalaryStructure = async (payload: any) => {
 
 export const addPayroll = async (payload: {
   employeeId: string;
-  month: number;
+  month: string;
   year: number;
   totalDeductions: number;
 }) => {
@@ -86,8 +83,5 @@ export const addPayroll = async (payload: {
     year: payload.year,
     totalDeductions: payload.totalDeductions,
   });
-
   return res.data;
 };
-
-

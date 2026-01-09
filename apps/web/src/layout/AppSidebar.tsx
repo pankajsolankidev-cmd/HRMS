@@ -45,7 +45,7 @@ const navItems: NavItem[] = [
   {
     icon:<IconReceiptRupee/>,
     name:"Salary",
-    path:"/salary-structures",
+    path:"/salary",
   },{
     icon:<IconReceiptRupee/>,
     name:"Payrolls",

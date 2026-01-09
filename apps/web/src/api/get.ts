@@ -50,13 +50,13 @@ export const getPayrollById = async (id: string) => {
 };
 
 export const getPayrollsByMonthYear = async (
-  month: number,
+  month: string, 
   year: number
 ) => {
   const res = await api.get("/payrolls", {
     params: {
-      month: String(month), 
-      year: String(year),   
+      month: month, 
+      year: String(year),
     },
   });
 

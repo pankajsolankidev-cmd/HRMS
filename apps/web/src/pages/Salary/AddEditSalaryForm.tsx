@@ -4,12 +4,13 @@ import { z } from "zod";
 import { useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
+import toast from "react-hot-toast";
 
 import Input from "../../components/form/input/InputField";
 import Select from "../../components/form/Select";
+import DatePicker from "../../components/form/date-picker";
 
 import { getEmployees, getSalaryStructureById } from "../../api/get";
-import DatePicker from "../../components/form/date-picker";
 import { updateSalaryStructure } from "../../api/patch";
 import { addSalaryStructure } from "../../api/post";
 
@@ -31,9 +32,11 @@ export default function AddEditSalaryForm() {
 
   const {
     control,
-    register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
+    register,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -73,9 +76,18 @@ export default function AddEditSalaryForm() {
         ? updateSalaryStructure(id!, payload)
         : addSalaryStructure(payload),
 
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["salary-structures"] });
-      navigate("/salary-structures");
+    onSuccess: (res) => {
+      toast.success(
+        res?.message || (isEdit ? "Salary updated successfully" : "Salary added successfully")
+      );
+      queryClient.invalidateQueries({ queryKey: ["salary-structure"] });
+      navigate("/salary");
+    },
+
+    onError: (error: any) => {
+      toast.error(
+        error?.response?.data?.message || "Something went wrong. Please try again."
+      );
     },
   });
 
@@ -104,14 +116,6 @@ export default function AddEditSalaryForm() {
           </button>
         </div>
 
-        {saveMutation.isError && (
-          <p className="mb-4 text-sm font-medium text-red-600">
-            {(saveMutation.error as any)?.response?.data?.message ||
-              (saveMutation.error as any)?.response?.data?.error ||
-              "Salary structure already exists for this employee"}
-          </p>
-        )}
-
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Controller
             name="employeeId"
@@ -136,7 +140,14 @@ export default function AddEditSalaryForm() {
             required
             label="Basic Salary"
             type="number"
-            {...register("basicSalary", { valueAsNumber: true })}
+            placeholder="0"
+            value={watch("basicSalary") === 0 ? "" : watch("basicSalary")}
+            onChange={(e) => {
+              const val = e.target.value;
+              setValue("basicSalary", val === "" ? 0 : Number(val), {
+                shouldValidate: true,
+              });
+            }}
             error={!!errors.basicSalary}
             hint={errors.basicSalary?.message}
           />
@@ -144,7 +155,7 @@ export default function AddEditSalaryForm() {
           <Input
             required
             label="Description"
-            placeholder="description"
+            placeholder="Description"
             {...register("description")}
           />
 

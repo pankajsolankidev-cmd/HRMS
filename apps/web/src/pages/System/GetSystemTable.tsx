@@ -1,4 +1,4 @@
-import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 
@@ -8,6 +8,7 @@ import DataTable, {
 import { getSystems } from "../../api/get";
 import { deleteSystem } from "../../api/delete";
 import Chip from "../../components/common/Chip";
+import toast from "react-hot-toast";
 
 type SystemComponent = {
   id: string;
@@ -37,7 +38,15 @@ export default function GetSystemTable() {
   const { mutate: removeSystem } = useMutation({
     mutationFn: deleteSystem,
     onSuccess: () => {
+      toast.success(
+        "System Deleted Successfully"
+      );
       queryClient.invalidateQueries({ queryKey: ["systems"] });
+    },
+    onError:(error : any)=>{
+      toast.error(
+        error?.response?.data?.message || "An unexpected error occurred"
+      );
     },
   });
   const columns: Column<System>[] = [

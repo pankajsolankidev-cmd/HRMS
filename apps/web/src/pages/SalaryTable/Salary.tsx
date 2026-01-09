@@ -18,11 +18,11 @@ export default function Salary() {
           title="Salary Details"
           action={
             <button
-              onClick={() => navigate("/salary-structures/new")}
+              onClick={() => navigate("/salary/new")}
               className="rounded-lg bg-black px-4 py-2 text-sm text-white
                  dark:bg-white dark:text-black"
             >
-              Add salary-structures
+              Add salary
             </button>
           }
         >

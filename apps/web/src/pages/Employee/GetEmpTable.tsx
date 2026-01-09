@@ -5,6 +5,7 @@ import { getEmployees } from "../../api/get";
 import { deleteEmployee } from "../../api/delete";
 import type { Column } from "../../components/tables/BasicTables/DataTable";
 import DataTable from "../../components/tables/BasicTables/DataTable";
+import toast from "react-hot-toast";
 
 type Employee = {
   id: number;
@@ -28,7 +29,16 @@ export default function GetEmpTable() {
   const { mutate: removeEmployee } = useMutation({
     mutationFn: deleteEmployee,
     onSuccess: () => {
+      toast.success(
+        "Employee Deleted successfully"
+      );
       queryClient.invalidateQueries({ queryKey: ["employees"] });
+    },
+    onError: (error: any) => {
+      toast.error(
+        error?.response?.data?.message ||
+          "Something went wrong. Please try again."
+      );
     },
   });
 

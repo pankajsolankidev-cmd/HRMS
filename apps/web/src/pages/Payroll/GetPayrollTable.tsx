@@ -18,6 +18,7 @@ import {
 } from "../../api/get";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { deletePayroll } from "../../api/delete";
+import toast from "react-hot-toast";
 
 export type Payroll = {
   id: string;
@@ -29,31 +30,28 @@ export type Payroll = {
 };
 
 const MONTHS = [
-  { label: "January", value: "1" },
-  { label: "February", value: "2" },
-  { label: "March", value: "3" },
-  { label: "April", value: "4" },
-  { label: "May", value: "5" },
-  { label: "June", value: "6" },
-  { label: "July", value: "7" },
-  { label: "August", value: "8" },
-  { label: "September", value: "9" },
-  { label: "October", value: "10" },
-  { label: "November", value: "11" },
-  { label: "December", value: "12" },
+  { label: "January", value: "JANUARY" },
+  { label: "February", value: "FEBRUARY" },
+  { label: "March", value: "MARCH" },
+  { label: "April", value: "APRIL" },
+  { label: "May", value: "MAY" },
+  { label: "June", value: "JUNE" },
+  { label: "July", value: "JULY" },
+  { label: "August", value: "AUGUST" },
+  { label: "September", value: "SEPTEMBER" },
+  { label: "October", value: "OCTOBER" },
+  { label: "November", value: "NOVEMBER" },
+  { label: "December", value: "DECEMBER" },
 ];
-const MONTH_MAP = new Map(
-  MONTHS.map((m) => [m.value, m.label])
-);
 
 export default function GetPayrollTable() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [tempMonth, setTempMonth] = useState<number | undefined>();
+  const [tempMonth, setTempMonth] = useState<string | undefined>();
   const [tempYear, setTempYear] = useState<number | undefined>();
 
-  const [month, setMonth] = useState<number | undefined>();
+  const [month, setMonth] = useState<string | undefined>();
   const [year, setYear] = useState<number | undefined>();
 
   const isFilterApplied = Boolean(month && year);
@@ -90,8 +88,13 @@ export default function GetPayrollTable() {
 
   const { mutate: remove } = useMutation({
     mutationFn: deletePayroll,
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["payrolls"] }),
+    onSuccess: (res) => {
+      toast.success(res?.message || "Payroll deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["payrolls"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Failed to delete payroll");
+    },
   });
 
   const data: Payroll[] = rawData.map((p: any) => ({
@@ -114,7 +117,7 @@ export default function GetPayrollTable() {
       header: "Month",
       cell: (row) => (
         <span className="font-medium">
-          {MONTH_MAP.get(String(row.month)) ?? row.month}
+          {row.month} 
         </span>
       ),
     },
@@ -151,7 +154,7 @@ export default function GetPayrollTable() {
           <IconTrash
             size={18}
             onClick={() => {
-              if (confirm("Delete payroll?")) {
+              if (confirm("Are you sure you want to delete this payroll?")) {
                 remove(row.id);
               }
             }}
@@ -168,16 +171,14 @@ export default function GetPayrollTable() {
         <Select
           label="Month"
           options={MONTHS}
-          value={tempMonth ? String(tempMonth) : ""}
-          onChange={(v) =>
-            setTempMonth(v ? Number(v) : undefined)
-          }
+          value={tempMonth ?? ""}
+          onChange={(v) => setTempMonth(v || undefined)}
         />
 
         <Input
           label="Year"
           type="number"
-          placeholder="2026"
+          placeholder="Enter year"
           value={tempYear ?? ""}
           onChange={(e) =>
             setTempYear(
@@ -186,35 +187,37 @@ export default function GetPayrollTable() {
           }
         />
 
-        <button
-          type="button"
-          disabled={!tempMonth || !tempYear}
-          onClick={() => {
-            setMonth(tempMonth);
-            setYear(tempYear);
-          }}
-          className="rounded-lg bg-black px-4 py-2 text-white
-                     disabled:opacity-50 dark:bg-white dark:text-black"
-        >
-          Apply
-        </button>
-
-        {isFilterApplied && (
+        <div className="flex gap-2 h-[42px]"> 
           <button
             type="button"
+            disabled={!tempMonth || !tempYear}
             onClick={() => {
-              setTempMonth(undefined);
-              setTempYear(undefined);
-              setMonth(undefined);
-              setYear(undefined);
+              setMonth(tempMonth);
+              setYear(tempYear);
             }}
-            className="rounded-lg border px-4 py-2 text-sm
-                       text-gray-700 hover:bg-gray-100
-                       dark:text-gray-200 dark:hover:bg-gray-800"
+            className="rounded-lg bg-black px-6 py-2 text-sm text-white
+                       disabled:opacity-50 dark:bg-white dark:text-black w-fit h-full"
           >
-            Clear
+            Apply
           </button>
-        )}
+
+          {isFilterApplied && (
+            <button
+              type="button"
+              onClick={() => {
+                setTempMonth(undefined);
+                setTempYear(undefined);
+                setMonth(undefined);
+                setYear(undefined);
+              }}
+              className="rounded-lg border px-4 py-2 text-sm
+                         text-gray-700 hover:bg-gray-100
+                         dark:text-gray-200 dark:hover:bg-gray-800"
+            >
+              Clear
+            </button>
+          )}
+        </div>
       </div>
 
       <DataTable

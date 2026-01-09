@@ -1,10 +1,11 @@
-import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useNavigate } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import DataTable, { type Column } from "../../components/tables/BasicTables/DataTable";
 
 import { getEmployees, getSalaryStructures } from "../../api/get";
 import { deleteSalaryStructure } from "../../api/delete";
+import toast from "react-hot-toast";
 
 export type SalaryStructure = {
   id: string;
@@ -46,8 +47,17 @@ export default function GetSalaryTable() {
 
   const { mutate: remove } = useMutation({
     mutationFn: deleteSalaryStructure,
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["salary-structures"] }),
+    onSuccess: () => {
+      toast.success(
+        "Salary Deleted Successfully"
+      );
+      queryClient.invalidateQueries({ queryKey: ["salary-structures"] });
+    },
+    onError:(error : any)=>{
+      toast.error(
+        error?.response?.data?.message || "An unexpected error occurred"
+      );
+    },
   });
 
 const columns: Column<SalaryStructure>[] = [
@@ -80,7 +90,7 @@ const columns: Column<SalaryStructure>[] = [
         <div className="flex items-center justify-center gap-3">
           <IconEdit
             size={18}
-            onClick={() => navigate(`/salary-structures/${row.id}`)}
+            onClick={() => navigate(`/salary/${row.id}`)}
             className="cursor-pointer text-blue-600"
           />
           <IconTrash
