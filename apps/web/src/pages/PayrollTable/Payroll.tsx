@@ -3,6 +3,7 @@ import ComponentCard from "../../components/common/ComponentCard";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import GetPayrollTable from "../Payroll/GetPayrollTable";
+import PayrollSummary from "../Payroll/PayrollSummary";
 
 export default function Payroll() {
   const navigate = useNavigate();
@@ -14,6 +15,11 @@ export default function Payroll() {
       />
       <PageBreadcrumb pageTitle="Payroll table" />
       <div className="space-y-6">
+        
+        <ComponentCard title="Payroll Summary">
+          <PayrollSummary />
+        </ComponentCard>
+
         <ComponentCard
           title="Payroll details"
           action={
