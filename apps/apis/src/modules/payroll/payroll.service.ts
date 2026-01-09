@@ -14,7 +14,7 @@ export class PayrollService {
   static async process(payload: ProcessPayrollDto, processedBy: string) {
     const now = new Date();
     const currentYear = now.getFullYear();
-    const currentMonthIndex = now.getMonth(); 
+    const currentMonthIndex = now.getMonth();
 
     const payloadMonthIndex = PayrollMonth.indexOf(payload.month);
 
