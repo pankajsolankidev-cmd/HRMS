@@ -8,15 +8,19 @@ import type {
 } from "@shared/types/src/payroll/payroll.dto";
 import type { PayrollFilterDto } from "@shared/types/src/payroll/payroll-filter.dto";
 
+import { PayrollMonth, PayrollMonthType } from "../../db/schema/payroll.enums";
+
 export class PayrollService {
   static async process(payload: ProcessPayrollDto, processedBy: string) {
     const now = new Date();
     const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth() + 1;
+    const currentMonthIndex = now.getMonth(); 
+
+    const payloadMonthIndex = PayrollMonth.indexOf(payload.month);
 
     if (
       payload.year > currentYear ||
-      (payload.year === currentYear && payload.month > currentMonth)
+      (payload.year === currentYear && payloadMonthIndex > currentMonthIndex)
     ) {
       throw new Error("Cannot process payroll for a future month");
     }
@@ -74,15 +78,15 @@ export class PayrollService {
   static async getAll(filters?: PayrollFilterDto) {
     const conditions = [];
 
-    if (filters?.month) {
-      conditions.push(eq(payrolls.month, filters.month));
+    if (filters?.month !== undefined) {
+      conditions.push(eq(payrolls.month, filters.month as PayrollMonthType));
     }
 
-    if (filters?.year) {
+    if (filters?.year !== undefined) {
       conditions.push(eq(payrolls.year, filters.year));
     }
 
-    if (filters?.employeeId) {
+    if (filters?.employeeId !== undefined) {
       conditions.push(eq(payrolls.employeeId, filters.employeeId));
     }
 
@@ -109,7 +113,7 @@ export class PayrollService {
     return payroll;
   }
 
-  static async getSummary(month: number, year: number) {
+  static async getSummary(month: PayrollMonthType, year: number) {
     const [result] = await db
       .select({
         employeesProcessed: sql<number>`COUNT(${payrolls.id})`,
@@ -166,10 +170,8 @@ export class PayrollService {
         throw new Error("Deductions cannot be greater than salary");
       }
 
-      const netSalary = basicSalary - deductions;
-
       updateData.totalDeductions = deductions.toString();
-      updateData.netSalary = netSalary.toString();
+      updateData.netSalary = (basicSalary - deductions).toString();
     }
 
     if (payload.file !== undefined) {

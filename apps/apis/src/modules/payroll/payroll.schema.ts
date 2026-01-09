@@ -1,3 +1,5 @@
+import { PayrollMonth } from "../../db/schema/payroll.enums";
+
 const payrollIdParams = {
   type: "object",
   required: ["id"],
@@ -20,13 +22,11 @@ export const processPayrollSchema = {
         format: "uuid",
       },
       month: {
-        type: "number",
-        minimum: 1,
-        maximum: 12,
+        type: "string",
+        enum: PayrollMonth,
       },
       year: {
         type: "number",
-        minimum: 2000,
       },
       totalDeductions: {
         type: "string",
@@ -45,9 +45,8 @@ export const getPayrollsSchema = {
     type: "object",
     properties: {
       month: {
-        type: "number",
-        minimum: 1,
-        maximum: 12,
+        type: "string",
+        enum: PayrollMonth,
       },
       year: {
         type: "number",
@@ -73,9 +72,8 @@ export const payrollSummarySchema = {
     required: ["month", "year"],
     properties: {
       month: {
-        type: "number",
-        minimum: 1,
-        maximum: 12,
+        type: "string",
+        enum: PayrollMonth,
       },
       year: {
         type: "number",
@@ -96,9 +94,8 @@ export const updatePayrollSchema = {
         format: "uuid",
       },
       month: {
-        type: "number",
-        minimum: 1,
-        maximum: 12,
+        type: "string",
+        enum: PayrollMonth,
       },
       year: {
         type: "number",

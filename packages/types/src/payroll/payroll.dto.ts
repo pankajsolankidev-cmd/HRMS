@@ -1,6 +1,8 @@
+import { PayrollMonthType } from "../../../../apps/apis/src/db/schema/payroll.enums";
+
 export type ProcessPayrollDto = {
   employeeId: string;
-  month: number;
+  month: PayrollMonthType;
   year: number;
   totalDeductions?: number;
   file?: string;
@@ -8,10 +10,9 @@ export type ProcessPayrollDto = {
 
 export interface UpdatePayrollDto {
   employeeId?: string;
-  month?: number;
+  month?: PayrollMonthType;
   year?: number;
   totalDeductions?: string;
   netSalary?: string;
   file?: string;
 }
-

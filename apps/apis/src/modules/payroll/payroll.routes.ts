@@ -15,13 +15,15 @@ import {
   deletePayrollSchema,
 } from "./payroll.schema";
 
+import type { PayrollMonthType } from "../../db/schema/payroll.enums";
+
 export async function payrollRoutes(app: FastifyInstance) {
   app.post<{ Body: ProcessPayrollDto }>(
     "/payrolls/process",
     { schema: processPayrollSchema },
     async (req, reply) => {
       try {
-        const processedBy = "06eefc3a-fdeb-4e6b-8443-604a384aff5d";
+        const processedBy = "93c60a57-11d1-46d6-ad9e-3802d3077fec";
 
         const data = await PayrollService.process(req.body, processedBy);
         return reply.code(201).send(data);
@@ -45,7 +47,7 @@ export async function payrollRoutes(app: FastifyInstance) {
 
   app.get("/payrolls", { schema: getPayrollsSchema }, async (req) => {
     const { month, year, employeeId } = req.query as {
-      month?: number;
+      month?: PayrollMonthType;
       year?: number;
       employeeId?: string;
     };
@@ -108,7 +110,7 @@ export async function payrollRoutes(app: FastifyInstance) {
     { schema: payrollSummarySchema },
     async (req) => {
       const { month, year } = req.query as {
-        month: number;
+        month: PayrollMonthType;
         year: number;
       };
 

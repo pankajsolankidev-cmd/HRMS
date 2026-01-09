@@ -1,5 +1,7 @@
+import { PayrollMonthType } from "../../../../apps/apis/src/db/schema/payroll.enums";
+
 export interface PayrollFilterDto {
-  month?: number;
+  month?: PayrollMonthType;
   year?: number;
   employeeId?: string;
 }
