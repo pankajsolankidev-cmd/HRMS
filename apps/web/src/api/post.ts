@@ -85,3 +85,33 @@ export const addPayroll = async (payload: {
   });
   return res.data;
 };
+
+export const uploadFile = async (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await api.post("/files/upload", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  return res.data as {
+    path?: string;
+    url?: string;
+  };
+};
+
+export type AddLeavePayload = {
+  fromDate: string;
+  toDate: string;
+  type: "sick" | "casual" | "marriage" | "wfh";
+  dayType: "full_day" | "first_half" | "second_half";
+  reason: string;
+  file?: string;
+};
+
+export const addLeave = async (payload: AddLeavePayload) => {
+  const res = await api.post("/leave-requests", payload);
+  return res.data;
+};

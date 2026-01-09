@@ -13,8 +13,8 @@ interface SelectProps {
   className?: string;
   label?: string;
   required?: boolean;
-  error?: boolean;    
-  hint?: string; 
+  error?: boolean;
+  hint?: string;
 }
 
 const Select: React.FC<SelectProps> = ({
@@ -33,7 +33,7 @@ const Select: React.FC<SelectProps> = ({
       {label && (
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           {label}
-          {required && <span className="text-red-500 ml-0.5">*</span>}
+          {required && <span className="ml-0.5 text-red-500">*</span>}
         </label>
       )}
 
@@ -65,7 +65,11 @@ const Select: React.FC<SelectProps> = ({
       </select>
 
       {hint && (
-        <p className={`text-xs ${error ? "text-red-500" : "text-gray-500 dark:text-gray-400"}`}>
+        <p
+          className={`text-xs ${
+            error ? "text-red-500" : "text-gray-500 dark:text-gray-400"
+          }`}
+        >
           {hint}
         </p>
       )}

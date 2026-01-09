@@ -63,3 +63,12 @@ export const getPayrollsByMonthYear = async (
   return Array.isArray(res.data) ? res.data : [];
 };
 
+export const getLeaves = async () => {
+  const res = await api.get("/leave-requests/me");
+  return Array.isArray(res.data?.data) ? res.data.data : [];
+
+}
+export const getLeaveById = async (id:string) => {
+  const res = await api.get(`/leave-requests/${id}`);
+  return res.data?.data ?? res.data;
+}

@@ -29,10 +29,16 @@ import System from "./pages/SystemTable/System";
 import AddEditSystem from "./pages/SystemTable/AddEditSystem";
 
 import { ScrollToTop } from "./components/common/ScrollToTop";
+
 import Salary from "./pages/SalaryTable/Salary";
 import AddEditSalary from "./pages/SalaryTable/AddEditSalary";
+
 import Payroll from "./pages/PayrollTable/Payroll";
 import AddEditPayroll from "./pages/PayrollTable/AddEditPayroll";
+
+import Leave from "./pages/LeaveTable/Leave";
+import AddEditLeave from "./pages/LeaveTable/AddEditLeave";
+
 import { Toaster } from "react-hot-toast";
 import RootRedirect from "./pages/OtherPage/RootRedirect";
 
@@ -40,6 +46,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<RootRedirect />} />
+
       <Route element={<PublicRoute />}>
         <Route element={<AuthLayout />}>
           <Route path="/" element={<SignInForm />} />
@@ -68,6 +75,9 @@ function AppRoutes() {
 
           <Route path="/payrolls" element={<Payroll />} />
           <Route path="/payrolls/:id" element={<AddEditPayroll />} />
+
+          <Route path="/leave-requests" element={<Leave />} />
+          <Route path="/leave-requests/:id" element={<AddEditLeave />} />
         </Route>
       </Route>
 
@@ -103,7 +113,7 @@ export default function App() {
         toastOptions={{
           duration: 4000,
           style: {
-            marginTop:"60px",
+            marginTop: "60px",
             fontSize: "14px",
           },
         }}

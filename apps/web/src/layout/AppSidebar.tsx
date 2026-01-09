@@ -3,9 +3,13 @@ import { Link, useLocation } from "react-router";
 import { useSidebar } from "../context/SidebarContext";
 import GridIcon from "../icons/grid.svg?react";
 import HorizontaLDots from "../icons/horizontal-dots.svg?react";
+
 import {
   UserCircleIcon,
   ChevronDownIcon,
+  CalendarIcon,
+  PuzzlePieceIcon,
+  FolderIcon,
 } from "@heroicons/react/24/outline";
 import {IconReceiptRupee } from "@tabler/icons-react";
 
@@ -33,25 +37,33 @@ const navItems: NavItem[] = [
     path: "/employees",
   },
   {
-    icon: <UserCircleIcon />,
+    icon: <PuzzlePieceIcon />,
     name: "Component",
     path: "/components",
-  },
+  }, 
   {
-    icon: <UserCircleIcon />,
+    icon: <FolderIcon />,
     name: "System",
     path: "/systems",
   },
   {
-    icon:<IconReceiptRupee/>,
-    name:"Salary",
-    path:"/salary",
-  },{
-    icon:<IconReceiptRupee/>,
-    name:"Payrolls",
-    path:"/payrolls",
-  }
+    icon: <CalendarIcon />,
+    name: "Leaves",
+    path: "/leave-requests",
+  },
+  {
+    icon: <IconReceiptRupee />,
+    name: "Salary",
+    path: "/salary",
+  },
+  {
+    icon: <IconReceiptRupee />,
+    name: "Payrolls",
+    path: "/payrolls",
+  },
+  
 ];
+
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
