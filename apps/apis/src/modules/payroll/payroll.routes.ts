@@ -50,16 +50,25 @@ export async function payrollRoutes(app: FastifyInstance) {
   );
 
   app.get("/payrolls", { schema: getPayrollsSchema }, async (req) => {
-    const { month, year, employeeId } = req.query as {
-      month?: PayrollMonthType;
-      year?: number;
-      employeeId?: string;
-    };
+    const { month, year, employeeId, page, limit, sortBy, sortOrder } =
+      req.query as {
+        month?: PayrollMonthType;
+        year?: number;
+        employeeId?: string;
+        page?: number;
+        limit?: number;
+        sortBy?: "year" | "netSalary" | "processedAt";
+        sortOrder?: "asc" | "desc";
+      };
 
     return PayrollService.getAll({
       month,
       year,
       employeeId,
+      page,
+      limit,
+      sortBy,
+      sortOrder,
     });
   });
 

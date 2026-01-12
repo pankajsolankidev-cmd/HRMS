@@ -1,6 +1,6 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { db } from "../../db";
-import { payrolls, salary} from "../../db/schema";
+import { payrolls, salary } from "../../db/schema";
 
 import type {
   ProcessPayrollDto,
@@ -9,6 +9,7 @@ import type {
 import type { PayrollFilterDto } from "@shared/types/src/payroll/payroll-filter.dto";
 
 import { PayrollMonth, PayrollMonthType } from "../../db/schema/payroll.enums";
+import { getPagination } from "../../utils/pagination";
 
 export class PayrollService {
   static async process(payload: ProcessPayrollDto, processedBy: string) {
@@ -79,7 +80,7 @@ export class PayrollService {
     const conditions = [];
 
     if (filters?.month !== undefined) {
-      conditions.push(eq(payrolls.month, filters.month as PayrollMonthType));
+      conditions.push(eq(payrolls.month, filters.month));
     }
 
     if (filters?.year !== undefined) {
@@ -90,14 +91,44 @@ export class PayrollService {
       conditions.push(eq(payrolls.employeeId, filters.employeeId));
     }
 
-    if (conditions.length === 0) {
-      return db.select().from(payrolls);
-    }
+    // ✅ Pagination
+    const { limit, offset, page } = getPagination(filters ?? {});
 
-    return db
+    // ✅ Sorting
+    const sortColumn =
+      filters?.sortBy === "netSalary"
+        ? payrolls.netSalary
+        : filters?.sortBy === "year"
+        ? payrolls.year
+        : payrolls.processedAt;
+
+    const order =
+      filters?.sortOrder === "asc" ? asc(sortColumn) : desc(sortColumn);
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const data = await db
       .select()
       .from(payrolls)
-      .where(and(...conditions));
+      .where(whereClause)
+      .orderBy(order)
+      .limit(limit)
+      .offset(offset);
+
+    // ✅ total count
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(payrolls)
+      .where(whereClause);
+
+    return {
+      data,
+      meta: {
+        page,
+        limit,
+        total: Number(count),
+      },
+    };
   }
 
   static async getById(id: string) {
