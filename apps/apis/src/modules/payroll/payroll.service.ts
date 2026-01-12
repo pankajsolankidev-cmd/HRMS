@@ -1,6 +1,6 @@
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "../../db";
-import { payrolls, salaryStructures } from "../../db/schema";
+import { payrolls, salary} from "../../db/schema";
 
 import type {
   ProcessPayrollDto,
@@ -27,8 +27,8 @@ export class PayrollService {
 
     const [salaryStructure] = await db
       .select()
-      .from(salaryStructures)
-      .where(eq(salaryStructures.employeeId, payload.employeeId));
+      .from(salary)
+      .where(eq(salary.employeeId, payload.employeeId));
 
     if (!salaryStructure) {
       throw new Error("Salary structure not found for employee");
@@ -156,8 +156,8 @@ export class PayrollService {
     if (payload.totalDeductions !== undefined) {
       const [salaryStructure] = await db
         .select()
-        .from(salaryStructures)
-        .where(eq(salaryStructures.employeeId, employeeId));
+        .from(salary)
+        .where(eq(salary.employeeId, employeeId));
 
       if (!salaryStructure) {
         throw new Error("Salary structure not found for employee");
