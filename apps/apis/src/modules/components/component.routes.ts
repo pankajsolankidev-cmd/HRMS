@@ -19,6 +19,7 @@ import type { CreateComponentDto } from "@shared/types/src/components/create-com
 import type { UpdateComponentDto } from "@shared/types/src/components/update-component.dto";
 
 import { verifyAccessToken } from "../../middlewares/auth.middlewares";
+import { sendMessage } from "../../utils/api-response";
 
 export default async function componentRoutes(app: FastifyInstance) {
   const secured = {
@@ -39,8 +40,9 @@ export default async function componentRoutes(app: FastifyInstance) {
     },
     async (request, reply) => {
       const body = request.body as CreateComponentDto;
-      const component = await createComponent(body);
-      return reply.code(201).send(component);
+      await createComponent(body);
+
+      return sendMessage(reply, "Component created successfully", 201);
     }
   );
 
@@ -80,7 +82,7 @@ export default async function componentRoutes(app: FastifyInstance) {
       const component = await getComponentById(id);
 
       if (!component) {
-        return reply.status(404).send({ error: "Component not found" });
+        return reply.status(404).send({ message: "Component not found" });
       }
 
       return component;
@@ -102,10 +104,10 @@ export default async function componentRoutes(app: FastifyInstance) {
 
       const updated = await updateComponent(id, body);
       if (!updated) {
-        return reply.status(404).send({ error: "Component not found" });
+        return reply.status(404).send({ message: "Component not found" });
       }
 
-      return updated;
+      return sendMessage(reply, "Component updated successfully");
     }
   );
 
@@ -125,10 +127,11 @@ export default async function componentRoutes(app: FastifyInstance) {
         },
       },
     },
-    async (request) => {
+    async (request, reply) => {
       const { id } = request.params as { id: string };
       await deleteComponent(id);
-      return { message: "Component deleted successfully" };
+
+      return sendMessage(reply, "Component deleted successfully");
     }
   );
 }

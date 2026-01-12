@@ -2,24 +2,20 @@ export const createComponentSchema = {
   tags: ["Components"],
   body: {
     type: "object",
-    required: ["name", "code"],
+    required: ["name"],
     properties: {
       name: { type: "string" },
       description: { type: "string" },
-      code: { type: "string" },
     },
+    additionalProperties: false,
   },
   response: {
     201: {
       type: "object",
       properties: {
-        id: { type: "string" },
-        name: { type: "string" },
-        description: { type: "string" },
-        code: { type: "string" },
-        createdAt: { type: "string" },
-        updatedAt: { type: "string" },
+        message: { type: "string" },
       },
+      required: ["message"],
     },
   },
 };
@@ -39,6 +35,23 @@ export const updateComponentSchema = {
       name: { type: "string" },
       description: { type: "string" },
       code: { type: "string" },
+    },
+    additionalProperties: false,
+  },
+  response: {
+    200: {
+      type: "object",
+      properties: {
+        message: { type: "string" },
+      },
+      required: ["message"],
+    },
+    404: {
+      type: "object",
+      properties: {
+        message: { type: "string" },
+      },
+      required: ["message"],
     },
   },
 };
