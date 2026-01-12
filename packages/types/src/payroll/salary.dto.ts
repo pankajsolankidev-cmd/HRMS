@@ -1,11 +1,11 @@
-export type CreateSalaryStructureDto = {
+export type CreateSalaryDto = {
   employeeId: string;
   basicSalary: number;
   description?: string;
   appraisalDate?: string;
 };
 
-export type UpdateSalaryStructureDto = {
+export type UpdateSalaryDto = {
   basicSalary?: number;
   description?: string;
   appraisalDate?: string;

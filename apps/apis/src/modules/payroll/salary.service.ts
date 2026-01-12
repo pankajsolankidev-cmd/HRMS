@@ -1,24 +1,24 @@
 import { eq } from "drizzle-orm";
 import { db } from "../../db";
-import { salaryStructures } from "../../db/schema";
+import { salary } from "../../db/schema";
 import type {
-  CreateSalaryStructureDto,
-  UpdateSalaryStructureDto,
-} from "@shared/types/src/payroll/salary-structure.dto";
+  CreateSalaryDto,
+  UpdateSalaryDto,
+} from "@shared/types/src/payroll/salary.dto";
 
-export class SalaryStructureService {
-  static async create(payload: CreateSalaryStructureDto) {
+export class SalaryService {
+  static async create(payload: CreateSalaryDto) {
     const [existing] = await db
       .select()
-      .from(salaryStructures)
-      .where(eq(salaryStructures.employeeId, payload.employeeId));
+      .from(salary)
+      .where(eq(salary.employeeId, payload.employeeId));
 
     if (existing) {
       throw new Error("Salary structure already exists for this employee");
     }
 
     const [created] = await db
-      .insert(salaryStructures)
+      .insert(salary)
       .values({
         employeeId: payload.employeeId,
         basicSalary: payload.basicSalary.toString(),
@@ -33,14 +33,14 @@ export class SalaryStructureService {
   }
 
   static async getAll() {
-    return db.select().from(salaryStructures);
+    return db.select().from(salary);
   }
 
   static async getByEmployee(employeeId: string) {
     const [salaryStructure] = await db
       .select()
-      .from(salaryStructures)
-      .where(eq(salaryStructures.employeeId, employeeId));
+      .from(salary)
+      .where(eq(salary.employeeId, employeeId));
 
     if (!salaryStructure) {
       throw new Error("Salary structure not found for this employee");
@@ -52,8 +52,8 @@ export class SalaryStructureService {
   static async getById(id: string) {
     const [salaryStructure] = await db
       .select()
-      .from(salaryStructures)
-      .where(eq(salaryStructures.id, id));
+      .from(salary)
+      .where(eq(salary.id, id));
 
     if (!salaryStructure) {
       throw new Error("Salary structure not found");
@@ -62,9 +62,9 @@ export class SalaryStructureService {
     return salaryStructure;
   }
 
-  static async update(id: string, payload: UpdateSalaryStructureDto) {
+  static async update(id: string, payload: UpdateSalaryDto) {
     const [updated] = await db
-      .update(salaryStructures)
+      .update(salary)
       .set({
         basicSalary:
           payload.basicSalary !== undefined
@@ -79,7 +79,7 @@ export class SalaryStructureService {
 
         updatedAt: new Date(),
       })
-      .where(eq(salaryStructures.id, id))
+      .where(eq(salary.id, id))
       .returning();
 
     if (!updated) {
@@ -91,8 +91,8 @@ export class SalaryStructureService {
 
   static async delete(id: string) {
     const [deleted] = await db
-      .delete(salaryStructures)
-      .where(eq(salaryStructures.id, id))
+      .delete(salary)
+      .where(eq(salary.id, id))
       .returning();
 
     if (!deleted) {

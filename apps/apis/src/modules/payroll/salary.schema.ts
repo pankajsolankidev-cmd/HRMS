@@ -1,4 +1,4 @@
-const salaryStructureIdParams = {
+const salaryIdParams = {
   type: "object",
   required: ["id"],
   properties: {
@@ -20,8 +20,8 @@ const employeeIdParams = {
   },
 };
 
-export const createSalaryStructureSchema: any = {
-  tags: ["Salary Structures"],
+export const createSalarySchema: any = {
+  tags: ["Salary"],
   body: {
     type: "object",
     required: ["employeeId", "basicSalary"],
@@ -45,23 +45,23 @@ export const createSalaryStructureSchema: any = {
   },
 };
 
-export const getAllSalaryStructuresSchema: any = {
-  tags: ["Salary Structures"],
+export const getAllSalarySchema: any = {
+  tags: ["Salary"],
 };
 
-export const getSalaryStructureByIdSchema: any = {
-  tags: ["Salary Structures"],
-  params: salaryStructureIdParams,
+export const getSalaryByIdSchema: any = {
+  tags: ["Salary"],
+  params: salaryIdParams,
 };
 
-export const getSalaryStructureByEmployeeSchema: any = {
-  tags: ["Salary Structures"],
+export const getSalaryByEmployeeSchema: any = {
+  tags: ["Salary"],
   params: employeeIdParams,
 };
 
-export const updateSalaryStructureSchema: any = {
-  tags: ["Salary Structures"],
-  params: salaryStructureIdParams,
+export const updateSalarySchema: any = {
+  tags: ["Salary"],
+  params: salaryIdParams,
   body: {
     type: "object",
     properties: {
@@ -80,7 +80,7 @@ export const updateSalaryStructureSchema: any = {
   },
 };
 
-export const deleteSalaryStructureSchema: any = {
-  tags: ["Salary Structures"],
-  params: salaryStructureIdParams,
+export const deleteSalarySchema: any = {
+  tags: ["Salary"],
+  params: salaryIdParams,
 };

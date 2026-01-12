@@ -12,7 +12,7 @@ import { employees } from "./employees.schema";
 import { baseColumns } from "../base-columns";
 import { PayrollMonth } from "./payroll.enums";
 
-export const salaryStructures = pgTable(
+export const salary = pgTable(
   "salary",
   {
     ...baseColumns,
