@@ -11,6 +11,7 @@ import {
   createSystemSchema,
   updateSystemSchema,
   getSystemByIdSchema,
+  getSystemsSchema,
 } from "./system.schema";
 
 import type {
@@ -40,7 +41,7 @@ export default async function systemRoutes(app: FastifyInstance) {
     async (request, reply) => {
       const body = request.body as CreateSystemDto;
       const system = await createSystem(body);
-      return reply.status(201).send(system);
+      return reply.code(201).send(system);
     }
   );
 
@@ -50,11 +51,19 @@ export default async function systemRoutes(app: FastifyInstance) {
       ...secured,
       schema: {
         ...secured.schema,
-        tags: ["Systems"],
+        ...getSystemsSchema,
       },
     },
-    async () => {
-      return await getSystems();
+    async (request) => {
+      const query = request.query as {
+        search?: string;
+        page?: number;
+        limit?: number;
+        sortBy?: "createdAt" | "name";
+        sortOrder?: "asc" | "desc";
+      };
+
+      return await getSystems(query);
     }
   );
 
@@ -72,7 +81,7 @@ export default async function systemRoutes(app: FastifyInstance) {
       const system = await getSystemById(id);
 
       if (!system) {
-        return reply.status(404).send({ error: "System not found" });
+        return reply.code(404).send({ error: "System not found" });
       }
 
       return system;
@@ -94,7 +103,7 @@ export default async function systemRoutes(app: FastifyInstance) {
 
       const updated = await updateSystem(id, body);
       if (!updated) {
-        return reply.status(404).send({ error: "System not found" });
+        return reply.code(404).send({ error: "System not found" });
       }
 
       return {
@@ -121,10 +130,10 @@ export default async function systemRoutes(app: FastifyInstance) {
     },
     async (request, reply) => {
       const { id } = request.params as { id: string };
-
       const deleted = await deleteSystem(id);
+
       if (!deleted) {
-        return reply.status(404).send({ error: "System not found" });
+        return reply.code(404).send({ error: "System not found" });
       }
 
       return {
