@@ -16,8 +16,13 @@ import componentRoutes from "./modules/components/component.routes";
 import leaveRequestRoutes from "./modules/leave-requests/leave-request.routes";
 import fastifyMultipart from "@fastify/multipart";
 import fileRoutes from "./modules/files/file.routes";
+import { salaryStructureRoutes } from "./modules/payroll/salary-structure.routes";
+import { payrollRoutes } from "./modules/payroll/payroll.routes";
+import fastifySensible from "@fastify/sensible";
 
 const app = Fastify({ logger: true });
+
+app.register(fastifySensible);
 
 app.register(fastifyMultipart, {
   limits: {
@@ -26,7 +31,7 @@ app.register(fastifyMultipart, {
 });
 
 app.register(cors, {
-  origin: ["http://localhost:5173", "http://192.168.1.33:5173"],
+  origin: ["http://localhost:5173", "http://192.168.1.34:5173"],
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 });
@@ -65,6 +70,8 @@ app.register(systemRoutes);
 app.register(componentRoutes);
 app.register(leaveRequestRoutes);
 app.register(fileRoutes);
+app.register(salaryStructureRoutes);
+app.register(payrollRoutes);
 
 app.get("/health", async () => {
   return { status: "API is running 🚀" };
