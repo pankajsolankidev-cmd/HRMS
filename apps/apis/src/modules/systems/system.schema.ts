@@ -1,60 +1,79 @@
 export const createSystemSchema = {
-  tags: ['Systems'],
+  tags: ["Systems"],
   body: {
-    type: 'object',
-    required: ['name'],
+    type: "object",
+    required: ["name"],
     properties: {
-      name: { type: 'string' },
-      description: { type: 'string' },
+      name: { type: "string" },
+      description: { type: "string" },
       componentIds: {
-        type: 'array',
-        items: { type: 'string' }
-      }
-    }
+        type: "array",
+        items: { type: "string" },
+      },
+    },
   },
   response: {
     201: {
-      type: 'object',
+      type: "object",
       properties: {
-        id: { type: 'string' },
-        name: { type: 'string' },
-        description: { type: 'string' },
-        createdAt: { type: 'string' },
-        updatedAt: { type: 'string' }
-      }
-    }
-  }
-}
+        id: { type: "string" },
+        name: { type: "string" },
+        description: { type: "string" },
+        createdAt: { type: "string" },
+        updatedAt: { type: "string" },
+      },
+    },
+  },
+};
 export const updateSystemSchema = {
-  tags: ['Systems'],
+  tags: ["Systems"],
   params: {
-    type: 'object',
-    required: ['id'],
+    type: "object",
+    required: ["id"],
     properties: {
-      id: { type: 'string' }
-    }
+      id: { type: "string" },
+    },
   },
   body: {
-    type: 'object',
+    type: "object",
     properties: {
-      name: { type: 'string' },
-      description: { type: 'string' },
+      name: { type: "string" },
+      description: { type: "string" },
       componentIds: {
-        type: 'array',
-        items: { type: 'string' }
-      }
-    }
-  }
-}
+        type: "array",
+        items: { type: "string" },
+      },
+    },
+  },
+};
 export const getSystemByIdSchema = {
-  tags: ['Systems'],
+  tags: ["Systems"],
   params: {
-    type: 'object',
-    required: ['id'],
+    type: "object",
+    required: ["id"],
     properties: {
-      id: { type: 'string' }
-    }
-  }
-}
+      id: { type: "string" },
+    },
+  },
+};
 
-
+export const getSystemsSchema = {
+  tags: ["Systems"],
+  querystring: {
+    type: "object",
+    properties: {
+      search: { type: "string" },
+      page: { type: "number", minimum: 1 },
+      limit: { type: "number", minimum: 1, maximum: 100 },
+      sortBy: {
+        type: "string",
+        enum: ["createdAt", "name"],
+      },
+      sortOrder: {
+        type: "string",
+        enum: ["asc", "desc"],
+      },
+    },
+    additionalProperties: false,
+  },
+};

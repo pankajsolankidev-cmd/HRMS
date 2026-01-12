@@ -12,6 +12,7 @@ import {
   createComponentSchema,
   updateComponentSchema,
   getComponentByIdSchema,
+  getComponentsSchema,
 } from "./component.schema";
 
 import type { CreateComponentDto } from "@shared/types/src/components/create-component.dto";
@@ -49,11 +50,19 @@ export default async function componentRoutes(app: FastifyInstance) {
       ...secured,
       schema: {
         ...secured.schema,
-        tags: ["Components"],
+        ...getComponentsSchema,
       },
     },
-    async () => {
-      return await getComponents();
+    async (request) => {
+      const query = request.query as {
+        search?: string;
+        page?: number;
+        limit?: number;
+        sortBy?: "name" | "createdAt";
+        sortOrder?: "asc" | "desc";
+      };
+
+      return getComponents(query);
     }
   );
 
@@ -116,7 +125,7 @@ export default async function componentRoutes(app: FastifyInstance) {
         },
       },
     },
-    async (request, reply) => {
+    async (request) => {
       const { id } = request.params as { id: string };
       await deleteComponent(id);
       return { message: "Component deleted successfully" };

@@ -18,6 +18,7 @@ import {
   UpdateLeaveRequestDto,
 } from "@shared/types/src/leave-request/leave-request.types";
 import { authenticate } from "../../plugins/auth.plugin";
+import { LeaveStatus } from "../../db/schema/leave.enums";
 
 export default async function leaveRequestRoutes(app: FastifyInstance) {
   app.post(
@@ -48,9 +49,19 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
     async (request, reply) => {
       const userId = request.user!.id;
 
-      const leaves = await getMyLeaveRequests(userId);
+      const query = request.query as {
+        search?: string;
+        status?: (typeof LeaveStatus)[keyof typeof LeaveStatus];
+        type?: string;
+        page?: number;
+        limit?: number;
+        sortBy?: "createdAt" | "fromDate";
+        sortOrder?: "asc" | "desc";
+      };
 
-      return reply.send({ data: leaves });
+      const result = await getMyLeaveRequests(userId, query);
+
+      return reply.send(result);
     }
   );
 

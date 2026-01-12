@@ -1,8 +1,9 @@
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, asc, and, ilike, sql } from "drizzle-orm";
 import { db } from "../../db";
 import { employees } from "../../db/schema/employees.schema";
 import { leaveRequests } from "../../db/schema/leave-requests.schema";
 import { LeaveStatus } from "../../db/schema/leave.enums";
+
 import {
   CreateLeaveRequestDto,
   UpdateLeaveRequestDto,
@@ -38,7 +39,18 @@ export async function createLeaveRequest(
   return leave;
 }
 
-export async function getMyLeaveRequests(userId: string) {
+export async function getMyLeaveRequests(
+  userId: string,
+  query?: {
+    search?: string;
+    status?: (typeof LeaveStatus)[keyof typeof LeaveStatus];
+    type?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: "createdAt" | "fromDate";
+    sortOrder?: "asc" | "desc";
+  }
+) {
   const [employee] = await db
     .select({ id: employees.id })
     .from(employees)
@@ -48,18 +60,56 @@ export async function getMyLeaveRequests(userId: string) {
     throw new Error("Employee not found for this user");
   }
 
-  return db
+  const conditions = [eq(leaveRequests.employeeId, employee.id)];
+
+  if (query?.search) {
+    conditions.push(ilike(leaveRequests.reason, `%${query.search}%`));
+  }
+
+  if (query?.status) {
+    conditions.push(eq(leaveRequests.status, query.status));
+  }
+
+  if (query?.type) {
+    conditions.push(eq(leaveRequests.type, query.type as any));
+  }
+
+  const page = Math.max(1, Number(query?.page) || 1);
+  const limit = Math.min(50, Number(query?.limit) || 10);
+  const offset = (page - 1) * limit;
+
+  const sortColumn =
+    query?.sortBy === "fromDate"
+      ? leaveRequests.fromDate
+      : leaveRequests.createdAt;
+
+  const order =
+    query?.sortOrder === "asc" ? asc(sortColumn) : desc(sortColumn);
+
+  const data = await db
     .select()
     .from(leaveRequests)
-    .where(eq(leaveRequests.employeeId, employee.id))
-    .orderBy(desc(leaveRequests.createdAt));
+    .where(and(...conditions))
+    .orderBy(order)
+    .limit(limit)
+    .offset(offset);
+
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(leaveRequests)
+    .where(and(...conditions));
+
+  return {
+    data,
+    meta: {
+      page,
+      limit,
+      total: Number(count),
+    },
+  };
 }
 
-export async function getLeaveRequestById(
-  userId: string,
-  leaveId: string
-) {
-  // 1️⃣ Resolve employee
+export async function getLeaveRequestById(userId: string, leaveId: string) {
   const [employee] = await db
     .select({ id: employees.id })
     .from(employees)
@@ -69,7 +119,6 @@ export async function getLeaveRequestById(
     throw new Error("Employee not found");
   }
 
-  // 2️⃣ Fetch leave
   const [leave] = await db
     .select()
     .from(leaveRequests)

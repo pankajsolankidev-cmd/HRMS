@@ -75,7 +75,25 @@ export const createEmployeeSchema = {
 
 export const getEmployeesSchema = {
   tags: ["Employees"],
+  querystring: {
+    type: "object",
+    properties: {
+      search: { type: "string" },
+      page: { type: "number", minimum: 1 },
+      limit: { type: "number", minimum: 1, maximum: 100 },
+      sortBy: {
+        type: "string",
+        enum: ["firstName", "createdAt"],
+      },
+      sortOrder: {
+        type: "string",
+        enum: ["asc", "desc"],
+      },
+    },
+    additionalProperties: false,
+  },
 };
+
 
 export const getEmployeeByIdSchema = {
   tags: ["Employees"],

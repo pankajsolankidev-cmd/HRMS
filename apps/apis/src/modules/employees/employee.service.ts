@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, and, asc, desc, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 import { db } from "../../db";
@@ -124,8 +124,35 @@ export async function updateEmployee(id: string, data: UpdateEmployeeDto) {
   });
 }
 
-export async function getEmployees() {
-  const rows = await db
+export async function getEmployees(query?: {
+  search?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: "firstName" | "createdAt";
+  sortOrder?: "asc" | "desc";
+}) {
+  const conditions = [];
+
+  if (query?.search) {
+    conditions.push(
+      sql`(
+        ${employees.firstName} ILIKE ${`%${query.search}%`} OR
+        ${employees.lastName} ILIKE ${`%${query.search}%`} OR
+        ${employees.email} ILIKE ${`%${query.search}%`}
+      )`
+    );
+  }
+
+  const page = Math.max(1, Number(query?.page) || 1);
+  const limit = Math.min(100, Number(query?.limit) || 10);
+  const offset = (page - 1) * limit;
+
+  const sortColumn =
+    query?.sortBy === "createdAt" ? employees.createdAt : employees.firstName;
+
+  const order = query?.sortOrder === "asc" ? asc(sortColumn) : desc(sortColumn);
+
+  const data = await db
     .select({
       id: employees.id,
       firstName: employees.firstName,
@@ -153,9 +180,25 @@ export async function getEmployees() {
     .leftJoin(
       documentGeneration,
       eq(documentGeneration.employeeId, employees.id)
-    );
+    )
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(order)
+    .limit(limit)
+    .offset(offset);
 
-  return rows;
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(employees)
+    .where(conditions.length ? and(...conditions) : undefined);
+
+  return {
+    data,
+    meta: {
+      page,
+      limit,
+      total: Number(count),
+    },
+  };
 }
 
 export async function getEmployeeById(id: string) {
