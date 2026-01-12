@@ -5,6 +5,7 @@ export const createComponentSchema = {
     required: ["name"],
     properties: {
       name: { type: "string" },
+      code: { type: "string" },
       description: { type: "string" },
     },
     additionalProperties: false,

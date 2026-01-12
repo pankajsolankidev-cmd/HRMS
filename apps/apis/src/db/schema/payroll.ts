@@ -11,6 +11,7 @@ import {
 import { employees } from "./employees.schema";
 import { baseColumns } from "../base-columns";
 import { PayrollMonth } from "./payroll.enums";
+import { users } from "./users.schema";
 
 export const salary = pgTable(
   "salary",
@@ -49,7 +50,7 @@ export const payrolls = pgTable(
 
     processedBy: uuid("processed_by")
       .notNull()
-      .references(() => employees.id),
+      .references(() => users.id),
 
     totalDeductions: numeric("total_deductions", {
       precision: 12,

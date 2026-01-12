@@ -16,38 +16,41 @@ import {
 } from "./payroll.schema";
 
 import type { PayrollMonthType } from "../../db/schema/payroll.enums";
+import { sendMessage } from "../../utils/api-response";
+import { verifyAccessToken } from "../../middlewares/auth.middlewares";
 
 export async function payrollRoutes(app: FastifyInstance) {
   app.post<{ Body: ProcessPayrollDto }>(
-    "/payrolls/process",
-    { schema: processPayrollSchema },
-    async (req, reply) => {
-      try {
-        if (!req.user) {
-          return reply.code(401).send({ message: "Unauthorized" });
-        }
+  "/payrolls/process",
+  {
+    schema: processPayrollSchema,
+    preHandler: verifyAccessToken, 
+  },
+  async (req, reply) => {
+    try {
+      const processedBy = req.user!.id; 
 
-        const processedBy = req.user.id;
+      await PayrollService.process(req.body, processedBy);
 
-        const data = await PayrollService.process(req.body, processedBy);
-        return reply.code(201).send(data);
-      } catch (error: any) {
-        if (error.message === "Cannot process payroll for a future month") {
-          return reply.code(400).send({ message: error.message });
-        }
-
-        if (error.message === "Payroll already processed for this month") {
-          return reply.code(409).send({ message: error.message });
-        }
-
-        if (error.message === "Salary structure not found for employee") {
-          return reply.code(404).send({ message: error.message });
-        }
-
-        throw error;
+      return sendMessage(reply, "Payroll processed successfully", 201);
+    } catch (error: any) {
+      if (error.message === "Cannot process payroll for a future month") {
+        return reply.code(400).send({ message: error.message });
       }
+
+      if (error.message === "Payroll already processed for this month") {
+        return reply.code(409).send({ message: error.message });
+      }
+
+      if (error.message === "Salary structure not found for employee") {
+        return reply.code(404).send({ message: error.message });
+      }
+
+      throw error;
     }
-  );
+  }
+);
+
 
   app.get("/payrolls", { schema: getPayrollsSchema }, async (req) => {
     const { month, year, employeeId, page, limit, sortBy, sortOrder } =
@@ -92,8 +95,12 @@ export async function payrollRoutes(app: FastifyInstance) {
     Body: UpdatePayrollDto;
   }>("/payrolls/:id", { schema: updatePayrollSchema }, async (req, reply) => {
     try {
-      const data = await PayrollService.update(req.params.id, req.body);
-      return reply.send(data);
+      const updated = await PayrollService.update(req.params.id, req.body);
+      if (!updated) {
+        return reply.code(404).send({ message: "Payroll not found" });
+      }
+
+      return sendMessage(reply, "Payroll updated successfully");
     } catch (error: any) {
       if (error.message === "Payroll not found") {
         return reply.code(404).send({ message: error.message });
@@ -107,8 +114,12 @@ export async function payrollRoutes(app: FastifyInstance) {
     { schema: deletePayrollSchema },
     async (req, reply) => {
       try {
-        const data = await PayrollService.delete(req.params.id);
-        return reply.send(data);
+        const deleted = await PayrollService.delete(req.params.id);
+        if (!deleted) {
+          return reply.code(404).send({ message: "Payroll not found" });
+        }
+
+        return sendMessage(reply, "Payroll deleted successfully");
       } catch (error: any) {
         if (error.message === "Payroll not found") {
           return reply.code(404).send({ message: error.message });
