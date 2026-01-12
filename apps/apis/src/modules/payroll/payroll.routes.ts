@@ -23,7 +23,11 @@ export async function payrollRoutes(app: FastifyInstance) {
     { schema: processPayrollSchema },
     async (req, reply) => {
       try {
-        const processedBy = "93c60a57-11d1-46d6-ad9e-3802d3077fec";
+        if (!req.user) {
+          return reply.code(401).send({ message: "Unauthorized" });
+        }
+
+        const processedBy = req.user.id;
 
         const data = await PayrollService.process(req.body, processedBy);
         return reply.code(201).send(data);
