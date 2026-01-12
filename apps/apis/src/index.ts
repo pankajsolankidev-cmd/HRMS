@@ -16,7 +16,7 @@ import componentRoutes from "./modules/components/component.routes";
 import leaveRequestRoutes from "./modules/leave-requests/leave-request.routes";
 import fastifyMultipart from "@fastify/multipart";
 import fileRoutes from "./modules/files/file.routes";
-import { salaryStructureRoutes } from "./modules/payroll/salary-structure.routes";
+import { salaryStructureRoutes } from "./modules/payroll/salary.routes";
 import { payrollRoutes } from "./modules/payroll/payroll.routes";
 import fastifySensible from "@fastify/sensible";
 

@@ -55,6 +55,17 @@ export const getPayrollsSchema = {
         type: "string",
         format: "uuid",
       },
+
+      page: { type: "number", minimum: 1 },
+      limit: { type: "number", minimum: 1, maximum: 100 },
+      sortBy: {
+        type: "string",
+        enum: ["processedAt", "netSalary", "year"],
+      },
+      sortOrder: {
+        type: "string",
+        enum: ["asc", "desc"],
+      },
     },
     additionalProperties: false,
   },

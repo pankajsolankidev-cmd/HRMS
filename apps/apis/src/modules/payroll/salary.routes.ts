@@ -19,10 +19,7 @@ import { authenticate } from "../../plugins/auth.plugin";
 export async function salaryStructureRoutes(app: FastifyInstance) {
   app.post<{ Body: CreateSalaryDto }>(
     "/salary",
-    {
-      schema: createSalarySchema,
-      preHandler: authenticate,
-    },
+    { schema: createSalarySchema, preHandler: authenticate },
     async (req, reply) => {
       const data = await SalaryService.create(req.body);
       return reply.code(201).send(data);
@@ -31,21 +28,15 @@ export async function salaryStructureRoutes(app: FastifyInstance) {
 
   app.get(
     "/salary",
-    {
-      schema: getAllSalarySchema,
-      preHandler: authenticate,
-    },
-    async () => {
-      return SalaryService.getAll();
+    { schema: getAllSalarySchema, preHandler: authenticate },
+    async (req) => {
+      return SalaryService.getAll(req.query as any);
     }
   );
 
   app.get<{ Params: { employeeId: string } }>(
     "/salary/employee/:employeeId",
-    {
-      schema: getSalaryByEmployeeSchema,
-      preHandler: authenticate,
-    },
+    { schema: getSalaryByEmployeeSchema, preHandler: authenticate },
     async (req) => {
       return SalaryService.getByEmployee(req.params.employeeId);
     }
@@ -53,24 +44,15 @@ export async function salaryStructureRoutes(app: FastifyInstance) {
 
   app.get<{ Params: { id: string } }>(
     "/salary/:id",
-    {
-      schema: getSalaryByIdSchema,
-      preHandler: authenticate,
-    },
+    { schema: getSalaryByIdSchema, preHandler: authenticate },
     async (req) => {
       return SalaryService.getById(req.params.id);
     }
   );
 
-  app.patch<{
-    Params: { id: string };
-    Body: UpdateSalaryDto;
-  }>(
+  app.patch<{ Params: { id: string }; Body: UpdateSalaryDto }>(
     "/salary/:id",
-    {
-      schema: updateSalarySchema,
-      preHandler: authenticate,
-    },
+    { schema: updateSalarySchema, preHandler: authenticate },
     async (req) => {
       return SalaryService.update(req.params.id, req.body);
     }
@@ -78,10 +60,7 @@ export async function salaryStructureRoutes(app: FastifyInstance) {
 
   app.delete<{ Params: { id: string } }>(
     "/salary/:id",
-    {
-      schema: deleteSalarySchema,
-      preHandler: authenticate,
-    },
+    { schema: deleteSalarySchema, preHandler: authenticate },
     async (req, reply) => {
       const data = await SalaryService.delete(req.params.id);
       return reply.code(200).send(data);
