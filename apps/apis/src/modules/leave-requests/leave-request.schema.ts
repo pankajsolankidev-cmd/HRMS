@@ -4,6 +4,14 @@ import {
   LeaveStatus,
 } from "../../db/schema/leave.enums";
 
+const errorResponse = {
+  type: "object",
+  properties: {
+    message: { type: "string" },
+  },
+  required: ["message"],
+};
+
 const leaveRequestIdParams = {
   type: "object",
   required: ["id"],
@@ -26,6 +34,17 @@ export const createLeaveRequestSchema = {
       file: { type: "string" },
     },
     additionalProperties: false,
+  },
+  response: {
+    201: {
+      type: "object",
+      properties: {
+        message: { type: "string" },
+      },
+      required: ["message"],
+    },
+    400: errorResponse,
+    500: errorResponse,
   },
 };
 
@@ -58,6 +77,14 @@ export const getMyLeaveRequestsSchema = {
   },
 };
 
+export const getLeaveRequestByIdSchema = {
+  tags: ["Leave Requests"],
+  params: leaveRequestIdParams,
+  response: {
+    404: errorResponse,
+  },
+};
+
 export const updateLeaveRequestSchema = {
   tags: ["Leave Requests"],
   params: leaveRequestIdParams,
@@ -73,14 +100,31 @@ export const updateLeaveRequestSchema = {
     },
     additionalProperties: false,
   },
-};
-
-export const getLeaveRequestByIdSchema = {
-  tags: ["Leave Requests"],
-  params: leaveRequestIdParams,
+  response: {
+    200: {
+      type: "object",
+      properties: {
+        message: { type: "string" },
+      },
+      required: ["message"],
+    },
+    404: errorResponse,
+    500: errorResponse,
+  },
 };
 
 export const deleteLeaveRequestSchema = {
   tags: ["Leave Requests"],
   params: leaveRequestIdParams,
+  response: {
+    200: {
+      type: "object",
+      properties: {
+        message: { type: "string" },
+      },
+      required: ["message"],
+    },
+    404: errorResponse,
+    500: errorResponse,
+  },
 };
