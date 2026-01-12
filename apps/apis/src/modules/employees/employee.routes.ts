@@ -72,8 +72,16 @@ export default async function employeeRoutes(app: FastifyInstance) {
         ...getEmployeesSchema,
       },
     },
-    async () => {
-      return await getEmployees();
+    async (request) => {
+      const query = request.query as {
+        search?: string;
+        page?: number;
+        limit?: number;
+        sortBy?: "firstName" | "createdAt";
+        sortOrder?: "asc" | "desc";
+      };
+
+      return getEmployees(query);
     }
   );
 

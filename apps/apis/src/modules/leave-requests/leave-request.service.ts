@@ -83,7 +83,8 @@ export async function getMyLeaveRequests(
       ? leaveRequests.fromDate
       : leaveRequests.createdAt;
 
-  const order = query?.sortOrder === "asc" ? asc(sortColumn) : desc(sortColumn);
+  const order =
+    query?.sortOrder === "asc" ? asc(sortColumn) : desc(sortColumn);
 
   const data = await db
     .select()

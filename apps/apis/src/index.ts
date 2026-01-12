@@ -21,14 +21,14 @@ const app = Fastify({ logger: true });
 
 app.register(fastifyMultipart, {
   limits: {
-    fileSize: 10 * 1024 * 1024, 
+    fileSize: 10 * 1024 * 1024,
   },
 });
 
 app.register(cors, {
   origin: ["http://localhost:5173", "http://192.168.1.33:5173"],
   credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH","DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 });
 
 app.register(cookie);
@@ -36,37 +36,35 @@ app.register(cookie);
 app.register(swagger, {
   openapi: {
     info: {
-      title: 'HRM API',
-      version: '1.0.0'
+      title: "HRM API",
+      version: "1.0.0",
     },
     components: {
       securitySchemes: {
         bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT'
-        }
-      }
-    }
-  }
-})
-
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
+    },
+  },
+});
 
 app.register(swaggerUI, {
   routePrefix: "/docs",
 });
 app.register(authPlugin);
 app.register(authRoutes);
-app.register(employeeRoutes,{
-  schema:{
-    security: [{ bearerAuth: [] }]
-  }
+app.register(employeeRoutes, {
+  schema: {
+    security: [{ bearerAuth: [] }],
+  },
 });
 app.register(systemRoutes);
 app.register(componentRoutes);
 app.register(leaveRequestRoutes);
 app.register(fileRoutes);
-
 
 app.get("/health", async () => {
   return { status: "API is running 🚀" };

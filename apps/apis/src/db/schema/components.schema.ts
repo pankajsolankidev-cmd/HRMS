@@ -6,4 +6,5 @@ export const components = pgTable("components", {
   description: text("description"),
   code: varchar("code", { length: 50 }).notNull().unique(),
   ...baseColumns,
+  
 });

@@ -35,12 +35,24 @@ export const getMyLeaveRequestsSchema = {
     type: "object",
     properties: {
       search: { type: "string" },
-      status: { type: "string", enum: Object.values(LeaveStatus) },
-      type: { type: "string", enum: Object.values(LeaveType) },
+      status: {
+        type: "string",
+        enum: Object.values(LeaveStatus),
+      },
+      type: {
+        type: "string",
+        enum: Object.values(LeaveType),
+      },
       page: { type: "number", minimum: 1 },
       limit: { type: "number", minimum: 1, maximum: 50 },
-      sortBy: { type: "string", enum: ["createdAt", "fromDate"] },
-      sortOrder: { type: "string", enum: ["asc", "desc"] },
+      sortBy: {
+        type: "string",
+        enum: ["createdAt", "fromDate"],
+      },
+      sortOrder: {
+        type: "string",
+        enum: ["asc", "desc"],
+      },
     },
     additionalProperties: false,
   },
