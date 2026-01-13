@@ -1,5 +1,13 @@
 import type { FastifyInstance } from "fastify";
-import { SalaryService } from "./salary.service";
+
+import {
+  createSalary,
+  getSalaries,
+  getSalaryById,
+  getSalaryByEmployee,
+  updateSalary,
+  deleteSalary,
+} from "./salary.service";
 
 import {
   createSalarySchema,
@@ -10,13 +18,7 @@ import {
   deleteSalarySchema,
 } from "./salary.schema";
 
-import type {
-  CreateSalaryDto,
-  UpdateSalaryDto,
-} from "@shared/types/src/payroll/salary.dto";
-
 import { verifyAccessToken } from "../../middlewares/auth.middlewares";
-import { sendMessage } from "../../utils/api-response";
 
 export default async function salaryRoutes(app: FastifyInstance) {
   const secured = {
@@ -36,12 +38,7 @@ export default async function salaryRoutes(app: FastifyInstance) {
         ...createSalarySchema,
       },
     },
-    async (req, reply) => {
-      const body = req.body as CreateSalaryDto;
-
-      await SalaryService.create(body);
-      return sendMessage(reply, "Salary structure created successfully", 201);
-    }
+    createSalary
   );
 
   app.get(
@@ -53,9 +50,7 @@ export default async function salaryRoutes(app: FastifyInstance) {
         ...getAllSalarySchema,
       },
     },
-    async (req) => {
-      return SalaryService.getAll(req.query as any);
-    }
+    getSalaries
   );
 
   app.get(
@@ -67,18 +62,7 @@ export default async function salaryRoutes(app: FastifyInstance) {
         ...getSalaryByIdSchema,
       },
     },
-    async (req, reply) => {
-      const { id } = req.params as { id: string };
-
-      try {
-        return await SalaryService.getById(id);
-      } catch (error: any) {
-        if (error.message === "Salary structure not found") {
-          return reply.code(404).send({ message: error.message });
-        }
-        throw error;
-      }
-    }
+    getSalaryById
   );
 
   app.get(
@@ -90,18 +74,7 @@ export default async function salaryRoutes(app: FastifyInstance) {
         ...getSalaryByEmployeeSchema,
       },
     },
-    async (req, reply) => {
-      const { employeeId } = req.params as { employeeId: string };
-
-      try {
-        return await SalaryService.getByEmployee(employeeId);
-      } catch (error: any) {
-        if (error.message === "Salary structure not found for this employee") {
-          return reply.code(404).send({ message: error.message });
-        }
-        throw error;
-      }
-    }
+    getSalaryByEmployee
   );
 
   app.put(
@@ -113,20 +86,7 @@ export default async function salaryRoutes(app: FastifyInstance) {
         ...updateSalarySchema,
       },
     },
-    async (req, reply) => {
-      const { id } = req.params as { id: string };
-      const body = req.body as UpdateSalaryDto;
-
-      try {
-        await SalaryService.update(id, body);
-        return sendMessage(reply, "Salary structure updated successfully");
-      } catch (error: any) {
-        if (error.message === "Salary structure not found") {
-          return reply.code(404).send({ message: error.message });
-        }
-        throw error;
-      }
-    }
+    updateSalary
   );
 
   app.delete(
@@ -138,18 +98,6 @@ export default async function salaryRoutes(app: FastifyInstance) {
         ...deleteSalarySchema,
       },
     },
-    async (req, reply) => {
-      const { id } = req.params as { id: string };
-
-      try {
-        await SalaryService.delete(id);
-        return sendMessage(reply, "Salary structure deleted successfully");
-      } catch (error: any) {
-        if (error.message === "Salary structure not found") {
-          return reply.code(404).send({ message: error.message });
-        }
-        throw error;
-      }
-    }
+    deleteSalary
   );
 }
