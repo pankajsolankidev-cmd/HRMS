@@ -1,11 +1,11 @@
 import type { FastifyInstance } from "fastify";
 
 import {
-  createComponent,
-  getComponents,
-  getComponentById,
-  updateComponent,
-  deleteComponent,
+  createComponentHandler,
+  getComponentsHandler,
+  getComponentByIdHandler,
+  updateComponentHandler,
+  deleteComponentHandler,
 } from "./component.service";
 
 import {
@@ -34,7 +34,7 @@ export default async function componentRoutes(app: FastifyInstance) {
         ...createComponentSchema,
       },
     },
-    createComponent
+    createComponentHandler
   );
 
   app.get(
@@ -46,7 +46,7 @@ export default async function componentRoutes(app: FastifyInstance) {
         ...getComponentsSchema,
       },
     },
-    getComponents
+    getComponentsHandler
   );
 
   app.get(
@@ -58,7 +58,7 @@ export default async function componentRoutes(app: FastifyInstance) {
         ...getComponentByIdSchema,
       },
     },
-    getComponentById
+    getComponentByIdHandler
   );
 
   app.put(
@@ -70,7 +70,7 @@ export default async function componentRoutes(app: FastifyInstance) {
         ...updateComponentSchema,
       },
     },
-    updateComponent
+    updateComponentHandler
   );
 
   app.delete(
@@ -89,6 +89,6 @@ export default async function componentRoutes(app: FastifyInstance) {
         },
       },
     },
-    deleteComponent
+    deleteComponentHandler
   );
 }

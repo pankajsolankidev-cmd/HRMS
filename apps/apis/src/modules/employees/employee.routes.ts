@@ -1,11 +1,11 @@
 import type { FastifyInstance } from "fastify";
 
 import {
-  createEmployee,
-  getEmployees,
-  getEmployeeById,
-  updateEmployee,
-  deleteEmployee,
+  createEmployeeHandler,
+  getEmployeesHandler,
+  getEmployeeByIdHandler,
+  updateEmployeeHandler,
+  deleteEmployeeHandler,
 } from "./employee.service";
 
 import {
@@ -36,7 +36,7 @@ export default async function employeeRoutes(app: FastifyInstance) {
         ...createEmployeeSchema,
       },
     },
-    createEmployee
+    createEmployeeHandler
   );
 
   app.get(
@@ -48,7 +48,7 @@ export default async function employeeRoutes(app: FastifyInstance) {
         ...getEmployeesSchema,
       },
     },
-    getEmployees
+    getEmployeesHandler
   );
 
   app.get(
@@ -60,7 +60,7 @@ export default async function employeeRoutes(app: FastifyInstance) {
         ...getEmployeeByIdSchema,
       },
     },
-    getEmployeeById
+    getEmployeeByIdHandler
   );
 
   app.put(
@@ -72,7 +72,7 @@ export default async function employeeRoutes(app: FastifyInstance) {
         ...updateEmployeeSchema,
       },
     },
-    updateEmployee
+    updateEmployeeHandler
   );
 
   app.delete(
@@ -84,6 +84,6 @@ export default async function employeeRoutes(app: FastifyInstance) {
         ...deleteEmployeeSchema,
       },
     },
-    deleteEmployee
+    deleteEmployeeHandler
   );
 }

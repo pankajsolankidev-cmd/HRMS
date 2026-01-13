@@ -1,12 +1,12 @@
 import type { FastifyInstance } from "fastify";
 
 import {
-  processPayroll,
-  getPayrolls,
-  getPayrollById,
-  updatePayroll,
-  deletePayroll,
-  getPayrollSummary,
+  processPayrollHandler,
+  getPayrollsHandler,
+  getPayrollByIdHandler,
+  updatePayrollHandler,
+  deletePayrollHandler,
+  getPayrollSummaryHandler,
 } from "./payroll.service";
 
 import {
@@ -27,7 +27,7 @@ export async function payrollRoutes(app: FastifyInstance) {
       schema: processPayrollSchema,
       preHandler: verifyAccessToken,
     },
-    processPayroll
+    processPayrollHandler
   );
 
   app.get(
@@ -36,7 +36,7 @@ export async function payrollRoutes(app: FastifyInstance) {
       schema: getPayrollsSchema,
       preHandler: verifyAccessToken,
     },
-    getPayrolls
+    getPayrollsHandler
   );
 
   app.get(
@@ -45,7 +45,7 @@ export async function payrollRoutes(app: FastifyInstance) {
       schema: getPayrollByIdSchema,
       preHandler: verifyAccessToken,
     },
-    getPayrollById
+    getPayrollByIdHandler
   );
 
   app.patch(
@@ -54,7 +54,7 @@ export async function payrollRoutes(app: FastifyInstance) {
       schema: updatePayrollSchema,
       preHandler: verifyAccessToken,
     },
-    updatePayroll
+    updatePayrollHandler
   );
 
   app.delete(
@@ -63,7 +63,7 @@ export async function payrollRoutes(app: FastifyInstance) {
       schema: deletePayrollSchema,
       preHandler: verifyAccessToken,
     },
-    deletePayroll
+    deletePayrollHandler
   );
 
   app.get(
@@ -72,6 +72,6 @@ export async function payrollRoutes(app: FastifyInstance) {
       schema: payrollSummarySchema,
       preHandler: verifyAccessToken,
     },
-    getPayrollSummary
+    getPayrollSummaryHandler
   );
 }

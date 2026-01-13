@@ -1,12 +1,12 @@
 import type { FastifyInstance } from "fastify";
 
 import {
-  createSalary,
-  getSalaries,
-  getSalaryById,
-  getSalaryByEmployee,
-  updateSalary,
-  deleteSalary,
+  createSalaryHandler,
+  getSalariesHandler,
+  getSalaryByIdHandler,
+  getSalaryByEmployeeHandler,
+  updateSalaryHandler,
+  deleteSalaryHandler,
 } from "./salary.service";
 
 import {
@@ -38,7 +38,7 @@ export default async function salaryRoutes(app: FastifyInstance) {
         ...createSalarySchema,
       },
     },
-    createSalary
+    createSalaryHandler
   );
 
   app.get(
@@ -50,7 +50,7 @@ export default async function salaryRoutes(app: FastifyInstance) {
         ...getAllSalarySchema,
       },
     },
-    getSalaries
+    getSalariesHandler
   );
 
   app.get(
@@ -62,7 +62,7 @@ export default async function salaryRoutes(app: FastifyInstance) {
         ...getSalaryByIdSchema,
       },
     },
-    getSalaryById
+    getSalaryByIdHandler
   );
 
   app.get(
@@ -74,7 +74,7 @@ export default async function salaryRoutes(app: FastifyInstance) {
         ...getSalaryByEmployeeSchema,
       },
     },
-    getSalaryByEmployee
+    getSalaryByEmployeeHandler
   );
 
   app.put(
@@ -86,7 +86,7 @@ export default async function salaryRoutes(app: FastifyInstance) {
         ...updateSalarySchema,
       },
     },
-    updateSalary
+    updateSalaryHandler
   );
 
   app.delete(
@@ -98,6 +98,6 @@ export default async function salaryRoutes(app: FastifyInstance) {
         ...deleteSalarySchema,
       },
     },
-    deleteSalary
+    deleteSalaryHandler
   );
 }

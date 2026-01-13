@@ -9,7 +9,7 @@ import type { UpdateComponentDto } from "@shared/types/src/components/update-com
 
 import { sendMessage } from "../../utils/api-response";
 
-export async function createComponent(
+export async function createComponentHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
@@ -20,7 +20,7 @@ export async function createComponent(
   return sendMessage(reply, "Component created successfully", 201);
 }
 
-export async function getComponents(request: FastifyRequest) {
+export async function getComponentsHandler(request: FastifyRequest) {
   const query = request.query as {
     search?: string;
     page?: number;
@@ -67,7 +67,7 @@ export async function getComponents(request: FastifyRequest) {
   };
 }
 
-export async function getComponentById(
+export async function getComponentByIdHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
@@ -85,7 +85,7 @@ export async function getComponentById(
   return component;
 }
 
-export async function updateComponent(
+export async function updateComponentHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
@@ -108,7 +108,7 @@ export async function updateComponent(
   return sendMessage(reply, "Component updated successfully");
 }
 
-export async function deleteComponent(
+export async function deleteComponentHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {

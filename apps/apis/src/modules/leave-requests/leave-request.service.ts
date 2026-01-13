@@ -13,7 +13,7 @@ import {
 
 import { sendMessage } from "../../utils/api-response";
 
-export async function createLeaveRequest(
+export async function createLeaveRequestHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
@@ -43,7 +43,7 @@ export async function createLeaveRequest(
   return sendMessage(reply, "Leave request created successfully", 201);
 }
 
-export async function getMyLeaveRequests(request: FastifyRequest) {
+export async function getMyLeaveRequestsHandler(request: FastifyRequest) {
   const userId = request.user!.id;
 
   const query = request.query as {
@@ -113,7 +113,7 @@ export async function getMyLeaveRequests(request: FastifyRequest) {
   };
 }
 
-export async function getLeaveRequestById(
+export async function getLeaveRequestByIdHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
@@ -143,7 +143,7 @@ export async function getLeaveRequestById(
   return { data: leave };
 }
 
-export async function updateLeaveRequest(
+export async function updateLeaveRequestHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
@@ -184,7 +184,7 @@ export async function updateLeaveRequest(
   return sendMessage(reply, "Leave request updated successfully");
 }
 
-export async function deleteLeaveRequest(
+export async function deleteLeaveRequestHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {

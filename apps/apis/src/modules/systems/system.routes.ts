@@ -1,11 +1,11 @@
 import type { FastifyInstance } from "fastify";
 
 import {
-  createSystem,
-  getSystems,
-  getSystemById,
-  updateSystem,
-  deleteSystem,
+  createSystemHandler,
+  getSystemsHandler,
+  getSystemByIdHandler,
+  updateSystemHandler,
+  deleteSystemHandler,
 } from "./system.service";
 
 import {
@@ -35,7 +35,7 @@ export default async function systemRoutes(app: FastifyInstance) {
         ...createSystemSchema,
       },
     },
-    createSystem
+    createSystemHandler
   );
 
   app.get(
@@ -47,7 +47,7 @@ export default async function systemRoutes(app: FastifyInstance) {
         ...getSystemsSchema,
       },
     },
-    getSystems
+    getSystemsHandler
   );
 
   app.get(
@@ -59,7 +59,7 @@ export default async function systemRoutes(app: FastifyInstance) {
         ...getSystemByIdSchema,
       },
     },
-    getSystemById
+    getSystemByIdHandler
   );
 
   app.put(
@@ -71,7 +71,7 @@ export default async function systemRoutes(app: FastifyInstance) {
         ...updateSystemSchema,
       },
     },
-    updateSystem
+    updateSystemHandler
   );
 
   app.delete(
@@ -89,6 +89,6 @@ export default async function systemRoutes(app: FastifyInstance) {
         },
       },
     },
-    deleteSystem
+    deleteSystemHandler
   );
 }

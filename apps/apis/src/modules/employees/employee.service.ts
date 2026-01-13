@@ -20,7 +20,7 @@ const DEFAULT_EMPLOYEE_PASSWORD: string = (() => {
 })();
 
 
-export async function createEmployee(
+export async function createEmployeeHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
@@ -91,7 +91,7 @@ export async function createEmployee(
 }
 
 
-export async function getEmployees(request: FastifyRequest) {
+export async function getEmployeesHandler(request: FastifyRequest) {
   const query = request.query as {
     search?: string;
     page?: number;
@@ -171,7 +171,7 @@ export async function getEmployees(request: FastifyRequest) {
 }
 
 
-export async function getEmployeeById(
+export async function getEmployeeByIdHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
@@ -216,7 +216,7 @@ export async function getEmployeeById(
 }
 
 
-export async function updateEmployee(
+export async function updateEmployeeHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
@@ -276,7 +276,7 @@ export async function updateEmployee(
 }
 
 
-export async function deleteEmployee(
+export async function deleteEmployeeHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {

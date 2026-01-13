@@ -1,11 +1,11 @@
 import type { FastifyInstance } from "fastify";
 
 import {
-  createLeaveRequest,
-  getMyLeaveRequests,
-  getLeaveRequestById,
-  updateLeaveRequest,
-  deleteLeaveRequest,
+  createLeaveRequestHandler,
+  getMyLeaveRequestsHandler,
+  getLeaveRequestByIdHandler,
+  updateLeaveRequestHandler,
+  deleteLeaveRequestHandler,
 } from "./leave-request.service";
 
 import {
@@ -25,7 +25,7 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
       schema: createLeaveRequestSchema,
       preHandler: authenticate,
     },
-    createLeaveRequest
+    createLeaveRequestHandler
   );
 
   app.get(
@@ -34,7 +34,7 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
       schema: getMyLeaveRequestsSchema,
       preHandler: authenticate,
     },
-    getMyLeaveRequests
+    getMyLeaveRequestsHandler
   );
 
   app.get(
@@ -43,7 +43,7 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
       schema: getLeaveRequestByIdSchema,
       preHandler: authenticate,
     },
-    getLeaveRequestById
+    getLeaveRequestByIdHandler
   );
 
   app.patch(
@@ -52,7 +52,7 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
       schema: updateLeaveRequestSchema,
       preHandler: authenticate,
     },
-    updateLeaveRequest
+    updateLeaveRequestHandler
   );
 
   app.delete(
@@ -61,6 +61,6 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
       schema: deleteLeaveRequestSchema,
       preHandler: authenticate,
     },
-    deleteLeaveRequest
+    deleteLeaveRequestHandler
   );
 }

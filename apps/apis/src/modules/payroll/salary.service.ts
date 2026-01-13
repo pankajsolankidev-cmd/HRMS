@@ -12,7 +12,7 @@ import type {
 
 import { sendMessage } from "../../utils/api-response";
 
-export async function createSalary(
+export async function createSalaryHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
@@ -41,7 +41,7 @@ export async function createSalary(
   return sendMessage(reply, "Salary structure created successfully", 201);
 }
 
-export async function getSalaries(request: FastifyRequest) {
+export async function getSalariesHandler(request: FastifyRequest) {
   const query = request.query as {
     search?: string;
     employeeId?: string;
@@ -103,7 +103,7 @@ export async function getSalaries(request: FastifyRequest) {
   };
 }
 
-export async function getSalaryById(
+export async function getSalaryByIdHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
@@ -121,7 +121,7 @@ export async function getSalaryById(
   return salaryStructure;
 }
 
-export async function getSalaryByEmployee(
+export async function getSalaryByEmployeeHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
@@ -141,7 +141,7 @@ export async function getSalaryByEmployee(
   return salaryStructure;
 }
 
-export async function updateSalary(
+export async function updateSalaryHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
@@ -171,7 +171,7 @@ export async function updateSalary(
   return sendMessage(reply, "Salary structure updated successfully");
 }
 
-export async function deleteSalary(
+export async function deleteSalaryHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {

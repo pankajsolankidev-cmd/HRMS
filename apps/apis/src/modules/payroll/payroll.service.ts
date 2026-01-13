@@ -14,7 +14,7 @@ import { PayrollMonth, PayrollMonthType } from "../../db/schema/payroll.enums";
 import { getPagination } from "../../utils/pagination";
 import { sendMessage } from "../../utils/api-response";
 
-export async function processPayroll(
+export async function processPayrollHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
@@ -87,7 +87,7 @@ export async function processPayroll(
   return sendMessage(reply, "Payroll processed successfully", 201);
 }
 
-export async function getPayrolls(request: FastifyRequest) {
+export async function getPayrollsHandler(request: FastifyRequest) {
   const filters = request.query as PayrollFilterDto;
 
   const conditions = [];
@@ -141,7 +141,7 @@ export async function getPayrolls(request: FastifyRequest) {
   };
 }
 
-export async function getPayrollById(
+export async function getPayrollByIdHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
@@ -156,7 +156,7 @@ export async function getPayrollById(
   return payroll;
 }
 
-export async function updatePayroll(
+export async function updatePayrollHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
@@ -214,7 +214,7 @@ export async function updatePayroll(
   return sendMessage(reply, "Payroll updated successfully");
 }
 
-export async function deletePayroll(
+export async function deletePayrollHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
@@ -234,7 +234,7 @@ export async function deletePayroll(
   return sendMessage(reply, "Payroll deleted successfully");
 }
 
-export async function getPayrollSummary(request: FastifyRequest) {
+export async function getPayrollSummaryHandler(request: FastifyRequest) {
   const { month, year } = request.query as {
     month: PayrollMonthType;
     year: number;

@@ -13,7 +13,7 @@ import type {
   UpdateSystemDto,
 } from "@shared/types/src/system/system.dto";
 
-export async function createSystem(
+export async function createSystemHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
@@ -41,7 +41,7 @@ export async function createSystem(
   return sendMessage(reply, "System created successfully", 201);
 }
 
-export async function getSystems(request: FastifyRequest) {
+export async function getSystemsHandler(request: FastifyRequest) {
   const query = request.query as {
     search?: string;
     page?: number;
@@ -100,7 +100,7 @@ export async function getSystems(request: FastifyRequest) {
   };
 }
 
-export async function getSystemById(
+export async function getSystemByIdHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
@@ -124,7 +124,7 @@ export async function getSystemById(
   };
 }
 
-export async function updateSystem(
+export async function updateSystemHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
@@ -171,7 +171,7 @@ export async function updateSystem(
   return sendMessage(reply, "System updated successfully");
 }
 
-export async function deleteSystem(
+export async function deleteSystemHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
