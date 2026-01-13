@@ -9,6 +9,7 @@ import Input from "../../components/form/input/InputField";
 import { addComponent } from "../../api/post";
 import { updateComponent } from "../../api/put";
 import { getComponentById } from "../../api/get";
+import toast from "react-hot-toast";
 
 const componentSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -23,7 +24,7 @@ export default function AddEditComponentForm() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const isEdit = Boolean(id && id!="new");
+  const isEdit = Boolean(id && id != "new");
 
   const {
     register,
@@ -57,16 +58,20 @@ export default function AddEditComponentForm() {
 
   const saveMutation = useMutation({
     mutationFn: (payload: ComponentFormData) =>
-      isEdit
-        ? updateComponent({ id: id!, payload })
-        : addComponent(payload),
-
+      isEdit ? updateComponent({ id: id!, payload }) : addComponent(payload),
     onSuccess: () => {
+      toast.success(
+        isEdit ? "Component updated successfully" : "Component added successfully"
+      );
       queryClient.invalidateQueries({ queryKey: ["components"] });
+      navigate("/components");
+    },
 
-      setTimeout(() => {
-        navigate("/components");
-      }, 1200);
+    onError: (error: any) => {
+      toast.error(
+        error?.response?.data?.message ||
+          "Something went wrong. Please try again."
+      );
     },
   });
 
@@ -95,30 +100,13 @@ export default function AddEditComponentForm() {
             disabled={saveMutation.isPending}
             className="rounded-lg bg-black px-4 py-2 text-white dark:bg-white dark:text-black disabled:opacity-50"
           >
-            {saveMutation.isPending
-              ? "Saving..."
-              : isEdit
-              ? "Update"
-              : "Add"}
+            {saveMutation.isPending ? "Saving..." : isEdit ? "Update" : "Add"}
           </button>
         </div>
 
-        {saveMutation.isSuccess && (
-          <p className="text-sm text-green-600 dark:text-green-400">
-            {isEdit
-              ? "Component updated successfully"
-              : "Component added successfully"}
-          </p>
-        )}
-
-        {saveMutation.isError && (
-          <p className="text-sm text-red-600 dark:text-red-400">
-            Something went wrong. Please try again.
-          </p>
-        )}
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Input
+            placeholder="Enter component name"
             label="Component Name"
             {...register("name")}
             error={!!errors.name}
@@ -126,6 +114,7 @@ export default function AddEditComponentForm() {
           />
 
           <Input
+            placeholder="Enter component code"
             label="Component Code"
             {...register("code")}
             error={!!errors.code}
@@ -134,6 +123,7 @@ export default function AddEditComponentForm() {
 
           <div className="md:col-span-2">
             <Input
+              placeholder="Description"
               label="Description"
               {...register("description")}
               error={!!errors.description}

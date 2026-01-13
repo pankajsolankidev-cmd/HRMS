@@ -30,6 +30,55 @@ export const getSystemById = async (id: string) => {
   return res.data;
 };
 
+export const getSalaryStructures = async () => {
+  const res = await api.get("/salary");
+  return Array.isArray(res.data) ? res.data : [];
+};
+
+export const getSalaryStructureById = async (id: string) => {
+  const res = await api.get(`/salary/${id}`);
+  return res.data;
+};
+export const getPayrolls = async () => {
+  const res = await api.get("/payrolls");
+  return Array.isArray(res.data) ? res.data : [];
+};
+
+export const getPayrollById = async (id: string) => {
+  const res = await api.get(`/payrolls/${id}`);
+  return res.data;
+};
+
+export const getPayrollsByMonthYear = async (
+  month: string, 
+  year: number
+) => {
+  const res = await api.get("/payrolls", {
+    params: {
+      month: month, 
+      year: String(year),
+    },
+  });
+
+  return Array.isArray(res.data) ? res.data : [];
+};
+
+export const getPayrollSummary = async (
+  month: string,
+  year: number
+) => {
+  const res = await api.get("/payrolls/summary", {
+    params: { month, year },
+  });
+  console.log(res.data);
+  return res.data as {
+    employeesProcessed: number;
+    avgSalary: number;
+    netPayroll: number;
+  };
+};
+
+
 export const getLeaves = async () => {
   const res = await api.get("/leave-requests/me");
   return Array.isArray(res.data?.data) ? res.data.data : [];

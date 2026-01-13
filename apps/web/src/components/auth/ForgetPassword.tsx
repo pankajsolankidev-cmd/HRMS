@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 
-import Label from "../form/Label";
 import Input from "../form/input/InputField";
 
 import { z } from "zod";

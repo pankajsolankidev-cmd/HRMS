@@ -1,11 +1,14 @@
-import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 
-import DataTable from "../../components/tables/BasicTables/DataTable";
+import DataTable, {
+  type Column,
+} from "../../components/tables/BasicTables/DataTable";
 import { getSystems } from "../../api/get";
 import { deleteSystem } from "../../api/delete";
 import Chip from "../../components/common/Chip";
+import toast from "react-hot-toast";
 
 type SystemComponent = {
   id: string;
@@ -35,27 +38,30 @@ export default function GetSystemTable() {
   const { mutate: removeSystem } = useMutation({
     mutationFn: deleteSystem,
     onSuccess: () => {
+      toast.success(
+        "System Deleted Successfully"
+      );
       queryClient.invalidateQueries({ queryKey: ["systems"] });
     },
+    onError:(error : any)=>{
+      toast.error(
+        error?.response?.data?.message || "An unexpected error occurred"
+      );
+    },
   });
-
-  const columns = [
+  const columns: Column<System>[] = [
     {
       header: "Name",
-      cell: (row: System) => (
-        <div className="font-medium text-center">{row.name}</div>
-      ),
+      cell: (row: System) => <div className="font-medium">{row.name}</div>,
     },
     {
       header: "Description",
-      cell: (row: System) => (
-        <div className="text-sm text-center">{row.description}</div>
-      ),
+      cell: (row: System) => <div className="text-sm">{row.description}</div>,
     },
     {
       header: "Components",
       cell: (row: System) => (
-        <div className="flex flex-wrap justify-center gap-2">
+        <div className="flex flex-wrap gap-2">
           {row.components && row.components.length > 0 ? (
             row.components.map((component) => (
               <Chip key={component.id} label={component.name} />
@@ -68,8 +74,9 @@ export default function GetSystemTable() {
     },
     {
       header: "Action",
+      align: "center",
       cell: (row: System) => (
-        <div className="flex items-center gap-3 justify-center">
+        <div className="flex items-center justify-center gap-3">
           <IconEdit
             size={18}
             onClick={() => navigate(`/systems/${row.id}`)}
@@ -91,17 +98,6 @@ export default function GetSystemTable() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <button
-          onClick={() => navigate("/systems/new")}
-          className="flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-white
-                     dark:bg-white dark:text-black"
-        >
-          <IconPlus size={18} />
-          Add System
-        </button>
-      </div>
-
       <DataTable
         columns={columns}
         data={systems}
