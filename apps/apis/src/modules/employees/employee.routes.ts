@@ -16,12 +16,7 @@ import {
   deleteEmployeeSchema,
 } from "./employee.schema";
 
-import type { CreateEmployeeDto } from "@shared/types/src/employee/employee.dto";
-import type { UpdateEmployeeDto } from "@shared/types/src/employee/update-employee.dto";
-
 import { verifyAccessToken } from "../../middlewares/auth.middlewares";
-import { sendMessage } from "../../utils/api-response";
-
 
 export default async function employeeRoutes(app: FastifyInstance) {
   const secured = {
@@ -32,7 +27,7 @@ export default async function employeeRoutes(app: FastifyInstance) {
     },
   };
 
- app.post(
+  app.post(
     "/employees",
     {
       ...secured,
@@ -41,30 +36,7 @@ export default async function employeeRoutes(app: FastifyInstance) {
         ...createEmployeeSchema,
       },
     },
-    async (request, reply) => {
-      const body = request.body as CreateEmployeeDto;
-
-      try {
-        const result = await createEmployee(body);
-
-        return reply.code(201).send({
-          message: "Employee created successfully",
-          employeeId: result.employeeId,
-          userId: result.userId,
-        });
-      } catch (err: any) {
-        if (err?.code === "23505") {
-          return reply.code(409).send({
-            message: "Employee with this email already exists",
-          });
-        }
-
-        request.log.error(err);
-        return reply.code(500).send({
-          message: "Internal server error",
-        });
-      }
-    }
+    createEmployee
   );
 
   app.get(
@@ -76,17 +48,7 @@ export default async function employeeRoutes(app: FastifyInstance) {
         ...getEmployeesSchema,
       },
     },
-    async (request) => {
-      const query = request.query as {
-        search?: string;
-        page?: number;
-        limit?: number;
-        sortBy?: "firstName" | "createdAt";
-        sortOrder?: "asc" | "desc";
-      };
-
-      return getEmployees(query);
-    }
+    getEmployees
   );
 
   app.get(
@@ -98,16 +60,7 @@ export default async function employeeRoutes(app: FastifyInstance) {
         ...getEmployeeByIdSchema,
       },
     },
-    async (request, reply) => {
-      const { id } = request.params as { id: string };
-
-      const employee = await getEmployeeById(id);
-      if (!employee) {
-        return reply.code(404).send({ error: "Employee not found" });
-      }
-
-      return employee;
-    }
+    getEmployeeById
   );
 
   app.put(
@@ -119,22 +72,9 @@ export default async function employeeRoutes(app: FastifyInstance) {
         ...updateEmployeeSchema,
       },
     },
-    async (request, reply) => {
-      const { id } = request.params as { id: string };
-      const body = request.body as UpdateEmployeeDto;
-
-      const updated = await updateEmployee(id, body);
-      if (!updated) {
-        return reply.code(404).send({
-          message: "Employee not found",
-        });
-      }
-
-      return sendMessage(reply, "Employee updated successfully");
-    }
+    updateEmployee
   );
 
-  // ✅ DELETE EMPLOYEE
   app.delete(
     "/employees/:id",
     {
@@ -144,17 +84,6 @@ export default async function employeeRoutes(app: FastifyInstance) {
         ...deleteEmployeeSchema,
       },
     },
-    async (request, reply) => {
-      const { id } = request.params as { id: string };
-
-      const deleted = await deleteEmployee(id);
-      if (!deleted) {
-        return reply.code(404).send({
-          message: "Employee not found",
-        });
-      }
-
-      return sendMessage(reply, "Employee deleted successfully");
-    }
+    deleteEmployee
   );
 }
