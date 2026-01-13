@@ -1,22 +1,34 @@
+import type { FastifyRequest, FastifyReply } from "fastify";
 import { and, eq, ilike, asc, desc, sql } from "drizzle-orm";
+
 import { db } from "../../db";
 import { components } from "../../db/schema/components.schema";
 
 import type { CreateComponentDto } from "@shared/types/src/components/create-component.dto";
 import type { UpdateComponentDto } from "@shared/types/src/components/update-component.dto";
 
-export async function createComponent(data: CreateComponentDto) {
-  const [component] = await db.insert(components).values(data).returning();
-  return component;
+import { sendMessage } from "../../utils/api-response";
+
+export async function createComponent(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const body = request.body as CreateComponentDto;
+
+  await db.insert(components).values(body);
+
+  return sendMessage(reply, "Component created successfully", 201);
 }
 
-export async function getComponents(query?: {
-  search?: string;
-  page?: number;
-  limit?: number;
-  sortBy?: "name" | "createdAt";
-  sortOrder?: "asc" | "desc";
-}) {
+export async function getComponents(request: FastifyRequest) {
+  const query = request.query as {
+    search?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: "name" | "createdAt";
+    sortOrder?: "asc" | "desc";
+  };
+
   const conditions = [];
 
   if (query?.search) {
@@ -55,33 +67,54 @@ export async function getComponents(query?: {
   };
 }
 
-export async function getComponentById(id: string) {
+export async function getComponentById(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const { id } = request.params as { id: string };
+
   const [component] = await db
     .select()
     .from(components)
     .where(eq(components.id, id));
 
+  if (!component) {
+    return reply.status(404).send({ message: "Component not found" });
+  }
+
   return component;
 }
 
-export async function updateComponent(id: string, data: UpdateComponentDto) {
+export async function updateComponent(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const { id } = request.params as { id: string };
+  const body = request.body as UpdateComponentDto;
+
   const [updated] = await db
     .update(components)
     .set({
-      ...data,
+      ...body,
       updatedAt: new Date(),
     })
     .where(eq(components.id, id))
     .returning();
 
-  return updated;
+  if (!updated) {
+    return reply.status(404).send({ message: "Component not found" });
+  }
+
+  return sendMessage(reply, "Component updated successfully");
 }
 
-export async function deleteComponent(id: string) {
-  const [deleted] = await db
-    .delete(components)
-    .where(eq(components.id, id))
-    .returning();
+export async function deleteComponent(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const { id } = request.params as { id: string };
 
-  return deleted;
+  await db.delete(components).where(eq(components.id, id));
+
+  return sendMessage(reply, "Component deleted successfully");
 }

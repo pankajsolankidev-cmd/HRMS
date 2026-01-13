@@ -15,11 +15,7 @@ import {
   getComponentsSchema,
 } from "./component.schema";
 
-import type { CreateComponentDto } from "@shared/types/src/components/create-component.dto";
-import type { UpdateComponentDto } from "@shared/types/src/components/update-component.dto";
-
 import { verifyAccessToken } from "../../middlewares/auth.middlewares";
-import { sendMessage } from "../../utils/api-response";
 
 export default async function componentRoutes(app: FastifyInstance) {
   const secured = {
@@ -38,12 +34,7 @@ export default async function componentRoutes(app: FastifyInstance) {
         ...createComponentSchema,
       },
     },
-    async (request, reply) => {
-      const body = request.body as CreateComponentDto;
-      await createComponent(body);
-
-      return sendMessage(reply, "Component created successfully", 201);
-    }
+    createComponent
   );
 
   app.get(
@@ -55,17 +46,7 @@ export default async function componentRoutes(app: FastifyInstance) {
         ...getComponentsSchema,
       },
     },
-    async (request) => {
-      const query = request.query as {
-        search?: string;
-        page?: number;
-        limit?: number;
-        sortBy?: "name" | "createdAt";
-        sortOrder?: "asc" | "desc";
-      };
-
-      return getComponents(query);
-    }
+    getComponents
   );
 
   app.get(
@@ -77,16 +58,7 @@ export default async function componentRoutes(app: FastifyInstance) {
         ...getComponentByIdSchema,
       },
     },
-    async (request, reply) => {
-      const { id } = request.params as { id: string };
-      const component = await getComponentById(id);
-
-      if (!component) {
-        return reply.status(404).send({ message: "Component not found" });
-      }
-
-      return component;
-    }
+    getComponentById
   );
 
   app.put(
@@ -98,17 +70,7 @@ export default async function componentRoutes(app: FastifyInstance) {
         ...updateComponentSchema,
       },
     },
-    async (request, reply) => {
-      const { id } = request.params as { id: string };
-      const body = request.body as UpdateComponentDto;
-
-      const updated = await updateComponent(id, body);
-      if (!updated) {
-        return reply.status(404).send({ message: "Component not found" });
-      }
-
-      return sendMessage(reply, "Component updated successfully");
-    }
+    updateComponent
   );
 
   app.delete(
@@ -127,11 +89,6 @@ export default async function componentRoutes(app: FastifyInstance) {
         },
       },
     },
-    async (request, reply) => {
-      const { id } = request.params as { id: string };
-      await deleteComponent(id);
-
-      return sendMessage(reply, "Component deleted successfully");
-    }
+    deleteComponent
   );
 }
