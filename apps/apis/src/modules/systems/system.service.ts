@@ -1,45 +1,55 @@
+import type { FastifyRequest, FastifyReply } from "fastify";
 import { eq, inArray, ilike, asc, desc, and } from "drizzle-orm";
+
 import { db } from "../../db";
 import { systems } from "../../db/schema/systems.schema";
 import { systemComponents } from "../../db/schema/system-components.schema";
 import { components } from "../../db/schema/components.schema";
 import { getPagination } from "../../utils/pagination";
+import { sendMessage } from "../../utils/api-response";
 
 import type {
   CreateSystemDto,
   UpdateSystemDto,
 } from "@shared/types/src/system/system.dto";
 
-export async function createSystem(data: CreateSystemDto) {
-  return await db.transaction(async (tx) => {
+export async function createSystem(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const body = request.body as CreateSystemDto;
+
+  await db.transaction(async (tx) => {
     const [system] = await tx
       .insert(systems)
       .values({
-        name: data.name,
-        description: data.description,
+        name: body.name,
+        description: body.description,
       })
       .returning();
 
-    if (data.componentIds?.length) {
-      const mappings = data.componentIds.map((componentId) => ({
-        systemId: system.id,
-        componentId,
-      }));
-
-      await tx.insert(systemComponents).values(mappings);
+    if (body.componentIds?.length) {
+      await tx.insert(systemComponents).values(
+        body.componentIds.map((componentId) => ({
+          systemId: system.id,
+          componentId,
+        }))
+      );
     }
-
-    return system;
   });
+
+  return sendMessage(reply, "System created successfully", 201);
 }
 
-export async function getSystems(query?: {
-  search?: string;
-  page?: number;
-  limit?: number;
-  sortBy?: "createdAt" | "name";
-  sortOrder?: "asc" | "desc";
-}) {
+export async function getSystems(request: FastifyRequest) {
+  const query = request.query as {
+    search?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: "createdAt" | "name";
+    sortOrder?: "asc" | "desc";
+  };
+
   const { limit, offset, page } = getPagination(query || {});
   const sortBy = query?.sortBy ?? "createdAt";
   const sortOrder = query?.sortOrder ?? "desc";
@@ -50,13 +60,10 @@ export async function getSystems(query?: {
     conditions.push(ilike(systems.name, `%${query.search}%`));
   }
 
-  const whereClause =
-    conditions.length > 0 ? and(...conditions) : undefined;
+  const whereClause = conditions.length ? and(...conditions) : undefined;
 
   const orderBy =
-    sortOrder === "asc"
-      ? asc(systems[sortBy])
-      : desc(systems[sortBy]);
+    sortOrder === "asc" ? asc(systems[sortBy]) : desc(systems[sortBy]);
 
   const systemsList = await db
     .select()
@@ -66,12 +73,8 @@ export async function getSystems(query?: {
     .limit(limit)
     .offset(offset);
 
-  if (systemsList.length === 0) {
-    return {
-      data: [],
-      page,
-      limit,
-    };
+  if (!systemsList.length) {
+    return { data: [], page, limit };
   }
 
   const systemIds = systemsList.map((s) => s.id);
@@ -97,9 +100,17 @@ export async function getSystems(query?: {
   };
 }
 
-export async function getSystemById(id: string) {
+export async function getSystemById(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const { id } = request.params as { id: string };
+
   const [system] = await db.select().from(systems).where(eq(systems.id, id));
-  if (!system) return null;
+
+  if (!system) {
+    return reply.code(404).send({ message: "System not found" });
+  }
 
   const rows = await db
     .select({ component: components })
@@ -113,14 +124,20 @@ export async function getSystemById(id: string) {
   };
 }
 
-export async function updateSystem(id: string, data: UpdateSystemDto) {
-  return await db.transaction(async (tx) => {
+export async function updateSystem(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const { id } = request.params as { id: string };
+  const body = request.body as UpdateSystemDto;
+
+  const updated = await db.transaction(async (tx) => {
     const [system] = await tx
       .update(systems)
       .set({
-        ...(data.name !== undefined && { name: data.name }),
-        ...(data.description !== undefined && {
-          description: data.description,
+        ...(body.name !== undefined && { name: body.name }),
+        ...(body.description !== undefined && {
+          description: body.description,
         }),
         updatedAt: new Date(),
       })
@@ -129,14 +146,14 @@ export async function updateSystem(id: string, data: UpdateSystemDto) {
 
     if (!system) return null;
 
-    if (Array.isArray(data.componentIds)) {
+    if (Array.isArray(body.componentIds)) {
       await tx
         .delete(systemComponents)
         .where(eq(systemComponents.systemId, id));
 
-      if (data.componentIds.length > 0) {
+      if (body.componentIds.length) {
         await tx.insert(systemComponents).values(
-          data.componentIds.map((componentId) => ({
+          body.componentIds.map((componentId) => ({
             systemId: id,
             componentId,
           }))
@@ -146,13 +163,28 @@ export async function updateSystem(id: string, data: UpdateSystemDto) {
 
     return system;
   });
+
+  if (!updated) {
+    return reply.code(404).send({ message: "System not found" });
+  }
+
+  return sendMessage(reply, "System updated successfully");
 }
 
-export async function deleteSystem(id: string) {
+export async function deleteSystem(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const { id } = request.params as { id: string };
+
   const [deleted] = await db
     .delete(systems)
     .where(eq(systems.id, id))
     .returning();
 
-  return deleted;
+  if (!deleted) {
+    return reply.code(404).send({ message: "System not found" });
+  }
+
+  return sendMessage(reply, "System deleted successfully");
 }
