@@ -1,10 +1,13 @@
 import type { FastifyInstance } from "fastify";
-import { PayrollService } from "./payroll.service";
 
-import type {
-  ProcessPayrollDto,
-  UpdatePayrollDto,
-} from "@shared/types/src/payroll/payroll.dto";
+import {
+  processPayrollHandler,
+  getPayrollsHandler,
+  getPayrollByIdHandler,
+  updatePayrollHandler,
+  deletePayrollHandler,
+  getPayrollSummaryHandler,
+} from "./payroll.service";
 
 import {
   processPayrollSchema,
@@ -15,130 +18,60 @@ import {
   deletePayrollSchema,
 } from "./payroll.schema";
 
-import type { PayrollMonthType } from "../../db/schema/payroll.enums";
-import { sendMessage } from "../../utils/api-response";
 import { verifyAccessToken } from "../../middlewares/auth.middlewares";
 
 export async function payrollRoutes(app: FastifyInstance) {
-  app.post<{ Body: ProcessPayrollDto }>(
-  "/payrolls/process",
-  {
-    schema: processPayrollSchema,
-    preHandler: verifyAccessToken, 
-  },
-  async (req, reply) => {
-    try {
-      const processedBy = req.user!.id; 
-
-      await PayrollService.process(req.body, processedBy);
-
-      return sendMessage(reply, "Payroll processed successfully", 201);
-    } catch (error: any) {
-      if (error.message === "Cannot process payroll for a future month") {
-        return reply.code(400).send({ message: error.message });
-      }
-
-      if (error.message === "Payroll already processed for this month") {
-        return reply.code(409).send({ message: error.message });
-      }
-
-      if (error.message === "Salary structure not found for employee") {
-        return reply.code(404).send({ message: error.message });
-      }
-
-      throw error;
-    }
-  }
-);
-
-
-  app.get("/payrolls", { schema: getPayrollsSchema }, async (req) => {
-    const { month, year, employeeId, page, limit, sortBy, sortOrder } =
-      req.query as {
-        month?: PayrollMonthType;
-        year?: number;
-        employeeId?: string;
-        page?: number;
-        limit?: number;
-        sortBy?: "year" | "netSalary" | "processedAt";
-        sortOrder?: "asc" | "desc";
-      };
-
-    return PayrollService.getAll({
-      month,
-      year,
-      employeeId,
-      page,
-      limit,
-      sortBy,
-      sortOrder,
-    });
-  });
-
-  app.get<{ Params: { id: string } }>(
-    "/payrolls/:id",
-    { schema: getPayrollByIdSchema },
-    async (req, reply) => {
-      try {
-        return await PayrollService.getById(req.params.id);
-      } catch (error: any) {
-        if (error.message === "Payroll not found") {
-          return reply.code(404).send({ message: error.message });
-        }
-        throw error;
-      }
-    }
+  app.post(
+    "/payrolls/process",
+    {
+      schema: processPayrollSchema,
+      preHandler: verifyAccessToken,
+    },
+    processPayrollHandler
   );
 
-  app.patch<{
-    Params: { id: string };
-    Body: UpdatePayrollDto;
-  }>("/payrolls/:id", { schema: updatePayrollSchema }, async (req, reply) => {
-    try {
-      const updated = await PayrollService.update(req.params.id, req.body);
-      if (!updated) {
-        return reply.code(404).send({ message: "Payroll not found" });
-      }
+  app.get(
+    "/payrolls",
+    {
+      schema: getPayrollsSchema,
+      preHandler: verifyAccessToken,
+    },
+    getPayrollsHandler
+  );
 
-      return sendMessage(reply, "Payroll updated successfully");
-    } catch (error: any) {
-      if (error.message === "Payroll not found") {
-        return reply.code(404).send({ message: error.message });
-      }
-      throw error;
-    }
-  });
-
-  app.delete<{ Params: { id: string } }>(
+  app.get(
     "/payrolls/:id",
-    { schema: deletePayrollSchema },
-    async (req, reply) => {
-      try {
-        const deleted = await PayrollService.delete(req.params.id);
-        if (!deleted) {
-          return reply.code(404).send({ message: "Payroll not found" });
-        }
+    {
+      schema: getPayrollByIdSchema,
+      preHandler: verifyAccessToken,
+    },
+    getPayrollByIdHandler
+  );
 
-        return sendMessage(reply, "Payroll deleted successfully");
-      } catch (error: any) {
-        if (error.message === "Payroll not found") {
-          return reply.code(404).send({ message: error.message });
-        }
-        throw error;
-      }
-    }
+  app.patch(
+    "/payrolls/:id",
+    {
+      schema: updatePayrollSchema,
+      preHandler: verifyAccessToken,
+    },
+    updatePayrollHandler
+  );
+
+  app.delete(
+    "/payrolls/:id",
+    {
+      schema: deletePayrollSchema,
+      preHandler: verifyAccessToken,
+    },
+    deletePayrollHandler
   );
 
   app.get(
     "/payrolls/summary",
-    { schema: payrollSummarySchema },
-    async (req) => {
-      const { month, year } = req.query as {
-        month: PayrollMonthType;
-        year: number;
-      };
-
-      return PayrollService.getSummary(month, year);
-    }
+    {
+      schema: payrollSummarySchema,
+      preHandler: verifyAccessToken,
+    },
+    getPayrollSummaryHandler
   );
 }
