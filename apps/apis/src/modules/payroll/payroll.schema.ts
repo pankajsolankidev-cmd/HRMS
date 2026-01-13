@@ -1,5 +1,13 @@
 import { PayrollMonth } from "../../db/schema/payroll.enums";
 
+const errorResponse = {
+  type: "object",
+  properties: {
+    message: { type: "string" },
+  },
+  required: ["message"],
+};
+
 const payrollIdParams = {
   type: "object",
   required: ["id"],
@@ -37,6 +45,19 @@ export const processPayrollSchema = {
     },
     additionalProperties: false,
   },
+  response: {
+    201: {
+      type: "object",
+      properties: {
+        message: { type: "string" },
+      },
+      required: ["message"],
+    },
+    400: errorResponse,
+    404: errorResponse,
+    409: errorResponse,
+    500: errorResponse,
+  },
 };
 
 export const getPayrollsSchema = {
@@ -55,7 +76,6 @@ export const getPayrollsSchema = {
         type: "string",
         format: "uuid",
       },
-
       page: { type: "number", minimum: 1 },
       limit: { type: "number", minimum: 1, maximum: 100 },
       sortBy: {
@@ -74,6 +94,9 @@ export const getPayrollsSchema = {
 export const getPayrollByIdSchema = {
   tags: ["Payroll"],
   params: payrollIdParams,
+  response: {
+    404: errorResponse,
+  },
 };
 
 export const payrollSummarySchema = {
@@ -123,9 +146,31 @@ export const updatePayrollSchema = {
     },
     additionalProperties: false,
   },
+  response: {
+    200: {
+      type: "object",
+      properties: {
+        message: { type: "string" },
+      },
+      required: ["message"],
+    },
+    404: errorResponse,
+    500: errorResponse,
+  },
 };
 
 export const deletePayrollSchema = {
   tags: ["Payroll"],
   params: payrollIdParams,
+  response: {
+    200: {
+      type: "object",
+      properties: {
+        message: { type: "string" },
+      },
+      required: ["message"],
+    },
+    404: errorResponse,
+    500: errorResponse,
+  },
 };

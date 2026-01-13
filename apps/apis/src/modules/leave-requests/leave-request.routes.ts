@@ -19,6 +19,7 @@ import {
 } from "@shared/types/src/leave-request/leave-request.types";
 import { authenticate } from "../../plugins/auth.plugin";
 import { LeaveStatus } from "../../db/schema/leave.enums";
+import { sendMessage } from "../../utils/api-response";
 
 export default async function leaveRequestRoutes(app: FastifyInstance) {
   app.post(
@@ -31,12 +32,9 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
       const userId = request.user!.id;
       const body = request.body as CreateLeaveRequestDto;
 
-      const leave = await createLeaveRequest(userId, body);
+      await createLeaveRequest(userId, body);
 
-      return reply.status(201).send({
-        message: "Leave request created successfully",
-        data: leave,
-      });
+      return sendMessage(reply, "Leave request created successfully", 201);
     }
   );
 
@@ -93,11 +91,11 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
       const body = request.body as UpdateLeaveRequestDto;
 
       const updated = await updateLeaveRequest(userId, id, body);
+      if (!updated) {
+        return reply.code(404).send({ message: "Leave request not found" });
+      }
 
-      return reply.send({
-        message: "Leave request updated successfully",
-        data: updated,
-      });
+      return sendMessage(reply, "Leave request updated successfully");
     }
   );
 
@@ -111,11 +109,12 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
       const userId = request.user!.id;
       const { id } = request.params as { id: string };
 
-      await deleteLeaveRequest(userId, id);
+      const deleted = await deleteLeaveRequest(userId, id);
+      if (!deleted) {
+        return reply.code(404).send({ message: "Leave request not found" });
+      }
 
-      return reply.send({
-        message: "Leave request deleted successfully",
-      });
+      return sendMessage(reply, "Leave request deleted successfully");
     }
   );
 }

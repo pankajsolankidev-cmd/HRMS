@@ -1,5 +1,5 @@
 {
-  "id": "21a9d4f7-c332-4dc0-8835-7fdc4d28f666",
+  "id": "bbc0bcf1-a60e-4865-9efe-ca9a9329b95f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -812,10 +812,10 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "payrolls_processed_by_employees_id_fk": {
-          "name": "payrolls_processed_by_employees_id_fk",
+        "payrolls_processed_by_users_id_fk": {
+          "name": "payrolls_processed_by_users_id_fk",
           "tableFrom": "payrolls",
-          "tableTo": "employees",
+          "tableTo": "users",
           "columnsFrom": [
             "processed_by"
           ],

@@ -1,3 +1,11 @@
+const messageResponse = {
+  type: "object",
+  required: ["message"],
+  properties: {
+    message: { type: "string" },
+  },
+};
+
 export const createSystemSchema = {
   tags: ["Systems"],
   body: {
@@ -11,20 +19,14 @@ export const createSystemSchema = {
         items: { type: "string" },
       },
     },
+    additionalProperties: false,
   },
   response: {
-    201: {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        name: { type: "string" },
-        description: { type: "string" },
-        createdAt: { type: "string" },
-        updatedAt: { type: "string" },
-      },
-    },
+    201: messageResponse,
+    500: messageResponse,
   },
 };
+
 export const updateSystemSchema = {
   tags: ["Systems"],
   params: {
@@ -44,8 +46,15 @@ export const updateSystemSchema = {
         items: { type: "string" },
       },
     },
+    additionalProperties: false,
+  },
+  response: {
+    200: messageResponse,
+    404: messageResponse,
+    500: messageResponse,
   },
 };
+
 export const getSystemByIdSchema = {
   tags: ["Systems"],
   params: {
@@ -54,6 +63,9 @@ export const getSystemByIdSchema = {
     properties: {
       id: { type: "string" },
     },
+  },
+  response: {
+    404: messageResponse,
   },
 };
 

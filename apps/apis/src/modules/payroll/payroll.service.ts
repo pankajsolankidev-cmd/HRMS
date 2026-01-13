@@ -69,7 +69,7 @@ export class PayrollService {
         totalDeductions: deductions.toString(),
         netSalary: netSalary.toString(),
         file: payload.file,
-        processedAt: new Date(),
+        // processedAt: new Date(),
       })
       .returning();
 

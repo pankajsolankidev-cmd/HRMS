@@ -1,3 +1,11 @@
+const messageResponse = {
+  type: "object",
+  required: ["message"],
+  properties: {
+    message: { type: "string" },
+  },
+};
+
 const salaryIdParams = {
   type: "object",
   required: ["id"],
@@ -26,6 +34,11 @@ export const createSalarySchema = {
       appraisalDate: { type: "string", format: "date" },
     },
     additionalProperties: false,
+  },
+  response: {
+    201: messageResponse,
+    409: messageResponse,
+    500: messageResponse,
   },
 };
 
@@ -58,11 +71,17 @@ export const getAllSalarySchema = {
 export const getSalaryByIdSchema = {
   tags: ["Salary"],
   params: salaryIdParams,
+  response: {
+    404: messageResponse,
+  },
 };
 
 export const getSalaryByEmployeeSchema = {
   tags: ["Salary"],
   params: employeeIdParams,
+  response: {
+    404: messageResponse,
+  },
 };
 
 export const updateSalarySchema = {
@@ -77,9 +96,19 @@ export const updateSalarySchema = {
     },
     additionalProperties: false,
   },
+  response: {
+    200: messageResponse,
+    404: messageResponse,
+    500: messageResponse,
+  },
 };
 
 export const deleteSalarySchema = {
   tags: ["Salary"],
   params: salaryIdParams,
+  response: {
+    200: messageResponse,
+    404: messageResponse,
+    500: messageResponse,
+  },
 };

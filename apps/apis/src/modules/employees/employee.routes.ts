@@ -20,9 +20,10 @@ import type { CreateEmployeeDto } from "@shared/types/src/employee/employee.dto"
 import type { UpdateEmployeeDto } from "@shared/types/src/employee/update-employee.dto";
 
 import { verifyAccessToken } from "../../middlewares/auth.middlewares";
+import { sendMessage } from "../../utils/api-response";
+
 
 export default async function employeeRoutes(app: FastifyInstance) {
-  /** 🔐 Common secured config */
   const secured = {
     preHandler: verifyAccessToken,
     schema: {
@@ -31,7 +32,7 @@ export default async function employeeRoutes(app: FastifyInstance) {
     },
   };
 
-  app.post(
+ app.post(
     "/employees",
     {
       ...secured,
@@ -49,16 +50,19 @@ export default async function employeeRoutes(app: FastifyInstance) {
         return reply.code(201).send({
           message: "Employee created successfully",
           employeeId: result.employeeId,
+          userId: result.userId,
         });
       } catch (err: any) {
         if (err?.code === "23505") {
           return reply.code(409).send({
-            error: "Employee with this email already exists",
+            message: "Employee with this email already exists",
           });
         }
 
         request.log.error(err);
-        return reply.code(500).send({ error: "Internal server error" });
+        return reply.code(500).send({
+          message: "Internal server error",
+        });
       }
     }
   );
@@ -121,15 +125,16 @@ export default async function employeeRoutes(app: FastifyInstance) {
 
       const updated = await updateEmployee(id, body);
       if (!updated) {
-        return reply.code(404).send({ error: "Employee not found" });
+        return reply.code(404).send({
+          message: "Employee not found",
+        });
       }
 
-      return {
-        message: "Employee updated successfully",
-      };
+      return sendMessage(reply, "Employee updated successfully");
     }
   );
 
+  // ✅ DELETE EMPLOYEE
   app.delete(
     "/employees/:id",
     {
@@ -144,12 +149,12 @@ export default async function employeeRoutes(app: FastifyInstance) {
 
       const deleted = await deleteEmployee(id);
       if (!deleted) {
-        return reply.code(404).send({ error: "Employee not found" });
+        return reply.code(404).send({
+          message: "Employee not found",
+        });
       }
 
-      return {
-        message: "Employee deleted successfully",
-      };
+      return sendMessage(reply, "Employee deleted successfully");
     }
   );
 }

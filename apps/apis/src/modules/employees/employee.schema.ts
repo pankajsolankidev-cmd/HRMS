@@ -1,8 +1,9 @@
 const errorResponse = {
   type: "object",
   properties: {
-    error: { type: "string" },
+    message: { type: "string" },
   },
+  required: ["message"],
 };
 
 export const createEmployeeSchema = {
@@ -64,9 +65,11 @@ export const createEmployeeSchema = {
     201: {
       type: "object",
       properties: {
+        message: { type: "string" },
         employeeId: { type: "string" },
         userId: { type: "string" },
       },
+      required: ["message", "employeeId", "userId"],
     },
     409: errorResponse,
     500: errorResponse,
@@ -94,10 +97,8 @@ export const getEmployeesSchema = {
   },
 };
 
-
 export const getEmployeeByIdSchema = {
   tags: ["Employees"],
-
   params: {
     type: "object",
     required: ["id"],
@@ -105,7 +106,6 @@ export const getEmployeeByIdSchema = {
       id: { type: "string" },
     },
   },
-
   response: {
     404: errorResponse,
   },
@@ -158,8 +158,9 @@ export const updateEmployeeSchema = {
     200: {
       type: "object",
       properties: {
-        id: { type: "string" },
+        message: { type: "string" },
       },
+      required: ["message"],
     },
     404: errorResponse,
     500: errorResponse,
@@ -178,6 +179,13 @@ export const deleteEmployeeSchema = {
   },
 
   response: {
+    200: {
+      type: "object",
+      properties: {
+        message: { type: "string" },
+      },
+      required: ["message"],
+    },
     404: errorResponse,
     500: errorResponse,
   },
