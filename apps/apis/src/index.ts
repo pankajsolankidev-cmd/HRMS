@@ -16,7 +16,7 @@ import componentRoutes from "./modules/components/component.routes";
 import leaveRequestRoutes from "./modules/leave-requests/leave-request.routes";
 import fastifyMultipart from "@fastify/multipart";
 import fileRoutes from "./modules/files/file.routes";
-import { salaryStructureRoutes } from "./modules/payroll/salary.routes";
+import salaryRoutes from "./modules/payroll/salary.routes";
 import { payrollRoutes } from "./modules/payroll/payroll.routes";
 import fastifySensible from "@fastify/sensible";
 
@@ -70,7 +70,7 @@ app.register(systemRoutes);
 app.register(componentRoutes);
 app.register(leaveRequestRoutes);
 app.register(fileRoutes);
-app.register(salaryStructureRoutes);
+app.register(salaryRoutes);
 app.register(payrollRoutes);
 
 app.get("/health", async () => {

@@ -1,69 +1,155 @@
 import type { FastifyInstance } from "fastify";
 import { SalaryService } from "./salary.service";
+
+import {
+  createSalarySchema,
+  getAllSalarySchema,
+  getSalaryByIdSchema,
+  getSalaryByEmployeeSchema,
+  updateSalarySchema,
+  deleteSalarySchema,
+} from "./salary.schema";
+
 import type {
   CreateSalaryDto,
   UpdateSalaryDto,
 } from "@shared/types/src/payroll/salary.dto";
 
-import {
-  createSalarySchema,
-  getAllSalarySchema,
-  getSalaryByEmployeeSchema,
-  getSalaryByIdSchema,
-  updateSalarySchema,
-  deleteSalarySchema,
-} from "./salary.schema";
+import { verifyAccessToken } from "../../middlewares/auth.middlewares";
+import { sendMessage } from "../../utils/api-response";
 
-import { authenticate } from "../../plugins/auth.plugin";
+export default async function salaryRoutes(app: FastifyInstance) {
+  const secured = {
+    preHandler: verifyAccessToken,
+    schema: {
+      security: [{ bearerAuth: [] }],
+      tags: ["Salary"],
+    },
+  };
 
-export async function salaryStructureRoutes(app: FastifyInstance) {
-  app.post<{ Body: CreateSalaryDto }>(
+  app.post(
     "/salary",
-    { schema: createSalarySchema, preHandler: authenticate },
+    {
+      ...secured,
+      schema: {
+        ...secured.schema,
+        ...createSalarySchema,
+      },
+    },
     async (req, reply) => {
-      const data = await SalaryService.create(req.body);
-      return reply.code(201).send(data);
+      const body = req.body as CreateSalaryDto;
+
+      await SalaryService.create(body);
+      return sendMessage(reply, "Salary structure created successfully", 201);
     }
   );
 
   app.get(
     "/salary",
-    { schema: getAllSalarySchema, preHandler: authenticate },
+    {
+      ...secured,
+      schema: {
+        ...secured.schema,
+        ...getAllSalarySchema,
+      },
+    },
     async (req) => {
       return SalaryService.getAll(req.query as any);
     }
   );
 
-  app.get<{ Params: { employeeId: string } }>(
-    "/salary/employee/:employeeId",
-    { schema: getSalaryByEmployeeSchema, preHandler: authenticate },
-    async (req) => {
-      return SalaryService.getByEmployee(req.params.employeeId);
-    }
-  );
-
-  app.get<{ Params: { id: string } }>(
+  app.get(
     "/salary/:id",
-    { schema: getSalaryByIdSchema, preHandler: authenticate },
-    async (req) => {
-      return SalaryService.getById(req.params.id);
-    }
-  );
-
-  app.patch<{ Params: { id: string }; Body: UpdateSalaryDto }>(
-    "/salary/:id",
-    { schema: updateSalarySchema, preHandler: authenticate },
-    async (req) => {
-      return SalaryService.update(req.params.id, req.body);
-    }
-  );
-
-  app.delete<{ Params: { id: string } }>(
-    "/salary/:id",
-    { schema: deleteSalarySchema, preHandler: authenticate },
+    {
+      ...secured,
+      schema: {
+        ...secured.schema,
+        ...getSalaryByIdSchema,
+      },
+    },
     async (req, reply) => {
-      const data = await SalaryService.delete(req.params.id);
-      return reply.code(200).send(data);
+      const { id } = req.params as { id: string };
+
+      try {
+        return await SalaryService.getById(id);
+      } catch (error: any) {
+        if (error.message === "Salary structure not found") {
+          return reply.code(404).send({ message: error.message });
+        }
+        throw error;
+      }
+    }
+  );
+
+  app.get(
+    "/salary/employee/:employeeId",
+    {
+      ...secured,
+      schema: {
+        ...secured.schema,
+        ...getSalaryByEmployeeSchema,
+      },
+    },
+    async (req, reply) => {
+      const { employeeId } = req.params as { employeeId: string };
+
+      try {
+        return await SalaryService.getByEmployee(employeeId);
+      } catch (error: any) {
+        if (error.message === "Salary structure not found for this employee") {
+          return reply.code(404).send({ message: error.message });
+        }
+        throw error;
+      }
+    }
+  );
+
+  app.put(
+    "/salary/:id",
+    {
+      ...secured,
+      schema: {
+        ...secured.schema,
+        ...updateSalarySchema,
+      },
+    },
+    async (req, reply) => {
+      const { id } = req.params as { id: string };
+      const body = req.body as UpdateSalaryDto;
+
+      try {
+        await SalaryService.update(id, body);
+        return sendMessage(reply, "Salary structure updated successfully");
+      } catch (error: any) {
+        if (error.message === "Salary structure not found") {
+          return reply.code(404).send({ message: error.message });
+        }
+        throw error;
+      }
+    }
+  );
+
+  app.delete(
+    "/salary/:id",
+    {
+      ...secured,
+      schema: {
+        ...secured.schema,
+        ...deleteSalarySchema,
+      },
+    },
+    async (req, reply) => {
+      const { id } = req.params as { id: string };
+
+      try {
+        await SalaryService.delete(id);
+        return sendMessage(reply, "Salary structure deleted successfully");
+      } catch (error: any) {
+        if (error.message === "Salary structure not found") {
+          return reply.code(404).send({ message: error.message });
+        }
+        throw error;
+      }
     }
   );
 }
