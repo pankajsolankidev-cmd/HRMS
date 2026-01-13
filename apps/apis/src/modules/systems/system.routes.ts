@@ -20,12 +20,14 @@ import type {
 } from "@shared/types/src/system/system.dto";
 
 import { verifyAccessToken } from "../../middlewares/auth.middlewares";
+import { sendMessage } from "../../utils/api-response";
 
 export default async function systemRoutes(app: FastifyInstance) {
   const secured = {
     preHandler: verifyAccessToken,
     schema: {
       security: [{ bearerAuth: [] }],
+      tags: ["Systems"],
     },
   };
 
@@ -40,8 +42,9 @@ export default async function systemRoutes(app: FastifyInstance) {
     },
     async (request, reply) => {
       const body = request.body as CreateSystemDto;
-      const system = await createSystem(body);
-      return reply.code(201).send(system);
+
+      await createSystem(body);
+      return sendMessage(reply, "System created successfully", 201);
     }
   );
 
@@ -55,15 +58,7 @@ export default async function systemRoutes(app: FastifyInstance) {
       },
     },
     async (request) => {
-      const query = request.query as {
-        search?: string;
-        page?: number;
-        limit?: number;
-        sortBy?: "createdAt" | "name";
-        sortOrder?: "asc" | "desc";
-      };
-
-      return await getSystems(query);
+      return getSystems(request.query as any);
     }
   );
 
@@ -81,7 +76,7 @@ export default async function systemRoutes(app: FastifyInstance) {
       const system = await getSystemById(id);
 
       if (!system) {
-        return reply.code(404).send({ error: "System not found" });
+        return reply.code(404).send({ message: "System not found" });
       }
 
       return system;
@@ -103,12 +98,10 @@ export default async function systemRoutes(app: FastifyInstance) {
 
       const updated = await updateSystem(id, body);
       if (!updated) {
-        return reply.code(404).send({ error: "System not found" });
+        return reply.code(404).send({ message: "System not found" });
       }
 
-      return {
-        message: "System updated successfully",
-      };
+      return sendMessage(reply, "System updated successfully");
     }
   );
 
@@ -118,7 +111,6 @@ export default async function systemRoutes(app: FastifyInstance) {
       ...secured,
       schema: {
         ...secured.schema,
-        tags: ["Systems"],
         params: {
           type: "object",
           required: ["id"],
@@ -133,12 +125,10 @@ export default async function systemRoutes(app: FastifyInstance) {
       const deleted = await deleteSystem(id);
 
       if (!deleted) {
-        return reply.code(404).send({ error: "System not found" });
+        return reply.code(404).send({ message: "System not found" });
       }
 
-      return {
-        message: "System deleted successfully",
-      };
+      return sendMessage(reply, "System deleted successfully");
     }
   );
 }
