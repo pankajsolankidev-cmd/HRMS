@@ -8,6 +8,8 @@ import {
 
 export type Column<T> = {
   header: string;
+  accessor?: keyof T;
+  sortable?: boolean;
   align?: "left" | "center" | "right";
   cell: (row: T) => React.ReactNode;
 };
@@ -17,6 +19,10 @@ export interface DataTableProps<T> {
   data: T[];
   isLoading?: boolean;
   isError?: boolean;
+
+  sortBy?: keyof T;
+  sortOrder?: "asc" | "desc";
+  onSort?: (field: keyof T) => void;
 }
 
 export default function DataTable<T>({
@@ -24,6 +30,9 @@ export default function DataTable<T>({
   data,
   isLoading,
   isError,
+  sortBy,
+  sortOrder,
+  onSort,
 }: DataTableProps<T>) {
   if (isLoading) {
     return (
@@ -47,17 +56,38 @@ export default function DataTable<T>({
         <Table>
           <TableHeader className="border-b border-gray-100 dark:border-gray-800">
             <TableRow className="bg-gray-50 dark:bg-gray-800/50">
-              {columns.map((col, index) => (
-                <TableCell
-                  key={index}
-                  isHeader
-                  className={`px-6 py-4 text-${
-                    col.align ?? "left"
-                  } text-xs font-semibold uppercase text-gray-500 dark:text-gray-400`}
-                >
-                  {col.header}
-                </TableCell>
-              ))}
+              {columns.map((col, index) => {
+                const isSortable = col.sortable && col.accessor && onSort;
+                const isActive = sortBy === col.accessor;
+
+                return (
+                  <TableCell
+                    key={index}
+                    isHeader
+                    onClick={
+                      isSortable
+                        ? () => onSort(col.accessor as keyof T)
+                        : undefined
+                    }
+                    className={`
+                      px-6 py-4 text-${col.align ?? "left"}
+                      text-xs font-semibold uppercase
+                      ${
+                        isSortable
+                          ? "cursor-pointer select-none hover:text-black dark:hover:text-white"
+                          : "text-gray-500 dark:text-gray-400"
+                      }
+                    `}
+                  >
+                    <div className="inline-flex items-center gap-1">
+                      {col.header}
+                      {isActive && (
+                        <span>{sortOrder === "asc" ? "▲" : "▼"}</span>
+                      )}
+                    </div>
+                  </TableCell>
+                );
+              })}
             </TableRow>
           </TableHeader>
 
@@ -85,3 +115,5 @@ export default function DataTable<T>({
     </div>
   );
 }
+
+

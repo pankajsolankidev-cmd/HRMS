@@ -1,8 +1,15 @@
 import api from "./axios";
-
-export const getEmployees = async () => {
-  const res = await api.get("/employees");
-  return Array.isArray(res.data) ? res.data : [];
+import type { PaginatedResponse } from "./types";
+export const getEmployees = async (params: {
+  page: number;
+  limit: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}) => {
+  const res = await api.get<PaginatedResponse<any>>("/employees", {
+    params,
+  });
+  return res.data;
 };
 
 export const getEmployeeById = async (id: string) => {
