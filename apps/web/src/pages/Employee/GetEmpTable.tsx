@@ -1,4 +1,4 @@
-import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { useState } from "react";
@@ -127,18 +127,7 @@ export default function GetEmpTable() {
   ];
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
-        <button
-          onClick={() => navigate("/employees/new")}
-          className="flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-white
-                     dark:bg-white dark:text-black"
-        >
-          <IconPlus size={18} />
-          Add Employee
-        </button>
-      </div>
-
+    <>
       <DataTable
         columns={columns}
         data={employees}
@@ -149,7 +138,7 @@ export default function GetEmpTable() {
         onSort={handleSort}
       />
 
-      <div className="flex items-center justify-between pt-4">
+      <div className="mt-4 flex items-center justify-between">
         <span className="text-sm text-gray-500">
           Showing {(page - 1) * limit + 1} – {Math.min(page * limit, total)} of{" "}
           {total}
@@ -173,6 +162,6 @@ export default function GetEmpTable() {
           </button>
         </div>
       </div>
-    </div>
+    </>
   );
 }

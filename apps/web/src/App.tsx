@@ -57,7 +57,7 @@ function AppRoutes() {
         </Route>
       </Route>
 
-      <Route element={<ProtectedRoute />}>
+      {/* <Route element={<ProtectedRoute />}> */}
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Home />} />
 
@@ -79,7 +79,7 @@ function AppRoutes() {
           <Route path="/leave-requests" element={<Leave />} />
           <Route path="/leave-requests/:id" element={<AddEditLeave />} />
         </Route>
-      </Route>
+      {/* </Route> */}
 
       <Route path="*" element={<NotFound />} />
     </Routes>

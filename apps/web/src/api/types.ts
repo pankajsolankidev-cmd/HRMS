@@ -6,3 +6,9 @@ export type PaginatedResponse<T> = {
     total: number;
   };
 };
+export type ListQueryParams = {
+  page: number;
+  limit: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+};

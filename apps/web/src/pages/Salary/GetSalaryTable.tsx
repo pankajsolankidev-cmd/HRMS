@@ -1,11 +1,15 @@
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useNavigate } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import DataTable, { type Column } from "../../components/tables/BasicTables/DataTable";
+import { useState } from "react";
+import toast from "react-hot-toast";
 
+import DataTable, {
+  type Column,
+} from "../../components/tables/BasicTables/DataTable";
 import { getEmployees, getSalaryStructures } from "../../api/get";
 import { deleteSalaryStructure } from "../../api/delete";
-import toast from "react-hot-toast";
+import type { PaginatedResponse } from "../../api/types";
 
 export type SalaryStructure = {
   id: string;
@@ -19,57 +23,89 @@ export default function GetSalaryTable() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: employees = [] } = useQuery({
-    queryKey: ["employees"],
-    queryFn: getEmployees,
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+
+  const [sortBy, setSortBy] = useState<keyof SalaryStructure | undefined>();
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  const handleSort = (field: keyof SalaryStructure) => {
+    if (sortBy === field) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(field);
+      setSortOrder("asc");
+    }
+    setPage(1);
+  };
+
+  const { data: employees } = useQuery({
+    queryKey: ["employees", "all"],
+    queryFn: () =>
+      getEmployees({
+        page: 1,
+        limit: 1000,
+      }),
   });
+
+  const employeeList = employees?.data ?? [];
 
   const employeeMap = new Map(
-    employees.map((e: any) => [e.id, `${e.firstName} ${e.lastName}`])
+    employeeList.map((emp: any) => [emp.id, `${emp.firstName} ${emp.lastName}`])
   );
 
-  const {
-    data: rawData = [],
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["salary-structures"],
-    queryFn: getSalaryStructures,
+  const { data, isLoading, isError } = useQuery<PaginatedResponse<any>>({
+    queryKey: ["salary-structures", page, limit, sortBy, sortOrder],
+    queryFn: () =>
+      getSalaryStructures({
+        page,
+        limit,
+        sortBy: sortBy as string | undefined,
+        sortOrder,
+      }),
+    placeholderData: (prev) => prev,
   });
 
-  const data: SalaryStructure[] = rawData.map((s: any) => ({
-    id: s.id,
-    employeeName: employeeMap.get(s.employeeId) || s.employeeId,
-    basicSalary: Number(s.basicSalary),
-    description: s.description,
-    appraisalDate: s.appraisalDate ? s.appraisalDate.split("T")[0] : undefined,
-  }));
+  const total = data?.meta?.total ?? 0;
+
+  const salaryData: SalaryStructure[] =
+    data?.data?.map((s: any) => ({
+      id: s.id,
+      employeeName: employeeMap.get(s.employeeId) || s.employeeId,
+      basicSalary: Number(s.basicSalary),
+      description: s.description,
+      appraisalDate: s.appraisalDate
+        ? s.appraisalDate.split("T")[0]
+        : undefined,
+    })) ?? [];
 
   const { mutate: remove } = useMutation({
     mutationFn: deleteSalaryStructure,
     onSuccess: () => {
-      toast.success(
-        "Salary Deleted Successfully"
-      );
-      queryClient.invalidateQueries({ queryKey: ["salary-structures"] });
+      toast.success("Salary Deleted Successfully");
+      queryClient.invalidateQueries({
+        queryKey: ["salary-structures"],
+      });
     },
-    onError:(error : any)=>{
+    onError: (error: any) => {
       toast.error(
         error?.response?.data?.message || "An unexpected error occurred"
       );
     },
   });
 
-const columns: Column<SalaryStructure>[] = [
+  const columns: Column<SalaryStructure>[] = [
     {
       header: "Employee",
-      cell: (row: SalaryStructure) => (
-        <span className="font-medium">{row.employeeName}</span>
-      ),
+      accessor: "employeeName",
+      sortable: true,
+      cell: (row) => <span className="font-medium">{row.employeeName}</span>,
     },
     {
       header: "Basic Salary",
-      cell: (row: SalaryStructure) => (
+      accessor: "basicSalary",
+      sortable: true,
+      cell: (row) => (
         <span className="font-medium text-green-600 dark:text-green-400">
           ₹ {row.basicSalary.toLocaleString("en-IN")}
         </span>
@@ -77,16 +113,18 @@ const columns: Column<SalaryStructure>[] = [
     },
     {
       header: "Description",
-      cell: (row: SalaryStructure) => row.description || "-",
+      cell: (row) => row.description || "-",
     },
     {
       header: "Appraisal Date",
-      cell: (row: SalaryStructure) => row.appraisalDate || "-",
+      accessor: "appraisalDate",
+      sortable: true,
+      cell: (row) => row.appraisalDate || "-",
     },
     {
       header: "Action",
-      align:"center",
-      cell: (row: SalaryStructure) => (
+      align: "center",
+      cell: (row) => (
         <div className="flex items-center justify-center gap-3">
           <IconEdit
             size={18}
@@ -108,15 +146,41 @@ const columns: Column<SalaryStructure>[] = [
   ];
 
   return (
-    <div className="space-y-4">
-      
-
+    <>
       <DataTable
         columns={columns}
-        data={data}
+        data={salaryData}
         isLoading={isLoading}
         isError={isError}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSort={handleSort}
       />
-    </div>
+
+      <div className="mt-4 flex items-center justify-between">
+        <span className="text-sm text-gray-500">
+          Showing {(page - 1) * limit + 1} – {Math.min(page * limit, total)} of{" "}
+          {total}
+        </span>
+
+        <div className="flex gap-2">
+          <button
+            disabled={page === 1}
+            onClick={() => setPage((p) => p - 1)}
+            className="rounded border px-3 py-1 text-sm disabled:opacity-50"
+          >
+            Prev
+          </button>
+
+          <button
+            disabled={page * limit >= total}
+            onClick={() => setPage((p) => p + 1)}
+            className="rounded border px-3 py-1 text-sm disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </>
   );
 }

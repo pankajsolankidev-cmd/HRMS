@@ -48,10 +48,15 @@ export default function AddEditSalaryForm() {
     },
   });
 
-  const { data: employees = [] } = useQuery({
-    queryKey: ["employees"],
-    queryFn: getEmployees,
+  const { data: employeesData } = useQuery({
+    queryKey: ["employees", "all"],
+    queryFn: () =>
+      getEmployees({
+        page: 1,
+        limit: 1000,
+      }),
   });
+  const employeeList = employeesData?.data ?? [];
 
   const { data, isLoading } = useQuery({
     queryKey: ["salary-structure", id],
@@ -78,7 +83,8 @@ export default function AddEditSalaryForm() {
 
     onSuccess: (res) => {
       toast.success(
-        res?.message || (isEdit ? "Salary updated successfully" : "Salary added successfully")
+        res?.message ||
+          (isEdit ? "Salary updated successfully" : "Salary added successfully")
       );
       queryClient.invalidateQueries({ queryKey: ["salary-structure"] });
       navigate("/salary");
@@ -86,7 +92,8 @@ export default function AddEditSalaryForm() {
 
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message || "Something went wrong. Please try again."
+        error?.response?.data?.message ||
+          "Something went wrong. Please try again."
       );
     },
   });
@@ -123,9 +130,9 @@ export default function AddEditSalaryForm() {
             render={({ field }) => (
               <Select
                 label="Employee"
-                options={employees.map((e: any) => ({
-                  label: `${e.firstName} ${e.lastName}`,
-                  value: e.id,
+                options={employeeList.map((emp: any) => ({
+                  label: `${emp.firstName} ${emp.lastName}`,
+                  value: emp.id,
                 }))}
                 value={field.value}
                 onChange={field.onChange}

@@ -44,11 +44,17 @@ export default function AddEditSystemForm() {
     },
   });
 
-  const { data: componentsData = [] } = useQuery({
-    queryKey: ["components"],
-    queryFn: getComponents,
+  const { data: componentsData } = useQuery({
+    queryKey: ["components", "all"],
+    queryFn: () =>
+      getComponents({
+        page: 1,
+        limit: 1000,
+      }),
   });
-  const componentOptions = componentsData.map((c: any) => ({
+  const componentList = componentsData?.data ?? [];
+
+  const componentOptions = componentList.map((c: any) => ({
     value: c.id,
     text: c.name,
   }));
@@ -75,9 +81,7 @@ export default function AddEditSystemForm() {
 
     onSuccess: () => {
       toast.success(
-        isEdit
-          ? "System updated successfully"
-          : "Ststem added successfully"
+        isEdit ? "System updated successfully" : "Ststem added successfully"
       );
       queryClient.invalidateQueries({ queryKey: ["systems"] });
       navigate("/systems");
@@ -171,6 +175,3 @@ export default function AddEditSystemForm() {
     </form>
   );
 }
-
-
-

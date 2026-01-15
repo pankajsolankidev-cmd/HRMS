@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import { useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -44,7 +44,11 @@ export default function AddEditPayrollForm() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const currentMonthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date()).toUpperCase();
+  const currentMonthName = new Intl.DateTimeFormat("en-US", {
+    month: "long",
+  })
+    .format(new Date())
+    .toUpperCase();
 
   const {
     control,
@@ -63,10 +67,16 @@ export default function AddEditPayrollForm() {
     },
   });
 
-  const { data: employees = [] } = useQuery({
-    queryKey: ["employees"],
-    queryFn: getEmployees,
+  const { data: employeesData } = useQuery({
+    queryKey: ["employees", "all"],
+    queryFn: () =>
+      getEmployees({
+        page: 1,
+        limit: 1000,
+      }),
   });
+
+  const employeeList = employeesData?.data ?? [];
 
   const { data: payrollData, isLoading } = useQuery({
     queryKey: ["payroll", id],
@@ -80,7 +90,9 @@ export default function AddEditPayrollForm() {
     reset({
       employeeId: payrollData.employeeId ?? "",
       month: payrollData.month ? String(payrollData.month).toUpperCase() : "",
-      year: payrollData.year ? Number(payrollData.year) : new Date().getFullYear(),
+      year: payrollData.year
+        ? Number(payrollData.year)
+        : new Date().getFullYear(),
       totalDeductions: Number(payrollData.totalDeductions) || 0,
     });
   }, [payrollData, reset]);
@@ -90,7 +102,12 @@ export default function AddEditPayrollForm() {
       isEdit ? updatePayroll(id!, payload) : addPayroll(payload),
 
     onSuccess: (data) => {
-      toast.success(data?.message || (isEdit ? "Payroll updated successfully" : "Payroll added successfully"));
+      toast.success(
+        data?.message ||
+          (isEdit
+            ? "Payroll updated successfully"
+            : "Payroll added successfully")
+      );
       queryClient.invalidateQueries({ queryKey: ["payrolls"] });
       navigate("/payrolls");
     },
@@ -100,12 +117,8 @@ export default function AddEditPayrollForm() {
     },
   });
 
-  const onSubmit = (formData: FormData) => {
+  const onSubmit: SubmitHandler<FormData> = (formData) => {
     saveMutation.mutate(formData);
-  };
-
-  const onInvalid = () => {
-    toast.error("Please fix the errors in the form");
   };
 
   if (isEdit && isLoading) {
@@ -113,19 +126,26 @@ export default function AddEditPayrollForm() {
   }
 
   return (
-    <form noValidate onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6">
+    <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="flex justify-end">
         <button
           type="submit"
           disabled={saveMutation.isPending}
-          className="rounded-lg bg-black px-4 py-2 text-white dark:bg-white dark:text-black disabled:opacity-50"
+          className="rounded-lg bg-black px-4 py-2 text-white
+                     dark:bg-white dark:text-black disabled:opacity-50"
         >
-          {saveMutation.isPending ? "Saving..." : isEdit ? "Update Payroll" : "Add Payroll"}
+          {saveMutation.isPending
+            ? "Saving..."
+            : isEdit
+            ? "Update Payroll"
+            : "Add Payroll"}
         </button>
       </div>
 
       <div className="rounded-xl border bg-white p-6 dark:bg-gray-900 dark:border-gray-700">
-        <h2 className="mb-6 text-lg font-semibold">{isEdit ? "Edit Payroll" : "Add Payroll"}</h2>
+        <h2 className="mb-6 text-lg font-semibold">
+          {isEdit ? "Edit Payroll" : "Add Payroll"}
+        </h2>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Controller
@@ -134,9 +154,9 @@ export default function AddEditPayrollForm() {
             render={({ field }) => (
               <Select
                 label="Employee"
-                options={employees.map((e: any) => ({
-                  label: `${e.firstName} ${e.lastName}`,
-                  value: e.id,
+                options={employeeList.map((emp: any) => ({
+                  label: `${emp.firstName} ${emp.lastName}`,
+                  value: emp.id,
                 }))}
                 value={field.value}
                 onChange={field.onChange}
@@ -166,11 +186,16 @@ export default function AddEditPayrollForm() {
           <Input
             label="Total Deductions"
             type="number"
-            value={watch("totalDeductions") === 0 ? "" : watch("totalDeductions")}
-            onChange={(e) => {
-              const val = e.target.value;
-              setValue("totalDeductions", val === "" ? 0 : Number(val), { shouldValidate: true });
-            }}
+            value={
+              watch("totalDeductions") === 0 ? "" : watch("totalDeductions")
+            }
+            onChange={(e) =>
+              setValue(
+                "totalDeductions",
+                e.target.value === "" ? 0 : Number(e.target.value),
+                { shouldValidate: true }
+              )
+            }
             placeholder="0"
             error={!!errors.totalDeductions}
             hint={errors.totalDeductions?.message}
@@ -179,12 +204,12 @@ export default function AddEditPayrollForm() {
           <Input
             label="Year"
             type="number"
-            value={watch("year") === 0 ? "" : watch("year")}
-            onChange={(e) => {
-              const val = e.target.value;
-              setValue("year", val === "" ? 0 : Number(val), { shouldValidate: true });
-            }}
-            placeholder={new Date().getFullYear().toString()}
+            value={watch("year")}
+            onChange={(e) =>
+              setValue("year", Number(e.target.value), {
+                shouldValidate: true,
+              })
+            }
             required
             error={!!errors.year}
             hint={errors.year?.message}
