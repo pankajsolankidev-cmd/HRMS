@@ -1,18 +1,18 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { useNavigate, useParams } from "react-router";
 import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { useNavigate, useParams } from "react-router";
+import { z } from "zod";
 
-import Input from "../../components/form/input/InputField";
-import { getSystemById } from "../../api/get";
-import { updateSystem } from "../../api/put";
-import { addSystem } from "../../api/post";
+import type { AxiosError } from "axios";
 import { Controller } from "react-hook-form";
-import MultiSelect from "../../components/form/MultiSelect";
-import { getComponents } from "../../api/get";
 import toast from "react-hot-toast";
+import { getComponents, getSystemById } from "../../api/get";
+import { addSystem } from "../../api/post";
+import { updateSystem } from "../../api/put";
+import Input from "../../components/form/input/InputField";
+import MultiSelect from "../../components/form/MultiSelect";
 
 const systemSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -73,19 +73,19 @@ export default function AddEditSystemForm() {
     mutationFn: (payload: SystemFormData) =>
       isEdit ? updateSystem({ id: id!, payload }) : addSystem(payload),
 
-    onSuccess: () => {
+    onSuccess: (res) => {
       toast.success(
-        isEdit
+        res?.message ?? isEdit
           ? "System updated successfully"
-          : "Ststem added successfully"
+          : "System added successfully"
       );
       queryClient.invalidateQueries({ queryKey: ["systems"] });
       navigate("/systems");
     },
 
-    onError: (error: any) => {
+    onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(
-        error?.response?.data?.message ||
+        error?.response?.data?.message ??
           "Something went wrong. Please try again."
       );
     },
@@ -171,6 +171,3 @@ export default function AddEditSystemForm() {
     </form>
   );
 }
-
-
-

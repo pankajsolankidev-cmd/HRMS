@@ -1,17 +1,18 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, Controller } from "react-hook-form";
-import { z } from "zod";
-import { useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { Controller, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
+import { useNavigate, useParams } from "react-router";
+import { z } from "zod";
 
 import Input from "../../components/form/input/InputField";
 import Select from "../../components/form/Select";
 
+import type { AxiosError } from "axios";
 import { getEmployees, getPayrollById } from "../../api/get";
-import { addPayroll } from "../../api/post";
 import { updatePayroll } from "../../api/patch";
+import { addPayroll } from "../../api/post";
 
 const schema = z.object({
   employeeId: z.string().min(1, "Employee is required"),
@@ -44,7 +45,9 @@ export default function AddEditPayrollForm() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const currentMonthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date()).toUpperCase();
+  const currentMonthName = new Intl.DateTimeFormat("en-US", { month: "long" })
+    .format(new Date())
+    .toUpperCase();
 
   const {
     control,
@@ -80,7 +83,9 @@ export default function AddEditPayrollForm() {
     reset({
       employeeId: payrollData.employeeId ?? "",
       month: payrollData.month ? String(payrollData.month).toUpperCase() : "",
-      year: payrollData.year ? Number(payrollData.year) : new Date().getFullYear(),
+      year: payrollData.year
+        ? Number(payrollData.year)
+        : new Date().getFullYear(),
       totalDeductions: Number(payrollData.totalDeductions) || 0,
     });
   }, [payrollData, reset]);
@@ -89,14 +94,19 @@ export default function AddEditPayrollForm() {
     mutationFn: (payload: FormData) =>
       isEdit ? updatePayroll(id!, payload) : addPayroll(payload),
 
-    onSuccess: (data) => {
-      toast.success(data?.message || (isEdit ? "Payroll updated successfully" : "Payroll added successfully"));
+    onSuccess: (res) => {
+      toast.success(
+        res?.message ??
+          (isEdit
+            ? "Payroll updated successfully"
+            : "Payroll added successfully")
+      );
       queryClient.invalidateQueries({ queryKey: ["payrolls"] });
       navigate("/payrolls");
     },
 
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Operation failed");
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error?.response?.data?.message ?? "Operation failed");
     },
   });
 
@@ -104,28 +114,27 @@ export default function AddEditPayrollForm() {
     saveMutation.mutate(formData);
   };
 
-  const onInvalid = () => {
-    toast.error("Please fix the errors in the form");
-  };
-
   if (isEdit && isLoading) {
     return <div className="p-6 text-gray-500">Loading payroll…</div>;
   }
 
   return (
-    <form noValidate onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6">
-      <div className="flex justify-end">
-        <button
-          type="submit"
-          disabled={saveMutation.isPending}
-          className="rounded-lg bg-black px-4 py-2 text-white dark:bg-white dark:text-black disabled:opacity-50"
-        >
-          {saveMutation.isPending ? "Saving..." : isEdit ? "Update Payroll" : "Add Payroll"}
-        </button>
-      </div>
-
+    <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="rounded-xl border bg-white p-6 dark:bg-gray-900 dark:border-gray-700">
-        <h2 className="mb-6 text-lg font-semibold">{isEdit ? "Edit Payroll" : "Add Payroll"}</h2>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
+            {isEdit ? "Edit Payroll" : "Add Payroll"}
+          </h2>
+
+          <button
+            type="submit"
+            disabled={saveMutation.isPending}
+            className="rounded-lg bg-black px-4 py-2 text-white
+                       dark:bg-white dark:text-black disabled:opacity-50"
+          >
+            {saveMutation.isPending ? "Saving..." : isEdit ? "Update" : "Add"}
+          </button>
+        </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Controller
@@ -166,10 +175,14 @@ export default function AddEditPayrollForm() {
           <Input
             label="Total Deductions"
             type="number"
-            value={watch("totalDeductions") === 0 ? "" : watch("totalDeductions")}
+            value={
+              watch("totalDeductions") === 0 ? "" : watch("totalDeductions")
+            }
             onChange={(e) => {
               const val = e.target.value;
-              setValue("totalDeductions", val === "" ? 0 : Number(val), { shouldValidate: true });
+              setValue("totalDeductions", val === "" ? 0 : Number(val), {
+                shouldValidate: true,
+              });
             }}
             placeholder="0"
             error={!!errors.totalDeductions}
@@ -182,7 +195,9 @@ export default function AddEditPayrollForm() {
             value={watch("year") === 0 ? "" : watch("year")}
             onChange={(e) => {
               const val = e.target.value;
-              setValue("year", val === "" ? 0 : Number(val), { shouldValidate: true });
+              setValue("year", val === "" ? 0 : Number(val), {
+                shouldValidate: true,
+              });
             }}
             placeholder={new Date().getFullYear().toString()}
             required

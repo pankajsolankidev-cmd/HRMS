@@ -1,15 +1,16 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { useNavigate, useParams } from "react-router";
 import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { useNavigate, useParams } from "react-router";
+import { z } from "zod";
 
-import Input from "../../components/form/input/InputField";
+import type { AxiosError } from "axios";
+import toast from "react-hot-toast";
+import { getComponentById } from "../../api/get";
 import { addComponent } from "../../api/post";
 import { updateComponent } from "../../api/put";
-import { getComponentById } from "../../api/get";
-import toast from "react-hot-toast";
+import Input from "../../components/form/input/InputField";
 
 const componentSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -59,17 +60,20 @@ export default function AddEditComponentForm() {
   const saveMutation = useMutation({
     mutationFn: (payload: ComponentFormData) =>
       isEdit ? updateComponent({ id: id!, payload }) : addComponent(payload),
-    onSuccess: () => {
+    onSuccess: (res) => {
       toast.success(
-        isEdit ? "Component updated successfully" : "Component added successfully"
+        res?.message ??
+          (isEdit
+            ? "Component updated successfully"
+            : "Component added successfully")
       );
       queryClient.invalidateQueries({ queryKey: ["components"] });
       navigate("/components");
     },
 
-    onError: (error: any) => {
+    onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(
-        error?.response?.data?.message ||
+        error?.response?.data?.message ??
           "Something went wrong. Please try again."
       );
     },

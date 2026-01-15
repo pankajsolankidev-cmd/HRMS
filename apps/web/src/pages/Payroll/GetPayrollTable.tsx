@@ -1,10 +1,12 @@
-import { useState, useMemo } from "react";
-import { useNavigate } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router";
 
-import DataTable, { type Column } from "../../components/tables/BasicTables/DataTable";
 import Select from "../../components/form/Select";
 import Input from "../../components/form/input/InputField";
+import DataTable, {
+  type Column,
+} from "../../components/tables/BasicTables/DataTable";
 
 import {
   getEmployees,
@@ -12,9 +14,10 @@ import {
   getPayrollsByMonthYear,
 } from "../../api/get";
 
-import { deletePayroll } from "../../api/delete";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
+import type { AxiosError } from "axios";
 import toast from "react-hot-toast";
+import { deletePayroll } from "../../api/delete";
 
 export type Payroll = {
   id: string;
@@ -84,11 +87,15 @@ export default function GetPayrollTable() {
 
   const { mutate: remove } = useMutation({
     mutationFn: deletePayroll,
-    onSuccess: () => {
-      toast.success("Payroll deleted successfully");
+    onSuccess: (res) => {
+      toast.success(res?.message ?? "Payroll deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["payrolls"] });
     },
-    onError: () => toast.error("Failed to delete payroll"),
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(
+        error?.response?.data?.message ?? "An unexpected error occurred"
+      );
+    },
   });
 
   const columns: Column<Payroll>[] = [

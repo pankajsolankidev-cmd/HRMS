@@ -1,10 +1,12 @@
+import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
-import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 
-import DataTable from "../../components/tables/BasicTables/DataTable";
-import { getLeaves } from "../../api/get";
+import type { AxiosError } from "axios";
+import { toast } from "react-hot-toast";
 import { deleteLeave } from "../../api/delete";
+import { getLeaves } from "../../api/get";
+import DataTable from "../../components/tables/BasicTables/DataTable";
 
 export type LeaveType = "sick" | "casual" | "marriage" | "wfh";
 export type LeaveDayType = "full_day" | "first_half" | "second_half";
@@ -13,16 +15,12 @@ export type LeaveStatus = "pending" | "approved" | "rejected";
 export type Leave = {
   id: number;
   employeeId: string;
-
   fromDate: string;
   toDate: string;
-
   type: LeaveType;
   dayType: LeaveDayType;
   status: LeaveStatus;
-
   reason: string;
-
   approvedAt?: string | null;
   approvedBy?: string | null;
   file?: string | null;
@@ -43,8 +41,14 @@ export default function GetLeaveTable() {
 
   const { mutate: removeLeave } = useMutation({
     mutationFn: deleteLeave,
-    onSuccess: () => {
+    onSuccess: (res) => {
+      toast.success(res?.message ?? "Leave deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["leaves"] });
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(
+        error?.response?.data?.message ?? "An unexpected error occurred"
+      );
     },
   });
 
@@ -52,15 +56,13 @@ export default function GetLeaveTable() {
     {
       header: "Type",
       cell: (row: Leave) => (
-        <div className="font-medium text-center capitalize">
-          {row.type}
-        </div>
+        <div className="text-center capitalize font-medium">{row.type}</div>
       ),
     },
     {
       header: "Dates",
       cell: (row: Leave) => (
-        <div className="font-medium text-center">
+        <div className="text-center font-medium">
           {row.fromDate} → {row.toDate}
         </div>
       ),
@@ -68,7 +70,7 @@ export default function GetLeaveTable() {
     {
       header: "Day Type",
       cell: (row: Leave) => (
-        <div className="font-medium text-center capitalize">
+        <div className="text-center capitalize font-medium">
           {row.dayType.replace("_", " ")}
         </div>
       ),
@@ -93,7 +95,7 @@ export default function GetLeaveTable() {
     {
       header: "Action",
       cell: (row: Leave) => (
-        <div className="flex items-center gap-3 justify-center">
+        <div className="flex justify-center gap-3">
           {row.status === "pending" ? (
             <>
               <IconEdit
@@ -127,41 +129,5 @@ export default function GetLeaveTable() {
     return <div className="p-6 text-red-600">Failed to load leaves.</div>;
   }
 
-  if (leaves.length === 0) {
-    return (
-      <div className="space-y-4">
-        <div className="flex justify-end">
-          <button
-            onClick={() => navigate("/leave-requests/new")}
-            className="flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-white
-                       dark:bg-white dark:text-black"
-          >
-            <IconPlus size={18} />
-            Apply Leave
-          </button>
-        </div>
-
-        <div className="rounded-lg border p-6 text-center text-gray-500">
-          You haven’t applied for any leave yet.
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
-        <button
-          onClick={() => navigate("/leave-requests/new")}
-          className="flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-white
-                     dark:bg-white dark:text-black"
-        >
-          <IconPlus size={18} />
-          Apply Leave
-        </button>
-      </div>
-
-      <DataTable columns={columns} data={leaves} />
-    </div>
-  );
+  return <DataTable columns={columns} data={leaves} />;
 }

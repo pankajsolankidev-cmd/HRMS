@@ -1,13 +1,14 @@
-import { useState } from "react";
-import { useParams, useNavigate, Link } from "react-router";
-import { useForm } from "react-hook-form";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { z } from "zod";
 import type { AxiosError } from "axios";
-import Input from "../form/input/InputField";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "react-hot-toast";
+import { Link, useNavigate, useParams } from "react-router";
+import { z } from "zod";
 import { resetPassword } from "../../api/post";
+import Input from "../form/input/InputField";
 
 const resetPasswordSchema = z
   .object({
@@ -45,11 +46,15 @@ const ResetPassword = () => {
         newPassword: data.password,
       });
     },
-    onSuccess: () => {
+    onSuccess: (res) => {
+      toast.success(res?.message ?? "Password reset successful");
       reset();
-      setTimeout(() => {
-        navigate("/signin");
-      }, 2000);
+      navigate("/signin", { replace: true });
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(
+        error?.response?.data?.message ?? "Reset link expired or invalid"
+      );
     },
   });
 
@@ -68,22 +73,8 @@ const ResetPassword = () => {
           Enter your new password below.
         </p>
 
-        {mutation.isError && (
-          <p className="text-red-500 text-sm mb-4">
-            {(mutation.error as AxiosError<{ message?: string }>)?.response?.data
-          ?.message || "Reset link expired or invalid"}
-          </p>
-        )}
-
-        {mutation.isSuccess && (
-          <p className="text-green-500 text-sm mb-4">
-            Password reset successful. Redirecting to sign in...
-          </p>
-        )}
-
         <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
           <div>
-
             <div className="relative">
               <Input
                 required
@@ -95,7 +86,7 @@ const ResetPassword = () => {
                 hint={errors.password?.message}
               />
               <span
-                onClick={() => setShowPassword(!showPassword)}
+                onClick={() => setShowPassword((prev) => !prev)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer"
               >
                 {showPassword ? (

@@ -1,11 +1,14 @@
 import { IconEdit, IconTrash } from "@tabler/icons-react";
-import { useNavigate } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import DataTable, { type Column } from "../../components/tables/BasicTables/DataTable";
+import { useNavigate } from "react-router";
+import DataTable, {
+  type Column,
+} from "../../components/tables/BasicTables/DataTable";
 
-import { getEmployees, getSalaryStructures } from "../../api/get";
-import { deleteSalaryStructure } from "../../api/delete";
+import type { AxiosError } from "axios";
 import toast from "react-hot-toast";
+import { deleteSalaryStructure } from "../../api/delete";
+import { getEmployees, getSalaryStructures } from "../../api/get";
 
 export type SalaryStructure = {
   id: string;
@@ -47,20 +50,18 @@ export default function GetSalaryTable() {
 
   const { mutate: remove } = useMutation({
     mutationFn: deleteSalaryStructure,
-    onSuccess: () => {
-      toast.success(
-        "Salary Deleted Successfully"
-      );
+    onSuccess: (res) => {
+      toast.success(res?.message ?? "Salary Deleted Successfully");
       queryClient.invalidateQueries({ queryKey: ["salary-structures"] });
     },
-    onError:(error : any)=>{
+    onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(
-        error?.response?.data?.message || "An unexpected error occurred"
+        error?.response?.data?.message ?? "An unexpected error occurred"
       );
     },
   });
 
-const columns: Column<SalaryStructure>[] = [
+  const columns: Column<SalaryStructure>[] = [
     {
       header: "Employee",
       cell: (row: SalaryStructure) => (
@@ -85,7 +86,7 @@ const columns: Column<SalaryStructure>[] = [
     },
     {
       header: "Action",
-      align:"center",
+      align: "center",
       cell: (row: SalaryStructure) => (
         <div className="flex items-center justify-center gap-3">
           <IconEdit
@@ -109,8 +110,6 @@ const columns: Column<SalaryStructure>[] = [
 
   return (
     <div className="space-y-4">
-      
-
       <DataTable
         columns={columns}
         data={data}

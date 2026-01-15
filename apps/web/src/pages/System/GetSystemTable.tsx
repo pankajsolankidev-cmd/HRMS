@@ -2,13 +2,14 @@ import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 
+import type { AxiosError } from "axios";
+import toast from "react-hot-toast";
+import { deleteSystem } from "../../api/delete";
+import { getSystems } from "../../api/get";
+import Chip from "../../components/common/Chip";
 import DataTable, {
   type Column,
 } from "../../components/tables/BasicTables/DataTable";
-import { getSystems } from "../../api/get";
-import { deleteSystem } from "../../api/delete";
-import Chip from "../../components/common/Chip";
-import toast from "react-hot-toast";
 
 type SystemComponent = {
   id: string;
@@ -37,15 +38,13 @@ export default function GetSystemTable() {
 
   const { mutate: removeSystem } = useMutation({
     mutationFn: deleteSystem,
-    onSuccess: () => {
-      toast.success(
-        "System Deleted Successfully"
-      );
+    onSuccess: (res) => {
+      toast.success(res?.message ?? "System Deleted Successfully");
       queryClient.invalidateQueries({ queryKey: ["systems"] });
     },
-    onError:(error : any)=>{
+    onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(
-        error?.response?.data?.message || "An unexpected error occurred"
+        error?.response?.data?.message ?? "An unexpected error occurred"
       );
     },
   });
