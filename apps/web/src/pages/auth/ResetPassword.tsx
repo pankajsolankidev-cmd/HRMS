@@ -8,7 +8,7 @@ import { toast } from "react-hot-toast";
 import { Link, useNavigate, useParams } from "react-router";
 import { z } from "zod";
 import { resetPassword } from "../../api/post";
-import Input from "../form/input/InputField";
+import Input from "../../components/form/input/InputField";
 
 const resetPasswordSchema = z
   .object({

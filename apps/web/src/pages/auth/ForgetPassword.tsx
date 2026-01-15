@@ -4,12 +4,11 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router";
 
-import Input from "../form/input/InputField";
-
 import type { AxiosError } from "axios";
 import { toast } from "react-hot-toast";
 import { z } from "zod";
 import { forgetPassword } from "../../api/post";
+import Input from "../../components/form/input/InputField";
 
 const forgetPasswordSchema = z.object({
   email: z

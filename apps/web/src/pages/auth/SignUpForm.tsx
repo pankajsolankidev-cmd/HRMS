@@ -9,7 +9,7 @@ import { toast } from "react-hot-toast";
 import { Link, useNavigate } from "react-router";
 import { z } from "zod";
 import { signUpApi } from "../../api/post";
-import Input from "../form/input/InputField";
+import Input from "../../components/form/input/InputField";
 
 const signUpSchema = z.object({
   username: z.string().min(1, "Username is required"),
