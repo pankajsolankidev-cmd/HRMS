@@ -31,7 +31,6 @@ export default function DatePicker({
 }: PropsType) {
   const fpRef = useRef<FlatpickrInstance | null>(null);
 
-  // Init Flatpickr ONCE
   useEffect(() => {
     fpRef.current = flatpickr(`#${id}`, {
       mode,
@@ -47,7 +46,6 @@ export default function DatePicker({
     };
   }, [id, mode, onChange]);
 
-  // ✅ UPDATE DATE WHEN VALUE CHANGES (THIS FIXES EDIT MODE)
   useEffect(() => {
     if (fpRef.current) {
       if (value) {

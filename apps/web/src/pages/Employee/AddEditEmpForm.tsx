@@ -89,7 +89,7 @@ const AddEmpForm = () => {
   });
 
   const { data: systems } = useQuery({
-    queryKey: ["systems", { page: 1, limit: 1000 }],
+    queryKey: ["systems"],
     queryFn: () =>
       getSystems({
         page: 1,

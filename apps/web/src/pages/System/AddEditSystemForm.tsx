@@ -14,8 +14,6 @@ import type { PaginatedResponse } from "../../api/types";
 import Input from "../../components/form/input/InputField";
 import MultiSelect from "../../components/form/MultiSelect";
 
-/* ---------------- Schema ---------------- */
-
 const systemSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().min(1, "Description is required"),
@@ -24,16 +22,12 @@ const systemSchema = z.object({
 
 type SystemFormData = z.infer<typeof systemSchema>;
 
-/* ---------------- Component ---------------- */
-
 export default function AddEditSystemForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const isEdit = Boolean(id && id !== "new");
-
-  /* ---------------- Form ---------------- */
 
   const {
     register,
@@ -84,8 +78,6 @@ export default function AddEditSystemForm() {
     }
   }, [systemData, reset]);
 
-  /* ---------------- Save Mutation ---------------- */
-
   const saveMutation = useMutation({
     mutationFn: (payload: SystemFormData) =>
       isEdit ? updateSystem({ id: id!, payload }) : addSystem(payload),
@@ -110,13 +102,9 @@ export default function AddEditSystemForm() {
     saveMutation.mutate(formData);
   };
 
-  /* ---------------- Loading Guard ---------------- */
-
   if (componentsLoading || (isEdit && systemLoading)) {
     return <div className="p-6 text-gray-500">Loading...</div>;
   }
-
-  /* ---------------- Render ---------------- */
 
   return (
     <form
@@ -141,7 +129,6 @@ export default function AddEditSystemForm() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Left Column */}
           <div className="space-y-6">
             <Input
               required
@@ -155,7 +142,7 @@ export default function AddEditSystemForm() {
             <Controller
               name="components"
               control={control}
-              defaultValue={[]} // 🔥 IMPORTANT
+              defaultValue={[]}
               render={({ field }) => (
                 <MultiSelect
                   label="Components"
@@ -172,7 +159,6 @@ export default function AddEditSystemForm() {
             />
           </div>
 
-          {/* Right Column */}
           <div>
             <Input
               required

@@ -70,7 +70,7 @@ export default function GetPayrollTable() {
     queryFn: () =>
       getEmployees({
         page: 1,
-        limit: 1000,
+        limit: 100,
       }),
   });
 
@@ -140,19 +140,16 @@ export default function GetPayrollTable() {
     {
       header: "Month",
       accessor: "month",
-      sortable: true,
       cell: (r) => r.month,
     },
     {
       header: "Year",
       accessor: "year",
-      sortable: true,
       cell: (r) => r.year,
     },
     {
       header: "Deductions",
       accessor: "totalDeductions",
-      sortable: true,
       cell: (row) => (
         <span className="font-medium text-red-600 dark:text-red-400">
           ₹ {row.totalDeductions.toLocaleString("en-IN")}

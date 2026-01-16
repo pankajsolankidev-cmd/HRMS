@@ -1,17 +1,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, Controller, type SubmitHandler } from "react-hook-form";
-import { z } from "zod";
-import { useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import toast from "react-hot-toast";
+import { useNavigate, useParams } from "react-router";
+import { z } from "zod";
 
 import Input from "../../components/form/input/InputField";
 import Select from "../../components/form/Select";
 
 import { getEmployees, getPayrollById } from "../../api/get";
-import { addPayroll } from "../../api/post";
 import { updatePayroll } from "../../api/patch";
+import { addPayroll } from "../../api/post";
 
 const schema = z.object({
   employeeId: z.string().min(1, "Employee is required"),
@@ -72,7 +72,7 @@ export default function AddEditPayrollForm() {
     queryFn: () =>
       getEmployees({
         page: 1,
-        limit: 1000,
+        limit: 100,
       }),
   });
 

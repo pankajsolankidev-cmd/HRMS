@@ -1,14 +1,15 @@
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { useState } from "react";
 
-import { getEmployees } from "../../api/get";
 import { deleteEmployee } from "../../api/delete";
+import { getEmployees } from "../../api/get";
+import type { PaginatedResponse } from "../../api/types";
 import DataTable, {
   type Column,
 } from "../../components/tables/BasicTables/DataTable";
-import type { PaginatedResponse } from "../../api/types";
+
 type Employee = {
   id: number;
   firstName: string;
@@ -19,7 +20,11 @@ type Employee = {
   onboardingBuddy: string;
 };
 
-export default function GetEmpTable() {
+type Props = {
+  search?: string;
+};
+
+export default function GetEmpTable({ search }: Props) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -29,20 +34,29 @@ export default function GetEmpTable() {
   const [sortBy, setSortBy] = useState<keyof Employee | undefined>();
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
+
   const handleSort = (field: keyof Employee) => {
-    setSortBy(field);
-    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    if (sortBy === field) {
+      setSortOrder((p) => (p === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(field);
+      setSortOrder("asc");
+    }
     setPage(1);
   };
 
   const { data, isLoading, isError } = useQuery<PaginatedResponse<any>>({
-    queryKey: ["employees", page, limit, sortBy, sortOrder],
+    queryKey: ["employees", page, limit, sortBy, sortOrder, search ?? "all"],
     queryFn: () =>
       getEmployees({
         page,
         limit,
         sortBy: sortBy as string | undefined,
         sortOrder,
+        search,
       }),
     placeholderData: (prev) => prev,
   });
@@ -114,11 +128,9 @@ export default function GetEmpTable() {
           />
           <IconTrash
             size={20}
-            onClick={() => {
-              if (confirm("Delete employee?")) {
-                removeEmployee(emp.id);
-              }
-            }}
+            onClick={() =>
+              confirm("Delete employee?") && removeEmployee(emp.id)
+            }
             className="cursor-pointer text-red-600"
           />
         </div>
@@ -128,40 +140,56 @@ export default function GetEmpTable() {
 
   return (
     <>
-      <DataTable
-        columns={columns}
-        data={employees}
-        isLoading={isLoading}
-        isError={isError}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        onSort={handleSort}
-      />
-
-      <div className="mt-4 flex items-center justify-between">
-        <span className="text-sm text-gray-500">
-          Showing {(page - 1) * limit + 1} – {Math.min(page * limit, total)} of{" "}
-          {total}
-        </span>
-
-        <div className="flex gap-2">
-          <button
-            disabled={page === 1}
-            onClick={() => setPage((p) => p - 1)}
-            className="rounded border px-3 py-1 text-sm disabled:opacity-50"
-          >
-            Prev
-          </button>
-
-          <button
-            disabled={page * limit >= total}
-            onClick={() => setPage((p) => p + 1)}
-            className="rounded border px-3 py-1 text-sm disabled:opacity-50"
-          >
-            Next
-          </button>
+      {!isLoading && employees.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
+            No matching employees found
+          </p>
+          {search && (
+            <p className="mt-1 text-sm text-gray-500">
+              No results matching{" "}
+              <span className="font-medium">"{search}"</span>
+            </p>
+          )}
         </div>
-      </div>
+      ) : (
+        <DataTable
+          columns={columns}
+          data={employees}
+          isLoading={isLoading}
+          isError={isError}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSort={handleSort}
+        />
+      )}
+
+      {employees.length > 0 && (
+        <div className="mt-4 flex items-center justify-between">
+          <span className="text-sm text-gray-500">
+            Showing {(page - 1) * limit + 1} – {Math.min(page * limit, total)}{" "}
+            of {total}
+          </span>
+
+          <div className="flex gap-2">
+            <button
+              disabled={page === 1}
+              onClick={() => setPage((p) => p - 1)}
+              className="rounded border px-3 py-1 text-sm disabled:opacity-50"
+            >
+              Prev
+            </button>
+
+            <button
+              disabled={page * limit >= total}
+              onClick={() => setPage((p) => p + 1)}
+              className="rounded border px-3 py-1 text-sm disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

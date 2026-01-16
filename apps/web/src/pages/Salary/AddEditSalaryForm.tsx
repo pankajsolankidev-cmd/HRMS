@@ -176,7 +176,7 @@ export default function AddEditSalaryForm() {
                 id="appraisalDate"
                 label="Appraisal Date"
                 placeholder="Select appraisal date"
-                value={field.value ? new Date(field.value) : null} // ✅ FIX
+                value={field.value ? new Date(field.value) : null}
                 onChange={(dates) => {
                   if (dates?.[0]) {
                     field.onChange(dates[0].toISOString().split("T")[0]);
