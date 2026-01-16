@@ -1,15 +1,15 @@
 import { IconEdit, IconTrash } from "@tabler/icons-react";
-import { useNavigate } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router";
 
+import { deleteSalaryStructure } from "../../api/delete";
+import { getEmployees, getSalaryStructures } from "../../api/get";
+import type { PaginatedResponse } from "../../api/types";
 import DataTable, {
   type Column,
 } from "../../components/tables/BasicTables/DataTable";
-import { getEmployees, getSalaryStructures } from "../../api/get";
-import { deleteSalaryStructure } from "../../api/delete";
-import type { PaginatedResponse } from "../../api/types";
 
 export type SalaryStructure = {
   id: string;
@@ -40,16 +40,15 @@ export default function GetSalaryTable() {
   };
 
   const { data: employees } = useQuery({
-    queryKey: ["employees", "all"],
+    queryKey: ["employees"],
     queryFn: () =>
       getEmployees({
         page: 1,
-        limit: 1000,
+        limit: 10,
       }),
   });
 
   const employeeList = employees?.data ?? [];
-
   const employeeMap = new Map(
     employeeList.map((emp: any) => [emp.id, `${emp.firstName} ${emp.lastName}`])
   );

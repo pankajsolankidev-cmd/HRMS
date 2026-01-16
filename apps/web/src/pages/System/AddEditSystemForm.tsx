@@ -1,18 +1,20 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { useNavigate, useParams } from "react-router";
 import { useEffect } from "react";
-
-import Input from "../../components/form/input/InputField";
-import { getSystemById } from "../../api/get";
-import { updateSystem } from "../../api/put";
-import { addSystem } from "../../api/post";
-import { Controller } from "react-hook-form";
-import MultiSelect from "../../components/form/MultiSelect";
-import { getComponents } from "../../api/get";
+import { Controller, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
+import { useNavigate, useParams } from "react-router";
+import { z } from "zod";
+
+import { getComponents, getSystemById } from "../../api/get";
+import { addSystem } from "../../api/post";
+import { updateSystem } from "../../api/put";
+
+import type { PaginatedResponse } from "../../api/types";
+import Input from "../../components/form/input/InputField";
+import MultiSelect from "../../components/form/MultiSelect";
+
+/* ---------------- Schema ---------------- */
 
 const systemSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -22,12 +24,16 @@ const systemSchema = z.object({
 
 type SystemFormData = z.infer<typeof systemSchema>;
 
+/* ---------------- Component ---------------- */
+
 export default function AddEditSystemForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const isEdit = Boolean(id && id !== "new");
+
+  /* ---------------- Form ---------------- */
 
   const {
     register,
@@ -44,36 +50,41 @@ export default function AddEditSystemForm() {
     },
   });
 
-  const { data: componentsData } = useQuery({
-    queryKey: ["components", "all"],
+  const { data: componentsData, isLoading: componentsLoading } = useQuery<
+    PaginatedResponse<any>
+  >({
+    queryKey: ["components"],
     queryFn: () =>
       getComponents({
         page: 1,
-        limit: 1000,
+        limit: 100,
       }),
   });
+
   const componentList = componentsData?.data ?? [];
 
   const componentOptions = componentList.map((c: any) => ({
-    value: c.id,
+    value: String(c.id),
     text: c.name,
   }));
 
-  const { data, isLoading } = useQuery({
+  const { data: systemData, isLoading: systemLoading } = useQuery({
     queryKey: ["system", id],
     queryFn: () => getSystemById(id!),
     enabled: isEdit,
   });
 
   useEffect(() => {
-    if (data) {
+    if (systemData) {
       reset({
-        name: data.name,
-        description: data.description,
-        components: data.components?.map((c: any) => c.id) ?? [],
+        name: systemData.name ?? "",
+        description: systemData.description ?? "",
+        components: systemData.components?.map((c: any) => String(c.id)) ?? [],
       });
     }
-  }, [data, reset]);
+  }, [systemData, reset]);
+
+  /* ---------------- Save Mutation ---------------- */
 
   const saveMutation = useMutation({
     mutationFn: (payload: SystemFormData) =>
@@ -81,7 +92,7 @@ export default function AddEditSystemForm() {
 
     onSuccess: () => {
       toast.success(
-        isEdit ? "System updated successfully" : "Ststem added successfully"
+        isEdit ? "System updated successfully" : "System added successfully"
       );
       queryClient.invalidateQueries({ queryKey: ["systems"] });
       navigate("/systems");
@@ -99,23 +110,23 @@ export default function AddEditSystemForm() {
     saveMutation.mutate(formData);
   };
 
-  if (isEdit && isLoading) {
-    return (
-      <div className="p-6 text-gray-500 dark:text-gray-400">
-        Loading system...
-      </div>
-    );
+  /* ---------------- Loading Guard ---------------- */
+
+  if (componentsLoading || (isEdit && systemLoading)) {
+    return <div className="p-6 text-gray-500">Loading...</div>;
   }
+
+  /* ---------------- Render ---------------- */
 
   return (
     <form
       noValidate
-      className="space-y-8 text-gray-900 dark:text-gray-100"
       onSubmit={handleSubmit(onSubmit)}
+      className="space-y-8 text-gray-900 dark:text-gray-100"
     >
       <div className="rounded-xl border bg-white p-6 dark:bg-gray-900 dark:border-gray-700 space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
+          <h2 className="text-lg font-semibold">
             {isEdit ? "Edit System" : "Add System"}
           </h2>
 
@@ -130,11 +141,12 @@ export default function AddEditSystemForm() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Left Column */}
           <div className="space-y-6">
             <Input
               required
-              placeholder="Enter system name"
               label="System Name"
+              placeholder="Enter system name"
               {...register("name")}
               error={!!errors.name}
               hint={errors.name?.message}
@@ -143,15 +155,15 @@ export default function AddEditSystemForm() {
             <Controller
               name="components"
               control={control}
-              defaultValue={[]}
+              defaultValue={[]} // 🔥 IMPORTANT
               render={({ field }) => (
                 <MultiSelect
                   label="Components"
                   options={componentOptions}
-                  value={field.value}
+                  value={field.value ?? []}
                   onChange={field.onChange}
-                  placeholder="Select components"
                   onBlur={field.onBlur}
+                  placeholder="Select components"
                   required
                   error={!!errors.components}
                   hint={errors.components?.message}
@@ -160,11 +172,12 @@ export default function AddEditSystemForm() {
             />
           </div>
 
+          {/* Right Column */}
           <div>
             <Input
               required
-              placeholder="Description"
               label="Description"
+              placeholder="Enter description"
               {...register("description")}
               error={!!errors.description}
               hint={errors.description?.message}

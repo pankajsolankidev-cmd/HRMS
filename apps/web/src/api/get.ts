@@ -13,9 +13,7 @@ export const getEmployeeById = async (id: string) => {
 };
 
 export const getComponents = async (params: ListQueryParams) => {
-  const res = await api.get("/components", {
-    params,
-  });
+  const res = await api.get<PaginatedResponse<any>>("/components", { params });
 
   return res.data;
 };
@@ -36,7 +34,7 @@ export const getSystemById = async (id: string) => {
 };
 
 export const getSalaryStructures = async (params: ListQueryParams) => {
-  const res = await api.get<PaginatedResponse<any>>("/salary-structures", {
+  const res = await api.get<PaginatedResponse<any>>("/salary", {
     params,
   });
   return res.data;
@@ -66,7 +64,6 @@ export const getPayrollSummary = async (month: string, year: number) => {
   const res = await api.get("/payrolls/summary", {
     params: { month, year },
   });
-  console.log(res.data);
   return res.data as {
     employeesProcessed: number;
     avgSalary: number;
@@ -74,10 +71,14 @@ export const getPayrollSummary = async (month: string, year: number) => {
   };
 };
 
-export const getLeaves = async () => {
-  const res = await api.get("/leave-requests/me");
-  return Array.isArray(res.data?.data) ? res.data.data : [];
+export const getLeaves = async (params?: ListQueryParams) => {
+  const res = await api.get<PaginatedResponse<any>>("/leave-requests/me", {
+    params,
+  });
+
+  return res.data;
 };
+
 export const getLeaveById = async (id: string) => {
   const res = await api.get(`/leave-requests/${id}`);
   return res.data?.data ?? res.data;

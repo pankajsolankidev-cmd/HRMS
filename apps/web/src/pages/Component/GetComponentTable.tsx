@@ -1,15 +1,15 @@
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router";
 
-import DataTable, {
-  type Column,
-} from "../../components/tables/BasicTables/DataTable";
 import { deleteComponent } from "../../api/delete";
 import { getComponents } from "../../api/get";
 import type { PaginatedResponse } from "../../api/types";
+import DataTable, {
+  type Column,
+} from "../../components/tables/BasicTables/DataTable";
 
 type Component = {
   id: number;

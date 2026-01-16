@@ -1,15 +1,15 @@
+import { AnimatePresence } from "framer-motion";
 import {
+  Route,
   BrowserRouter as Router,
   Routes,
-  Route,
   useLocation,
 } from "react-router";
-import { AnimatePresence } from "framer-motion";
 
-import SignInForm from "./components/auth/SignInForm";
-import SignUpForm from "./components/auth/SignUpForm";
 import ForgetPassword from "./components/auth/ForgetPassword";
 import ResetPassword from "./components/auth/ResetPassword";
+import SignInForm from "./components/auth/SignInForm";
+import SignUpForm from "./components/auth/SignUpForm";
 
 import AppLayout from "./layout/AppLayout";
 import AuthLayout from "./pages/AuthPages/AuthPageLayout";
@@ -19,25 +19,25 @@ import NotFound from "./pages/OtherPage/NotFound";
 import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
 import PublicRoute from "./pages/OtherPage/PublicRoute";
 
-import Employee from "./pages/EmployeeTable/Employee";
 import AddEmployee from "./pages/EmployeeTable/AddEditEmployee";
+import Employee from "./pages/EmployeeTable/Employee";
 
-import Component from "./pages/ComponentTable/Component";
 import AddEditComponent from "./pages/ComponentTable/AddEditComponent";
+import Component from "./pages/ComponentTable/Component";
 
-import System from "./pages/SystemTable/System";
 import AddEditSystem from "./pages/SystemTable/AddEditSystem";
+import System from "./pages/SystemTable/System";
 
 import { ScrollToTop } from "./components/common/ScrollToTop";
 
-import Salary from "./pages/SalaryTable/Salary";
 import AddEditSalary from "./pages/SalaryTable/AddEditSalary";
+import Salary from "./pages/SalaryTable/Salary";
 
-import Payroll from "./pages/PayrollTable/Payroll";
 import AddEditPayroll from "./pages/PayrollTable/AddEditPayroll";
+import Payroll from "./pages/PayrollTable/Payroll";
 
-import Leave from "./pages/LeaveTable/Leave";
 import AddEditLeave from "./pages/LeaveTable/AddEditLeave";
+import Leave from "./pages/LeaveTable/Leave";
 
 import { Toaster } from "react-hot-toast";
 import RootRedirect from "./pages/OtherPage/RootRedirect";
@@ -57,7 +57,7 @@ function AppRoutes() {
         </Route>
       </Route>
 
-      {/* <Route element={<ProtectedRoute />}> */}
+      <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Home />} />
 
@@ -79,7 +79,7 @@ function AppRoutes() {
           <Route path="/leave-requests" element={<Leave />} />
           <Route path="/leave-requests/:id" element={<AddEditLeave />} />
         </Route>
-      {/* </Route> */}
+      </Route>
 
       <Route path="*" element={<NotFound />} />
     </Routes>

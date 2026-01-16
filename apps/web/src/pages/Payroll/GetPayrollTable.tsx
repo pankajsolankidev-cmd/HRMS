@@ -1,17 +1,17 @@
-import { useState, useMemo } from "react";
-import { useNavigate } from "react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router";
 
+import Select from "../../components/form/Select";
+import Input from "../../components/form/input/InputField";
 import DataTable, {
   type Column,
 } from "../../components/tables/BasicTables/DataTable";
-import Select from "../../components/form/Select";
-import Input from "../../components/form/input/InputField";
 
-import { getEmployees, getPayrolls } from "../../api/get";
 import { deletePayroll } from "../../api/delete";
+import { getEmployees, getPayrolls } from "../../api/get";
 import type { PaginatedResponse } from "../../api/types";
 
 export type Payroll = {
@@ -70,7 +70,7 @@ export default function GetPayrollTable() {
     queryFn: () =>
       getEmployees({
         page: 1,
-        limit: 1000, 
+        limit: 1000,
       }),
   });
 
@@ -87,9 +87,7 @@ export default function GetPayrollTable() {
     [employeeList]
   );
 
-  const { data, isLoading, isError } = useQuery<
-    PaginatedResponse<any>
-  >({
+  const { data, isLoading, isError } = useQuery<PaginatedResponse<any>>({
     queryKey: [
       "payrolls",
       page,
@@ -155,13 +153,21 @@ export default function GetPayrollTable() {
       header: "Deductions",
       accessor: "totalDeductions",
       sortable: true,
-      cell: (r) => `₹ ${r.totalDeductions.toLocaleString("en-IN")}`,
+      cell: (row) => (
+        <span className="font-medium text-red-600 dark:text-red-400">
+          ₹ {row.totalDeductions.toLocaleString("en-IN")}
+        </span>
+      ),
     },
     {
       header: "Net Salary",
       accessor: "netSalary",
       sortable: true,
-      cell: (r) => `₹ ${r.netSalary.toLocaleString("en-IN")}`,
+      cell: (row) => (
+        <span className="font-medium text-green-600 dark:text-green-400">
+          ₹ {row.netSalary.toLocaleString("en-IN")}
+        </span>
+      ),
     },
     {
       header: "Action",
@@ -198,9 +204,7 @@ export default function GetPayrollTable() {
           type="number"
           value={tempYear ?? ""}
           onChange={(e) =>
-            setTempYear(
-              e.target.value ? Number(e.target.value) : undefined
-            )
+            setTempYear(e.target.value ? Number(e.target.value) : undefined)
           }
         />
 
@@ -247,8 +251,8 @@ export default function GetPayrollTable() {
 
       <div className="mt-4 flex items-center justify-between">
         <span className="text-sm text-gray-500">
-          Showing {(page - 1) * limit + 1} –{" "}
-          {Math.min(page * limit, total)} of {total}
+          Showing {(page - 1) * limit + 1} – {Math.min(page * limit, total)} of{" "}
+          {total}
         </span>
 
         <div className="flex gap-2">

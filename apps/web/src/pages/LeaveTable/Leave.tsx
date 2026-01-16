@@ -1,9 +1,12 @@
+import { useNavigate } from "react-router";
 import ComponentCard from "../../components/common/ComponentCard";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import GetLeaveTable from "../Leaves/GetLeaveTable";
 
 export default function Leave() {
+  const navigate = useNavigate();
+
   return (
     <>
       <PageMeta
@@ -12,7 +15,18 @@ export default function Leave() {
       />
       <PageBreadcrumb pageTitle="Leave table" />
       <div className="space-y-6">
-        <ComponentCard title="Leave Details">
+        <ComponentCard
+          title="Leave Details"
+          action={
+            <button
+              onClick={() => navigate("/leave-requests/new")}
+              className="rounded-lg bg-black px-4 py-2 text-sm text-white
+                 dark:bg-white dark:text-black"
+            >
+              Add leave requests
+            </button>
+          }
+        >
           <GetLeaveTable />
         </ComponentCard>
       </div>

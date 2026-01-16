@@ -1,18 +1,20 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useForm, Controller } from "react-hook-form";
-import { z } from "zod";
-import { useNavigate, useParams } from "react-router";
 import { useEffect } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { useNavigate, useParams } from "react-router";
+import { z } from "zod";
 
 import Input from "../../components/form/input/InputField";
 
-import { addLeave, uploadFile } from "../../api/post";
+import type { AxiosError } from "axios";
+import { toast } from "react-hot-toast";
 import { getLeaveById } from "../../api/get";
+import { updateLeave } from "../../api/patch";
+import { addLeave, uploadFile } from "../../api/post";
 import Select from "../../components/form/Select";
 import DatePicker from "../../components/form/date-picker";
 import FileInput from "../../components/form/input/FileInput";
-import { updateLeave } from "../../api/patch";
 
 const LEAVE_TYPES = [
   { label: "Sick", value: "sick" },
@@ -27,11 +29,6 @@ const DAY_TYPES = [
   { label: "Second Half", value: "second_half" },
 ];
 
-const STATUS_TYPES = [
-  { label: "Pending", value: "pending" },
-  { label: "Approved", value: "approved" },
-  { label: "Rejected", value: "rejected" },
-];
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const leaveSchema = z.object({
   fromDate: z.string().min(1, "From date is required"),
@@ -102,22 +99,24 @@ export default function AddEditLeaveForm() {
     mutationFn: (payload: any) =>
       isEdit ? updateLeave({ id: id!, payload }) : addLeave(payload),
 
-    onSuccess: () => {
+    onSuccess: (res) => {
+      toast.success(res?.message ?? "Leave Added successfully");
       queryClient.invalidateQueries({ queryKey: ["leaves"] });
       navigate("/leave-requests");
     },
-    onError:()=>{
-      console.log("ERRRRRORRRR");
-    }
+
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error?.response?.data?.message ?? "Fill proper value");
+    },
   });
 
   const onSubmit = async (formData: LeaveFormData) => {
     try {
-      let filePath = data?.file; 
+      let filePath = data?.file;
 
       if (formData.file) {
         const uploadedFile = await uploadFile(formData.file);
-        filePath = uploadedFile.path; 
+        filePath = uploadedFile.path;
       }
 
       const payload = {
@@ -131,8 +130,7 @@ export default function AddEditLeaveForm() {
 
       saveMutation.mutate(payload as any);
     } catch (error) {
-      console.error("Leave submit failed:", error);
-      
+      toast.error("File upload failed. Please try again.");
     }
   };
 
@@ -157,10 +155,6 @@ export default function AddEditLeaveForm() {
             {saveMutation.isPending ? "Saving..." : isEdit ? "Update" : "Apply"}
           </button>
         </div>
-
-        {saveMutation.isError && (
-          <p className="text-sm text-red-600">Something went wrong</p>
-        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Controller
@@ -188,6 +182,7 @@ export default function AddEditLeaveForm() {
                 value={field.value}
                 onChange={field.onChange}
                 error={!!errors.dayType}
+                hint={errors.dayType?.message}
               />
             )}
           />
@@ -200,7 +195,7 @@ export default function AddEditLeaveForm() {
                 id="fromDate"
                 label="From Date"
                 placeholder="Select start date"
-                defaultDate={field.value}
+                value={field.value ? new Date(field.value) : null}
                 onChange={(dates) => {
                   if (dates?.length) {
                     setValue("fromDate", dates[0].toISOString().split("T")[0], {
@@ -208,13 +203,11 @@ export default function AddEditLeaveForm() {
                     });
                   }
                 }}
+                error={!!errors.fromDate}
+                hint={errors.fromDate?.message}
               />
             )}
           />
-
-          {errors.fromDate && (
-            <p className="text-sm text-red-600">{errors.fromDate.message}</p>
-          )}
 
           <Controller
             name="toDate"
@@ -224,7 +217,7 @@ export default function AddEditLeaveForm() {
                 id="toDate"
                 label="To Date"
                 placeholder="Select end date"
-                defaultDate={field.value}
+                value={field.value ? new Date(field.value) : null}
                 onChange={(dates) => {
                   if (dates?.length) {
                     setValue("toDate", dates[0].toISOString().split("T")[0], {
@@ -232,15 +225,14 @@ export default function AddEditLeaveForm() {
                     });
                   }
                 }}
+                error={!!errors.toDate}
+                hint={errors.toDate?.message}
               />
             )}
           />
 
-          {errors.toDate && (
-            <p className="text-sm text-red-600">{errors.toDate.message}</p>
-          )}
-
           <Input
+            required
             label="Reason"
             placeholder="Enter Reason"
             {...register("reason")}

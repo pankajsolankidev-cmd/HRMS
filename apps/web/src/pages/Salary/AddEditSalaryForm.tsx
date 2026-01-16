@@ -1,14 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, Controller } from "react-hook-form";
-import { z } from "zod";
-import { useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { Controller, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
+import { useNavigate, useParams } from "react-router";
+import { z } from "zod";
 
+import DatePicker from "../../components/form/date-picker";
 import Input from "../../components/form/input/InputField";
 import Select from "../../components/form/Select";
-import DatePicker from "../../components/form/date-picker";
 
 import { getEmployees, getSalaryStructureById } from "../../api/get";
 import { updateSalaryStructure } from "../../api/patch";
@@ -53,10 +53,14 @@ export default function AddEditSalaryForm() {
     queryFn: () =>
       getEmployees({
         page: 1,
-        limit: 1000,
+        limit: 100,
       }),
   });
   const employeeList = employeesData?.data ?? [];
+  const employeeOptions = employeeList.map((emp: any) => ({
+    label: `${emp.firstName} ${emp.lastName}`,
+    value: emp.id,
+  }));
 
   const { data, isLoading } = useQuery({
     queryKey: ["salary-structure", id],
@@ -70,7 +74,7 @@ export default function AddEditSalaryForm() {
         employeeId: data.employeeId,
         basicSalary: Number(data.basicSalary),
         description: data.description || "",
-        appraisalDate: data.appraisalDate || "",
+        appraisalDate: data.appraisalDate ?? undefined,
       });
     }
   }, [data, reset]);
@@ -130,12 +134,10 @@ export default function AddEditSalaryForm() {
             render={({ field }) => (
               <Select
                 label="Employee"
-                options={employeeList.map((emp: any) => ({
-                  label: `${emp.firstName} ${emp.lastName}`,
-                  value: emp.id,
-                }))}
+                options={employeeOptions}
                 value={field.value}
                 onChange={field.onChange}
+                placeholder="Select employee"
                 required
                 error={!!errors.employeeId}
                 hint={errors.employeeId?.message}
@@ -174,10 +176,12 @@ export default function AddEditSalaryForm() {
                 id="appraisalDate"
                 label="Appraisal Date"
                 placeholder="Select appraisal date"
-                defaultDate={field.value || undefined}
+                value={field.value ? new Date(field.value) : null} // ✅ FIX
                 onChange={(dates) => {
-                  if (dates?.length) {
+                  if (dates?.[0]) {
                     field.onChange(dates[0].toISOString().split("T")[0]);
+                  } else {
+                    field.onChange("");
                   }
                 }}
               />

@@ -1,7 +1,7 @@
-import { useEffect } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
 
@@ -9,11 +9,11 @@ import { getEmployeeById, getSystems } from "../../api/get";
 import { addEmployee } from "../../api/post";
 import { updateEmployee } from "../../api/put";
 
-import Input from "../../components/form/input/InputField";
-import Select from "../../components/form/Select";
+import toast from "react-hot-toast";
 import DatePicker from "../../components/form/date-picker";
 import Checkbox from "../../components/form/input/Checkbox";
-import toast from "react-hot-toast";
+import Input from "../../components/form/input/InputField";
+import Select from "../../components/form/Select";
 
 export type EmployeePayload = {
   firstName: string;
@@ -88,11 +88,18 @@ const AddEmpForm = () => {
     },
   });
 
-  const { data: systems = [] } = useQuery({
-    queryKey: ["systems"],
-    queryFn: getSystems,
+  const { data: systems } = useQuery({
+    queryKey: ["systems", { page: 1, limit: 1000 }],
+    queryFn: () =>
+      getSystems({
+        page: 1,
+        limit: 100,
+      }),
   });
-  const systemOptions = systems.map((s: any) => ({
+
+  const systemList = systems?.data ?? [];
+
+  const systemOptions = systemList.map((s: any) => ({
     value: s.id,
     label: s.name,
   }));
@@ -157,33 +164,24 @@ const AddEmpForm = () => {
   const addMutation = useMutation({
     mutationFn: addEmployee,
     onSuccess: () => {
-      toast.success(
-         "Employee Added successfully"
-      );
+      toast.success("Employee Added successfully");
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       navigate("/employees");
     },
-    onError:(error : any)=>{
-      toast.error(
-        error?.response?.data?.message || "Fill proper value"
-      );
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || "Fill proper value");
     },
-
   });
 
   const updateMutation = useMutation({
     mutationFn: updateEmployee,
     onSuccess: () => {
-      toast.success(
-         "Employee updated successfully"
-      );
+      toast.success("Employee updated successfully");
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       navigate("/employees");
     },
-    onError:(error : any)=>{
-      toast.error(
-        error?.response?.data?.message || "Fill proper value"
-      );
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || "Fill proper value");
     },
   });
 
@@ -289,11 +287,14 @@ const AddEmpForm = () => {
                 <DatePicker
                   id="joiningDate"
                   label="Joining Date"
-                  defaultDate={field.value}
-                  onChange={(dates) =>
-                    dates?.[0] &&
-                    field.onChange(dates[0].toISOString().split("T")[0])
-                  }
+                  value={field.value ? new Date(field.value) : null}
+                  onChange={(dates) => {
+                    if (dates?.[0]) {
+                      field.onChange(dates[0].toISOString().split("T")[0]);
+                    } else {
+                      field.onChange("");
+                    }
+                  }}
                   required
                   error={!!fieldState.error}
                   hint={fieldState.error?.message}
