@@ -11,7 +11,6 @@ import DataTable, {
   type Column,
 } from "../../components/tables/BasicTables/DataTable";
 
-/* ✅ Backend-aligned type (camelCase) */
 type Expense = {
   id: number;
   expenseType: string;
