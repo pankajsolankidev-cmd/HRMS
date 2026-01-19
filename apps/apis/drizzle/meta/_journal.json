@@ -8,6 +8,13 @@
       "when": 1768219622267,
       "tag": "0000_wooden_maximus",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1768806132871,
+      "tag": "0001_glossy_nighthawk",
+      "breakpoints": true
     }
   ]
 }
