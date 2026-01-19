@@ -1,16 +1,16 @@
-import { useEffect, useRef } from "react";
+import { CalendarIcon } from "@heroicons/react/24/outline";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.css";
-import Label from "./Label";
-import type { Hook, DateOption } from "flatpickr/dist/types/options";
 import type { Instance as FlatpickrInstance } from "flatpickr/dist/types/instance";
-import { CalendarIcon } from "@heroicons/react/24/outline";
+import type { DateOption, Hook } from "flatpickr/dist/types/options";
+import { useEffect, useRef } from "react";
+import Label from "./Label";
 
 type PropsType = {
   id: string;
   mode?: "single" | "multiple" | "range" | "time";
+  value?: DateOption | null;
   onChange?: Hook | Hook[];
-  defaultDate?: DateOption;
   label?: string;
   placeholder?: string;
   required?: boolean;
@@ -21,9 +21,9 @@ type PropsType = {
 export default function DatePicker({
   id,
   mode = "single",
+  value,
   onChange,
   label,
-  defaultDate,
   placeholder,
   required,
   error,
@@ -37,7 +37,6 @@ export default function DatePicker({
       static: true,
       monthSelectorType: "static",
       dateFormat: "Y-m-d",
-      defaultDate,
       onChange,
     }) as FlatpickrInstance;
 
@@ -45,7 +44,17 @@ export default function DatePicker({
       fpRef.current?.destroy();
       fpRef.current = null;
     };
-  }, [id, mode, onChange, defaultDate]);
+  }, [id, mode, onChange]);
+
+  useEffect(() => {
+    if (fpRef.current) {
+      if (value) {
+        fpRef.current.setDate(value, false);
+      } else {
+        fpRef.current.clear();
+      }
+    }
+  }, [value]);
 
   return (
     <div className="space-y-1.5">
@@ -78,7 +87,11 @@ export default function DatePicker({
       </div>
 
       {hint && (
-        <p className={`text-xs ${error ? "text-red-500" : "text-gray-500 dark:text-gray-400"}`}>
+        <p
+          className={`text-xs ${
+            error ? "text-red-500" : "text-gray-500 dark:text-gray-400"
+          }`}
+        >
           {hint}
         </p>
       )}

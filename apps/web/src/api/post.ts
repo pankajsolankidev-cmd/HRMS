@@ -115,3 +115,15 @@ export const addLeave = async (payload: AddLeavePayload) => {
   const res = await api.post("/leave-requests", payload);
   return res.data;
 };
+export type ExpensePayload = {
+  expense_type: string;
+  amount: number;
+  expense_date: string;
+  description?: string;
+  file?: string;
+};
+
+export const addExpense = async (payload: ExpensePayload) => {
+  const res = await api.post("/expenses", payload);
+  return res.data;
+};

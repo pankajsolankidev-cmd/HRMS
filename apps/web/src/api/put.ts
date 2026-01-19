@@ -1,5 +1,6 @@
 import type { EmployeePayload } from "../pages/Employee/AddEditEmpForm";
 import api from "./axios";
+import type { ExpensePayload } from "./post";
 
 export const updateEmployee = async ({
   id,
@@ -41,8 +42,12 @@ export const updateSystem = async ({
   });
   return res.data;
 };
+export const updateExpense = async (params: {
+  id: string;
+  payload: ExpensePayload;
+}) => {
+  const { id, payload } = params;
 
-
-
-
-
+  const res = await api.put(`/expenses/${id}`, payload);
+  return res.data;
+};
