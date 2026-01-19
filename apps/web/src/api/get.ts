@@ -91,9 +91,9 @@ export const getExpenseById = async (id: string) => {
   const res = await api.get(`/expenses/${id}`);
   return res.data;
 };
-export const getExpenseSummary = async (month: number, year: number) => {
+export const getExpenseSummary = async (fromDate: string, toDate: string) => {
   const res = await api.get("/expenses/summary", {
-    params: { month, year },
+    params: { fromDate, toDate },
   });
   return res.data;
 };

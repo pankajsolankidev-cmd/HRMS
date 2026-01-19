@@ -2,65 +2,51 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { getExpenseSummary } from "../../api/get";
-import Select from "../../components/form/Select";
-import Input from "../../components/form/input/InputField";
-
-const MONTHS = [
-  { label: "January", value: "1" },
-  { label: "February", value: "2" },
-  { label: "March", value: "3" },
-  { label: "April", value: "4" },
-  { label: "May", value: "5" },
-  { label: "June", value: "6" },
-  { label: "July", value: "7" },
-  { label: "August", value: "8" },
-  { label: "September", value: "9" },
-  { label: "October", value: "10" },
-  { label: "November", value: "11" },
-  { label: "December", value: "12" },
-];
+import DatePicker from "../../components/form/date-picker";
 
 export default function ExpenseSummary() {
-  const now = new Date();
-  const currentMonth = now.getMonth() + 1;
-  const currentYear = now.getFullYear();
+  const today = new Date().toISOString().split("T")[0];
 
-  const [month, setMonth] = useState<number>(currentMonth);
-  const [year, setYear] = useState<number>(currentYear);
+  const [fromDate, setFromDate] = useState<string>(today);
+  const [toDate, setToDate] = useState<string>(today);
   const [run, setRun] = useState(false);
 
   const { data, isFetching } = useQuery({
-    queryKey: ["expense-summary", month, year],
-    queryFn: () => getExpenseSummary(month, year),
+    queryKey: ["expense-summary", fromDate, toDate],
+    queryFn: () => getExpenseSummary(fromDate, toDate),
     enabled: run,
   });
 
   return (
     <div className="space-y-4">
-      <div className="flex items-end justify-end gap-3">
-        <Select
-          options={MONTHS}
-          value={String(month)}
-          onChange={(v) => {
-            setMonth(Number(v));
-            setRun(false);
+      <div className="flex flex-wrap items-end justify-end gap-3">
+        <DatePicker
+          id="fromDate"
+          label="From Date"
+          value={fromDate ? new Date(fromDate) : null}
+          onChange={(dates) => {
+            if (dates?.length) {
+              setFromDate(dates[0].toLocaleDateString("en-CA"));
+              setRun(false);
+            }
           }}
-          className="w-[160px]"
         />
 
-        <Input
-          type="number"
-          value={year}
-          onChange={(e) => {
-            setYear(Number(e.target.value));
-            setRun(false);
+        <DatePicker
+          id="toDate"
+          label="To Date"
+          value={toDate ? new Date(toDate) : null}
+          onChange={(dates) => {
+            if (dates?.length) {
+              setToDate(dates[0].toLocaleDateString("en-CA"));
+              setRun(false);
+            }
           }}
-          className="w-[120px]"
         />
 
         <button
           onClick={() => setRun(true)}
-          disabled={isFetching}
+          disabled={isFetching || !fromDate || !toDate}
           className="h-[42px] rounded-lg bg-black px-6 text-sm text-white
                      disabled:opacity-50 dark:bg-white dark:text-black"
         >
@@ -68,7 +54,7 @@ export default function ExpenseSummary() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 ">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <SummaryCard label="Total Expenses" value={data?.totalExpenses ?? 0} />
 
         <SummaryCard

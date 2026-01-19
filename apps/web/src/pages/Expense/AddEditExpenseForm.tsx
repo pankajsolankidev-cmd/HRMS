@@ -10,6 +10,7 @@ import DatePicker from "../../components/form/date-picker";
 import FileInput from "../../components/form/input/FileInput";
 import Input from "../../components/form/input/InputField";
 
+import type { AxiosError } from "axios";
 import { getExpenseById } from "../../api/get";
 import { addExpense, uploadFile } from "../../api/post";
 import { updateExpense } from "../../api/put";
@@ -91,7 +92,7 @@ export default function AddEditExpenseForm() {
       navigate("/expenses");
     },
 
-    onError: (error: any) => {
+    onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(
         error?.response?.data?.message ||
           "Something went wrong. Please try again.",

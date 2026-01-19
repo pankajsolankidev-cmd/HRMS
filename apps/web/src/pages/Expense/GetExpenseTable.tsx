@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
 
+import type { AxiosError } from "axios";
 import { deleteExpense } from "../../api/delete";
 import { getExpenses } from "../../api/get";
 import type { PaginatedResponse } from "../../api/types";
@@ -66,7 +67,7 @@ export default function GetExpenseTable({ search }: Props) {
       toast.success("Expense deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(
         error?.response?.data?.message ||
           "Something went wrong. Please try again.",
