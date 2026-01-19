@@ -32,7 +32,6 @@ export default function GetComponentTable({ search }: Props) {
   const [sortBy, setSortBy] = useState<keyof Component | undefined>();
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
-  /** Reset page when search changes */
   useEffect(() => {
     setPage(1);
   }, [search]);

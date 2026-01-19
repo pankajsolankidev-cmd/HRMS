@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
 
+import { deleteSystem } from "../../api/delete";
+import { getSystems } from "../../api/get";
+import type { PaginatedResponse } from "../../api/types";
+import Chip from "../../components/common/Chip";
 import DataTable, {
   type Column,
 } from "../../components/tables/BasicTables/DataTable";
-import { getSystems } from "../../api/get";
-import { deleteSystem } from "../../api/delete";
-import Chip from "../../components/common/Chip";
-import type { PaginatedResponse } from "../../api/types";
 
 type SystemComponent = {
   id: string;
@@ -38,7 +38,6 @@ export default function GetSystemTable({ search }: Props) {
   const [sortBy, setSortBy] = useState<keyof System | undefined>();
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
-  /** reset page on search */
   useEffect(() => {
     setPage(1);
   }, [search]);
