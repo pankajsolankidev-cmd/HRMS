@@ -19,6 +19,7 @@ import fileRoutes from "./modules/files/file.routes";
 import salaryRoutes from "./modules/payroll/salary.routes";
 import { payrollRoutes } from "./modules/payroll/payroll.routes";
 import fastifySensible from "@fastify/sensible";
+import positionRoutes from "./modules/master/position.routes";
 
 const app = Fastify({ logger: true });
 
@@ -72,6 +73,7 @@ app.register(leaveRequestRoutes);
 app.register(fileRoutes);
 app.register(salaryRoutes);
 app.register(payrollRoutes);
+app.register(positionRoutes);
 
 app.get("/health", async () => {
   return { status: "API is running 🚀" };
@@ -88,5 +90,5 @@ app.listen(
       process.exit(1);
     }
     app.log.info(`API running on ${address}`);
-  }
+  },
 );

@@ -2,10 +2,18 @@ import { eq, and, asc, desc, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 import { db } from "../../db";
-import { employees, documentGeneration, users } from "../../db/schema";
+import {
+  employees,
+  documentGeneration,
+  users,
+  userRoles,
+  roles,
+} from "../../db/schema";
 
 import type { CreateEmployeeDto } from "@shared/types/src/employee/employee.dto";
 import type { UpdateEmployeeDto } from "@shared/types/src/employee/update-employee.dto";
+import { ROLES } from "../../db/schema/roles.enums";
+import { positions } from "../../db/schema/positions.schema";
 
 const DEFAULT_EMPLOYEE_PASSWORD: string = (() => {
   const pwd = process.env.DEFAULT_EMPLOYEE_PASSWORD;
@@ -34,19 +42,46 @@ export async function createEmployee(data: CreateEmployeeDto) {
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
-        position: data.position,
+
+        positionId: data.positionId,
         departmentId: data.departmentId,
         joiningDate: data.joiningDate,
         managerId: data.managerId ?? null,
         systemId: data.systemId ?? null,
 
-        welcomewithWhatsapp: data.welcome.welcomewithWhatsapp,
-        welcomewithGmail: data.welcome.welcomewithGmail,
-        welcomewithSlack: data.welcome.welcomewithSlack,
+        welcomeWithWhatsapp: data.welcome.welcomewithWhatsapp,
+        welcomeWithGmail: data.welcome.welcomewithGmail,
+        welcomeWithSlack: data.welcome.welcomewithSlack,
 
         userId: user.id,
       })
       .returning({ id: employees.id });
+
+    const [position] = await tx
+      .select({ name: positions.name })
+      .from(positions)
+      .where(eq(positions.id, data.positionId));
+
+    if (!position) {
+      throw new Error("Invalid position");
+    }
+
+    const roleName =
+      position.name.toLowerCase() === "hr" ? ROLES.HR : ROLES.EMPLOYEE;
+
+    const [role] = await tx
+      .select({ id: roles.id })
+      .from(roles)
+      .where(eq(roles.name, roleName));
+
+    if (!role) {
+      throw new Error(`Role not found: ${roleName}`);
+    }
+
+    await tx.insert(userRoles).values({
+      userId: user.id,
+      roleId: role.id,
+    });
 
     await tx.insert(documentGeneration).values({
       employeeId: employee.id,
@@ -66,14 +101,14 @@ export async function updateEmployee(id: string, data: UpdateEmployeeDto) {
     const employeeUpdateData: Partial<typeof employees.$inferInsert> = {
       firstName: data.firstName,
       lastName: data.lastName,
-      position: data.position,
+      positionId: data.positionId,
       departmentId: data.departmentId,
       managerId: data.managerId,
       systemId: data.systemId,
 
-      welcomewithWhatsapp: data.welcome?.welcomewithWhatsapp,
-      welcomewithGmail: data.welcome?.welcomewithGmail,
-      welcomewithSlack: data.welcome?.welcomewithSlack,
+      welcomeWithWhatsapp: data.welcome?.welcomewithWhatsapp,
+      welcomeWithGmail: data.welcome?.welcomewithGmail,
+      welcomeWithSlack: data.welcome?.welcomewithSlack,
 
       updatedAt: new Date(),
     };
@@ -82,7 +117,7 @@ export async function updateEmployee(id: string, data: UpdateEmployeeDto) {
       (key) =>
         employeeUpdateData[key as keyof typeof employeeUpdateData] ===
           undefined &&
-        delete employeeUpdateData[key as keyof typeof employeeUpdateData]
+        delete employeeUpdateData[key as keyof typeof employeeUpdateData],
     );
 
     const result = await tx
@@ -108,7 +143,7 @@ export async function updateEmployee(id: string, data: UpdateEmployeeDto) {
         (key) =>
           documentUpdateData[key as keyof typeof documentUpdateData] ===
             undefined &&
-          delete documentUpdateData[key as keyof typeof documentUpdateData]
+          delete documentUpdateData[key as keyof typeof documentUpdateData],
       );
 
       await tx
@@ -139,7 +174,7 @@ export async function getEmployees(query?: {
         ${employees.firstName} ILIKE ${`%${query.search}%`} OR
         ${employees.lastName} ILIKE ${`%${query.search}%`} OR
         ${employees.email} ILIKE ${`%${query.search}%`}
-      )`
+      )`,
     );
   }
 
@@ -158,7 +193,7 @@ export async function getEmployees(query?: {
       firstName: employees.firstName,
       lastName: employees.lastName,
       email: employees.email,
-      position: employees.position,
+      positionId: employees.positionId,
       departmentId: employees.departmentId,
       joiningDate: employees.joiningDate,
       managerId: employees.managerId,
@@ -166,9 +201,9 @@ export async function getEmployees(query?: {
       userId: employees.userId,
 
       welcome: {
-        welcomewithWhatsapp: employees.welcomewithWhatsapp,
-        welcomewithGmail: employees.welcomewithGmail,
-        welcomewithSlack: employees.welcomewithSlack,
+        welcomewithWhatsapp: employees.welcomeWithWhatsapp,
+        welcomewithGmail: employees.welcomeWithGmail,
+        welcomewithSlack: employees.welcomeWithSlack,
       },
 
       documents: {
@@ -179,7 +214,7 @@ export async function getEmployees(query?: {
     .from(employees)
     .leftJoin(
       documentGeneration,
-      eq(documentGeneration.employeeId, employees.id)
+      eq(documentGeneration.employeeId, employees.id),
     )
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(order)
@@ -208,7 +243,7 @@ export async function getEmployeeById(id: string) {
       firstName: employees.firstName,
       lastName: employees.lastName,
       email: employees.email,
-      position: employees.position,
+      positionId: employees.positionId,
       departmentId: employees.departmentId,
       joiningDate: employees.joiningDate,
       managerId: employees.managerId,
@@ -216,9 +251,9 @@ export async function getEmployeeById(id: string) {
       userId: employees.userId,
 
       welcome: {
-        welcomewithWhatsapp: employees.welcomewithWhatsapp,
-        welcomewithGmail: employees.welcomewithGmail,
-        welcomewithSlack: employees.welcomewithSlack,
+        welcomewithWhatsapp: employees.welcomeWithWhatsapp,
+        welcomewithGmail: employees.welcomeWithGmail,
+        welcomewithSlack: employees.welcomeWithSlack,
       },
 
       documents: {
@@ -229,7 +264,7 @@ export async function getEmployeeById(id: string) {
     .from(employees)
     .leftJoin(
       documentGeneration,
-      eq(documentGeneration.employeeId, employees.id)
+      eq(documentGeneration.employeeId, employees.id),
     )
     .where(eq(employees.id, id));
 

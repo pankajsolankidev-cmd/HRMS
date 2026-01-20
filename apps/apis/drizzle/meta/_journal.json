@@ -15,6 +15,41 @@
       "when": 1768806132871,
       "tag": "0001_glossy_nighthawk",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1768825670049,
+      "tag": "0002_bitter_lord_hawal",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1768825706750,
+      "tag": "0003_narrow_piledriver",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1768825925633,
+      "tag": "0004_glorious_night_thrasher",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1768826508222,
+      "tag": "0005_premium_steel_serpent",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1768892274238,
+      "tag": "0006_youthful_nick_fury",
+      "breakpoints": true
     }
   ]
 }
