@@ -1,14 +1,6 @@
 import type { FastifyInstance } from "fastify";
 
 import {
-  createEmployeeHandler,
-  getEmployeesHandler,
-  getEmployeeByIdHandler,
-  updateEmployeeHandler,
-  deleteEmployeeHandler,
-} from "./employee.service";
-
-import {
   createEmployeeSchema,
   getEmployeesSchema,
   getEmployeeByIdSchema,
@@ -17,6 +9,13 @@ import {
 } from "./employee.schema";
 
 import { verifyAccessToken } from "../../middlewares/auth.middlewares";
+import {
+  createEmployeeHandler,
+  deleteEmployeeHandler,
+  getEmployeeByIdHandler,
+  getEmployeesHandler,
+  updateEmployeeHandler,
+} from "./employee.service";
 
 export default async function employeeRoutes(app: FastifyInstance) {
   const secured = {
@@ -36,7 +35,7 @@ export default async function employeeRoutes(app: FastifyInstance) {
         ...createEmployeeSchema,
       },
     },
-    createEmployeeHandler
+    createEmployeeHandler,
   );
 
   app.get(
@@ -48,7 +47,7 @@ export default async function employeeRoutes(app: FastifyInstance) {
         ...getEmployeesSchema,
       },
     },
-    getEmployeesHandler
+    getEmployeesHandler,
   );
 
   app.get(
@@ -60,7 +59,7 @@ export default async function employeeRoutes(app: FastifyInstance) {
         ...getEmployeeByIdSchema,
       },
     },
-    getEmployeeByIdHandler
+    getEmployeeByIdHandler,
   );
 
   app.put(
@@ -72,7 +71,7 @@ export default async function employeeRoutes(app: FastifyInstance) {
         ...updateEmployeeSchema,
       },
     },
-    updateEmployeeHandler
+    updateEmployeeHandler,
   );
 
   app.delete(
@@ -84,6 +83,6 @@ export default async function employeeRoutes(app: FastifyInstance) {
         ...deleteEmployeeSchema,
       },
     },
-    deleteEmployeeHandler
+    deleteEmployeeHandler,
   );
 }
