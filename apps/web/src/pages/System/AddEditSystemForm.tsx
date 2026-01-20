@@ -12,6 +12,7 @@ import { addSystem } from "../../api/post";
 import { Controller } from "react-hook-form";
 import MultiSelect from "../../components/form/MultiSelect";
 import { getComponents } from "../../api/get";
+import toast from "react-hot-toast";
 
 const systemSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -39,6 +40,7 @@ export default function AddEditSystemForm() {
     defaultValues: {
       name: "",
       description: "",
+      components: [],
     },
   });
 
@@ -58,26 +60,34 @@ export default function AddEditSystemForm() {
   });
 
   useEffect(() => {
-  if (data) {
-    reset({
-      name: data.name,
-      description: data.description,
-      components: data.components?.map((c: any) => c.id) ?? [],
-    });
-  }
-}, [data, reset]);
-
+    if (data) {
+      reset({
+        name: data.name,
+        description: data.description,
+        components: data.components?.map((c: any) => c.id) ?? [],
+      });
+    }
+  }, [data, reset]);
 
   const saveMutation = useMutation({
     mutationFn: (payload: SystemFormData) =>
       isEdit ? updateSystem({ id: id!, payload }) : addSystem(payload),
 
     onSuccess: () => {
+      toast.success(
+        isEdit
+          ? "System updated successfully"
+          : "Ststem added successfully"
+      );
       queryClient.invalidateQueries({ queryKey: ["systems"] });
+      navigate("/systems");
+    },
 
-      setTimeout(() => {
-        navigate("/systems");
-      }, 1200);
+    onError: (error: any) => {
+      toast.error(
+        error?.response?.data?.message ||
+          "Something went wrong. Please try again."
+      );
     },
   });
 
@@ -94,7 +104,11 @@ export default function AddEditSystemForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form
+      noValidate
+      className="space-y-8 text-gray-900 dark:text-gray-100"
+      onSubmit={handleSubmit(onSubmit)}
+    >
       <div className="rounded-xl border bg-white p-6 dark:bg-gray-900 dark:border-gray-700 space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
@@ -111,23 +125,11 @@ export default function AddEditSystemForm() {
           </button>
         </div>
 
-        {saveMutation.isSuccess && (
-          <p className="text-sm text-green-600 dark:text-green-400">
-            {isEdit
-              ? "System updated successfully"
-              : "System added successfully"}
-          </p>
-        )}
-
-        {saveMutation.isError && (
-          <p className="text-sm text-red-600 dark:text-red-400">
-            Something went wrong. Please try again.
-          </p>
-        )}
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-6">
             <Input
+              required
+              placeholder="Enter system name"
               label="System Name"
               {...register("name")}
               error={!!errors.name}
@@ -145,19 +147,19 @@ export default function AddEditSystemForm() {
                   value={field.value}
                   onChange={field.onChange}
                   placeholder="Select components"
+                  onBlur={field.onBlur}
+                  required
+                  error={!!errors.components}
+                  hint={errors.components?.message}
                 />
               )}
             />
-
-            {errors.components && (
-              <p className="text-sm text-red-600">
-                {errors.components.message}
-              </p>
-            )}
           </div>
 
           <div>
             <Input
+              required
+              placeholder="Description"
               label="Description"
               {...register("description")}
               error={!!errors.description}

@@ -1,21 +1,34 @@
-import jwt from 'jsonwebtoken'
-import crypto from 'crypto'
-import bcrypt from 'bcryptjs'
+import jwt from "jsonwebtoken";
+import crypto from "crypto";
+import bcrypt from "bcryptjs";
 
-const JWT_SECRET = process.env.JWT_SECRET!
+export interface AccessTokenPayload {
+  id: string;
+  email: string;
+}
 
-export function generateAccessToken(payload: object) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' })
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error("invalid token");
+  }
+  return secret;
+}
+
+export function generateAccessToken(payload: AccessTokenPayload) {
+  return jwt.sign(payload, getJwtSecret(), {
+    expiresIn: "7d",
+  });
 }
 
 export function generateRefreshToken() {
-  return crypto.randomBytes(64).toString('hex')
+  return crypto.randomBytes(64).toString("hex");
 }
 
 export async function hashToken(token: string) {
-  return bcrypt.hash(token, 10)
+  return bcrypt.hash(token, 10);
 }
 
 export async function compareToken(token: string, hash: string) {
-  return bcrypt.compare(token, hash)
+  return bcrypt.compare(token, hash);
 }

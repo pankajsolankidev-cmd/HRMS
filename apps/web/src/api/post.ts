@@ -1,10 +1,7 @@
 import type { EmployeePayload } from "../pages/Employee/AddEditEmpForm";
 import api from "./axios";
 
-export const signInApi = async (data: {
-  email: string;
-  password: string;
-}) => {
+export const signInApi = async (data: { email: string; password: string }) => {
   const res = await api.post("/signin", data);
   return res.data;
 };
@@ -69,6 +66,26 @@ export const addSystem = async (payload: {
   return res.data;
 };
 
+export const addSalaryStructure = async (payload: any) => {
+  const res = await api.post("/salary", payload);
+  return res.data;
+};
+
+export const addPayroll = async (payload: {
+  employeeId: string;
+  month: string;
+  year: number;
+  totalDeductions: number;
+}) => {
+  const res = await api.post("/payrolls/process", {
+    employeeId: payload.employeeId,
+    month: payload.month,
+    year: payload.year,
+    totalDeductions: payload.totalDeductions,
+  });
+  return res.data;
+};
+
 export const uploadFile = async (file: File) => {
   const formData = new FormData();
   formData.append("file", file);
@@ -98,6 +115,3 @@ export const addLeave = async (payload: AddLeavePayload) => {
   const res = await api.post("/leave-requests", payload);
   return res.data;
 };
-
-
-

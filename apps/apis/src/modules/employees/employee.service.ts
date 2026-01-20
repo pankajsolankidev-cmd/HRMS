@@ -1,3 +1,4 @@
+import type { FastifyRequest, FastifyReply } from "fastify";
 import { eq, and, asc, desc, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
@@ -15,6 +16,8 @@ import type { UpdateEmployeeDto } from "@shared/types/src/employee/update-employ
 import { ROLES } from "../../db/schema/roles.enums";
 import { positions } from "../../db/schema/positions.schema";
 
+import { sendMessage } from "../../utils/api-response";
+
 const DEFAULT_EMPLOYEE_PASSWORD: string = (() => {
   const pwd = process.env.DEFAULT_EMPLOYEE_PASSWORD;
   if (!pwd) {
@@ -23,149 +26,112 @@ const DEFAULT_EMPLOYEE_PASSWORD: string = (() => {
   return pwd;
 })();
 
-export async function createEmployee(data: CreateEmployeeDto) {
-  return db.transaction(async (tx) => {
-    const hashedPassword = await bcrypt.hash(DEFAULT_EMPLOYEE_PASSWORD, 10);
+export async function createEmployeeHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const body = request.body as CreateEmployeeDto;
 
-    const [user] = await tx
-      .insert(users)
-      .values({
-        username: `${data.firstName}.${data.lastName}`.toLowerCase(),
-        email: data.email,
-        password: hashedPassword,
-      })
-      .returning({ id: users.id });
+  try {
+    const result = await db.transaction(async (tx) => {
+      const hashedPassword = await bcrypt.hash(DEFAULT_EMPLOYEE_PASSWORD, 10);
 
-    const [employee] = await tx
-      .insert(employees)
-      .values({
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
+      const [user] = await tx
+        .insert(users)
+        .values({
+          username: `${body.firstName}.${body.lastName}`.toLowerCase(),
+          email: body.email,
+          password: hashedPassword,
+        })
+        .returning({ id: users.id });
 
-        positionId: data.positionId,
-        departmentId: data.departmentId,
-        joiningDate: data.joiningDate,
-        managerId: data.managerId ?? null,
-        systemId: data.systemId ?? null,
+      const [employee] = await tx
+        .insert(employees)
+        .values({
+          firstName: body.firstName,
+          lastName: body.lastName,
+          email: body.email,
 
-        welcomeWithWhatsapp: data.welcome.welcomewithWhatsapp,
-        welcomeWithGmail: data.welcome.welcomewithGmail,
-        welcomeWithSlack: data.welcome.welcomewithSlack,
+          positionId: body.positionId,
+          departmentId: body.departmentId,
+          joiningDate: body.joiningDate,
+          managerId: body.managerId ?? null,
+          systemId: body.systemId ?? null,
 
+          welcomeWithWhatsapp: body.welcome.welcomewithWhatsapp,
+          welcomeWithGmail: body.welcome.welcomewithGmail,
+          welcomeWithSlack: body.welcome.welcomewithSlack,
+
+          userId: user.id,
+        })
+        .returning({ id: employees.id });
+
+      const [position] = await tx
+        .select({ name: positions.name })
+        .from(positions)
+        .where(eq(positions.id, body.positionId));
+
+      if (!position) {
+        throw new Error("Invalid position");
+      }
+
+      const roleName =
+        position.name.toLowerCase() === "hr" ? ROLES.HR : ROLES.EMPLOYEE;
+
+      const [role] = await tx
+        .select({ id: roles.id })
+        .from(roles)
+        .where(eq(roles.name, roleName));
+
+      if (!role) {
+        throw new Error(`Role not found: ${roleName}`);
+      }
+
+      await tx.insert(userRoles).values({
         userId: user.id,
-      })
-      .returning({ id: employees.id });
+        roleId: role.id,
+      });
 
-    const [position] = await tx
-      .select({ name: positions.name })
-      .from(positions)
-      .where(eq(positions.id, data.positionId));
+      await tx.insert(documentGeneration).values({
+        employeeId: employee.id,
+        generateOfferLetter: body.documents.generateOfferLetter,
+        generateAppointmentLetter: body.documents.generateAppointmentLetter,
+      });
 
-    if (!position) {
-      throw new Error("Invalid position");
-    }
-
-    const roleName =
-      position.name.toLowerCase() === "hr" ? ROLES.HR : ROLES.EMPLOYEE;
-
-    const [role] = await tx
-      .select({ id: roles.id })
-      .from(roles)
-      .where(eq(roles.name, roleName));
-
-    if (!role) {
-      throw new Error(`Role not found: ${roleName}`);
-    }
-
-    await tx.insert(userRoles).values({
-      userId: user.id,
-      roleId: role.id,
-    });
-
-    await tx.insert(documentGeneration).values({
-      employeeId: employee.id,
-      generateOfferLetter: data.documents.generateOfferLetter,
-      generateAppointmentLetter: data.documents.generateAppointmentLetter,
-    });
-
-    return {
-      employeeId: employee.id,
-      userId: user.id,
-    };
-  });
-}
-
-export async function updateEmployee(id: string, data: UpdateEmployeeDto) {
-  return db.transaction(async (tx) => {
-    const employeeUpdateData: Partial<typeof employees.$inferInsert> = {
-      firstName: data.firstName,
-      lastName: data.lastName,
-      positionId: data.positionId,
-      departmentId: data.departmentId,
-      managerId: data.managerId,
-      systemId: data.systemId,
-
-      welcomeWithWhatsapp: data.welcome?.welcomewithWhatsapp,
-      welcomeWithGmail: data.welcome?.welcomewithGmail,
-      welcomeWithSlack: data.welcome?.welcomewithSlack,
-
-      updatedAt: new Date(),
-    };
-
-    Object.keys(employeeUpdateData).forEach(
-      (key) =>
-        employeeUpdateData[key as keyof typeof employeeUpdateData] ===
-          undefined &&
-        delete employeeUpdateData[key as keyof typeof employeeUpdateData],
-    );
-
-    const result = await tx
-      .update(employees)
-      .set(employeeUpdateData)
-      .where(eq(employees.id, id))
-      .returning();
-
-    if (result.length === 0) {
-      throw new Error("Employee not found or nothing to update");
-    }
-
-    if (data.documents) {
-      const documentUpdateData: Partial<
-        typeof documentGeneration.$inferInsert
-      > = {
-        generateOfferLetter: data.documents.generateOfferLetter,
-        generateAppointmentLetter: data.documents.generateAppointmentLetter,
-        updatedAt: new Date(),
+      return {
+        employeeId: employee.id,
+        userId: user.id,
       };
+    });
 
-      Object.keys(documentUpdateData).forEach(
-        (key) =>
-          documentUpdateData[key as keyof typeof documentUpdateData] ===
-            undefined &&
-          delete documentUpdateData[key as keyof typeof documentUpdateData],
-      );
-
-      await tx
-        .update(documentGeneration)
-        .set(documentUpdateData)
-        .where(eq(documentGeneration.employeeId, id));
+    return reply.code(201).send({
+      message: "Employee created successfully",
+      employeeId: result.employeeId,
+      userId: result.userId,
+    });
+  } catch (err: any) {
+    if (err?.code === "23505") {
+      return reply.code(409).send({
+        message: "Employee with this email already exists",
+      });
     }
 
-    return {
-      id,
-      message: "Employee updated successfully",
-    };
-  });
+    request.log.error(err);
+    return reply.code(500).send({
+      message: "Internal server error",
+    });
+  }
 }
 
-export async function getEmployees(query?: {
-  search?: string;
-  page?: number;
-  limit?: number;
-  sortBy?: "firstName" | "createdAt";
-  sortOrder?: "asc" | "desc";
-}) {
+export async function getEmployeesHandler(request: FastifyRequest) {
+  const query = request.query as {
+    search?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: "firstName" | "createdAt";
+    sortOrder?: "asc" | "desc";
+  };
+
   const conditions = [];
 
   if (query?.search) {
@@ -236,7 +202,12 @@ export async function getEmployees(query?: {
   };
 }
 
-export async function getEmployeeById(id: string) {
+export async function getEmployeeByIdHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const { id } = request.params as { id: string };
+
   const rows = await db
     .select({
       id: employees.id,
@@ -268,20 +239,94 @@ export async function getEmployeeById(id: string) {
     )
     .where(eq(employees.id, id));
 
-  return rows.length ? rows[0] : null;
+  if (!rows.length) {
+    return reply.code(404).send({ message: "Employee not found" });
+  }
+
+  return rows[0];
 }
 
-export async function deleteEmployee(id: string) {
-  return db.transaction(async (tx) => {
+export async function updateEmployeeHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const { id } = request.params as { id: string };
+  const body = request.body as UpdateEmployeeDto;
+
+  const updated = await db.transaction(async (tx) => {
+    const employeeUpdateData: Partial<typeof employees.$inferInsert> = {
+      firstName: body.firstName,
+      lastName: body.lastName,
+      positionId: body.positionId,
+      departmentId: body.departmentId,
+      managerId: body.managerId,
+      systemId: body.systemId,
+
+      welcomeWithWhatsapp: body.welcome?.welcomewithWhatsapp,
+      welcomeWithGmail: body.welcome?.welcomewithGmail,
+      welcomeWithSlack: body.welcome?.welcomewithSlack,
+
+      updatedAt: new Date(),
+    };
+
+    Object.keys(employeeUpdateData).forEach(
+      (key) =>
+        employeeUpdateData[key as keyof typeof employeeUpdateData] ===
+          undefined &&
+        delete employeeUpdateData[key as keyof typeof employeeUpdateData],
+    );
+
+    const [result] = await tx
+      .update(employees)
+      .set(employeeUpdateData)
+      .where(eq(employees.id, id))
+      .returning();
+
+    if (!result) return null;
+
+    if (body.documents) {
+      await tx
+        .update(documentGeneration)
+        .set({
+          generateOfferLetter: body.documents.generateOfferLetter,
+          generateAppointmentLetter: body.documents.generateAppointmentLetter,
+          updatedAt: new Date(),
+        })
+        .where(eq(documentGeneration.employeeId, id));
+    }
+
+    return result;
+  });
+
+  if (!updated) {
+    return reply.code(404).send({ message: "Employee not found" });
+  }
+
+  return sendMessage(reply, "Employee updated successfully");
+}
+
+export async function deleteEmployeeHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const { id } = request.params as { id: string };
+
+  const deleted = await db.transaction(async (tx) => {
     await tx
       .delete(documentGeneration)
       .where(eq(documentGeneration.employeeId, id));
 
-    const [deleted] = await tx
+    const [emp] = await tx
       .delete(employees)
       .where(eq(employees.id, id))
       .returning({ id: employees.id });
 
-    return deleted;
+    return emp;
   });
+
+  if (!deleted) {
+    return reply.code(404).send({ message: "Employee not found" });
+  }
+
+  return sendMessage(reply, "Employee deleted successfully");
 }

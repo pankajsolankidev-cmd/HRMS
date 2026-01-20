@@ -11,6 +11,7 @@ import {
   PuzzlePieceIcon,
   FolderIcon,
 } from "@heroicons/react/24/outline";
+import {IconReceiptRupee } from "@tabler/icons-react";
 
 type NavItem = {
   name: string;
@@ -26,7 +27,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   {
-    icon: <GridIcon/>,
+    icon: <GridIcon />,
     name: "Dashboard",
     path: "/dashboard",
   },
@@ -36,12 +37,12 @@ const navItems: NavItem[] = [
     path: "/employees",
   },
   {
-    icon: <PuzzlePieceIcon/>,
+    icon: <PuzzlePieceIcon />,
     name: "Component",
     path: "/components",
-  },
+  }, 
   {
-    icon: < FolderIcon />,
+    icon: <FolderIcon />,
     name: "System",
     path: "/systems",
   },
@@ -49,8 +50,20 @@ const navItems: NavItem[] = [
     icon: <CalendarIcon />,
     name: "Leaves",
     path: "/leave-requests",
-  }
+  },
+  {
+    icon: <IconReceiptRupee />,
+    name: "Salary",
+    path: "/salary",
+  },
+  {
+    icon: <IconReceiptRupee />,
+    name: "Payrolls",
+    path: "/payrolls",
+  },
+  
 ];
+
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();

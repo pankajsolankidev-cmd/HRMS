@@ -14,6 +14,7 @@ import { baseColumns } from "../base-columns";
 import { positions } from "./positions.schema";
 
 export const employees = pgTable("employees", {
+  ...baseColumns,
   firstName: varchar("first_name", { length: 100 }).notNull(),
   lastName: varchar("last_name", { length: 100 }).notNull(),
   email: varchar("email", { length: 255 }).notNull(),
@@ -33,6 +34,4 @@ export const employees = pgTable("employees", {
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-
-  ...baseColumns,
 });

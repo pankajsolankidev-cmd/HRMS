@@ -1,4 +1,6 @@
+import type { FastifyRequest, FastifyReply } from "fastify";
 import { eq, desc, asc, and, ilike, sql } from "drizzle-orm";
+
 import { db } from "../../db";
 import { employees } from "../../db/schema/employees.schema";
 import { leaveRequests } from "../../db/schema/leave-requests.schema";
@@ -9,39 +11,42 @@ import {
   UpdateLeaveRequestDto,
 } from "@shared/types/src/leave-request/leave-request.types";
 
-export async function createLeaveRequest(
-  userId: string,
-  data: CreateLeaveRequestDto
+import { sendMessage } from "../../utils/api-response";
+
+export async function createLeaveRequestHandler(
+  request: FastifyRequest,
+  reply: FastifyReply
 ) {
+  const userId = request.user!.id;
+  const body = request.body as CreateLeaveRequestDto;
+
   const [employee] = await db
     .select({ id: employees.id })
     .from(employees)
     .where(eq(employees.userId, userId));
 
   if (!employee) {
-    throw new Error("Employee not found for this user");
+    return reply.code(404).send({ message: "Employee not found" });
   }
 
-  const [leave] = await db
-    .insert(leaveRequests)
-    .values({
-      employeeId: employee.id,
-      fromDate: data.fromDate,
-      toDate: data.toDate,
-      type: data.type,
-      dayType: data.dayType,
-      reason: data.reason,
-      file: data.file,
-      status: LeaveStatus.Pending,
-    })
-    .returning();
+  await db.insert(leaveRequests).values({
+    employeeId: employee.id,
+    fromDate: body.fromDate,
+    toDate: body.toDate,
+    type: body.type,
+    dayType: body.dayType,
+    reason: body.reason,
+    file: body.file,
+    status: LeaveStatus.Pending,
+  });
 
-  return leave;
+  return sendMessage(reply, "Leave request created successfully", 201);
 }
 
-export async function getMyLeaveRequests(
-  userId: string,
-  query?: {
+export async function getMyLeaveRequestsHandler(request: FastifyRequest) {
+  const userId = request.user!.id;
+
+  const query = request.query as {
     search?: string;
     status?: (typeof LeaveStatus)[keyof typeof LeaveStatus];
     type?: string;
@@ -49,15 +54,15 @@ export async function getMyLeaveRequests(
     limit?: number;
     sortBy?: "createdAt" | "fromDate";
     sortOrder?: "asc" | "desc";
-  }
-) {
+  };
+
   const [employee] = await db
     .select({ id: employees.id })
     .from(employees)
     .where(eq(employees.userId, userId));
 
   if (!employee) {
-    throw new Error("Employee not found for this user");
+    throw new Error("Employee not found");
   }
 
   const conditions = [eq(leaveRequests.employeeId, employee.id)];
@@ -83,8 +88,7 @@ export async function getMyLeaveRequests(
       ? leaveRequests.fromDate
       : leaveRequests.createdAt;
 
-  const order =
-    query?.sortOrder === "asc" ? asc(sortColumn) : desc(sortColumn);
+  const order = query?.sortOrder === "asc" ? asc(sortColumn) : desc(sortColumn);
 
   const data = await db
     .select()
@@ -109,56 +113,62 @@ export async function getMyLeaveRequests(
   };
 }
 
-export async function getLeaveRequestById(userId: string, leaveId: string) {
+export async function getLeaveRequestByIdHandler(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const userId = request.user!.id;
+  const { id } = request.params as { id: string };
+
   const [employee] = await db
     .select({ id: employees.id })
     .from(employees)
     .where(eq(employees.userId, userId));
 
   if (!employee) {
-    throw new Error("Employee not found");
+    return reply.code(404).send({ message: "Employee not found" });
   }
 
   const [leave] = await db
     .select()
     .from(leaveRequests)
     .where(
-      and(
-        eq(leaveRequests.id, leaveId),
-        eq(leaveRequests.employeeId, employee.id)
-      )
+      and(eq(leaveRequests.id, id), eq(leaveRequests.employeeId, employee.id))
     );
 
   if (!leave) {
-    throw new Error("Leave request not found");
+    return reply.code(404).send({ message: "Leave request not found" });
   }
 
-  return leave;
+  return { data: leave };
 }
 
-export async function updateLeaveRequest(
-  userId: string,
-  leaveId: string,
-  data: UpdateLeaveRequestDto
+export async function updateLeaveRequestHandler(
+  request: FastifyRequest,
+  reply: FastifyReply
 ) {
+  const userId = request.user!.id;
+  const { id } = request.params as { id: string };
+  const body = request.body as UpdateLeaveRequestDto;
+
   const [employee] = await db
     .select({ id: employees.id })
     .from(employees)
     .where(eq(employees.userId, userId));
 
   if (!employee) {
-    throw new Error("Employee not found");
+    return reply.code(404).send({ message: "Employee not found" });
   }
 
   const [updated] = await db
     .update(leaveRequests)
     .set({
-      ...data,
+      ...body,
       updatedAt: new Date(),
     })
     .where(
       and(
-        eq(leaveRequests.id, leaveId),
+        eq(leaveRequests.id, id),
         eq(leaveRequests.employeeId, employee.id),
         eq(leaveRequests.status, LeaveStatus.Pending)
       )
@@ -166,27 +176,35 @@ export async function updateLeaveRequest(
     .returning();
 
   if (!updated) {
-    throw new Error("Leave not found or cannot be updated");
+    return reply
+      .code(404)
+      .send({ message: "Leave not found or cannot be updated" });
   }
 
-  return updated;
+  return sendMessage(reply, "Leave request updated successfully");
 }
 
-export async function deleteLeaveRequest(userId: string, leaveId: string) {
+export async function deleteLeaveRequestHandler(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const userId = request.user!.id;
+  const { id } = request.params as { id: string };
+
   const [employee] = await db
     .select({ id: employees.id })
     .from(employees)
     .where(eq(employees.userId, userId));
 
   if (!employee) {
-    throw new Error("Employee not found");
+    return reply.code(404).send({ message: "Employee not found" });
   }
 
   const [deleted] = await db
     .delete(leaveRequests)
     .where(
       and(
-        eq(leaveRequests.id, leaveId),
+        eq(leaveRequests.id, id),
         eq(leaveRequests.employeeId, employee.id),
         eq(leaveRequests.status, LeaveStatus.Pending)
       )
@@ -194,8 +212,10 @@ export async function deleteLeaveRequest(userId: string, leaveId: string) {
     .returning({ id: leaveRequests.id });
 
   if (!deleted) {
-    throw new Error("Leave not found or cannot be deleted");
+    return reply
+      .code(404)
+      .send({ message: "Leave not found or cannot be deleted" });
   }
 
-  return deleted;
+  return sendMessage(reply, "Leave request deleted successfully");
 }

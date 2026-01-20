@@ -22,7 +22,9 @@ export default function AddEditSystem() {
       />
 
       <div className="space-y-6 dark:bg-gray-800">
-        <ComponentCard title={isEditMode ? "Edit System" : "Add System"}>
+        <ComponentCard title={isEditMode ? "Edit System" : "Add System"}
+        
+        >
           <AddEditSystemForm />
         </ComponentCard>
       </div>

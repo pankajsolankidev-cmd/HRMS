@@ -1,9 +1,11 @@
+import { useNavigate } from "react-router";
 import ComponentCard from "../../components/common/ComponentCard";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import GetEmpTable from "../Employee/GetEmpTable";
 
 export default function Employee() {
+  const navigate = useNavigate();
   return (
     <>
       <PageMeta
@@ -12,7 +14,18 @@ export default function Employee() {
       />
       <PageBreadcrumb pageTitle="Employee tables" />
       <div className="space-y-6">
-        <ComponentCard title="Employee Details">
+        <ComponentCard
+          title="Employee Details"
+          action={
+            <button
+              onClick={() => navigate("/employees/new")}
+              className="rounded-lg bg-black px-4 py-2 text-sm text-white
+                 dark:bg-white dark:text-black"
+            >
+              Add Employee
+            </button>
+          }
+        >
           <GetEmpTable />
         </ComponentCard>
       </div>

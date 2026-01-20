@@ -90,8 +90,8 @@ export default function SignInForm() {
 
             <form className="space-y-5 mt-8" onSubmit={handleSubmit(onSubmit)}>
               <Input
-              required
-              label="Email"
+                required
+                label="Email"
                 type="email"
                 placeholder="info@gmail.com"
                 {...register("email")}
@@ -101,8 +101,8 @@ export default function SignInForm() {
 
               <div className="relative">
                 <Input
-                required
-                label="Password "
+                  required
+                  label="Password "
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   {...register("password")}

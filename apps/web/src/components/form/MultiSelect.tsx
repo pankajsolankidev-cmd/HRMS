@@ -12,8 +12,13 @@ interface MultiSelectProps {
   defaultSelected?: string[];
   value?: string[];
   onChange?: (selected: string[]) => void;
+  onBlur?: () => void;
   disabled?: boolean;
   placeholder?: string;
+
+  required?: boolean;
+  error?: boolean;
+  hint?: string;
 }
 
 const MultiSelect: React.FC<MultiSelectProps> = ({
@@ -22,8 +27,12 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
   defaultSelected = [],
   value,
   onChange,
+  onBlur,
   disabled = false,
   placeholder = "Select options",
+  required,
+  error,
+  hint,
 }) => {
   const isControlled = value !== undefined;
   const [internalSelected, setInternalSelected] =
@@ -40,6 +49,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
         !dropdownRef.current.contains(event.target as Node)
       ) {
         setIsOpen(false);
+        onBlur?.();
       }
     };
 
@@ -57,7 +67,13 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
 
   const toggleDropdown = () => {
     if (!disabled) {
-      setIsOpen((prev) => !prev);
+      setIsOpen((prev) => {
+        if (prev) {
+          onBlur?.();
+        }
+        return !prev;
+      });
+
       setFocusedIndex(-1);
     }
   };
@@ -110,6 +126,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
         id={`${label}-label`}
       >
         {label}
+        {required && <span className="ml-0.5 text-red-500">*</span>}
       </label>
 
       <div className="relative z-20 inline-block w-full">
@@ -126,11 +143,18 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
             tabIndex={disabled ? -1 : 0}
           >
             <div
-              className={`mb-2 flex min-h-11  rounded-lg border border-gray-300 py-1.5 pl-3 pr-3 shadow-theme-xs outline-hidden transition focus:border-brand-300 focus:shadow-focus-ring dark:border-gray-700 dark:bg-gray-900 dark:focus:border-brand-300 ${
+              className={`mb-2 flex min-h-11 rounded-lg border py-1.5 pl-3 pr-3 shadow-theme-xs transition
+              ${
+                error
+                  ? "border-red-500 focus-within:ring-2 focus-within:ring-red-500/20"
+                  : "border-gray-300 focus-within:border-brand-300 focus-within:ring-2 focus-within:ring-brand-500/20 dark:border-gray-700 dark:focus-within:border-brand-300"
+              }
+              ${
                 disabled
                   ? "opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-800"
                   : "cursor-pointer"
-              }`}
+              }
+            `}
             >
               <div className="flex flex-wrap flex-auto gap-2">
                 {selectedOptions.length > 0 ? (
