@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { userRoles, roles, rolePermissions, permissions } from "../db/schema";
 
+import { ROLES } from "../db/schema/roles.enums";
 import type { PermissionName } from "../db/schema/permissions.enums";
 
 export function authorize(requiredPermission: PermissionName) {
@@ -16,6 +17,7 @@ export function authorize(requiredPermission: PermissionName) {
 
     const rows = await db
       .select({
+        role: roles.name,
         permission: permissions.name,
       })
       .from(userRoles)
@@ -23,6 +25,12 @@ export function authorize(requiredPermission: PermissionName) {
       .innerJoin(rolePermissions, eq(roles.id, rolePermissions.roleId))
       .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
       .where(eq(userRoles.userId, userId));
+
+    const hasAdminRole = rows.some((r) => r.role === ROLES.ADMIN);
+
+    if (hasAdminRole) {
+      return;
+    }
 
     const permissionList = rows.map((r) => r.permission);
 
