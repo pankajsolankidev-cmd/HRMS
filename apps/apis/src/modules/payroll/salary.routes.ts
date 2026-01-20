@@ -19,10 +19,12 @@ import {
 } from "./salary.schema";
 
 import { verifyAccessToken } from "../../middlewares/auth.middlewares";
+import { authorize } from "../../middlewares/authorize.middleware";
+import { PERMISSIONS } from "../../db/schema/permissions.enums";
 
 export default async function salaryRoutes(app: FastifyInstance) {
   const secured = {
-    preHandler: verifyAccessToken,
+    preHandler: [verifyAccessToken],
     schema: {
       security: [{ bearerAuth: [] }],
       tags: ["Salary"],
@@ -33,71 +35,77 @@ export default async function salaryRoutes(app: FastifyInstance) {
     "/salary",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.SALARY_CREATE)],
       schema: {
         ...secured.schema,
         ...createSalarySchema,
       },
     },
-    createSalaryHandler
+    createSalaryHandler,
   );
 
   app.get(
     "/salary",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.SALARY_VIEW)],
       schema: {
         ...secured.schema,
         ...getAllSalarySchema,
       },
     },
-    getSalariesHandler
+    getSalariesHandler,
   );
 
   app.get(
     "/salary/:id",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.SALARY_VIEW)],
       schema: {
         ...secured.schema,
         ...getSalaryByIdSchema,
       },
     },
-    getSalaryByIdHandler
+    getSalaryByIdHandler,
   );
 
   app.get(
     "/salary/employee/:employeeId",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.SALARY_VIEW)],
       schema: {
         ...secured.schema,
         ...getSalaryByEmployeeSchema,
       },
     },
-    getSalaryByEmployeeHandler
+    getSalaryByEmployeeHandler,
   );
 
   app.put(
     "/salary/:id",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.SALARY_UPDATE)],
       schema: {
         ...secured.schema,
         ...updateSalarySchema,
       },
     },
-    updateSalaryHandler
+    updateSalaryHandler,
   );
 
   app.delete(
     "/salary/:id",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.SALARY_DELETE)],
       schema: {
         ...secured.schema,
         ...deleteSalarySchema,
       },
     },
-    deleteSalaryHandler
+    deleteSalaryHandler,
   );
 }
