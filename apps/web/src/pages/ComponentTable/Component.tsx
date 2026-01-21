@@ -44,7 +44,7 @@ export default function Component() {
         }
         action={
           <button
-            onClick={() => navigate("/employees/new")}
+            onClick={() => navigate("/components/new")}
             className="
               h-[42px] rounded-lg bg-black px-5 text-sm text-white
               dark:bg-white dark:text-black
