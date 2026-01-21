@@ -1,1 +1,0 @@
-ALTER TABLE "employees" ALTER COLUMN "position_id" DROP DEFAULT;

@@ -1,1 +1,0 @@
-ALTER TABLE "employees" ALTER COLUMN "position_id" SET DEFAULT 'ecb74f28-9474-4b5d-8233-68d690d10998';
