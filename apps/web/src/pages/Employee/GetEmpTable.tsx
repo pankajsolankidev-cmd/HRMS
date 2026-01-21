@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 
 import { deleteEmployee } from "../../api/delete";
-import { getEmployees } from "../../api/get";
+import { getEmployees, getPositions } from "../../api/get";
 import type { PaginatedResponse } from "../../api/types";
 import DataTable, {
   type Column,
@@ -37,6 +37,22 @@ export default function GetEmpTable({ search }: Props) {
   useEffect(() => {
     setPage(1);
   }, [search]);
+
+  const { data: positions } = useQuery({
+    queryKey: ["positions"],
+    queryFn: () =>
+      getPositions({
+        page: 1,
+        limit: 100,
+      }),
+  });
+  const positionMap: Record<string, string> = {};
+
+  if (Array.isArray(positions)) {
+    positions.forEach((p: any) => {
+      positionMap[p.id] = p.name;
+    });
+  }
 
   const handleSort = (field: keyof Employee) => {
     if (sortBy === field) {
@@ -74,7 +90,8 @@ export default function GetEmpTable({ search }: Props) {
       firstName: u.firstName,
       lastName: u.lastName,
       email: u.email,
-      position: u.position || "Employee",
+      position: positionMap[u.positionId] ?? "—",
+
       joiningDate: u.joiningDate,
       onboardingBuddy: u.onboardingBuddy ?? "HR Team",
     })) ?? [];

@@ -41,8 +41,3 @@ export const updateSystem = async ({
   });
   return res.data;
 };
-
-
-
-
-

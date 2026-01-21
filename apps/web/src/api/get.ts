@@ -9,6 +9,8 @@ export const getEmployees = async (params: ListQueryParams) => {
 
 export const getEmployeeById = async (id: string) => {
   const res = await api.get(`/employees/${id}`);
+  console.log(res.data);
+
   return res.data;
 };
 
@@ -25,6 +27,11 @@ export const getComponentById = async (id: string) => {
 
 export const getSystems = async (params: ListQueryParams) => {
   const res = await api.get<PaginatedResponse<any>>("/systems", { params });
+
+  return res.data;
+};
+export const getPositions = async (params: ListQueryParams) => {
+  const res = await api.get<PaginatedResponse<any>>("/positions", { params });
   return res.data;
 };
 

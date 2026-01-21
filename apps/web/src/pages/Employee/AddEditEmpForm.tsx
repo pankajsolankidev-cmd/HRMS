@@ -5,7 +5,7 @@ import { Controller, useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
 
-import { getEmployeeById, getSystems } from "../../api/get";
+import { getEmployeeById, getPositions, getSystems } from "../../api/get";
 import { addEmployee } from "../../api/post";
 import { updateEmployee } from "../../api/put";
 
@@ -19,7 +19,7 @@ export type EmployeePayload = {
   firstName: string;
   lastName: string;
   email: string;
-  position: string;
+  positionId: string;
   joiningDate: string;
 
   departmentId?: string | null;
@@ -42,7 +42,8 @@ const employeeSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   email: z.string().email("Invalid email address"),
-  position: z.string().min(1, "Position is required"),
+  positionId: z.string().min(1, "Position is required"),
+
   joiningDate: z.string().min(1, "Joining date is required"),
 
   departmentId: z.string().nullable().optional(),
@@ -96,6 +97,21 @@ const AddEmpForm = () => {
         limit: 100,
       }),
   });
+  const { data: positions } = useQuery({
+    queryKey: ["positions"],
+    queryFn: () =>
+      getPositions({
+        page: 1,
+        limit: 100,
+      }),
+  });
+
+  const positionList = Array.isArray(positions) ? positions : [];
+
+  const positionOptions = positionList.map((p: any) => ({
+    value: p.id,
+    label: p.name,
+  }));
 
   const systemList = systems?.data ?? [];
 
@@ -116,7 +132,7 @@ const AddEmpForm = () => {
         firstName: "",
         lastName: "",
         email: "",
-        position: "",
+        positionId: "",
         joiningDate: "",
         departmentId: null,
         managerId: null,
@@ -140,7 +156,7 @@ const AddEmpForm = () => {
       firstName: employeeData.firstName ?? "",
       lastName: employeeData.lastName ?? "",
       email: employeeData.email ?? "",
-      position: employeeData.position ?? "",
+      positionId: employeeData.positionId ?? "",
       joiningDate: employeeData.joiningDate ?? "",
       departmentId: null,
       managerId: employeeData.managerId ?? null,
@@ -187,6 +203,7 @@ const AddEmpForm = () => {
 
   const onSubmit = (data: EmployeeFormValues) => {
     const payload: EmployeePayload = data;
+    console.log("payload", payload);
     if (isEditMode) {
       updateMutation.mutate({ id: id!, payload });
     } else {
@@ -223,8 +240,8 @@ const AddEmpForm = () => {
             {addMutation.isPending || updateMutation.isPending
               ? "Saving..."
               : isEditMode
-              ? "Update"
-              : "Add"}
+                ? "Update"
+                : "Add"}
           </button>
         </div>
 
@@ -257,13 +274,17 @@ const AddEmpForm = () => {
               hint={errors.email?.message}
             />
 
-            <Input
-              label="Position"
-              placeholder="Enter position"
-              required
-              {...register("position")}
-              error={!!errors.position}
-              hint={errors.position?.message}
+            <Controller
+              name="positionId"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Position"
+                  options={positionOptions}
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                />
+              )}
             />
 
             <Controller
