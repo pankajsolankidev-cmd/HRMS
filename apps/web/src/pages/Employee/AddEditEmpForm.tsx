@@ -1,7 +1,7 @@
-import { useEffect } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
 
@@ -9,11 +9,12 @@ import { getEmployeeById, getSystems } from "../../api/get";
 import { addEmployee } from "../../api/post";
 import { updateEmployee } from "../../api/put";
 
-import Input from "../../components/form/input/InputField";
-import Select from "../../components/form/Select";
+import type { AxiosError } from "axios";
+import toast from "react-hot-toast";
 import DatePicker from "../../components/form/date-picker";
 import Checkbox from "../../components/form/input/Checkbox";
-import toast from "react-hot-toast";
+import Input from "../../components/form/input/InputField";
+import Select from "../../components/form/Select";
 
 export type EmployeePayload = {
   firstName: string;
@@ -41,7 +42,10 @@ export type EmployeePayload = {
 const employeeSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  email: z.string().email("Invalid email address"),
+  email: z
+    .email({ message: "Invalid email address" })
+    .min(1, "Email is required"),
+
   position: z.string().min(1, "Position is required"),
   joiningDate: z.string().min(1, "Joining date is required"),
 
@@ -156,34 +160,25 @@ const AddEmpForm = () => {
 
   const addMutation = useMutation({
     mutationFn: addEmployee,
-    onSuccess: () => {
-      toast.success(
-         "Employee Added successfully"
-      );
+    onSuccess: (res) => {
+      toast.success(res?.message ?? "Employee Added successfully");
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       navigate("/employees");
     },
-    onError:(error : any)=>{
-      toast.error(
-        error?.response?.data?.message || "Fill proper value"
-      );
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error?.response?.data?.message ?? "Fill proper value");
     },
-
   });
 
   const updateMutation = useMutation({
     mutationFn: updateEmployee,
     onSuccess: () => {
-      toast.success(
-         "Employee updated successfully"
-      );
+      toast.success("Employee updated successfully");
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       navigate("/employees");
     },
-    onError:(error : any)=>{
-      toast.error(
-        error?.response?.data?.message || "Fill proper value"
-      );
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || "Fill proper value");
     },
   });
 

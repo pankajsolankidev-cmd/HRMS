@@ -1,11 +1,12 @@
-import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { AxiosError } from "axios";
+import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
-import { getEmployees } from "../../api/get";
 import { deleteEmployee } from "../../api/delete";
+import { getEmployees } from "../../api/get";
 import type { Column } from "../../components/tables/BasicTables/DataTable";
 import DataTable from "../../components/tables/BasicTables/DataTable";
-import toast from "react-hot-toast";
 
 type Employee = {
   id: number;
@@ -28,15 +29,13 @@ export default function GetEmpTable() {
 
   const { mutate: removeEmployee } = useMutation({
     mutationFn: deleteEmployee,
-    onSuccess: () => {
-      toast.success(
-        "Employee Deleted successfully"
-      );
+    onSuccess: (res) => {
+      toast.success(res?.message ?? "Employee Deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["employees"] });
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(
-        error?.response?.data?.message ||
+        error?.response?.data?.message ??
           "Something went wrong. Please try again."
       );
     },

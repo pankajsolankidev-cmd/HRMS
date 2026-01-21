@@ -1,20 +1,19 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router";
 
-import Input from "../form/input/InputField";
-
+import type { AxiosError } from "axios";
+import { toast } from "react-hot-toast";
 import { z } from "zod";
 import { forgetPassword } from "../../api/post";
-import type { AxiosError } from "axios";
+import Input from "../../components/form/input/InputField";
 
 const forgetPasswordSchema = z.object({
   email: z
-    .string()
-    .min(1, "Email is required")
-    .email("Enter a valid email address"),
+    .email({ message: "Invalid email address" })
+    .min(1, "Email is required"),
 });
 
 type ForgetPasswordFormData = z.infer<typeof forgetPasswordSchema>;
@@ -36,12 +35,22 @@ const ForgetPassword = () => {
   const mutation = useMutation({
     mutationFn: (data: ForgetPasswordFormData) => forgetPassword(data.email),
 
-    onSuccess: (data: any) => {
+    onSuccess: (res) => {
+      toast.success(
+        res?.message ?? "Password reset link has been sent to your email"
+      );
+
       reset();
 
-      if (data?.key) {
-        setKey(data.key);
+      if (res?.key) {
+        setKey(res.key);
       }
+    },
+
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(
+        error?.response?.data?.message ?? "Failed to send reset link"
+      );
     },
   });
 
@@ -59,19 +68,6 @@ const ForgetPassword = () => {
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
           Enter your registered email and we’ll send you a reset link.
         </p>
-
-        {mutation.isError && (
-          <p className="text-red-500 text-sm mb-4">
-            {(mutation.error as AxiosError<{ message?: string }>)?.response
-              ?.data?.message || "Reset link expired or invalid"}
-          </p>
-        )}
-
-        {mutation.isSuccess && (
-          <p className="text-green-500 text-sm mb-4">
-            Password reset link has been sent to your email.
-          </p>
-        )}
 
         <form
           className="space-y-5 dark:text-gray-400"

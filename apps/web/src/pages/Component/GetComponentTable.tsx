@@ -1,13 +1,14 @@
-import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import type { AxiosError } from "axios";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router";
+import { deleteComponent } from "../../api/delete";
+import { getComponents } from "../../api/get";
 import DataTable, {
   type Column,
 } from "../../components/tables/BasicTables/DataTable";
-import { deleteComponent } from "../../api/delete";
-import { getComponents } from "../../api/get";
-import { useNavigate } from "react-router";
-import toast from "react-hot-toast";
 
 type Component = {
   id: number;
@@ -31,15 +32,13 @@ export default function GetComponentTable() {
 
   const { mutate: removeComponent } = useMutation({
     mutationFn: deleteComponent,
-    onSuccess: () => {
-      toast.success(
-        "Component Deleted Successfully"
-      );
+    onSuccess: (res) => {
+      toast.success(res?.message ?? "Component Deleted Successfully");
       queryClient.invalidateQueries({ queryKey: ["components"] });
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(
-        error?.response?.data?.message ||
+        error?.response?.data?.message ??
           "Something went wrong. Please try again."
       );
     },
