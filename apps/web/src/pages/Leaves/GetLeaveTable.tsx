@@ -82,7 +82,7 @@ export default function GetLeaveTable({ search }: Props) {
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(
-        error?.response?.data?.message ?? "An unexpected error occurred"
+        error?.response?.data?.message ?? "An unexpected error occurred",
       );
     },
   });
@@ -131,8 +131,8 @@ export default function GetLeaveTable({ search }: Props) {
               row.status === "pending"
                 ? "bg-yellow-100 text-yellow-800"
                 : row.status === "approved"
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800"
             }`}
         >
           {row.status}

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
 
+import type { AxiosError } from "axios";
 import { deleteSalaryStructure } from "../../api/delete";
 import { getEmployees, getSalaryStructures } from "../../api/get";
 import type { PaginatedResponse } from "../../api/types";
@@ -97,20 +98,18 @@ export default function GetSalaryTable({ search }: Props) {
           ? s.appraisalDate.split("T")[0]
           : undefined,
       })) ?? [],
-    [data, employeeMap]
+    [data, employeeMap],
   );
 
   const { mutate: remove } = useMutation({
     mutationFn: deleteSalaryStructure,
-    onSuccess: () => {
-      toast.success("Salary Deleted Successfully");
-      queryClient.invalidateQueries({
-        queryKey: ["salary-structures"],
-      });
+    onSuccess: (res) => {
+      toast.success(res?.message ?? "Salary Deleted Successfully");
+      queryClient.invalidateQueries({ queryKey: ["salary-structures"] });
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(
-        error?.response?.data?.message || "An unexpected error occurred"
+        error?.response?.data?.message ?? "An unexpected error occurred",
       );
     },
   });

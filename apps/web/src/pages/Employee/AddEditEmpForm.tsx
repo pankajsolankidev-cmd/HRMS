@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { AxiosError } from "axios";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router";
@@ -43,7 +44,6 @@ const employeeSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   email: z.string().email("Invalid email address"),
   positionId: z.string().min(1, "Position is required"),
-
   joiningDate: z.string().min(1, "Joining date is required"),
 
   departmentId: z.string().nullable().optional(),
@@ -61,12 +61,15 @@ const employeeSchema = z.object({
     welcomewithSlack: z.boolean(),
   }),
 });
+
 type EmployeeFormValues = z.infer<typeof employeeSchema>;
 
 const AddEmpForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditMode = Boolean(id && id !== "new");
+
+  const queryClient = useQueryClient();
 
   const {
     control,
@@ -97,6 +100,7 @@ const AddEmpForm = () => {
         limit: 100,
       }),
   });
+
   const { data: positions } = useQuery({
     queryKey: ["positions"],
     queryFn: () =>
@@ -106,25 +110,33 @@ const AddEmpForm = () => {
       }),
   });
 
-  const positionList = Array.isArray(positions) ? positions : [];
-
-  const positionOptions = positionList.map((p: any) => ({
-    value: p.id,
-    label: p.name,
-  }));
-
-  const systemList = systems?.data ?? [];
-
-  const systemOptions = systemList.map((s: any) => ({
-    value: s.id,
-    label: s.name,
-  }));
-
   const { data: employeeData } = useQuery({
     queryKey: ["employee", id],
     queryFn: () => getEmployeeById(id!),
     enabled: isEditMode,
   });
+
+  const positionOptions = (Array.isArray(positions) ? positions : []).map(
+    (p: any) => ({
+      value: p.id,
+      label: p.name,
+    }),
+  );
+
+  const systemOptions = (systems?.data ?? []).map((s: any) => ({
+    value: s.id,
+    label: s.name,
+  }));
+
+  const departmentOptions = [
+    { value: "1", label: "HR" },
+    { value: "2", label: "Engineering" },
+  ];
+
+  const managerOptions = [
+    { value: "10", label: "John Manager" },
+    { value: "11", label: "Jane Manager" },
+  ];
 
   useEffect(() => {
     if (!isEditMode) {
@@ -175,17 +187,15 @@ const AddEmpForm = () => {
     });
   }, [isEditMode, employeeData, reset]);
 
-  const queryClient = useQueryClient();
-
   const addMutation = useMutation({
     mutationFn: addEmployee,
-    onSuccess: () => {
-      toast.success("Employee Added successfully");
+    onSuccess: (res) => {
+      toast.success(res?.message ?? "Employee Added successfully");
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       navigate("/employees");
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Fill proper value");
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error?.response?.data?.message ?? "Fill proper value");
     },
   });
 
@@ -196,30 +206,19 @@ const AddEmpForm = () => {
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       navigate("/employees");
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Fill proper value");
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error?.response?.data?.message ?? "Fill proper value");
     },
   });
 
   const onSubmit = (data: EmployeeFormValues) => {
     const payload: EmployeePayload = data;
-    console.log("payload", payload);
     if (isEditMode) {
       updateMutation.mutate({ id: id!, payload });
     } else {
       addMutation.mutate(payload);
     }
   };
-
-  const departmentOptions = [
-    { value: "1", label: "HR" },
-    { value: "2", label: "Engineering" },
-  ];
-
-  const managerOptions = [
-    { value: "10", label: "John Manager" },
-    { value: "11", label: "Jane Manager" },
-  ];
 
   return (
     <form
@@ -311,7 +310,7 @@ const AddEmpForm = () => {
                   value={field.value ? new Date(field.value) : null}
                   onChange={(dates) => {
                     if (dates?.[0]) {
-                      field.onChange(dates[0].toISOString().split("T")[0]);
+                      field.onChange(dates[0].toLocaleDateString("en-CA"));
                     } else {
                       field.onChange("");
                     }
@@ -353,7 +352,6 @@ const AddEmpForm = () => {
                   />
                 )}
               />
-
               <Controller
                 name="documents.generateAppointmentLetter"
                 control={control}
@@ -370,7 +368,6 @@ const AddEmpForm = () => {
 
           <div className="rounded-xl border bg-white p-6 dark:bg-gray-900">
             <h2 className="mb-4 text-lg font-semibold">System Allocation</h2>
-
             <Controller
               name="systemId"
               control={control}
@@ -399,7 +396,6 @@ const AddEmpForm = () => {
                   />
                 )}
               />
-
               <Controller
                 name="welcome.welcomewithWhatsapp"
                 control={control}
@@ -411,7 +407,6 @@ const AddEmpForm = () => {
                   />
                 )}
               />
-
               <Controller
                 name="welcome.welcomewithSlack"
                 control={control}

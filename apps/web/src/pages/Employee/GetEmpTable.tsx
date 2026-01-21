@@ -1,14 +1,15 @@
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
 
+import type { AxiosError } from "axios";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router";
 import { deleteEmployee } from "../../api/delete";
 import { getEmployees, getPositions } from "../../api/get";
 import type { PaginatedResponse } from "../../api/types";
-import DataTable, {
-  type Column,
-} from "../../components/tables/BasicTables/DataTable";
+import type { Column } from "../../components/tables/BasicTables/DataTable";
+import DataTable from "../../components/tables/BasicTables/DataTable";
 
 type Employee = {
   id: number;
@@ -79,8 +80,15 @@ export default function GetEmpTable({ search }: Props) {
 
   const { mutate: removeEmployee } = useMutation({
     mutationFn: deleteEmployee,
-    onSuccess: () => {
+    onSuccess: (res) => {
+      toast.success(res?.message ?? "Employee Deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["employees"] });
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(
+        error?.response?.data?.message ??
+          "Something went wrong. Please try again.",
+      );
     },
   });
 

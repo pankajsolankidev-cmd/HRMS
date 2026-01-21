@@ -10,6 +10,7 @@ import DataTable, {
   type Column,
 } from "../../components/tables/BasicTables/DataTable";
 
+import type { AxiosError } from "axios";
 import { deletePayroll } from "../../api/delete";
 import { getEmployees, getPayrolls } from "../../api/get";
 import type { PaginatedResponse } from "../../api/types";
@@ -82,9 +83,9 @@ export default function GetPayrollTable() {
         employeeList.map((emp: any) => [
           emp.id,
           `${emp.firstName} ${emp.lastName}`,
-        ])
+        ]),
       ),
-    [employeeList]
+    [employeeList],
   );
 
   const { data, isLoading, isError } = useQuery<PaginatedResponse<any>>({
@@ -123,11 +124,15 @@ export default function GetPayrollTable() {
 
   const { mutate: remove } = useMutation({
     mutationFn: deletePayroll,
-    onSuccess: () => {
-      toast.success("Payroll deleted successfully");
+    onSuccess: (res) => {
+      toast.success(res?.message ?? "Payroll deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["payrolls"] });
     },
-    onError: () => toast.error("Failed to delete payroll"),
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(
+        error?.response?.data?.message ?? "An unexpected error occurred",
+      );
+    },
   });
 
   const columns: Column<Payroll>[] = [

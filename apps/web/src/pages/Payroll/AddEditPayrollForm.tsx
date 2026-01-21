@@ -9,6 +9,7 @@ import { z } from "zod";
 import Input from "../../components/form/input/InputField";
 import Select from "../../components/form/Select";
 
+import type { AxiosError } from "axios";
 import { getEmployees, getPayrollById } from "../../api/get";
 import { updatePayroll } from "../../api/patch";
 import { addPayroll } from "../../api/post";
@@ -101,19 +102,19 @@ export default function AddEditPayrollForm() {
     mutationFn: (payload: FormData) =>
       isEdit ? updatePayroll(id!, payload) : addPayroll(payload),
 
-    onSuccess: (data) => {
+    onSuccess: (res) => {
       toast.success(
-        data?.message ||
+        res?.message ??
           (isEdit
             ? "Payroll updated successfully"
-            : "Payroll added successfully")
+            : "Payroll added successfully"),
       );
       queryClient.invalidateQueries({ queryKey: ["payrolls"] });
       navigate("/payrolls");
     },
 
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Operation failed");
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error?.response?.data?.message ?? "Operation failed");
     },
   });
 
@@ -137,8 +138,8 @@ export default function AddEditPayrollForm() {
           {saveMutation.isPending
             ? "Saving..."
             : isEdit
-            ? "Update Payroll"
-            : "Add Payroll"}
+              ? "Update Payroll"
+              : "Add Payroll"}
         </button>
       </div>
 
@@ -189,13 +190,12 @@ export default function AddEditPayrollForm() {
             value={
               watch("totalDeductions") === 0 ? "" : watch("totalDeductions")
             }
-            onChange={(e) =>
-              setValue(
-                "totalDeductions",
-                e.target.value === "" ? 0 : Number(e.target.value),
-                { shouldValidate: true }
-              )
-            }
+            onChange={(e) => {
+              const val = e.target.value;
+              setValue("totalDeductions", val === "" ? 0 : Number(val), {
+                shouldValidate: true,
+              });
+            }}
             placeholder="0"
             error={!!errors.totalDeductions}
             hint={errors.totalDeductions?.message}
@@ -204,12 +204,14 @@ export default function AddEditPayrollForm() {
           <Input
             label="Year"
             type="number"
-            value={watch("year")}
-            onChange={(e) =>
-              setValue("year", Number(e.target.value), {
+            value={watch("year") === 0 ? "" : watch("year")}
+            onChange={(e) => {
+              const val = e.target.value;
+              setValue("year", val === "" ? 0 : Number(val), {
                 shouldValidate: true,
-              })
-            }
+              });
+            }}
+            placeholder={new Date().getFullYear().toString()}
             required
             error={!!errors.year}
             hint={errors.year?.message}

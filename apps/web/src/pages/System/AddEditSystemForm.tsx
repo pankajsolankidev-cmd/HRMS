@@ -10,6 +10,7 @@ import { getComponents, getSystemById } from "../../api/get";
 import { addSystem } from "../../api/post";
 import { updateSystem } from "../../api/put";
 
+import type { AxiosError } from "axios";
 import type { PaginatedResponse } from "../../api/types";
 import Input from "../../components/form/input/InputField";
 import MultiSelect from "../../components/form/MultiSelect";
@@ -82,18 +83,20 @@ export default function AddEditSystemForm() {
     mutationFn: (payload: SystemFormData) =>
       isEdit ? updateSystem({ id: id!, payload }) : addSystem(payload),
 
-    onSuccess: () => {
+    onSuccess: (res) => {
       toast.success(
-        isEdit ? "System updated successfully" : "System added successfully"
+        (res?.message ?? isEdit)
+          ? "System updated successfully"
+          : "System added successfully",
       );
       queryClient.invalidateQueries({ queryKey: ["systems"] });
       navigate("/systems");
     },
 
-    onError: (error: any) => {
+    onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(
-        error?.response?.data?.message ||
-          "Something went wrong. Please try again."
+        error?.response?.data?.message ??
+          "Something went wrong. Please try again.",
       );
     },
   });

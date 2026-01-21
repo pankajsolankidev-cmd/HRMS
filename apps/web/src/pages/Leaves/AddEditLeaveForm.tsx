@@ -41,7 +41,7 @@ const leaveSchema = z.object({
     .instanceof(File)
     .refine(
       (file) => file.size <= MAX_FILE_SIZE,
-      "File size must be less than 10MB"
+      "File size must be less than 10MB",
     )
     .optional()
     .nullable(),
@@ -198,7 +198,7 @@ export default function AddEditLeaveForm() {
                 value={field.value ? new Date(field.value) : null}
                 onChange={(dates) => {
                   if (dates?.length) {
-                    setValue("fromDate", dates[0].toISOString().split("T")[0], {
+                    setValue("fromDate", dates[0].toLocaleDateString("en-CA"), {
                       shouldValidate: true,
                     });
                   }
@@ -220,7 +220,7 @@ export default function AddEditLeaveForm() {
                 value={field.value ? new Date(field.value) : null}
                 onChange={(dates) => {
                   if (dates?.length) {
-                    setValue("toDate", dates[0].toISOString().split("T")[0], {
+                    setValue("toDate", dates[0].toLocaleDateString("en-CA"), {
                       shouldValidate: true,
                     });
                   }

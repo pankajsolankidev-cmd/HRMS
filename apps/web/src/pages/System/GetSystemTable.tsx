@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
 
+import type { AxiosError } from "axios";
 import { deleteSystem } from "../../api/delete";
 import { getSystems } from "../../api/get";
 import type { PaginatedResponse } from "../../api/types";
@@ -67,11 +68,15 @@ export default function GetSystemTable({ search }: Props) {
 
   const { mutate: removeSystem } = useMutation({
     mutationFn: deleteSystem,
-    onSuccess: () => {
-      toast.success("System Deleted Successfully");
+    onSuccess: (res) => {
+      toast.success(res?.message ?? "System Deleted Successfully");
       queryClient.invalidateQueries({ queryKey: ["systems"] });
     },
-    onError: () => toast.error("An unexpected error occurred"),
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(
+        error?.response?.data?.message ?? "An unexpected error occurred",
+      );
+    },
   });
 
   const systems: System[] = data?.data ?? [];
