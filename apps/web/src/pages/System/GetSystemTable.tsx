@@ -1,11 +1,13 @@
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
 
 import type { AxiosError } from "axios";
-import toast from "react-hot-toast";
 import { deleteSystem } from "../../api/delete";
 import { getSystems } from "../../api/get";
+import type { PaginatedResponse } from "../../api/types";
 import Chip from "../../components/common/Chip";
 import DataTable, {
   type Column,
@@ -23,17 +25,45 @@ type System = {
   components: SystemComponent[];
 };
 
-export default function GetSystemTable() {
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
+type Props = {
+  search?: string;
+};
 
-  const {
-    data: systems = [],
-    isLoading,
-    isError,
-  } = useQuery<System[]>({
-    queryKey: ["systems"],
-    queryFn: getSystems,
+export default function GetSystemTable({ search }: Props) {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+
+  const [sortBy, setSortBy] = useState<keyof System | undefined>();
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
+
+  const handleSort = (field: keyof System) => {
+    if (sortBy === field) {
+      setSortOrder((p) => (p === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(field);
+      setSortOrder("asc");
+    }
+    setPage(1);
+  };
+
+  const { data, isLoading, isError } = useQuery<PaginatedResponse<System>>({
+    queryKey: ["systems", page, limit, sortBy, sortOrder, search ?? "all"],
+    queryFn: () =>
+      getSystems({
+        page,
+        limit,
+        sortBy: sortBy as string | undefined,
+        sortOrder,
+        search,
+      }),
+    placeholderData: (prev) => prev,
   });
 
   const { mutate: removeSystem } = useMutation({
@@ -44,27 +74,39 @@ export default function GetSystemTable() {
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(
-        error?.response?.data?.message ?? "An unexpected error occurred"
+        error?.response?.data?.message ?? "An unexpected error occurred",
       );
     },
   });
+
+  const systems: System[] = data?.data ?? [];
+  const total = data?.meta?.total ?? 0;
+
   const columns: Column<System>[] = [
     {
       header: "Name",
-      cell: (row: System) => <div className="font-medium">{row.name}</div>,
+      accessor: "name",
+      sortable: true,
+      cell: (row) => (
+        <div className="font-medium text-gray-800 dark:text-white/90">
+          {row.name}
+        </div>
+      ),
     },
     {
       header: "Description",
-      cell: (row: System) => <div className="text-sm">{row.description}</div>,
+      cell: (row) => (
+        <div className="text-sm text-gray-600 dark:text-gray-400">
+          {row.description}
+        </div>
+      ),
     },
     {
       header: "Components",
-      cell: (row: System) => (
+      cell: (row) => (
         <div className="flex flex-wrap gap-2">
-          {row.components && row.components.length > 0 ? (
-            row.components.map((component) => (
-              <Chip key={component.id} label={component.name} />
-            ))
+          {row.components?.length ? (
+            row.components.map((c) => <Chip key={c.id} label={c.name} />)
           ) : (
             <span className="text-sm text-gray-400">—</span>
           )}
@@ -74,7 +116,7 @@ export default function GetSystemTable() {
     {
       header: "Action",
       align: "center",
-      cell: (row: System) => (
+      cell: (row) => (
         <div className="flex items-center justify-center gap-3">
           <IconEdit
             size={18}
@@ -83,11 +125,7 @@ export default function GetSystemTable() {
           />
           <IconTrash
             size={18}
-            onClick={() => {
-              if (confirm("Delete component?")) {
-                removeSystem(row.id);
-              }
-            }}
+            onClick={() => confirm("Delete system?") && removeSystem(row.id)}
             className="cursor-pointer text-red-600 dark:text-red-400"
           />
         </div>
@@ -96,13 +134,57 @@ export default function GetSystemTable() {
   ];
 
   return (
-    <div className="space-y-4">
-      <DataTable
-        columns={columns}
-        data={systems}
-        isLoading={isLoading}
-        isError={isError}
-      />
-    </div>
+    <>
+      {!isLoading && systems.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
+            No systems found
+          </p>
+          {search && (
+            <p className="mt-1 text-sm text-gray-500">
+              No results matching{" "}
+              <span className="font-medium">"{search}"</span>
+            </p>
+          )}
+        </div>
+      ) : (
+        <DataTable
+          columns={columns}
+          data={systems}
+          isLoading={isLoading}
+          isError={isError}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSort={handleSort}
+        />
+      )}
+
+      {systems.length > 0 && (
+        <div className="mt-4 flex items-center justify-between">
+          <span className="text-sm text-gray-500">
+            Showing {(page - 1) * limit + 1} – {Math.min(page * limit, total)}{" "}
+            of {total}
+          </span>
+
+          <div className="flex gap-2">
+            <button
+              disabled={page === 1}
+              onClick={() => setPage((p) => p - 1)}
+              className="rounded border px-3 py-1 text-sm disabled:opacity-50"
+            >
+              Prev
+            </button>
+
+            <button
+              disabled={page * limit >= total}
+              onClick={() => setPage((p) => p + 1)}
+              className="rounded border px-3 py-1 text-sm disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

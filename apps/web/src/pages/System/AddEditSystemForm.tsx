@@ -1,16 +1,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
+import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
 
-import type { AxiosError } from "axios";
-import { Controller } from "react-hook-form";
-import toast from "react-hot-toast";
 import { getComponents, getSystemById } from "../../api/get";
 import { addSystem } from "../../api/post";
 import { updateSystem } from "../../api/put";
+
+import type { AxiosError } from "axios";
+import type { PaginatedResponse } from "../../api/types";
 import Input from "../../components/form/input/InputField";
 import MultiSelect from "../../components/form/MultiSelect";
 
@@ -44,30 +45,39 @@ export default function AddEditSystemForm() {
     },
   });
 
-  const { data: componentsData = [] } = useQuery({
+  const { data: componentsData, isLoading: componentsLoading } = useQuery<
+    PaginatedResponse<any>
+  >({
     queryKey: ["components"],
-    queryFn: getComponents,
+    queryFn: () =>
+      getComponents({
+        page: 1,
+        limit: 100,
+      }),
   });
-  const componentOptions = componentsData.map((c: any) => ({
-    value: c.id,
+
+  const componentList = componentsData?.data ?? [];
+
+  const componentOptions = componentList.map((c: any) => ({
+    value: String(c.id),
     text: c.name,
   }));
 
-  const { data, isLoading } = useQuery({
+  const { data: systemData, isLoading: systemLoading } = useQuery({
     queryKey: ["system", id],
     queryFn: () => getSystemById(id!),
     enabled: isEdit,
   });
 
   useEffect(() => {
-    if (data) {
+    if (systemData) {
       reset({
-        name: data.name,
-        description: data.description,
-        components: data.components?.map((c: any) => c.id) ?? [],
+        name: systemData.name ?? "",
+        description: systemData.description ?? "",
+        components: systemData.components?.map((c: any) => String(c.id)) ?? [],
       });
     }
-  }, [data, reset]);
+  }, [systemData, reset]);
 
   const saveMutation = useMutation({
     mutationFn: (payload: SystemFormData) =>
@@ -75,9 +85,9 @@ export default function AddEditSystemForm() {
 
     onSuccess: (res) => {
       toast.success(
-        res?.message ?? isEdit
+        (res?.message ?? isEdit)
           ? "System updated successfully"
-          : "System added successfully"
+          : "System added successfully",
       );
       queryClient.invalidateQueries({ queryKey: ["systems"] });
       navigate("/systems");
@@ -86,7 +96,7 @@ export default function AddEditSystemForm() {
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(
         error?.response?.data?.message ??
-          "Something went wrong. Please try again."
+          "Something went wrong. Please try again.",
       );
     },
   });
@@ -95,23 +105,19 @@ export default function AddEditSystemForm() {
     saveMutation.mutate(formData);
   };
 
-  if (isEdit && isLoading) {
-    return (
-      <div className="p-6 text-gray-500 dark:text-gray-400">
-        Loading system...
-      </div>
-    );
+  if (componentsLoading || (isEdit && systemLoading)) {
+    return <div className="p-6 text-gray-500">Loading...</div>;
   }
 
   return (
     <form
       noValidate
-      className="space-y-8 text-gray-900 dark:text-gray-100"
       onSubmit={handleSubmit(onSubmit)}
+      className="space-y-8 text-gray-900 dark:text-gray-100"
     >
       <div className="rounded-xl border bg-white p-6 dark:bg-gray-900 dark:border-gray-700 space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
+          <h2 className="text-lg font-semibold">
             {isEdit ? "Edit System" : "Add System"}
           </h2>
 
@@ -129,8 +135,8 @@ export default function AddEditSystemForm() {
           <div className="space-y-6">
             <Input
               required
-              placeholder="Enter system name"
               label="System Name"
+              placeholder="Enter system name"
               {...register("name")}
               error={!!errors.name}
               hint={errors.name?.message}
@@ -144,10 +150,10 @@ export default function AddEditSystemForm() {
                 <MultiSelect
                   label="Components"
                   options={componentOptions}
-                  value={field.value}
+                  value={field.value ?? []}
                   onChange={field.onChange}
-                  placeholder="Select components"
                   onBlur={field.onBlur}
+                  placeholder="Select components"
                   required
                   error={!!errors.components}
                   hint={errors.components?.message}
@@ -159,8 +165,8 @@ export default function AddEditSystemForm() {
           <div>
             <Input
               required
-              placeholder="Description"
               label="Description"
+              placeholder="Enter description"
               {...register("description")}
               error={!!errors.description}
               hint={errors.description?.message}

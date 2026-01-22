@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
@@ -45,7 +45,9 @@ export default function AddEditPayrollForm() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const currentMonthName = new Intl.DateTimeFormat("en-US", { month: "long" })
+  const currentMonthName = new Intl.DateTimeFormat("en-US", {
+    month: "long",
+  })
     .format(new Date())
     .toUpperCase();
 
@@ -66,10 +68,16 @@ export default function AddEditPayrollForm() {
     },
   });
 
-  const { data: employees = [] } = useQuery({
-    queryKey: ["employees"],
-    queryFn: getEmployees,
+  const { data: employeesData } = useQuery({
+    queryKey: ["employees", "all"],
+    queryFn: () =>
+      getEmployees({
+        page: 1,
+        limit: 100,
+      }),
   });
+
+  const employeeList = employeesData?.data ?? [];
 
   const { data: payrollData, isLoading } = useQuery({
     queryKey: ["payroll", id],
@@ -99,7 +107,7 @@ export default function AddEditPayrollForm() {
         res?.message ??
           (isEdit
             ? "Payroll updated successfully"
-            : "Payroll added successfully")
+            : "Payroll added successfully"),
       );
       queryClient.invalidateQueries({ queryKey: ["payrolls"] });
       navigate("/payrolls");
@@ -110,7 +118,7 @@ export default function AddEditPayrollForm() {
     },
   });
 
-  const onSubmit = (formData: FormData) => {
+  const onSubmit: SubmitHandler<FormData> = (formData) => {
     saveMutation.mutate(formData);
   };
 
@@ -120,21 +128,25 @@ export default function AddEditPayrollForm() {
 
   return (
     <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div className="rounded-xl border bg-white p-6 dark:bg-gray-900 dark:border-gray-700">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
-            {isEdit ? "Edit Payroll" : "Add Payroll"}
-          </h2>
+      <div className="flex justify-end">
+        <button
+          type="submit"
+          disabled={saveMutation.isPending}
+          className="rounded-lg bg-black px-4 py-2 text-white
+                     dark:bg-white dark:text-black disabled:opacity-50"
+        >
+          {saveMutation.isPending
+            ? "Saving..."
+            : isEdit
+              ? "Update Payroll"
+              : "Add Payroll"}
+        </button>
+      </div>
 
-          <button
-            type="submit"
-            disabled={saveMutation.isPending}
-            className="rounded-lg bg-black px-4 py-2 text-white
-                       dark:bg-white dark:text-black disabled:opacity-50"
-          >
-            {saveMutation.isPending ? "Saving..." : isEdit ? "Update" : "Add"}
-          </button>
-        </div>
+      <div className="rounded-xl border bg-white p-6 dark:bg-gray-900 dark:border-gray-700">
+        <h2 className="mb-6 text-lg font-semibold">
+          {isEdit ? "Edit Payroll" : "Add Payroll"}
+        </h2>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Controller
@@ -143,9 +155,9 @@ export default function AddEditPayrollForm() {
             render={({ field }) => (
               <Select
                 label="Employee"
-                options={employees.map((e: any) => ({
-                  label: `${e.firstName} ${e.lastName}`,
-                  value: e.id,
+                options={employeeList.map((emp: any) => ({
+                  label: `${emp.firstName} ${emp.lastName}`,
+                  value: emp.id,
                 }))}
                 value={field.value}
                 onChange={field.onChange}

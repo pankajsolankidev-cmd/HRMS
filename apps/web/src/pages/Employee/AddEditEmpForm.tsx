@@ -1,15 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { AxiosError } from "axios";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
 
-import { getEmployeeById, getSystems } from "../../api/get";
+import { getEmployeeById, getPositions, getSystems } from "../../api/get";
 import { addEmployee } from "../../api/post";
 import { updateEmployee } from "../../api/put";
 
-import type { AxiosError } from "axios";
 import toast from "react-hot-toast";
 import DatePicker from "../../components/form/date-picker";
 import Checkbox from "../../components/form/input/Checkbox";
@@ -20,7 +20,7 @@ export type EmployeePayload = {
   firstName: string;
   lastName: string;
   email: string;
-  position: string;
+  positionId: string;
   joiningDate: string;
 
   departmentId?: string | null;
@@ -42,11 +42,8 @@ export type EmployeePayload = {
 const employeeSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  email: z
-    .email({ message: "Invalid email address" })
-    .min(1, "Email is required"),
-
-  position: z.string().min(1, "Position is required"),
+  email: z.string().email("Invalid email address"),
+  positionId: z.string().min(1, "Position is required"),
   joiningDate: z.string().min(1, "Joining date is required"),
 
   departmentId: z.string().nullable().optional(),
@@ -64,12 +61,15 @@ const employeeSchema = z.object({
     welcomewithSlack: z.boolean(),
   }),
 });
+
 type EmployeeFormValues = z.infer<typeof employeeSchema>;
 
 const AddEmpForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditMode = Boolean(id && id !== "new");
+
+  const queryClient = useQueryClient();
 
   const {
     control,
@@ -92,14 +92,23 @@ const AddEmpForm = () => {
     },
   });
 
-  const { data: systems = [] } = useQuery({
+  const { data: systems } = useQuery({
     queryKey: ["systems"],
-    queryFn: getSystems,
+    queryFn: () =>
+      getSystems({
+        page: 1,
+        limit: 100,
+      }),
   });
-  const systemOptions = systems.map((s: any) => ({
-    value: s.id,
-    label: s.name,
-  }));
+
+  const { data: positions } = useQuery({
+    queryKey: ["positions"],
+    queryFn: () =>
+      getPositions({
+        page: 1,
+        limit: 100,
+      }),
+  });
 
   const { data: employeeData } = useQuery({
     queryKey: ["employee", id],
@@ -107,13 +116,35 @@ const AddEmpForm = () => {
     enabled: isEditMode,
   });
 
+  const positionOptions = (Array.isArray(positions) ? positions : []).map(
+    (p: any) => ({
+      value: p.id,
+      label: p.name,
+    }),
+  );
+
+  const systemOptions = (systems?.data ?? []).map((s: any) => ({
+    value: s.id,
+    label: s.name,
+  }));
+
+  const departmentOptions = [
+    { value: "1", label: "HR" },
+    { value: "2", label: "Engineering" },
+  ];
+
+  const managerOptions = [
+    { value: "10", label: "John Manager" },
+    { value: "11", label: "Jane Manager" },
+  ];
+
   useEffect(() => {
     if (!isEditMode) {
       reset({
         firstName: "",
         lastName: "",
         email: "",
-        position: "",
+        positionId: "",
         joiningDate: "",
         departmentId: null,
         managerId: null,
@@ -137,7 +168,7 @@ const AddEmpForm = () => {
       firstName: employeeData.firstName ?? "",
       lastName: employeeData.lastName ?? "",
       email: employeeData.email ?? "",
-      position: employeeData.position ?? "",
+      positionId: employeeData.positionId ?? "",
       joiningDate: employeeData.joiningDate ?? "",
       departmentId: null,
       managerId: employeeData.managerId ?? null,
@@ -155,8 +186,6 @@ const AddEmpForm = () => {
       },
     });
   }, [isEditMode, employeeData, reset]);
-
-  const queryClient = useQueryClient();
 
   const addMutation = useMutation({
     mutationFn: addEmployee,
@@ -177,8 +206,8 @@ const AddEmpForm = () => {
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       navigate("/employees");
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Fill proper value");
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error?.response?.data?.message ?? "Fill proper value");
     },
   });
 
@@ -190,16 +219,6 @@ const AddEmpForm = () => {
       addMutation.mutate(payload);
     }
   };
-
-  const departmentOptions = [
-    { value: "1", label: "HR" },
-    { value: "2", label: "Engineering" },
-  ];
-
-  const managerOptions = [
-    { value: "10", label: "John Manager" },
-    { value: "11", label: "Jane Manager" },
-  ];
 
   return (
     <form
@@ -220,8 +239,8 @@ const AddEmpForm = () => {
             {addMutation.isPending || updateMutation.isPending
               ? "Saving..."
               : isEditMode
-              ? "Update"
-              : "Add"}
+                ? "Update"
+                : "Add"}
           </button>
         </div>
 
@@ -254,13 +273,17 @@ const AddEmpForm = () => {
               hint={errors.email?.message}
             />
 
-            <Input
-              label="Position"
-              placeholder="Enter position"
-              required
-              {...register("position")}
-              error={!!errors.position}
-              hint={errors.position?.message}
+            <Controller
+              name="positionId"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Position"
+                  options={positionOptions}
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                />
+              )}
             />
 
             <Controller
@@ -284,11 +307,14 @@ const AddEmpForm = () => {
                 <DatePicker
                   id="joiningDate"
                   label="Joining Date"
-                  defaultDate={field.value}
-                  onChange={(dates) =>
-                    dates?.[0] &&
-                    field.onChange(dates[0].toISOString().split("T")[0])
-                  }
+                  value={field.value ? new Date(field.value) : null}
+                  onChange={(dates) => {
+                    if (dates?.[0]) {
+                      field.onChange(dates[0].toLocaleDateString("en-CA"));
+                    } else {
+                      field.onChange("");
+                    }
+                  }}
                   required
                   error={!!fieldState.error}
                   hint={fieldState.error?.message}
@@ -326,7 +352,6 @@ const AddEmpForm = () => {
                   />
                 )}
               />
-
               <Controller
                 name="documents.generateAppointmentLetter"
                 control={control}
@@ -343,7 +368,6 @@ const AddEmpForm = () => {
 
           <div className="rounded-xl border bg-white p-6 dark:bg-gray-900">
             <h2 className="mb-4 text-lg font-semibold">System Allocation</h2>
-
             <Controller
               name="systemId"
               control={control}
@@ -372,7 +396,6 @@ const AddEmpForm = () => {
                   />
                 )}
               />
-
               <Controller
                 name="welcome.welcomewithWhatsapp"
                 control={control}
@@ -384,7 +407,6 @@ const AddEmpForm = () => {
                   />
                 )}
               />
-
               <Controller
                 name="welcome.welcomewithSlack"
                 control={control}
