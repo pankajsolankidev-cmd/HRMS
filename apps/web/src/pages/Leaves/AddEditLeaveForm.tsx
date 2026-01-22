@@ -118,7 +118,6 @@ export default function AddEditExpenseForm() {
 
       saveMutation.mutate(payload);
     } catch (error) {
-      console.error("Expense submit failed:", error);
       toast.error("File upload failed. Please try again.");
     }
   };

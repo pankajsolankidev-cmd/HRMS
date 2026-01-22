@@ -55,7 +55,6 @@ export default function AddEditExpenseForm() {
     resolver: zodResolver(expenseSchema),
     defaultValues: {
       expenseType: "",
-      amount: 0,
       expenseDate: "",
       description: "",
       file: null,
@@ -119,7 +118,6 @@ export default function AddEditExpenseForm() {
 
       saveMutation.mutate(payload);
     } catch (error) {
-      console.error("Expense submit failed:", error);
       toast.error("File upload failed. Please try again.");
     }
   };
@@ -165,6 +163,7 @@ export default function AddEditExpenseForm() {
             label="Amount"
             type="number"
             step="0.01"
+            placeholder="0.00"
             {...register("amount", { valueAsNumber: true })}
             error={!!errors.amount}
             hint={errors.amount?.message}

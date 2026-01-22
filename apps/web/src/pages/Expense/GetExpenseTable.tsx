@@ -105,7 +105,6 @@ export default function GetExpenseTable({ search }: Props) {
     {
       header: "Date",
       accessor: "expenseDate",
-      sortable: true,
       cell: (row) => (
         <span className="text-gray-600 dark:text-gray-400">
           {new Date(row.expenseDate).toLocaleDateString()}
