@@ -47,7 +47,7 @@ export default function ExpenseSummary() {
         <button
           onClick={() => setRun(true)}
           disabled={isFetching || !fromDate || !toDate}
-          className="h-[42px] rounded-lg bg-black px-6 text-sm text-white
+          className="h-[45px] rounded-lg bg-black px-6 text-sm text-white
                      disabled:opacity-50 dark:bg-white dark:text-black"
         >
           {isFetching ? "Fetching..." : "View Summary"}

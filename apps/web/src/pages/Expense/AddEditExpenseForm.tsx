@@ -16,13 +16,15 @@ import { addExpense, uploadFile } from "../../api/post";
 import { updateExpense } from "../../api/put";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_AMOUNT = 1_000_000;
 
 const expenseSchema = z.object({
   expenseType: z.string().min(1, "Expense type is required"),
   amount: z
     .number()
     .refine((val) => !isNaN(val), "Amount is required")
-    .positive("Amount must be greater than 0"),
+    .positive("Amount must be greater than 0")
+    .max(MAX_AMOUNT, "Amount is too large"),
   expenseDate: z.string().min(1, "Expense date is required"),
   description: z.string().optional(),
   file: z
@@ -83,9 +85,11 @@ export default function AddEditExpenseForm() {
     mutationFn: (payload: any) =>
       isEdit ? updateExpense({ id: id!, payload }) : addExpense(payload),
 
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast.success(
-        isEdit ? "Expense updated successfully" : "Expense added successfully",
+        (data.message ?? isEdit)
+          ? "Expense updated successfully"
+          : "Expense added successfully",
       );
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
       navigate("/expenses");
@@ -93,7 +97,7 @@ export default function AddEditExpenseForm() {
 
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(
-        error?.response?.data?.message ||
+        error?.response?.data?.message ??
           "Something went wrong. Please try again.",
       );
     },
