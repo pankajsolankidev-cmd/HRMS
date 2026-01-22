@@ -6,7 +6,7 @@ import AddEditSystemForm from "../System/AddEditSystemForm";
 
 export default function AddEditSystem() {
   const { id } = useParams();
-  const isEditMode = Boolean(id && id!="new");
+  const isEditMode = Boolean(id && id != "new");
 
   return (
     <div className="dark:bg-gray-900">
@@ -16,18 +16,14 @@ export default function AddEditSystem() {
             ? "Edit Employee | TailAdmin - React Dashboard"
             : "Add Employee | TailAdmin - React Dashboard"
         }
-        description={
-          isEditMode ? "Edit System details" : "Add a new System"
-        }
+        description={isEditMode ? "Edit System details" : "Add a new System"}
       />
 
       <div className="space-y-6 dark:bg-gray-800">
-        <ComponentCard title={isEditMode ? "Edit System" : "Add System"}
-        
-        >
+        <ComponentCard title={isEditMode ? "Edit System" : "Add System"}>
           <AddEditSystemForm />
         </ComponentCard>
       </div>
-      </div>
+    </div>
   );
 }

@@ -1,22 +1,17 @@
 import { AnimatePresence } from "framer-motion";
 import {
+  Navigate,
   Route,
   BrowserRouter as Router,
   Routes,
   useLocation,
 } from "react-router";
 
-import ForgetPassword from "./components/auth/ForgetPassword";
-import ResetPassword from "./components/auth/ResetPassword";
-import SignInForm from "./components/auth/SignInForm";
-import SignUpForm from "./components/auth/SignUpForm";
-
 import AppLayout from "./layout/AppLayout";
-import AuthLayout from "./pages/AuthPages/AuthPageLayout";
+import AuthLayout from "./layout/AuthPageLayout";
 
 import Home from "./pages/Dashboard/Home";
 import NotFound from "./pages/OtherPage/NotFound";
-import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
 import PublicRoute from "./pages/OtherPage/PublicRoute";
 
 import AddEmployee from "./pages/EmployeeTable/AddEditEmployee";
@@ -42,7 +37,12 @@ import Leave from "./pages/LeaveTable/Leave";
 import { Toaster } from "react-hot-toast";
 import AddEditExpense from "./pages/ExpenseTable/AddEditExpense";
 import Expense from "./pages/ExpenseTable/Expense";
+import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
 import RootRedirect from "./pages/OtherPage/RootRedirect";
+import ForgetPassword from "./pages/auth/ForgetPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
+import SignInForm from "./pages/auth/SignInForm";
+import SignUpForm from "./pages/auth/SignUpForm";
 
 function AppRoutes() {
   return (
@@ -51,7 +51,7 @@ function AppRoutes() {
 
       <Route element={<PublicRoute />}>
         <Route element={<AuthLayout />}>
-          <Route path="/" element={<SignInForm />} />
+          <Route path="/" element={<Navigate to="/signin" replace />} />
           <Route path="/signin" element={<SignInForm />} />
           <Route path="/signup" element={<SignUpForm />} />
           <Route path="/forgot-password" element={<ForgetPassword />} />

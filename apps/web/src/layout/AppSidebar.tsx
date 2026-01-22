@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
+import GridIcon from "../assets/icons/grid.svg?react";
+import HorizontaLDots from "../assets/icons/horizontal-dots.svg?react";
 import { useSidebar } from "../context/SidebarContext";
-import GridIcon from "../icons/grid.svg?react";
-import HorizontaLDots from "../icons/horizontal-dots.svg?react";
 
 import {
   CalendarIcon,
@@ -78,13 +78,13 @@ const AppSidebar: React.FC = () => {
   } | null>(null);
 
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
-    {}
+    {},
   );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const isActive = useCallback(
     (path: string) => location.pathname === path,
-    [location.pathname]
+    [location.pathname],
   );
 
   useEffect(() => {
@@ -104,7 +104,7 @@ const AppSidebar: React.FC = () => {
     setOpenSubmenu((prev) =>
       prev && prev.type === menuType && prev.index === index
         ? null
-        : { type: menuType, index }
+        : { type: menuType, index },
     );
   };
 

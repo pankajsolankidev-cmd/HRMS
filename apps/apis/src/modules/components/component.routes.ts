@@ -16,10 +16,12 @@ import {
 } from "./component.schema";
 
 import { verifyAccessToken } from "../../middlewares/auth.middlewares";
+import { authorize } from "../../middlewares/authorize.middleware";
+import { PERMISSIONS } from "../../db/schema/permissions.enums";
 
 export default async function componentRoutes(app: FastifyInstance) {
   const secured = {
-    preHandler: verifyAccessToken,
+    preHandler: [verifyAccessToken],
     schema: {
       security: [{ bearerAuth: [] }],
     },
@@ -29,54 +31,59 @@ export default async function componentRoutes(app: FastifyInstance) {
     "/components",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.COMPONENT_CREATE)],
       schema: {
         ...secured.schema,
         ...createComponentSchema,
       },
     },
-    createComponentHandler
+    createComponentHandler,
   );
 
   app.get(
     "/components",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.COMPONENT_VIEW)],
       schema: {
         ...secured.schema,
         ...getComponentsSchema,
       },
     },
-    getComponentsHandler
+    getComponentsHandler,
   );
 
   app.get(
     "/components/:id",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.COMPONENT_VIEW)],
       schema: {
         ...secured.schema,
         ...getComponentByIdSchema,
       },
     },
-    getComponentByIdHandler
+    getComponentByIdHandler,
   );
 
   app.put(
     "/components/:id",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.COMPONENT_UPDATE)],
       schema: {
         ...secured.schema,
         ...updateComponentSchema,
       },
     },
-    updateComponentHandler
+    updateComponentHandler,
   );
 
   app.delete(
     "/components/:id",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.COMPONENT_DELETE)],
       schema: {
         ...secured.schema,
         tags: ["Components"],
@@ -89,6 +96,6 @@ export default async function componentRoutes(app: FastifyInstance) {
         },
       },
     },
-    deleteComponentHandler
+    deleteComponentHandler,
   );
 }

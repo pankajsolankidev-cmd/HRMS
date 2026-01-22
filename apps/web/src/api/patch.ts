@@ -1,7 +1,7 @@
 import api from "./axios";
 
 export const updateSalaryStructure = async (id: string, payload: any) => {
-  const res = await api.patch(`/salary/${id}`, payload);
+  const res = await api.put(`/salary/${id}`, payload);
   return res.data;
 };
 
