@@ -17,13 +17,18 @@ import {
 } from "./leave-request.schema";
 
 import { authenticate } from "../../plugins/auth.plugin";
+import { authorize } from "../../middlewares/authorize.middleware";
+import { PERMISSIONS } from "../../db/schema/permissions.enums";
 
 export default async function leaveRequestRoutes(app: FastifyInstance) {
   app.post(
     "/leave-requests",
     {
       schema: createLeaveRequestSchema,
-      preHandler: authenticate,
+      preHandler: [
+        authenticate,
+        authorize(PERMISSIONS.LEAVE_CREATE),
+      ],
     },
     createLeaveRequestHandler
   );
@@ -32,7 +37,10 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
     "/leave-requests/me",
     {
       schema: getMyLeaveRequestsSchema,
-      preHandler: authenticate,
+      preHandler: [
+        authenticate,
+        authorize(PERMISSIONS.LEAVE_VIEW_OWN),
+      ],
     },
     getMyLeaveRequestsHandler
   );
@@ -41,7 +49,10 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
     "/leave-requests/:id",
     {
       schema: getLeaveRequestByIdSchema,
-      preHandler: authenticate,
+      preHandler: [
+        authenticate,
+        authorize(PERMISSIONS.LEAVE_VIEW_OWN),
+      ],
     },
     getLeaveRequestByIdHandler
   );
@@ -50,7 +61,10 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
     "/leave-requests/:id",
     {
       schema: updateLeaveRequestSchema,
-      preHandler: authenticate,
+      preHandler: [
+        authenticate,
+        authorize(PERMISSIONS.LEAVE_UPDATE),
+      ],
     },
     updateLeaveRequestHandler
   );
@@ -59,7 +73,10 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
     "/leave-requests/:id",
     {
       schema: deleteLeaveRequestSchema,
-      preHandler: authenticate,
+      preHandler: [
+        authenticate,
+        authorize(PERMISSIONS.LEAVE_DELETE),
+      ],
     },
     deleteLeaveRequestHandler
   );

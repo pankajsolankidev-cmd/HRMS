@@ -19,59 +19,64 @@ import {
 } from "./payroll.schema";
 
 import { verifyAccessToken } from "../../middlewares/auth.middlewares";
+import { authorize } from "../../middlewares/authorize.middleware";
+import { PERMISSIONS } from "../../db/schema/permissions.enums";
 
 export async function payrollRoutes(app: FastifyInstance) {
   app.post(
     "/payrolls/process",
     {
       schema: processPayrollSchema,
-      preHandler: verifyAccessToken,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.PAYROLL_PROCESS)],
     },
-    processPayrollHandler
+    processPayrollHandler,
   );
 
   app.get(
     "/payrolls",
     {
       schema: getPayrollsSchema,
-      preHandler: verifyAccessToken,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.PAYROLL_VIEW)],
     },
-    getPayrollsHandler
+    getPayrollsHandler,
   );
 
   app.get(
     "/payrolls/:id",
     {
       schema: getPayrollByIdSchema,
-      preHandler: verifyAccessToken,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.PAYROLL_VIEW)],
     },
-    getPayrollByIdHandler
+    getPayrollByIdHandler,
   );
 
   app.patch(
     "/payrolls/:id",
     {
       schema: updatePayrollSchema,
-      preHandler: verifyAccessToken,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.PAYROLL_UPDATE)],
     },
-    updatePayrollHandler
+    updatePayrollHandler,
   );
 
   app.delete(
     "/payrolls/:id",
     {
       schema: deletePayrollSchema,
-      preHandler: verifyAccessToken,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.PAYROLL_DELETE)],
     },
-    deletePayrollHandler
+    deletePayrollHandler,
   );
 
   app.get(
     "/payrolls/summary",
     {
       schema: payrollSummarySchema,
-      preHandler: verifyAccessToken,
+      preHandler: [
+        verifyAccessToken,
+        authorize(PERMISSIONS.PAYROLL_VIEW_SUMMARY),
+      ],
     },
-    getPayrollSummaryHandler
+    getPayrollSummaryHandler,
   );
 }

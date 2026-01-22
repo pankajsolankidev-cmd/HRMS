@@ -11,6 +11,7 @@ import {
 import { systems } from "./systems.schema";
 import { users } from "./users.schema";
 import { baseColumns } from "../base-columns";
+import { positions } from "./positions.schema";
 
 export const employees = pgTable("employees", {
   ...baseColumns,
@@ -18,15 +19,15 @@ export const employees = pgTable("employees", {
   lastName: varchar("last_name", { length: 100 }).notNull(),
   email: varchar("email", { length: 255 }).notNull(),
 
-  position: varchar("position", { length: 100 }).notNull(),
+  positionId: uuid("position_id").notNull().references(() => positions.id),
   departmentId: integer("department_id"),
   joiningDate: date("joining_date").notNull(),
 
   managerId: uuid("manager_id"),
 
-  welcomewithWhatsapp: boolean("welcomewith_whatsapp").default(false).notNull(),
-  welcomewithGmail: boolean("welcomewith_gmail").default(false).notNull(),
-  welcomewithSlack: boolean("welcomewith_slack").default(false).notNull(),
+  welcomeWithWhatsapp: boolean("welcomeWithWhatsapp").default(false).notNull(),
+  welcomeWithGmail: boolean("welcomeWithGmail").default(false).notNull(),
+  welcomeWithSlack: boolean("welcomeWithSlack").default(false).notNull(),
 
   systemId: uuid("system_id").references(() => systems.id),
 

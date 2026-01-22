@@ -15,7 +15,7 @@ export const createEmployeeSchema = {
       "firstName",
       "lastName",
       "email",
-      "position",
+      "positionId",
       "joiningDate",
       "welcome",
       "documents",
@@ -24,14 +24,15 @@ export const createEmployeeSchema = {
       firstName: { type: "string" },
       lastName: { type: "string" },
       email: { type: "string", format: "email" },
-      position: { type: "string" },
+
+      // ✅ changed
+      positionId: { type: "string", format: "uuid" },
 
       departmentId: { type: "number" },
       joiningDate: { type: "string", format: "date" },
 
-      managerId: { type: ["string", "null"] },
-      systemId: { type: ["string", "null"] },
-      userId: { type: ["string", "null"] },
+      managerId: { type: ["string", "null"], format: "uuid" },
+      systemId: { type: ["string", "null"], format: "uuid" },
 
       welcome: {
         type: "object",
@@ -76,6 +77,7 @@ export const createEmployeeSchema = {
   },
 };
 
+
 export const getEmployeesSchema = {
   tags: ["Employees"],
   querystring: {
@@ -118,7 +120,7 @@ export const updateEmployeeSchema = {
     type: "object",
     required: ["id"],
     properties: {
-      id: { type: "string" },
+      id: { type: "string", format: "uuid" },
     },
   },
 
@@ -127,10 +129,13 @@ export const updateEmployeeSchema = {
     properties: {
       firstName: { type: "string" },
       lastName: { type: "string" },
-      position: { type: "string" },
+
+      // ✅ changed
+      positionId: { type: "string", format: "uuid" },
+
       departmentId: { type: "number" },
-      managerId: { type: ["string", "null"] },
-      systemId: { type: ["string", "null"] },
+      managerId: { type: ["string", "null"], format: "uuid" },
+      systemId: { type: ["string", "null"], format: "uuid" },
 
       welcome: {
         type: "object",
@@ -166,6 +171,7 @@ export const updateEmployeeSchema = {
     500: errorResponse,
   },
 };
+
 
 export const deleteEmployeeSchema = {
   tags: ["Employees"],

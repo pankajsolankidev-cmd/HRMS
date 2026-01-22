@@ -3,13 +3,20 @@ import { eq, and, asc, desc, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 import { db } from "../../db";
-import { employees, documentGeneration, users } from "../../db/schema";
+import {
+  employees,
+  documentGeneration,
+  users,
+  userRoles,
+  roles,
+} from "../../db/schema";
 
 import type { CreateEmployeeDto } from "@shared/types/src/employee/employee.dto";
 import type { UpdateEmployeeDto } from "@shared/types/src/employee/update-employee.dto";
+import { ROLES } from "../../db/schema/roles.enums";
+import { positions } from "../../db/schema/positions.schema";
 
 import { sendMessage } from "../../utils/api-response";
-
 
 const DEFAULT_EMPLOYEE_PASSWORD: string = (() => {
   const pwd = process.env.DEFAULT_EMPLOYEE_PASSWORD;
@@ -19,10 +26,9 @@ const DEFAULT_EMPLOYEE_PASSWORD: string = (() => {
   return pwd;
 })();
 
-
 export async function createEmployeeHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const body = request.body as CreateEmployeeDto;
 
@@ -45,19 +51,46 @@ export async function createEmployeeHandler(
           firstName: body.firstName,
           lastName: body.lastName,
           email: body.email,
-          position: body.position,
+
+          positionId: body.positionId,
           departmentId: body.departmentId,
           joiningDate: body.joiningDate,
           managerId: body.managerId ?? null,
           systemId: body.systemId ?? null,
 
-          welcomewithWhatsapp: body.welcome.welcomewithWhatsapp,
-          welcomewithGmail: body.welcome.welcomewithGmail,
-          welcomewithSlack: body.welcome.welcomewithSlack,
+          welcomeWithWhatsapp: body.welcome.welcomewithWhatsapp,
+          welcomeWithGmail: body.welcome.welcomewithGmail,
+          welcomeWithSlack: body.welcome.welcomewithSlack,
 
           userId: user.id,
         })
         .returning({ id: employees.id });
+
+      const [position] = await tx
+        .select({ name: positions.name })
+        .from(positions)
+        .where(eq(positions.id, body.positionId));
+
+      if (!position) {
+        throw new Error("Invalid position");
+      }
+
+      const roleName =
+        position.name.toLowerCase() === "hr" ? ROLES.HR : ROLES.EMPLOYEE;
+
+      const [role] = await tx
+        .select({ id: roles.id })
+        .from(roles)
+        .where(eq(roles.name, roleName));
+
+      if (!role) {
+        throw new Error(`Role not found: ${roleName}`);
+      }
+
+      await tx.insert(userRoles).values({
+        userId: user.id,
+        roleId: role.id,
+      });
 
       await tx.insert(documentGeneration).values({
         employeeId: employee.id,
@@ -90,7 +123,6 @@ export async function createEmployeeHandler(
   }
 }
 
-
 export async function getEmployeesHandler(request: FastifyRequest) {
   const query = request.query as {
     search?: string;
@@ -108,7 +140,7 @@ export async function getEmployeesHandler(request: FastifyRequest) {
         ${employees.firstName} ILIKE ${`%${query.search}%`} OR
         ${employees.lastName} ILIKE ${`%${query.search}%`} OR
         ${employees.email} ILIKE ${`%${query.search}%`}
-      )`
+      )`,
     );
   }
 
@@ -127,7 +159,7 @@ export async function getEmployeesHandler(request: FastifyRequest) {
       firstName: employees.firstName,
       lastName: employees.lastName,
       email: employees.email,
-      position: employees.position,
+      positionId: employees.positionId,
       departmentId: employees.departmentId,
       joiningDate: employees.joiningDate,
       managerId: employees.managerId,
@@ -135,9 +167,9 @@ export async function getEmployeesHandler(request: FastifyRequest) {
       userId: employees.userId,
 
       welcome: {
-        welcomewithWhatsapp: employees.welcomewithWhatsapp,
-        welcomewithGmail: employees.welcomewithGmail,
-        welcomewithSlack: employees.welcomewithSlack,
+        welcomewithWhatsapp: employees.welcomeWithWhatsapp,
+        welcomewithGmail: employees.welcomeWithGmail,
+        welcomewithSlack: employees.welcomeWithSlack,
       },
 
       documents: {
@@ -148,7 +180,7 @@ export async function getEmployeesHandler(request: FastifyRequest) {
     .from(employees)
     .leftJoin(
       documentGeneration,
-      eq(documentGeneration.employeeId, employees.id)
+      eq(documentGeneration.employeeId, employees.id),
     )
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(order)
@@ -170,10 +202,9 @@ export async function getEmployeesHandler(request: FastifyRequest) {
   };
 }
 
-
 export async function getEmployeeByIdHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
 
@@ -183,7 +214,7 @@ export async function getEmployeeByIdHandler(
       firstName: employees.firstName,
       lastName: employees.lastName,
       email: employees.email,
-      position: employees.position,
+      positionId: employees.positionId,
       departmentId: employees.departmentId,
       joiningDate: employees.joiningDate,
       managerId: employees.managerId,
@@ -191,9 +222,9 @@ export async function getEmployeeByIdHandler(
       userId: employees.userId,
 
       welcome: {
-        welcomewithWhatsapp: employees.welcomewithWhatsapp,
-        welcomewithGmail: employees.welcomewithGmail,
-        welcomewithSlack: employees.welcomewithSlack,
+        welcomewithWhatsapp: employees.welcomeWithWhatsapp,
+        welcomewithGmail: employees.welcomeWithGmail,
+        welcomewithSlack: employees.welcomeWithSlack,
       },
 
       documents: {
@@ -204,7 +235,7 @@ export async function getEmployeeByIdHandler(
     .from(employees)
     .leftJoin(
       documentGeneration,
-      eq(documentGeneration.employeeId, employees.id)
+      eq(documentGeneration.employeeId, employees.id),
     )
     .where(eq(employees.id, id));
 
@@ -215,10 +246,9 @@ export async function getEmployeeByIdHandler(
   return rows[0];
 }
 
-
 export async function updateEmployeeHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
   const body = request.body as UpdateEmployeeDto;
@@ -227,14 +257,14 @@ export async function updateEmployeeHandler(
     const employeeUpdateData: Partial<typeof employees.$inferInsert> = {
       firstName: body.firstName,
       lastName: body.lastName,
-      position: body.position,
+      positionId: body.positionId,
       departmentId: body.departmentId,
       managerId: body.managerId,
       systemId: body.systemId,
 
-      welcomewithWhatsapp: body.welcome?.welcomewithWhatsapp,
-      welcomewithGmail: body.welcome?.welcomewithGmail,
-      welcomewithSlack: body.welcome?.welcomewithSlack,
+      welcomeWithWhatsapp: body.welcome?.welcomewithWhatsapp,
+      welcomeWithGmail: body.welcome?.welcomewithGmail,
+      welcomeWithSlack: body.welcome?.welcomewithSlack,
 
       updatedAt: new Date(),
     };
@@ -243,7 +273,7 @@ export async function updateEmployeeHandler(
       (key) =>
         employeeUpdateData[key as keyof typeof employeeUpdateData] ===
           undefined &&
-        delete employeeUpdateData[key as keyof typeof employeeUpdateData]
+        delete employeeUpdateData[key as keyof typeof employeeUpdateData],
     );
 
     const [result] = await tx
@@ -275,10 +305,9 @@ export async function updateEmployeeHandler(
   return sendMessage(reply, "Employee updated successfully");
 }
 
-
 export async function deleteEmployeeHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
 

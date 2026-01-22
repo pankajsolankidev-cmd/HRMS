@@ -9,6 +9,8 @@ import {
 } from "./employee.schema";
 
 import { verifyAccessToken } from "../../middlewares/auth.middlewares";
+import { authorize } from "../../middlewares/authorize.middleware";
+
 import {
   createEmployeeHandler,
   deleteEmployeeHandler,
@@ -17,9 +19,11 @@ import {
   updateEmployeeHandler,
 } from "./employee.service";
 
+import { PERMISSIONS } from "../../db/schema/permissions.enums";
+
 export default async function employeeRoutes(app: FastifyInstance) {
   const secured = {
-    preHandler: verifyAccessToken,
+    preHandler: [verifyAccessToken],
     schema: {
       security: [{ bearerAuth: [] }],
       tags: ["Employees"],
@@ -30,6 +34,7 @@ export default async function employeeRoutes(app: FastifyInstance) {
     "/employees",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.EMPLOYEE_CREATE)],
       schema: {
         ...secured.schema,
         ...createEmployeeSchema,
@@ -42,6 +47,7 @@ export default async function employeeRoutes(app: FastifyInstance) {
     "/employees",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.EMPLOYEE_VIEW)],
       schema: {
         ...secured.schema,
         ...getEmployeesSchema,
@@ -54,6 +60,7 @@ export default async function employeeRoutes(app: FastifyInstance) {
     "/employees/:id",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.EMPLOYEE_VIEW)],
       schema: {
         ...secured.schema,
         ...getEmployeeByIdSchema,
@@ -66,6 +73,7 @@ export default async function employeeRoutes(app: FastifyInstance) {
     "/employees/:id",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.EMPLOYEE_UPDATE)],
       schema: {
         ...secured.schema,
         ...updateEmployeeSchema,
@@ -78,6 +86,7 @@ export default async function employeeRoutes(app: FastifyInstance) {
     "/employees/:id",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.EMPLOYEE_DELETE)],
       schema: {
         ...secured.schema,
         ...deleteEmployeeSchema,

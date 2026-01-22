@@ -16,10 +16,12 @@ import {
 } from "./system.schema";
 
 import { verifyAccessToken } from "../../middlewares/auth.middlewares";
+import { authorize } from "../../middlewares/authorize.middleware";
+import { PERMISSIONS } from "../../db/schema/permissions.enums";
 
 export default async function systemRoutes(app: FastifyInstance) {
   const secured = {
-    preHandler: verifyAccessToken,
+    preHandler: [verifyAccessToken],
     schema: {
       security: [{ bearerAuth: [] }],
       tags: ["Systems"],
@@ -30,54 +32,59 @@ export default async function systemRoutes(app: FastifyInstance) {
     "/systems",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.SYSTEM_CREATE)],
       schema: {
         ...secured.schema,
         ...createSystemSchema,
       },
     },
-    createSystemHandler
+    createSystemHandler,
   );
 
   app.get(
     "/systems",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.SYSTEM_VIEW)],
       schema: {
         ...secured.schema,
         ...getSystemsSchema,
       },
     },
-    getSystemsHandler
+    getSystemsHandler,
   );
 
   app.get(
     "/systems/:id",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.SYSTEM_VIEW)],
       schema: {
         ...secured.schema,
         ...getSystemByIdSchema,
       },
     },
-    getSystemByIdHandler
+    getSystemByIdHandler,
   );
 
   app.put(
     "/systems/:id",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.SYSTEM_UPDATE)],
       schema: {
         ...secured.schema,
         ...updateSystemSchema,
       },
     },
-    updateSystemHandler
+    updateSystemHandler,
   );
 
   app.delete(
     "/systems/:id",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.SYSTEM_DELETE)],
       schema: {
         ...secured.schema,
         params: {
@@ -89,6 +96,6 @@ export default async function systemRoutes(app: FastifyInstance) {
         },
       },
     },
-    deleteSystemHandler
+    deleteSystemHandler,
   );
 }

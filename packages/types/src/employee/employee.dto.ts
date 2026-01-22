@@ -2,7 +2,7 @@ export interface CreateEmployeeDto {
   firstName: string;
   lastName: string;
   email: string;
-  position: string;
+  positionId: string;
 
   departmentId?: number;
   joiningDate: string;
