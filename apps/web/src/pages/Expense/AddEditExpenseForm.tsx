@@ -165,7 +165,7 @@ export default function AddEditExpenseForm() {
             label="Amount"
             type="number"
             step="0.01"
-            {...register("amount")}
+            {...register("amount", { valueAsNumber: true })}
             error={!!errors.amount}
             hint={errors.amount?.message}
           />
@@ -183,7 +183,7 @@ export default function AddEditExpenseForm() {
                   if (dates?.length) {
                     setValue(
                       "expenseDate",
-                      dates[0].toISOString().split("T")[0],
+                      dates[0].toLocaleDateString("en-CA"),
                       { shouldValidate: true },
                     );
                   }

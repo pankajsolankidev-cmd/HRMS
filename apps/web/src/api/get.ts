@@ -65,7 +65,6 @@ export const getPayrollSummary = async (month: string, year: number) => {
   const res = await api.get("/payrolls/summary", {
     params: { month, year },
   });
-  console.log(res.data);
   return res.data as {
     employeesProcessed: number;
     avgSalary: number;
