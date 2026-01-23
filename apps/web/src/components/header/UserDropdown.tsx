@@ -1,29 +1,30 @@
-import { useState } from "react";
-import { DropdownItem } from "../ui/dropdown/DropdownItem";
-import { Dropdown } from "../ui/dropdown/Dropdown";
-import { useNavigate } from "react-router";
+import { useMutation } from "@tanstack/react-query";
+import type { AxiosError } from "axios";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
-
+import { useState } from "react";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router";
+import { logoutUser } from "../../api/post";
+import { Dropdown } from "../ui/dropdown/Dropdown";
+import { DropdownItem } from "../ui/dropdown/DropdownItem";
 export default function UserDropdown() {
-
   type JwtUser = {
-  username:string;
-  email: string;
-};
+    username: string;
+    email: string;
+  };
 
-const token = Cookies.get("access");
+  const token = Cookies.get("access");
 
-let user: JwtUser | null = null;
+  let user: JwtUser | null = null;
 
-if (token) {
-  try {
-    user = jwtDecode<JwtUser>(token);
-  } catch {
-    user = null;
+  if (token) {
+    try {
+      user = jwtDecode<JwtUser>(token);
+    } catch {
+      user = null;
+    }
   }
-}
-
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -36,10 +37,34 @@ if (token) {
   }
   const navigate = useNavigate();
 
-  const handleLogout = () => {
+  const { mutate: logout } = useMutation({
+    mutationFn: logoutUser,
+    onSuccess: (data) => {
+      toast.success(data?.message ?? "Logged out successfully");
+      Cookies.remove("access");
+      Cookies.remove("refresh");
+      navigate("/signin");
+    },
 
-    Cookies.remove("access");  
-    navigate("/signin");
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error?.response?.data?.message ?? "Invalid credentials");
+      Cookies.remove("access");
+      Cookies.remove("refresh");
+      navigate("/signin");
+    },
+  });
+
+  const handleLogout = () => {
+    const refreshToken = Cookies.get("refresh");
+
+    if (!refreshToken) {
+      toast.success("Logged out");
+      Cookies.remove("access");
+      navigate("/signin");
+      return;
+    }
+
+    logout(refreshToken);
   };
 
   return (
@@ -52,7 +77,9 @@ if (token) {
           <img src="/images/user/owner.jpg" alt="User" />
         </span>
 
-        <span className="block mr-1 font-medium text-theme-sm">{user?.username ?? "User"}</span>
+        <span className="block mr-1 font-medium text-theme-sm">
+          {user?.username ?? "User"}
+        </span>
         <svg
           className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""
@@ -138,7 +165,6 @@ if (token) {
               Account settings
             </DropdownItem>
           </li>
-          
         </ul>
         <button
           onClick={handleLogout}

@@ -15,7 +15,12 @@ export const signUpApi = async (data: {
   const res = await api.post("/signup", data);
   return res.data;
 };
-
+export const logoutUser = async (refreshToken: string) => {
+  const res = await api.post("/auth/logout", {
+    refreshToken,
+  });
+  return res.data;
+};
 export const refreshToken = async () => {
   const refreshToken = Cookies.get("refresh");
 
