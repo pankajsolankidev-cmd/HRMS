@@ -44,6 +44,9 @@ export default function SignInForm() {
     mutationFn: signInApi,
     onSuccess: (res) => {
       const token = res.accessToken;
+      const refreshToken = res.refreshToken;
+
+      Cookies.set("refresh", refreshToken);
       Cookies.set("access", token);
 
       toast.success(res?.message ?? "Signed in successfully");

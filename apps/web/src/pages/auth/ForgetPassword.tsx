@@ -1,12 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import type { AxiosError } from "axios";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router";
-
-import type { AxiosError } from "axios";
 import { toast } from "react-hot-toast";
+import { Link, useNavigate } from "react-router";
 import { z } from "zod";
+
 import { forgetPassword } from "../../api/post";
 import Input from "../../components/form/input/InputField";
 
@@ -18,9 +18,8 @@ const forgetPasswordSchema = z.object({
 
 type ForgetPasswordFormData = z.infer<typeof forgetPasswordSchema>;
 
-const ForgetPassword = () => {
+export default function ForgetPassword() {
   const navigate = useNavigate();
-
   const [key, setKey] = useState<string | null>(null);
 
   const {
@@ -36,87 +35,71 @@ const ForgetPassword = () => {
     mutationFn: (data: ForgetPasswordFormData) => forgetPassword(data.email),
 
     onSuccess: (res) => {
-      toast.success(
-        res?.message ?? "Password reset link has been sent to your email"
-      );
-
+      toast.success(res?.message ?? "Password reset link sent to your email");
       reset();
-
-      if (res?.key) {
-        setKey(res.key);
-      }
+      if (res?.key) setKey(res.key);
     },
 
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(
-        error?.response?.data?.message ?? "Failed to send reset link"
+        error?.response?.data?.message ?? "Failed to send reset link",
       );
     },
   });
 
-  const onSubmit = (data: ForgetPasswordFormData) => {
-    mutation.mutate(data);
-  };
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
-        <h1 className="text-2xl font-semibold text-gray-800 dark:text-white mb-2">
-          Forgot Password
-        </h1>
+    <>
+      <h1 className="text-2xl font-semibold text-gray-800 dark:text-white">
+        Forgot Password
+      </h1>
 
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-          Enter your registered email and we’ll send you a reset link.
-        </p>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+        Enter your registered email and we’ll send you a reset link.
+      </p>
 
-        <form
-          className="space-y-5 dark:text-gray-400"
-          onSubmit={handleSubmit(onSubmit)}
+      <form
+        className="space-y-5 mt-8"
+        onSubmit={handleSubmit((data) => mutation.mutate(data))}
+      >
+        <Input
+          required
+          label="Email"
+          type="email"
+          placeholder="info@gmail.com"
+          {...register("email")}
+          error={!!errors.email}
+          hint={errors.email?.message}
+        />
+
+        <button
+          type="submit"
+          disabled={mutation.isPending}
+          className="w-full py-3 bg-black text-white rounded-lg disabled:opacity-50"
         >
-          <div>
-            <Input
-              required
-              label="Email"
-              type="email"
-              placeholder="info@gmail.com"
-              {...register("email")}
-              error={!!errors.email}
-              hint={errors.email?.message}
-            />
-          </div>
+          {mutation.isPending ? "Sending..." : "Send Reset Link"}
+        </button>
+      </form>
 
-          <button
-            type="submit"
-            disabled={mutation.isPending}
-            className="w-full py-3 bg-black text-white rounded-lg hover:opacity-90 transition disabled:opacity-50"
-          >
-            {mutation.isPending ? "Sending..." : "Send Reset Link"}
-          </button>
-        </form>
+      {key && (
+        <button
+          onClick={() => navigate(`/reset-password/${key}`)}
+          className="mt-4 w-full py-2 rounded-lg border text-sm
+            border-gray-300 text-gray-700
+            hover:bg-gray-100
+            dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+        >
+          Go to Reset Password
+        </button>
+      )}
 
-        {key && (
-          <button
-            onClick={() => navigate(`/reset-password/${key}`)}
-            className="mt-4 w-full py-2 rounded-lg border border-gray-300
-              text-sm font-medium text-gray-700
-              hover:bg-gray-100
-              dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-          >
-            Go to Reset Password Page
-          </button>
-        )}
-
-        <div className="mt-6 text-center">
-          <Link
-            to="/signin"
-            className="text-sm text-gray-600 dark:text-gray-400 hover:underline"
-          >
-            Back to Sign In
-          </Link>
-        </div>
+      <div className="mt-6 text-center">
+        <Link
+          to="/signin"
+          className="text-sm text-gray-600 dark:text-gray-400 hover:underline"
+        >
+          Back to Sign In
+        </Link>
       </div>
-    </div>
+    </>
   );
-};
-
-export default ForgetPassword;
+}

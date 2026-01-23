@@ -35,6 +35,7 @@ import AddEditLeave from "./pages/LeaveTable/AddEditLeave";
 import Leave from "./pages/LeaveTable/Leave";
 
 import { Toaster } from "react-hot-toast";
+import SmallAuthLayout from "./layout/SmallAuthLayout";
 import AddEditExpense from "./pages/ExpenseTable/AddEditExpense";
 import Expense from "./pages/ExpenseTable/Expense";
 import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
@@ -54,6 +55,8 @@ function AppRoutes() {
           <Route path="/" element={<Navigate to="/signin" replace />} />
           <Route path="/signin" element={<SignInForm />} />
           <Route path="/signup" element={<SignUpForm />} />
+        </Route>
+        <Route element={<SmallAuthLayout />}>
           <Route path="/forgot-password" element={<ForgetPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
         </Route>

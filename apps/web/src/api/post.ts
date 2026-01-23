@@ -1,5 +1,6 @@
+import Cookies from "js-cookie";
 import type { EmployeePayload } from "../pages/Employee/AddEditEmpForm";
-import api from "./axios";
+import api, { refreshApi } from "./axios";
 
 export const signInApi = async (data: { email: string; password: string }) => {
   const res = await api.post("/signin", data);
@@ -16,7 +17,12 @@ export const signUpApi = async (data: {
 };
 
 export const refreshToken = async () => {
-  const res = await api.post("/auth/refresh");
+  const refreshToken = Cookies.get("refresh");
+
+  const res = await refreshApi.post("/auth/refresh", {
+    refreshToken,
+  });
+
   return res.data;
 };
 
