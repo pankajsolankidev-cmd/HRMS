@@ -35,12 +35,14 @@ import AddEditLeave from "./pages/LeaveTable/AddEditLeave";
 import Leave from "./pages/LeaveTable/Leave";
 
 import { Toaster } from "react-hot-toast";
+import AddEditExpense from "./pages/ExpenseTable/AddEditExpense";
+import Expense from "./pages/ExpenseTable/Expense";
+import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
+import RootRedirect from "./pages/OtherPage/RootRedirect";
 import ForgetPassword from "./pages/auth/ForgetPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import SignInForm from "./pages/auth/SignInForm";
 import SignUpForm from "./pages/auth/SignUpForm";
-import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
-import RootRedirect from "./pages/OtherPage/RootRedirect";
 
 function AppRoutes() {
   return (
@@ -78,6 +80,9 @@ function AppRoutes() {
 
           <Route path="/leave-requests" element={<Leave />} />
           <Route path="/leave-requests/:id" element={<AddEditLeave />} />
+
+          <Route path="/expenses" element={<Expense />} />
+          <Route path="/expenses/:id" element={<AddEditExpense />} />
         </Route>
       </Route>
 

@@ -67,6 +67,17 @@ export const getPayrollById = async (id: string) => {
   return res.data;
 };
 
+export const getPayrollsByMonthYear = async (month: string, year: number) => {
+  const res = await api.get("/payrolls", {
+    params: {
+      month: month,
+      year: String(year),
+    },
+  });
+
+  return Array.isArray(res.data) ? res.data : [];
+};
+
 export const getPayrollSummary = async (month: string, year: number) => {
   const res = await api.get("/payrolls/summary", {
     params: { month, year },
@@ -89,4 +100,20 @@ export const getLeaves = async (params?: ListQueryParams) => {
 export const getLeaveById = async (id: string) => {
   const res = await api.get(`/leave-requests/${id}`);
   return res.data?.data ?? res.data;
+};
+
+export const getExpenses = async (params: ListQueryParams) => {
+  const res = await api.get<PaginatedResponse<any>>("/expenses", { params });
+
+  return res.data;
+};
+export const getExpenseById = async (id: string) => {
+  const res = await api.get(`/expenses/${id}`);
+  return res.data;
+};
+export const getExpenseSummary = async (fromDate: string, toDate: string) => {
+  const res = await api.get("/expenses/summary", {
+    params: { fromDate, toDate },
+  });
+  return res.data;
 };

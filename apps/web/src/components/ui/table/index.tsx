@@ -1,7 +1,4 @@
-import type {
-  ReactNode,
-  MouseEventHandler,
-} from "react";
+import type { MouseEventHandler, ReactNode } from "react";
 
 interface TableProps {
   children: ReactNode;
@@ -31,31 +28,18 @@ interface TableCellProps {
 }
 
 const Table: React.FC<TableProps> = ({ children, className }) => {
-  return (
-    <table className={`min-w-full ${className ?? ""}`}>
-      {children}
-    </table>
-  );
+  return <table className={`min-w-full ${className ?? ""}`}>{children}</table>;
 };
 
-const TableHeader: React.FC<TableHeaderProps> = ({
-  children,
-  className,
-}) => {
+const TableHeader: React.FC<TableHeaderProps> = ({ children, className }) => {
   return <thead className={className}>{children}</thead>;
 };
 
-const TableBody: React.FC<TableBodyProps> = ({
-  children,
-  className,
-}) => {
+const TableBody: React.FC<TableBodyProps> = ({ children, className }) => {
   return <tbody className={className}>{children}</tbody>;
 };
 
-const TableRow: React.FC<TableRowProps> = ({
-  children,
-  className,
-}) => {
+const TableRow: React.FC<TableRowProps> = ({ children, className }) => {
   return <tr className={className}>{children}</tr>;
 };
 
@@ -68,19 +52,10 @@ const TableCell: React.FC<TableCellProps> = ({
   const CellTag = isHeader ? "th" : "td";
 
   return (
-    <CellTag
-      className={className}
-      onClick={onClick}
-    >
+    <CellTag className={className} onClick={onClick}>
       {children}
     </CellTag>
   );
 };
 
-export {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableCell,
-};
+export { Table, TableBody, TableCell, TableHeader, TableRow };

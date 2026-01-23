@@ -11,7 +11,7 @@ import {
   PuzzlePieceIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
-import { IconReceiptRupee } from "@tabler/icons-react";
+import { IconReceiptRupee, IconWallet } from "@tabler/icons-react";
 
 type NavItem = {
   name: string;
@@ -61,6 +61,11 @@ const navItems: NavItem[] = [
     name: "Payrolls",
     path: "/payrolls",
   },
+  {
+    icon: <IconWallet />,
+    name: "Expenses",
+    path: "/expenses",
+  },
 ];
 
 const AppSidebar: React.FC = () => {
@@ -73,13 +78,13 @@ const AppSidebar: React.FC = () => {
   } | null>(null);
 
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
-    {}
+    {},
   );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const isActive = useCallback(
     (path: string) => location.pathname === path,
-    [location.pathname]
+    [location.pathname],
   );
 
   useEffect(() => {
@@ -99,7 +104,7 @@ const AppSidebar: React.FC = () => {
     setOpenSubmenu((prev) =>
       prev && prev.type === menuType && prev.index === index
         ? null
-        : { type: menuType, index }
+        : { type: menuType, index },
     );
   };
 
