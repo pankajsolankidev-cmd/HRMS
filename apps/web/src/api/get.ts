@@ -9,7 +9,6 @@ export const getEmployees = async (params: ListQueryParams) => {
 
 export const getEmployeeById = async (id: string) => {
   const res = await api.get(`/employees/${id}`);
-  console.log(res.data);
 
   return res.data;
 };
@@ -90,7 +89,7 @@ export const getPayrollSummary = async (month: string, year: number) => {
 };
 
 export const getLeaves = async (params?: ListQueryParams) => {
-  const res = await api.get<PaginatedResponse<any>>("/leave-requests/me", {
+  const res = await api.get<PaginatedResponse<any>>("/leave-requests", {
     params,
   });
 
