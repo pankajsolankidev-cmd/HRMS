@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { eq, desc, asc, and, ilike, sql } from "drizzle-orm";
+import { eq, desc, asc, and, ilike, sql, gte } from "drizzle-orm";
 
 import { db } from "../../db";
 import { employees } from "../../db/schema/employees.schema";
@@ -13,12 +13,36 @@ import {
 
 import { sendMessage } from "../../utils/api-response";
 
+/* ===========================
+   Helpers
+=========================== */
+function validateFutureDates(fromDate: string, toDate: string) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const from = new Date(fromDate);
+  const to = new Date(toDate);
+
+  if (from < today) {
+    throw new Error("From date must be today or a future date");
+  }
+
+  if (to < from) {
+    throw new Error("To date cannot be before from date");
+  }
+}
+
+/* ===========================
+   CREATE
+=========================== */
 export async function createLeaveRequestHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
   const userId = request.user!.id;
   const body = request.body as CreateLeaveRequestDto;
+
+  validateFutureDates(body.fromDate, body.toDate);
 
   const [employee] = await db
     .select({ id: employees.id })
@@ -43,6 +67,9 @@ export async function createLeaveRequestHandler(
   return sendMessage(reply, "Leave request created successfully", 201);
 }
 
+/* ===========================
+   GET MY LEAVES
+=========================== */
 export async function getMyLeaveRequestsHandler(request: FastifyRequest) {
   const userId = request.user!.id;
 
@@ -113,6 +140,71 @@ export async function getMyLeaveRequestsHandler(request: FastifyRequest) {
   };
 }
 
+/* ===========================
+   GET ALL LEAVES (ADMIN)
+=========================== */
+export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
+  const query = request.query as {
+    search?: string;
+    status?: (typeof LeaveStatus)[keyof typeof LeaveStatus];
+    type?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: "createdAt" | "fromDate";
+    sortOrder?: "asc" | "desc";
+  };
+
+  const conditions = [];
+
+  if (query?.search) {
+    conditions.push(ilike(leaveRequests.reason, `%${query.search}%`));
+  }
+
+  if (query?.status) {
+    conditions.push(eq(leaveRequests.status, query.status));
+  }
+
+  if (query?.type) {
+    conditions.push(eq(leaveRequests.type, query.type as any));
+  }
+
+  const page = Math.max(1, Number(query?.page) || 1);
+  const limit = Math.min(50, Number(query?.limit) || 10);
+  const offset = (page - 1) * limit;
+
+  const sortColumn =
+    query?.sortBy === "fromDate"
+      ? leaveRequests.fromDate
+      : leaveRequests.createdAt;
+
+  const order = query?.sortOrder === "asc" ? asc(sortColumn) : desc(sortColumn);
+
+  const data = await db
+    .select()
+    .from(leaveRequests)
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(order)
+    .limit(limit)
+    .offset(offset);
+
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(leaveRequests)
+    .where(conditions.length ? and(...conditions) : undefined);
+
+  return {
+    data,
+    meta: {
+      page,
+      limit,
+      total: Number(count),
+    },
+  };
+}
+
+/* ===========================
+   GET BY ID
+=========================== */
 export async function getLeaveRequestByIdHandler(
   request: FastifyRequest,
   reply: FastifyReply
@@ -143,6 +235,9 @@ export async function getLeaveRequestByIdHandler(
   return { data: leave };
 }
 
+/* ===========================
+   UPDATE
+=========================== */
 export async function updateLeaveRequestHandler(
   request: FastifyRequest,
   reply: FastifyReply
@@ -150,6 +245,10 @@ export async function updateLeaveRequestHandler(
   const userId = request.user!.id;
   const { id } = request.params as { id: string };
   const body = request.body as UpdateLeaveRequestDto;
+
+  if (body.fromDate && body.toDate) {
+    validateFutureDates(body.fromDate, body.toDate);
+  }
 
   const [employee] = await db
     .select({ id: employees.id })
@@ -184,6 +283,9 @@ export async function updateLeaveRequestHandler(
   return sendMessage(reply, "Leave request updated successfully");
 }
 
+/* ===========================
+   DELETE
+=========================== */
 export async function deleteLeaveRequestHandler(
   request: FastifyRequest,
   reply: FastifyReply
