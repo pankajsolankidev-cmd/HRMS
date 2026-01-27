@@ -29,7 +29,7 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
       schema: createLeaveRequestSchema,
       preHandler: [authenticate, authorize(PERMISSIONS.LEAVE_CREATE)],
     },
-    createLeaveRequestHandler
+    createLeaveRequestHandler,
   );
 
   app.get(
@@ -38,17 +38,16 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
       schema: getMyLeaveRequestsSchema,
       preHandler: [authenticate, authorize(PERMISSIONS.LEAVE_VIEW_OWN)],
     },
-    getMyLeaveRequestsHandler
+    getMyLeaveRequestsHandler,
   );
 
-  /* ===== ADMIN GET ALL ===== */
   app.get(
     "/leave-requests",
     {
       schema: getAllLeaveRequestsSchema,
       // preHandler: [authenticate, authorize(PERMISSIONS.LEAVE_VIEW_ALL)],
     },
-    getAllLeaveRequestsHandler
+    getAllLeaveRequestsHandler,
   );
 
   app.get(
@@ -57,7 +56,7 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
       schema: getLeaveRequestByIdSchema,
       preHandler: [authenticate, authorize(PERMISSIONS.LEAVE_VIEW_OWN)],
     },
-    getLeaveRequestByIdHandler
+    getLeaveRequestByIdHandler,
   );
 
   app.patch(
@@ -66,7 +65,7 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
       schema: updateLeaveRequestSchema,
       preHandler: [authenticate, authorize(PERMISSIONS.LEAVE_UPDATE)],
     },
-    updateLeaveRequestHandler
+    updateLeaveRequestHandler,
   );
 
   app.delete(
@@ -75,6 +74,6 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
       schema: deleteLeaveRequestSchema,
       preHandler: [authenticate, authorize(PERMISSIONS.LEAVE_DELETE)],
     },
-    deleteLeaveRequestHandler
+    deleteLeaveRequestHandler,
   );
 }

@@ -13,9 +13,6 @@ import {
 
 import { sendMessage } from "../../utils/api-response";
 
-/* ===========================
-   Helpers
-=========================== */
 function validateFutureDates(fromDate: string, toDate: string) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -32,12 +29,9 @@ function validateFutureDates(fromDate: string, toDate: string) {
   }
 }
 
-/* ===========================
-   CREATE
-=========================== */
 export async function createLeaveRequestHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const userId = request.user!.id;
   const body = request.body as CreateLeaveRequestDto;
@@ -67,9 +61,6 @@ export async function createLeaveRequestHandler(
   return sendMessage(reply, "Leave request created successfully", 201);
 }
 
-/* ===========================
-   GET MY LEAVES
-=========================== */
 export async function getMyLeaveRequestsHandler(request: FastifyRequest) {
   const userId = request.user!.id;
 
@@ -140,9 +131,6 @@ export async function getMyLeaveRequestsHandler(request: FastifyRequest) {
   };
 }
 
-/* ===========================
-   GET ALL LEAVES (ADMIN)
-=========================== */
 export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
   const query = request.query as {
     search?: string;
@@ -202,12 +190,9 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
   };
 }
 
-/* ===========================
-   GET BY ID
-=========================== */
 export async function getLeaveRequestByIdHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const userId = request.user!.id;
   const { id } = request.params as { id: string };
@@ -225,7 +210,7 @@ export async function getLeaveRequestByIdHandler(
     .select()
     .from(leaveRequests)
     .where(
-      and(eq(leaveRequests.id, id), eq(leaveRequests.employeeId, employee.id))
+      and(eq(leaveRequests.id, id), eq(leaveRequests.employeeId, employee.id)),
     );
 
   if (!leave) {
@@ -235,12 +220,9 @@ export async function getLeaveRequestByIdHandler(
   return { data: leave };
 }
 
-/* ===========================
-   UPDATE
-=========================== */
 export async function updateLeaveRequestHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const userId = request.user!.id;
   const { id } = request.params as { id: string };
@@ -269,8 +251,8 @@ export async function updateLeaveRequestHandler(
       and(
         eq(leaveRequests.id, id),
         eq(leaveRequests.employeeId, employee.id),
-        eq(leaveRequests.status, LeaveStatus.Pending)
-      )
+        eq(leaveRequests.status, LeaveStatus.Pending),
+      ),
     )
     .returning();
 
@@ -283,12 +265,9 @@ export async function updateLeaveRequestHandler(
   return sendMessage(reply, "Leave request updated successfully");
 }
 
-/* ===========================
-   DELETE
-=========================== */
 export async function deleteLeaveRequestHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const userId = request.user!.id;
   const { id } = request.params as { id: string };
@@ -308,8 +287,8 @@ export async function deleteLeaveRequestHandler(
       and(
         eq(leaveRequests.id, id),
         eq(leaveRequests.employeeId, employee.id),
-        eq(leaveRequests.status, LeaveStatus.Pending)
-      )
+        eq(leaveRequests.status, LeaveStatus.Pending),
+      ),
     )
     .returning({ id: leaveRequests.id });
 
