@@ -1,4 +1,11 @@
-import { pgTable, uuid, date, text } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  date,
+  text,
+  numeric,
+  integer,
+} from "drizzle-orm/pg-core";
 import { employees } from "./employees.schema";
 import {
   leaveTypeEnum,
@@ -20,6 +27,11 @@ export const leaveRequests = pgTable("leave_requests", {
 
   type: leaveTypeEnum("type").notNull(),
   dayType: leaveDayTypeEnum("day_type").notNull(),
+  fromHour: integer("from_hour").notNull(),
+  toHour: integer("to_hour").notNull(),
+
+  totalHours: integer("total_hours").notNull(),
+  totalDays: numeric("total_days").notNull(),
 
   status: leaveStatusEnum("status").default(LeaveStatus.Pending).notNull(),
 
