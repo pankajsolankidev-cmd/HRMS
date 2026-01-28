@@ -118,7 +118,6 @@ export default function GetSalaryTable({ search }: Props) {
     {
       header: "Employee",
       accessor: "employeeName",
-      sortable: true,
       cell: (row) => (
         <span className="font-medium text-gray-800 dark:text-white/90">
           {row.employeeName}
