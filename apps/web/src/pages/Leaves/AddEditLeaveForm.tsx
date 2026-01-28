@@ -14,6 +14,7 @@ import Select from "../../components/form/Select";
 import DatePicker from "../../components/form/date-picker";
 import FileInput from "../../components/form/input/FileInput";
 import Input from "../../components/form/input/InputField";
+import type { LeaveApiResponse, LeaveDetail } from "./leaveType";
 
 const LEAVE_TYPES = [
   { label: "Sick", value: "sick" },
@@ -28,6 +29,7 @@ const DAY_TYPES = [
   { label: "Second Half", value: "second_half" },
   { label: "Multiple Days", value: "multiple_days" },
 ];
+
 const HOUR_OPTIONS = [
   { label: "First Half", value: "first_half" },
   { label: "Second Half", value: "second_half" },
@@ -35,6 +37,8 @@ const HOUR_OPTIONS = [
 ];
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+type LeaveByIdResponse = LeaveApiResponse<LeaveDetail>;
 
 const leaveSchema = z
   .object({
@@ -48,22 +52,25 @@ const leaveSchema = z
     fromHourType: z.enum(["first_half", "second_half", "full_day"]),
     toHourType: z.enum(["first_half", "second_half", "full_day"]),
 
-    // Backend values
     fromHour: z.number(),
     toHour: z.number(),
 
     file: z
-      .instanceof(File)
-      .refine(
-        (file) => file.size <= MAX_FILE_SIZE,
-        "File size must be less than 10MB",
-      )
-      .optional()
-      .nullable(),
+      .union([
+        z
+          .instanceof(File)
+          .refine(
+            (file) => file.size <= MAX_FILE_SIZE,
+            "File size must be less than 10MB",
+          ),
+        z.null(),
+        z.undefined(),
+      ])
+      .optional(),
   })
   .superRefine((data, ctx) => {
     if (data.dayType === "multiple_days") {
-      if (!data.fromHour) {
+      if (data.fromHour == null) {
         ctx.addIssue({
           path: ["fromHour"],
           message: "From hour is required",
@@ -82,6 +89,12 @@ const leaveSchema = z
   });
 
 type LeaveFormData = z.infer<typeof leaveSchema>;
+
+/* ================= HELPERS ================= */
+const hoursToHourType = (hours?: number) => {
+  if (hours === 4) return "first_half";
+  return "full_day";
+};
 
 export default function AddEditLeaveForm() {
   const { id } = useParams<{ id: string }>();
@@ -111,6 +124,7 @@ export default function AddEditLeaveForm() {
       toHour: 8,
     },
   });
+
   const hourTypeToHours = (val: string) => {
     return val === "full_day" ? 8 : 4;
   };
@@ -120,46 +134,45 @@ export default function AddEditLeaveForm() {
     name: "dayType",
   });
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading } = useQuery<LeaveByIdResponse>({
     queryKey: ["leave", id],
     queryFn: () => getLeaveById(id!),
     enabled: isEdit,
   });
 
   useEffect(() => {
-    if (data) {
-      reset({
-        fromDate: data.fromDate,
-        toDate: data.toDate,
-        type: data.type,
-        dayType: data.dayType,
-        reason: data.reason,
-        status: data.status,
-        fromHour: data.fromHour ?? 8,
-        toHour: data.toHour ?? 8,
-        file: null,
-      });
-    }
+    if (!data) return;
+
+    const leave = data.leave;
+
+    reset({
+      fromDate: leave.fromDate,
+      toDate: leave.toDate,
+      type: leave.type,
+      dayType: leave.dayType,
+      reason: leave.reason,
+      status: leave.status,
+
+      fromHour: leave.fromHour ?? 8,
+      toHour: leave.toHour ?? 8,
+
+      fromHourType: hoursToHourType(leave.fromHour),
+      toHourType: hoursToHourType(leave.toHour),
+
+      file: null,
+    });
   }, [data, reset]);
 
   useEffect(() => {
     if (!dayType) return;
 
-    if (
-      dayType === "first_half" ||
-      dayType === "second_half" ||
-      dayType === "full_day"
-    ) {
+    if (dayType !== "multiple_days") {
       setValue("toDate", control._formValues.fromDate);
       const hours = dayType === "full_day" ? 8 : 4;
       setValue("fromHour", hours);
       setValue("toHour", hours);
     }
-    if (dayType === "multiple_days") {
-      setValue("fromHour", 8);
-      setValue("toHour", 8);
-    }
-  }, [dayType, setValue]);
+  }, [dayType]);
 
   const saveMutation = useMutation({
     mutationFn: (payload: any) =>
@@ -178,9 +191,9 @@ export default function AddEditLeaveForm() {
 
   const onSubmit = async (formData: LeaveFormData) => {
     try {
-      let filePath = data?.file;
+      let filePath = data?.leave.file;
 
-      if (formData.file) {
+      if (formData.file instanceof File) {
         const uploadedFile = await uploadFile(formData.file);
         filePath = uploadedFile.path;
       }
@@ -192,10 +205,8 @@ export default function AddEditLeaveForm() {
         dayType: formData.dayType,
         reason: formData.reason,
         file: filePath,
-        ...(formData.dayType === "multiple_days" && {
-          fromHour: formData.fromHour,
-          toHour: formData.toHour,
-        }),
+        fromHour: formData.fromHour,
+        toHour: formData.toHour,
       };
 
       saveMutation.mutate(payload);

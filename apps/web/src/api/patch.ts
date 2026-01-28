@@ -37,3 +37,20 @@ export const updateLeave = async ({
   const res = await api.patch(`/leave-requests/${id}`, payload);
   return res.data;
 };
+export const approveLeave = async (id: string) => {
+  const res = await api.patch(`/leave-requests/${id}/approve`);
+  return res.data;
+};
+
+export const rejectLeave = async ({
+  id,
+  rejectionReason,
+}: {
+  id: string;
+  rejectionReason?: string;
+}) => {
+  const res = await api.patch(`/leave-requests/${id}/reject`, {
+    rejectionReason,
+  });
+  return res.data;
+};

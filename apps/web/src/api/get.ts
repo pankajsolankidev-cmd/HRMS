@@ -92,12 +92,13 @@ export const getLeaves = async (params?: ListQueryParams) => {
   const res = await api.get<PaginatedResponse<any>>("/leave-requests", {
     params,
   });
-
+  console.log(res.data);
   return res.data;
 };
 
 export const getLeaveById = async (id: string) => {
   const res = await api.get(`/leave-requests/${id}`);
+  console.log(res.data);
   return res.data?.data ?? res.data;
 };
 
