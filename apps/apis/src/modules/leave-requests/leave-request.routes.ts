@@ -6,6 +6,8 @@ import {
   getLeaveRequestByIdHandler,
   updateLeaveRequestHandler,
   deleteLeaveRequestHandler,
+  approveLeaveRequestHandler,
+  rejectLeaveRequestHandler,
 } from "./leave-request.service";
 
 import {
@@ -62,5 +64,17 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
       preHandler: [authenticate],
     },
     deleteLeaveRequestHandler,
+  );
+
+  app.patch(
+    "/leave-requests/:id/approve",
+    { preHandler: [authenticate] },
+    approveLeaveRequestHandler,
+  );
+
+  app.patch(
+    "/leave-requests/:id/reject",
+    { preHandler: [authenticate] },
+    rejectLeaveRequestHandler,
   );
 }

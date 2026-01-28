@@ -5,6 +5,7 @@ import {
   text,
   numeric,
   integer,
+  timestamp,
 } from "drizzle-orm/pg-core";
 import { employees } from "./employees.schema";
 import {
@@ -14,6 +15,7 @@ import {
   LeaveStatus,
 } from "./leave.enums";
 import { baseColumns } from "../base-columns";
+import { users } from "./users.schema";
 
 export const leaveRequests = pgTable("leave_requests", {
   ...baseColumns,
@@ -37,4 +39,10 @@ export const leaveRequests = pgTable("leave_requests", {
 
   reason: text("reason"),
   file: text("file"),
+  approvedBy: uuid("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+
+  rejectedBy: uuid("rejected_by").references(() => users.id),
+  rejectedAt: timestamp("rejected_at"),
+  rejectionReason: text("rejection_reason"),
 });

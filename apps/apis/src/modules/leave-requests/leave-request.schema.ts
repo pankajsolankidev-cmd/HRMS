@@ -4,6 +4,20 @@ import {
   LeaveStatus,
 } from "../../db/schema/leave.enums";
 
+const userMiniSchema = {
+  anyOf: [
+    {
+      type: "object",
+      properties: {
+        id: { type: "string", format: "uuid" },
+        username: { type: "string" },
+      },
+      required: ["id", "username"],
+    },
+    { type: "null" },   // ✅ ALLOW NULL
+  ],
+};
+
 const errorResponse = {
   type: "object",
   properties: {
@@ -49,6 +63,14 @@ const leaveObjectSchema = {
     status: { type: "string", enum: Object.values(LeaveStatus) },
 
     reason: { type: "string" },
+    rejectionReason: { type: ["string", "null"] },
+
+    approvedBy: { type: ["string", "null"], format: "uuid" },
+    approvedAt: { type: ["string", "null"], format: "date-time" },
+
+    rejectedBy: { type: ["string", "null"], format: "uuid" },
+    rejectedAt: { type: ["string", "null"], format: "date-time" },
+
     file: { type: "string" },
 
     createdAt: { type: "string", format: "date-time" },
@@ -115,6 +137,9 @@ export const getAllLeaveRequestsSchema = {
             properties: {
               leave: leaveObjectSchema,
               employee: employeeObjectSchema,
+
+              approvedByUser: userMiniSchema,   // ✅ NEW
+              rejectedByUser: userMiniSchema,   // ✅ NEW
             },
             required: ["leave", "employee"],
           },
@@ -146,6 +171,9 @@ export const getLeaveRequestByIdSchema = {
           properties: {
             leave: leaveObjectSchema,
             employee: employeeObjectSchema,
+
+            approvedByUser: userMiniSchema,   // ✅ NEW
+            rejectedByUser: userMiniSchema,   // ✅ NEW
           },
           required: ["leave", "employee"],
         },

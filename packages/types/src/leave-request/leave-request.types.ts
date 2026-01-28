@@ -12,6 +12,11 @@ export type CreateLeaveRequestDto = {
   toHour: number;
   reason?: string;
   file?: string;
+  approvedBy?: string | null;
+  approvedAt?: string | null;
+  rejectedBy?: string | null;
+  rejectedAt?: string | null;
+  rejectionReason?: string | null;
 };
 
 export type UpdateLeaveRequestDto = {
@@ -23,4 +28,5 @@ export type UpdateLeaveRequestDto = {
   toHour?: number;
   reason?: string;
   file?: string;
+  
 };
