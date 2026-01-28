@@ -31,7 +31,16 @@ export type LeaveRow = {
   status: LeaveStatus;
   reason: string;
   totalDays: string;
+  rejectionReason?: string | null;
   file?: string;
+
+  approvedByUser?: {
+    username: string;
+  } | null;
+
+  rejectedByUser?: {
+    username: string;
+  } | null;
 };
 
 type Props = {
@@ -93,6 +102,14 @@ export default function GetLeaveTable({ search }: Props) {
     totalDays: item.leave.totalDays,
     rejectionReason: item.leave.rejectionReason ?? null,
     file: item.leave.file,
+
+    approvedByUser: item.approvedByUser
+      ? { username: item.approvedByUser.username }
+      : null,
+
+    rejectedByUser: item.rejectedByUser
+      ? { username: item.rejectedByUser.username }
+      : null,
   }));
 
   const total = data?.meta?.total ?? 0;
@@ -208,6 +225,43 @@ export default function GetLeaveTable({ search }: Props) {
         </span>
       ),
     },
+    {
+      header: "Reason",
+      cell: (row) => (
+        <span className="text-red-700 dark:text-gray-300">
+          {row.rejectionReason}
+        </span>
+      ),
+    },
+    {
+      header: "User Reason",
+      cell: (row) => (
+        <span className="text-red-700 dark:text-gray-300">{row.reason}</span>
+      ),
+    },
+    {
+      header: "Action By",
+      cell: (row) => {
+        if (row.status === "approved") {
+          return (
+            <span className="text-green-700 font-medium">
+              {row.approvedByUser?.username ?? "—"}
+            </span>
+          );
+        }
+
+        if (row.status === "rejected") {
+          return (
+            <span className="text-red-700 font-medium">
+              {row.rejectedByUser?.username ?? "—"}
+            </span>
+          );
+        }
+
+        return <span className="text-gray-400">—</span>;
+      },
+    },
+
     {
       header: "Action",
       align: "center",

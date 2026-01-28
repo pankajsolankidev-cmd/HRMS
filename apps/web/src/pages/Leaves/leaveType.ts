@@ -13,6 +13,10 @@ export type Employee = {
   firstName: string;
   lastName: string;
 };
+export type ActionUser = {
+  id: string;
+  username: string;
+};
 
 export type LeaveBase = {
   id: string;
@@ -38,4 +42,6 @@ export type LeaveDetail = LeaveBase & {
 export type LeaveApiResponse<TLeave = LeaveBase> = {
   employee: Employee;
   leave: TLeave;
+  approvedByUser?: ActionUser | null;
+  rejectedByUser?: ActionUser | null;
 };
