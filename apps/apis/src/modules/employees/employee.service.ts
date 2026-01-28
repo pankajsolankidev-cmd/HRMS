@@ -13,7 +13,7 @@ import {
 
 import type { CreateEmployeeDto } from "@shared/types/src/employee/employee.dto";
 import type { UpdateEmployeeDto } from "@shared/types/src/employee/update-employee.dto";
-import { ROLES } from "../../db/schema/roles.enums";
+import { RoleName, ROLES } from "../../db/schema/roles.enums";
 import { positions } from "../../db/schema/positions.schema";
 
 import { sendMessage } from "../../utils/api-response";
@@ -75,8 +75,21 @@ export async function createEmployeeHandler(
         throw new Error("Invalid position");
       }
 
-      const roleName =
-        position.name.toLowerCase() === "hr" ? ROLES.HR : ROLES.EMPLOYEE;
+      let roleName: RoleName;
+
+      switch (position.name.toLowerCase()) {
+        case "hr":
+          roleName = ROLES.HR;
+          break;
+
+        case "admin":
+          roleName = ROLES.ADMIN;
+          break;
+
+        default:
+          roleName = ROLES.EMPLOYEE;
+          break;
+      }
 
       const [role] = await tx
         .select({ id: roles.id })
