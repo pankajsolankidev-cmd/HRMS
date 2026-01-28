@@ -170,7 +170,6 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
 
   const conditions = [];
 
-  // ✅ ROLE-BASED AUTH (REPLACES POSITION CHECK)
   const userRolesRows = await db
     .select({
       roleName: roles.name,
@@ -183,7 +182,6 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
 
   const isHRorAdmin = roleNames.includes("HR") || roleNames.includes("ADMIN");
 
-  // ✅ Fetch employee record (still needed for filtering)
   const [employee] = await db
     .select({ id: employees.id })
     .from(employees)
@@ -251,7 +249,7 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
     .from(leaveRequests)
     .leftJoin(employees, eq(leaveRequests.employeeId, employees.id))
     .leftJoin(approverUser, eq(leaveRequests.approvedBy, approverUser.id))
-    .leftJoin(rejecterUser, eq(leaveRequests.rejectedBy, rejecterUser.id)) // ✅ THIS WAS MISSING
+    .leftJoin(rejecterUser, eq(leaveRequests.rejectedBy, rejecterUser.id))
 
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(order)
@@ -326,7 +324,7 @@ export async function getLeaveRequestByIdHandler(
     .from(leaveRequests)
     .leftJoin(employees, eq(leaveRequests.employeeId, employees.id))
     .leftJoin(approverUser, eq(leaveRequests.approvedBy, approverUser.id))
-    .leftJoin(rejecterUser, eq(leaveRequests.rejectedBy, rejecterUser.id)) // ✅ THIS WAS MISSING
+    .leftJoin(rejecterUser, eq(leaveRequests.rejectedBy, rejecterUser.id))
     .where(and(...conditions));
 
   if (!row) {
@@ -486,12 +484,9 @@ export async function approveLeaveRequestHandler(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const userId = request.user!.id; // APPROVER USER ID
+  const userId = request.user!.id;
   const { id } = request.params as { id: string };
 
-  // =========================
-  // Get approver roles
-  // =========================
   const approverRolesRows = await db
     .select({
       roleName: roles.name,
@@ -505,9 +500,6 @@ export async function approveLeaveRequestHandler(
   const isApproverAdmin = approverRoleNames.includes("ADMIN");
   const isApproverHR = approverRoleNames.includes("HR");
 
-  // =========================
-  // Get leave + target employee + target user
-  // =========================
   const leaveRows = await db
     .select({
       leaveId: leaveRequests.id,
@@ -536,9 +528,6 @@ export async function approveLeaveRequestHandler(
     });
   }
 
-  // =========================
-  // Get target user roles
-  // =========================
   const targetRolesRows = await db
     .select({
       roleName: roles.name,
@@ -551,32 +540,23 @@ export async function approveLeaveRequestHandler(
 
   const isTargetHR = targetRoleNames.includes("HR");
 
-  // =========================
-  // BUSINESS RULES
-  // =========================
-
-  // 🔴 HR leave → ONLY Admin can approve
   if (isTargetHR && !isApproverAdmin) {
     return reply.code(403).send({
       message: "HR leave can only be approved by Admin",
     });
   }
 
-  // Normal rule: only HR/Admin can approve
   if (!isApproverAdmin && !isApproverHR) {
     return reply.code(403).send({
       message: "Only HR or Admin can approve leave requests",
     });
   }
 
-  // =========================
-  // Update leave (USER ID BASED AUDIT)
-  // =========================
   const [updated] = await db
     .update(leaveRequests)
     .set({
       status: LeaveStatus.Approved,
-      approvedBy: userId, // ✅ USERS.ID (NOT EMPLOYEE ID)
+      approvedBy: userId,
       approvedAt: new Date(),
       updatedAt: new Date(),
     })
@@ -601,13 +581,10 @@ export async function rejectLeaveRequestHandler(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const userId = request.user!.id; // APPROVER USER ID
+  const userId = request.user!.id;
   const { id } = request.params as { id: string };
   const body = request.body as { rejectionReason?: string };
 
-  // =========================
-  // Get approver roles
-  // =========================
   const approverRolesRows = await db
     .select({
       roleName: roles.name,
@@ -624,9 +601,6 @@ export async function rejectLeaveRequestHandler(
   const isApproverAdmin = approverRoleNames.includes("ADMIN");
   const isApproverHR = approverRoleNames.includes("HR");
 
-  // =========================
-  // Get leave + target employee + target user
-  // =========================
   const leaveRows = await db
     .select({
       leaveId: leaveRequests.id,
@@ -640,7 +614,6 @@ export async function rejectLeaveRequestHandler(
 
   const leaveRow = leaveRows[0];
 
-  // ✅ CHECK FIRST — leave exists
   if (!leaveRow) {
     return reply.code(404).send({ message: "Leave request not found" });
   }
@@ -651,16 +624,12 @@ export async function rejectLeaveRequestHandler(
     });
   }
 
-  // ✅ Prevent self-reject
   if (leaveRow.targetUserId === userId) {
     return reply.code(403).send({
       message: "You cannot reject your own leave request",
     });
   }
 
-  // =========================
-  // Get target user roles
-  // =========================
   const targetRolesRows = await db
     .select({
       roleName: roles.name,
@@ -669,37 +638,27 @@ export async function rejectLeaveRequestHandler(
     .leftJoin(roles, eq(userRoles.roleId, roles.id))
     .where(eq(userRoles.userId, leaveRow.targetUserId));
 
-  // ✅ NORMALIZE ROLE NAMES
   const targetRoleNames = targetRolesRows.map((r) => r.roleName?.toUpperCase());
 
   const isTargetHR = targetRoleNames.includes("HR");
 
-  // =========================
-  // BUSINESS RULES
-  // =========================
-
-  // 🔴 HR leave → ONLY Admin can reject
   if (isTargetHR && !isApproverAdmin) {
     return reply.code(403).send({
       message: "HR leave can only be rejected by Admin",
     });
   }
 
-  // Normal rule: only HR/Admin can reject
   if (!isApproverAdmin && !isApproverHR) {
     return reply.code(403).send({
       message: "Only HR or Admin can reject leave requests",
     });
   }
 
-  // =========================
-  // Update leave (USER ID BASED AUDIT)
-  // =========================
   const [updated] = await db
     .update(leaveRequests)
     .set({
       status: LeaveStatus.Rejected,
-      rejectedBy: userId, // ✅ USERS.ID
+      rejectedBy: userId,
       rejectedAt: new Date(),
       rejectionReason: body.rejectionReason ?? null,
       updatedAt: new Date(),

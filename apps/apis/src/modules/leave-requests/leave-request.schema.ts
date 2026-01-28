@@ -14,7 +14,7 @@ const userMiniSchema = {
       },
       required: ["id", "username"],
     },
-    { type: "null" },   // ✅ ALLOW NULL
+    { type: "null" },   
   ],
 };
 
@@ -138,8 +138,8 @@ export const getAllLeaveRequestsSchema = {
               leave: leaveObjectSchema,
               employee: employeeObjectSchema,
 
-              approvedByUser: userMiniSchema,   // ✅ NEW
-              rejectedByUser: userMiniSchema,   // ✅ NEW
+              approvedByUser: userMiniSchema,   
+              rejectedByUser: userMiniSchema,   
             },
             required: ["leave", "employee"],
           },
@@ -172,8 +172,8 @@ export const getLeaveRequestByIdSchema = {
             leave: leaveObjectSchema,
             employee: employeeObjectSchema,
 
-            approvedByUser: userMiniSchema,   // ✅ NEW
-            rejectedByUser: userMiniSchema,   // ✅ NEW
+            approvedByUser: userMiniSchema,   
+            rejectedByUser: userMiniSchema,   
           },
           required: ["leave", "employee"],
         },
