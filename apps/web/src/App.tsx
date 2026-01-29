@@ -35,6 +35,7 @@ import AddEditLeave from "./pages/LeaveTable/AddEditLeave";
 import Leave from "./pages/LeaveTable/Leave";
 
 import { Toaster } from "react-hot-toast";
+import { useSelector } from "react-redux";
 import AddEditExpense from "./pages/ExpenseTable/AddEditExpense";
 import Expense from "./pages/ExpenseTable/Expense";
 import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
@@ -111,6 +112,9 @@ function AnimatedRoutes() {
 }
 
 export default function App() {
+  const auth = useSelector((state: any) => state.auth);
+
+  console.log("AUTH STATE:", auth);
   return (
     <Router>
       <Toaster

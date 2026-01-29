@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
+import { toast } from "react-hot-toast";
 import { getExpenseSummary } from "../../api/get";
 import DatePicker from "../../components/form/date-picker";
 
@@ -11,11 +12,25 @@ export default function ExpenseSummary() {
   const [toDate, setToDate] = useState<string>(today);
   const [run, setRun] = useState(false);
 
-  const { data, isFetching } = useQuery({
+  const { data, error, isFetching } = useQuery({
     queryKey: ["expense-summary", fromDate, toDate],
     queryFn: () => getExpenseSummary(fromDate, toDate),
     enabled: run,
   });
+
+  // For Success
+  useEffect(() => {
+    if (data) {
+      toast.success("Expense summary loaded!");
+    }
+  }, [data]);
+
+  // For Error
+  useEffect(() => {
+    if (error) {
+      toast.error(`Failed to fetch: ${error.message}`);
+    }
+  }, [error]);
 
   return (
     <div className="space-y-4">

@@ -9,6 +9,7 @@ import { deleteLeave } from "../../api/delete";
 import { getLeaves } from "../../api/get";
 import { approveLeave, rejectLeave } from "../../api/patch";
 import type { PaginatedResponse } from "../../api/types";
+import Can from "../../components/common/Can";
 import DataTable, {
   type Column,
 } from "../../components/tables/BasicTables/DataTable";
@@ -275,37 +276,49 @@ export default function GetLeaveTable({ search }: Props) {
       align: "center",
       cell: (row) => (
         <div className="flex items-center justify-center gap-2">
-          {row.status === "pending" ? (
-            <>
-              <button
-                onClick={() => approve(row.id)}
-                className="rounded-md bg-green-600 px-2 py-1 text-xs font-medium text-white hover:bg-green-700"
-              >
-                Approve
-              </button>
+          <Can permission="leave.approve">
+            {row.status === "pending" && (
+              <>
+                <button
+                  onClick={() => approve(row.id)}
+                  className="rounded-md bg-green-600 px-2 py-1 text-xs font-medium text-white hover:bg-green-700"
+                >
+                  Approve
+                </button>
 
-              <button
-                onClick={() => setRejectId(row.id)}
-                className="rounded-md bg-red-800 px-2 py-1 text-xs font-medium text-white hover:bg-orange-600"
-              >
-                Reject
-              </button>
+                <button
+                  onClick={() => setRejectId(row.id)}
+                  className="rounded-md bg-red-800 px-2 py-1 text-xs font-medium text-white hover:bg-orange-600"
+                >
+                  Reject
+                </button>
+              </>
+            )}
+          </Can>
 
-              <IconEdit
-                size={18}
-                onClick={() => navigate(`/leave-requests/${row.id}`)}
-                className="cursor-pointer text-blue-600 hover:text-blue-700"
-                title="Edit"
-              />
+          <Can permissions={["leave.update", "leave.delete"]} requireAll>
+            {row.status === "pending" && (
+              <>
+                <IconEdit
+                  size={18}
+                  onClick={() => navigate(`/leave-requests/${row.id}`)}
+                  className="cursor-pointer text-blue-600 hover:text-blue-700"
+                  title="Edit"
+                />
 
-              <IconTrash
-                size={18}
-                onClick={() => confirm("Delete Leave?") && removeLeave(row.id)}
-                className="cursor-pointer text-red-600 hover:text-red-700"
-                title="Delete"
-              />
-            </>
-          ) : (
+                <IconTrash
+                  size={18}
+                  onClick={() =>
+                    confirm("Delete Leave?") && removeLeave(row.id)
+                  }
+                  className="cursor-pointer text-red-600 hover:text-red-700"
+                  title="Delete"
+                />
+              </>
+            )}
+          </Can>
+
+          {row.status !== "pending" && (
             <span className="text-xs text-gray-400">Locked</span>
           )}
         </div>

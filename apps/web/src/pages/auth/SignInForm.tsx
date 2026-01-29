@@ -7,10 +7,12 @@ import Cookies from "js-cookie";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
+import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router";
 import { z } from "zod";
 import { signInApi } from "../../api/post";
 import Input from "../../components/form/input/InputField";
+import { setAuth } from "../../context/authSlice";
 
 const signInSchema = z.object({
   email: z
@@ -38,13 +40,21 @@ export default function SignInForm() {
       password: "",
     },
   });
-
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const signInMutation = useMutation({
     mutationFn: signInApi,
     onSuccess: (res) => {
       const token = res.accessToken;
       Cookies.set("access", token);
+      dispatch(
+        setAuth({
+          accessToken: res.accessToken,
+          refreshToken: res.refreshToken,
+          roles: res.roles,
+          permissions: res.permissions,
+        }),
+      );
 
       toast.success(res?.message ?? "Signed in successfully");
       navigate("/dashboard", { replace: true });

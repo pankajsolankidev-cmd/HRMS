@@ -1,166 +1,57 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router";
+import { useCallback } from "react";
+import { useSelector } from "react-redux";
+
 import GridIcon from "../assets/icons/grid.svg?react";
 import HorizontaLDots from "../assets/icons/horizontal-dots.svg?react";
-import { useSidebar } from "../context/SidebarContext";
 
 import {
   CalendarIcon,
-  ChevronDownIcon,
   FolderIcon,
   PuzzlePieceIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import { IconReceiptRupee, IconWallet } from "@tabler/icons-react";
 
+import { Link, useLocation } from "react-router";
+import type { RootState } from "../context";
+import { useSidebar } from "../context/SidebarContext";
+
 type NavItem = {
   name: string;
   icon: React.ReactNode;
-  path?: string;
-  subItems?: {
-    name: string;
-    path: string;
-    pro?: boolean;
-    new?: boolean;
-  }[];
+  path: string;
 };
 
-const navItems: NavItem[] = [
-  {
-    icon: <GridIcon />,
-    name: "Dashboard",
-    path: "/dashboard",
-  },
-  {
-    icon: <UserCircleIcon />,
-    name: "Employees",
-    path: "/employees",
-  },
-  {
-    icon: <PuzzlePieceIcon />,
-    name: "Component",
-    path: "/components",
-  },
-  {
-    icon: <FolderIcon />,
-    name: "System",
-    path: "/systems",
-  },
-  {
-    icon: <CalendarIcon />,
-    name: "Leaves",
-    path: "/leave-requests",
-  },
-  {
-    icon: <IconReceiptRupee />,
-    name: "Salary",
-    path: "/salary",
-  },
-  {
-    icon: <IconReceiptRupee />,
-    name: "Payrolls",
-    path: "/payrolls",
-  },
-  {
-    icon: <IconWallet />,
-    name: "Expenses",
-    path: "/expenses",
-  },
+const ADMIN_MENU: NavItem[] = [
+  { icon: <GridIcon />, name: "Dashboard", path: "/dashboard" },
+  { icon: <UserCircleIcon />, name: "Employees", path: "/employees" },
+  { icon: <PuzzlePieceIcon />, name: "Component", path: "/components" },
+  { icon: <FolderIcon />, name: "System", path: "/systems" },
+  { icon: <CalendarIcon />, name: "Leaves", path: "/leave-requests" },
+  { icon: <IconReceiptRupee />, name: "Salary", path: "/salary" },
+  { icon: <IconReceiptRupee />, name: "Payrolls", path: "/payrolls" },
+  { icon: <IconWallet />, name: "Expenses", path: "/expenses" },
+];
+
+const EMPLOYEE_MENU: NavItem[] = [
+  { icon: <CalendarIcon />, name: "Leaves", path: "/leave-requests" },
+  { icon: <IconWallet />, name: "Expenses", path: "/expenses" },
 ];
 
 const AppSidebar: React.FC = () => {
+  const roles = useSelector((state: RootState) => state.auth.roles);
+
+  const isEmployee = roles.includes("EMPLOYEE");
+
+  const menuItems = isEmployee ? EMPLOYEE_MENU : ADMIN_MENU;
+
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+
   const location = useLocation();
-
-  const [openSubmenu, setOpenSubmenu] = useState<{
-    type: "main" | "others";
-    index: number;
-  } | null>(null);
-
-  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
-    {},
-  );
-  const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const isActive = useCallback(
     (path: string) => location.pathname === path,
     [location.pathname],
-  );
-
-  useEffect(() => {
-    if (openSubmenu) {
-      const key = `${openSubmenu.type}-${openSubmenu.index}`;
-      const el = subMenuRefs.current[key];
-      if (el) {
-        setSubMenuHeight((prev) => ({
-          ...prev,
-          [key]: el.scrollHeight,
-        }));
-      }
-    }
-  }, [openSubmenu]);
-
-  const handleSubmenuToggle = (index: number, menuType: "main" | "others") => {
-    setOpenSubmenu((prev) =>
-      prev && prev.type === menuType && prev.index === index
-        ? null
-        : { type: menuType, index },
-    );
-  };
-
-  const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => (
-    <ul className="flex flex-col gap-4">
-      {items.map((nav, index) => {
-        const isOpen =
-          openSubmenu?.type === menuType && openSubmenu?.index === index;
-
-        return (
-          <li key={nav.name}>
-            {nav.subItems ? (
-              <button
-                onClick={() => handleSubmenuToggle(index, menuType)}
-                className={`menu-item group cursor-pointer ${
-                  isOpen ? "menu-item-active" : "menu-item-inactive"
-                } ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "lg:justify-start"
-                }`}
-              >
-                <span className="menu-item-icon-size">{nav.icon}</span>
-
-                {(isExpanded || isHovered || isMobileOpen) && (
-                  <>
-                    <span className="menu-item-text">{nav.name}</span>
-                    <ChevronDownIcon
-                      className={`ml-auto h-4 w-4 transition-transform duration-300 ${
-                        isOpen ? "rotate-180" : "rotate-0"
-                      }`}
-                    />
-                  </>
-                )}
-              </button>
-            ) : (
-              nav.path && (
-                <Link
-                  to={nav.path}
-                  className={`menu-item group ${
-                    isActive(nav.path)
-                      ? "menu-item-active"
-                      : "menu-item-inactive"
-                  }`}
-                >
-                  <span className="menu-item-icon-size">{nav.icon}</span>
-                  {(isExpanded || isHovered || isMobileOpen) && (
-                    <span className="menu-item-text">{nav.name}</span>
-                  )}
-                </Link>
-              )
-            )}
-          </li>
-        );
-      })}
-    </ul>
   );
 
   return (
@@ -208,7 +99,23 @@ const AppSidebar: React.FC = () => {
           )}
         </h2>
 
-        {renderMenuItems(navItems, "main")}
+        <ul className="flex flex-col gap-4">
+          {menuItems.map((nav) => (
+            <li key={nav.name}>
+              <Link
+                to={nav.path}
+                className={`menu-item group ${
+                  isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
+                }`}
+              >
+                <span className="menu-item-icon-size">{nav.icon}</span>
+                {(isExpanded || isHovered || isMobileOpen) && (
+                  <span className="menu-item-text">{nav.name}</span>
+                )}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </nav>
     </aside>
   );
