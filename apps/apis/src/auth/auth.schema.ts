@@ -45,6 +45,14 @@ export const signInSchema = {
       properties: {
         accessToken: { type: "string" },
         refreshToken: { type: "string" },
+        roles: {
+          type: "array",
+          items: { type: "string" },
+        },
+        permissions: {
+          type: "array",
+          items: { type: "string" },
+        },
       },
     },
     400: errorResponse,

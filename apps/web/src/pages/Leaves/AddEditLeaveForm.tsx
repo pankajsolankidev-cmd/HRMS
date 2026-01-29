@@ -90,7 +90,6 @@ const leaveSchema = z
 
 type LeaveFormData = z.infer<typeof leaveSchema>;
 
-/* ================= HELPERS ================= */
 const hoursToHourType = (hours?: number) => {
   if (hours === 4) return "first_half";
   return "full_day";
@@ -243,6 +242,7 @@ export default function AddEditLeaveForm() {
             control={control}
             render={({ field }) => (
               <Select
+                required
                 label="Leave Type"
                 options={LEAVE_TYPES}
                 value={field.value}
@@ -258,6 +258,7 @@ export default function AddEditLeaveForm() {
             control={control}
             render={({ field }) => (
               <Select
+                required
                 label="Day Type"
                 options={DAY_TYPES}
                 value={field.value}
@@ -273,6 +274,7 @@ export default function AddEditLeaveForm() {
             control={control}
             render={({ field }) => (
               <DatePicker
+                required
                 id="fromDate"
                 label="From Date"
                 value={field.value ? new Date(field.value) : null}

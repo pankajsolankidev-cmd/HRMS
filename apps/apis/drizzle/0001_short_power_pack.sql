@@ -1,0 +1,1 @@
+ALTER TYPE "public"."leave_day_type" ADD VALUE 'multiple_days';

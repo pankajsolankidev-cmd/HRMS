@@ -18,8 +18,8 @@ import { addSalaryStructure } from "../../api/post";
 const schema = z.object({
   employeeId: z.string().min(1, "Employee is required"),
   basicSalary: z.number().min(1, "Basic salary must be greater than 0"),
-  description: z.string().min(1, "Description is required"),
-  appraisalDate: z.string(),
+  description: z.string().nullable(),
+  appraisalDate: z.string().nullable(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -165,12 +165,9 @@ export default function AddEditSalaryForm() {
           />
 
           <Input
-            required
             label="Description"
             placeholder="Description"
             {...register("description")}
-            error={!!errors.description}
-            hint={errors.description?.message}
           />
 
           <Controller

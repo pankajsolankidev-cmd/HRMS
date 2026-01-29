@@ -56,8 +56,10 @@ export default function GetLeaveTable({ search }: Props) {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
 
-  const [sortBy, setSortBy] = useState<keyof LeaveRow | undefined>();
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [sortBy, setSortBy] = useState<keyof LeaveRow | undefined>(undefined);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | undefined>(
+    undefined,
+  );
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
 
@@ -71,7 +73,19 @@ export default function GetLeaveTable({ search }: Props) {
     } else {
       setSortBy(field);
       setSortOrder("asc");
+      setPage(1);
+      return;
     }
+
+    if (sortOrder === "asc") {
+      setSortOrder("desc");
+    } else if (sortOrder === "desc") {
+      setSortBy(undefined);
+      setSortOrder(undefined);
+    } else {
+      setSortOrder("asc");
+    }
+
     setPage(1);
   };
 

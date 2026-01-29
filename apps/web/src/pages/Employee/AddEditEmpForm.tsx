@@ -278,6 +278,7 @@ const AddEmpForm = () => {
               control={control}
               render={({ field }) => (
                 <Select
+                  required
                   label="Position"
                   options={positionOptions}
                   value={field.value ?? ""}
