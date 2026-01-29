@@ -4,6 +4,22 @@ import {
   LeaveStatus,
 } from "../../db/schema/leave.enums";
 
+const userMiniSchema = {
+  anyOf: [
+    {
+      type: "object",
+      properties: {
+        id: { type: "string", format: "uuid" },
+        firstName: { type: "string" },
+        lastName: { type: "string" },
+      },
+      required: ["id", "firstName", "lastName"],
+    },
+    { type: "null" },
+  ],
+};
+
+
 const errorResponse = {
   type: "object",
   properties: {
@@ -20,16 +36,65 @@ const leaveRequestIdParams = {
   },
 };
 
+const employeeObjectSchema = {
+  type: "object",
+  properties: {
+    id: { type: "string", format: "uuid" },
+    firstName: { type: "string" },
+    lastName: { type: "string" },
+  },
+  required: ["id", "firstName", "lastName"],
+};
+
+const leaveObjectSchema = {
+  type: "object",
+  properties: {
+    id: { type: "string", format: "uuid" },
+    fromDate: { type: "string", format: "date" },
+    toDate: { type: "string", format: "date" },
+
+    type: { type: "string", enum: Object.values(LeaveType) },
+    dayType: { type: "string", enum: Object.values(LeaveDayType) },
+
+    fromHour: { type: "number" },
+    toHour: { type: "number" },
+
+    totalHours: { type: "number" },
+    totalDays: { type: "string" },
+
+    status: { type: "string", enum: Object.values(LeaveStatus) },
+
+    reason: { type: "string" },
+    rejectionReason: { type: ["string", "null"] },
+
+    approvedBy: { type: ["string", "null"], format: "uuid" },
+    approvedAt: { type: ["string", "null"], format: "date-time" },
+
+    rejectedBy: { type: ["string", "null"], format: "uuid" },
+    rejectedAt: { type: ["string", "null"], format: "date-time" },
+
+    file: { type: "string" },
+
+    createdAt: { type: "string", format: "date-time" },
+    updatedAt: { type: "string", format: "date-time" },
+  },
+};
+
 export const createLeaveRequestSchema = {
   tags: ["Leave Requests"],
   body: {
     type: "object",
-    required: ["fromDate", "toDate", "type", "dayType"],
+    required: ["fromDate", "toDate", "type", "dayType", "fromHour", "toHour"],
     properties: {
       fromDate: { type: "string", format: "date" },
       toDate: { type: "string", format: "date" },
+
       type: { type: "string", enum: Object.values(LeaveType) },
       dayType: { type: "string", enum: Object.values(LeaveDayType) },
+
+      fromHour: { type: "number", minimum: 0, maximum: 24 },
+      toHour: { type: "number", minimum: 0, maximum: 24 },
+
       reason: { type: "string" },
       file: { type: "string" },
     },
@@ -48,32 +113,51 @@ export const createLeaveRequestSchema = {
   },
 };
 
-export const getMyLeaveRequestsSchema = {
+export const getAllLeaveRequestsSchema = {
   tags: ["Leave Requests"],
   querystring: {
     type: "object",
     properties: {
       search: { type: "string" },
-      status: {
-        type: "string",
-        enum: Object.values(LeaveStatus),
-      },
-      type: {
-        type: "string",
-        enum: Object.values(LeaveType),
-      },
+      status: { type: "string", enum: Object.values(LeaveStatus) },
+      type: { type: "string", enum: Object.values(LeaveType) },
       page: { type: "number", minimum: 1 },
       limit: { type: "number", minimum: 1, maximum: 50 },
-      sortBy: {
-        type: "string",
-        enum: ["createdAt", "fromDate"],
-      },
-      sortOrder: {
-        type: "string",
-        enum: ["asc", "desc"],
-      },
+      sortBy: { type: "string", enum: ["createdAt", "fromDate"] },
+      sortOrder: { type: "string", enum: ["asc", "desc"] },
     },
     additionalProperties: false,
+  },
+  response: {
+    200: {
+      type: "object",
+      properties: {
+        data: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              leave: leaveObjectSchema,
+              employee: employeeObjectSchema,
+
+              approvedByUser: userMiniSchema,   
+              rejectedByUser: userMiniSchema,   
+            },
+            required: ["leave", "employee"],
+          },
+        },
+        meta: {
+          type: "object",
+          properties: {
+            page: { type: "number" },
+            limit: { type: "number" },
+            total: { type: "number" },
+          },
+          required: ["page", "limit", "total"],
+        },
+      },
+      required: ["data", "meta"],
+    },
   },
 };
 
@@ -81,6 +165,23 @@ export const getLeaveRequestByIdSchema = {
   tags: ["Leave Requests"],
   params: leaveRequestIdParams,
   response: {
+    200: {
+      type: "object",
+      properties: {
+        data: {
+          type: "object",
+          properties: {
+            leave: leaveObjectSchema,
+            employee: employeeObjectSchema,
+
+            approvedByUser: userMiniSchema,   
+            rejectedByUser: userMiniSchema,   
+          },
+          required: ["leave", "employee"],
+        },
+      },
+      required: ["data"],
+    },
     404: errorResponse,
   },
 };
@@ -93,8 +194,13 @@ export const updateLeaveRequestSchema = {
     properties: {
       fromDate: { type: "string", format: "date" },
       toDate: { type: "string", format: "date" },
+
       type: { type: "string", enum: Object.values(LeaveType) },
       dayType: { type: "string", enum: Object.values(LeaveDayType) },
+
+      fromHour: { type: "number", minimum: 0, maximum: 24 },
+      toHour: { type: "number", minimum: 0, maximum: 24 },
+
       reason: { type: "string" },
       file: { type: "string" },
     },
