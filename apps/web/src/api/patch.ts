@@ -12,7 +12,7 @@ export const updatePayroll = async (
     month: string;
     year: number;
     totalDeductions: number;
-  }
+  },
 ) => {
   const res = await api.patch(`/payrolls/${id}`, payload);
   return res.data;
@@ -27,10 +27,30 @@ export const updateLeave = async ({
     fromDate: string;
     toDate: string;
     type: "sick" | "casual" | "marriage" | "wfh";
-    dayType: "full_day" | "first_half" | "second_half";
+    dayType: "full_day" | "first_half" | "second_half" | "multiple_days";
     reason: string;
+    fromHour: number;
+    toHour: number;
+    file?: string;
   };
 }) => {
   const res = await api.patch(`/leave-requests/${id}`, payload);
+  return res.data;
+};
+export const approveLeave = async (id: string) => {
+  const res = await api.patch(`/leave-requests/${id}/approve`);
+  return res.data;
+};
+
+export const rejectLeave = async ({
+  id,
+  rejectionReason,
+}: {
+  id: string;
+  rejectionReason?: string;
+}) => {
+  const res = await api.patch(`/leave-requests/${id}/reject`, {
+    rejectionReason,
+  });
   return res.data;
 };

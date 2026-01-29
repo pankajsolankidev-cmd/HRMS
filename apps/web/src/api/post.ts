@@ -117,9 +117,11 @@ export type AddLeavePayload = {
   fromDate: string;
   toDate: string;
   type: "sick" | "casual" | "marriage" | "wfh";
-  dayType: "full_day" | "first_half" | "second_half";
+  dayType: "full_day" | "first_half" | "second_half" | "multiple_days";
   reason: string;
   file?: string;
+  fromHour: number;
+  toHour: number;
 };
 
 export const addLeave = async (payload: AddLeavePayload) => {

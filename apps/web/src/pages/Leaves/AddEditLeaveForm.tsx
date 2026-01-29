@@ -1,11 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
-
-import Input from "../../components/form/input/InputField";
 
 import type { AxiosError } from "axios";
 import { toast } from "react-hot-toast";
@@ -15,6 +13,8 @@ import { addLeave, uploadFile } from "../../api/post";
 import Select from "../../components/form/Select";
 import DatePicker from "../../components/form/date-picker";
 import FileInput from "../../components/form/input/FileInput";
+import Input from "../../components/form/input/InputField";
+import type { LeaveApiResponse, LeaveDetail } from "./leaveType";
 
 const LEAVE_TYPES = [
   { label: "Sick", value: "sick" },
@@ -27,38 +27,73 @@ const DAY_TYPES = [
   { label: "Full Day", value: "full_day" },
   { label: "First Half", value: "first_half" },
   { label: "Second Half", value: "second_half" },
+  { label: "Multiple Days", value: "multiple_days" },
+];
+
+const HOUR_OPTIONS = [
+  { label: "First Half", value: "first_half" },
+  { label: "Second Half", value: "second_half" },
+  { label: "Full Day", value: "full_day" },
 ];
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+type LeaveByIdResponse = LeaveApiResponse<LeaveDetail>;
+
 const leaveSchema = z
   .object({
     fromDate: z.string().min(1, "From date is required"),
     toDate: z.string().min(1, "To date is required"),
     type: z.enum(["sick", "casual", "marriage", "wfh"]),
-    dayType: z.enum(["full_day", "first_half", "second_half"]),
+    dayType: z.enum(["full_day", "first_half", "second_half", "multiple_days"]),
     reason: z.string().min(1, "Reason is required"),
     status: z.enum(["pending", "approved", "rejected"]).optional(),
+
+    fromHourType: z.enum(["first_half", "second_half", "full_day"]),
+    toHourType: z.enum(["first_half", "second_half", "full_day"]),
+
+    fromHour: z.number(),
+    toHour: z.number(),
+
     file: z
-      .instanceof(File)
-      .refine(
-        (file) => file.size <= MAX_FILE_SIZE,
-        "File size must be less than 10MB",
-      )
-      .optional()
-      .nullable(),
+      .union([
+        z
+          .instanceof(File)
+          .refine(
+            (file) => file.size <= MAX_FILE_SIZE,
+            "File size must be less than 10MB",
+          ),
+        z.null(),
+        z.undefined(),
+      ])
+      .optional(),
   })
-  .refine(
-    (data) => {
-      if (!data.fromDate || !data.toDate) return true;
-      return new Date(data.fromDate) <= new Date(data.toDate);
-    },
-    {
-      message: "From date cannot be after To date",
-      path: ["toDate"],
-    },
-  );
+  .superRefine((data, ctx) => {
+    if (data.dayType === "multiple_days") {
+      if (data.fromHour == null) {
+        ctx.addIssue({
+          path: ["fromHour"],
+          message: "From hour is required",
+          code: z.ZodIssueCode.custom,
+        });
+      }
+
+      if (!data.toHour) {
+        ctx.addIssue({
+          path: ["toHour"],
+          message: "To hour is required",
+          code: z.ZodIssueCode.custom,
+        });
+      }
+    }
+  });
 
 type LeaveFormData = z.infer<typeof leaveSchema>;
+
+const hoursToHourType = (hours?: number) => {
+  if (hours === 4) return "first_half";
+  return "full_day";
+};
 
 export default function AddEditLeaveForm() {
   const { id } = useParams<{ id: string }>();
@@ -77,34 +112,66 @@ export default function AddEditLeaveForm() {
   } = useForm<LeaveFormData>({
     resolver: zodResolver(leaveSchema),
     defaultValues: {
-      status: "pending",
       fromDate: "",
       toDate: "",
       type: undefined,
       dayType: undefined,
       reason: "",
+      fromHourType: "full_day",
+      toHourType: "full_day",
+      fromHour: 8,
+      toHour: 8,
     },
   });
 
-  const { data, isLoading } = useQuery({
+  const hourTypeToHours = (val: string) => {
+    return val === "full_day" ? 8 : 4;
+  };
+
+  const dayType = useWatch({
+    control,
+    name: "dayType",
+  });
+
+  const { data, isLoading } = useQuery<LeaveByIdResponse>({
     queryKey: ["leave", id],
     queryFn: () => getLeaveById(id!),
     enabled: isEdit,
   });
 
   useEffect(() => {
-    if (data) {
-      reset({
-        fromDate: data.fromDate,
-        toDate: data.toDate,
-        type: data.type,
-        dayType: data.dayType,
-        reason: data.reason,
-        status: data.status,
-        file: null,
-      });
-    }
+    if (!data) return;
+
+    const leave = data.leave;
+
+    reset({
+      fromDate: leave.fromDate,
+      toDate: leave.toDate,
+      type: leave.type,
+      dayType: leave.dayType,
+      reason: leave.reason,
+      status: leave.status,
+
+      fromHour: leave.fromHour ?? 8,
+      toHour: leave.toHour ?? 8,
+
+      fromHourType: hoursToHourType(leave.fromHour),
+      toHourType: hoursToHourType(leave.toHour),
+
+      file: null,
+    });
   }, [data, reset]);
+
+  useEffect(() => {
+    if (!dayType) return;
+
+    if (dayType !== "multiple_days") {
+      setValue("toDate", control._formValues.fromDate);
+      const hours = dayType === "full_day" ? 8 : 4;
+      setValue("fromHour", hours);
+      setValue("toHour", hours);
+    }
+  }, [dayType]);
 
   const saveMutation = useMutation({
     mutationFn: (payload: any) =>
@@ -123,7 +190,7 @@ export default function AddEditLeaveForm() {
 
   const onSubmit = async (formData: LeaveFormData) => {
     try {
-      let filePath = data?.file;
+      let filePath = data?.leave.file;
 
       if (formData.file) {
         const uploadedFile = await uploadFile(formData.file);
@@ -137,10 +204,12 @@ export default function AddEditLeaveForm() {
         dayType: formData.dayType,
         reason: formData.reason,
         file: filePath,
+        fromHour: formData.fromHour,
+        toHour: formData.toHour,
       };
 
-      saveMutation.mutate(payload as any);
-    } catch (error) {
+      saveMutation.mutate(payload);
+    } catch {
       toast.error("File upload failed. Please try again.");
     }
   };
@@ -208,43 +277,74 @@ export default function AddEditLeaveForm() {
                 required
                 id="fromDate"
                 label="From Date"
-                placeholder="Select start date"
                 value={field.value ? new Date(field.value) : null}
                 onChange={(dates) => {
                   if (dates?.length) {
-                    setValue("fromDate", dates[0].toLocaleDateString("en-CA"), {
-                      shouldValidate: true,
-                    });
+                    const date = dates[0].toLocaleDateString("en-CA");
+                    setValue("fromDate", date);
+                    if (dayType !== "multiple_days") {
+                      setValue("toDate", date);
+                    }
                   }
                 }}
-                error={!!errors.fromDate}
-                hint={errors.fromDate?.message}
               />
             )}
           />
 
-          <Controller
-            name="toDate"
-            control={control}
-            render={({ field }) => (
-              <DatePicker
-                required
-                id="toDate"
-                label="To Date"
-                placeholder="Select end date"
-                value={field.value ? new Date(field.value) : null}
-                onChange={(dates) => {
-                  if (dates?.length) {
-                    setValue("toDate", dates[0].toLocaleDateString("en-CA"), {
-                      shouldValidate: true,
-                    });
-                  }
-                }}
-                error={!!errors.toDate}
-                hint={errors.toDate?.message}
+          {dayType === "multiple_days" && (
+            <Controller
+              name="toDate"
+              control={control}
+              render={({ field }) => (
+                <DatePicker
+                  id="toDate"
+                  label="To Date"
+                  value={field.value ? new Date(field.value) : null}
+                  onChange={(dates) => {
+                    if (dates?.length) {
+                      setValue("toDate", dates[0].toLocaleDateString("en-CA"));
+                    }
+                  }}
+                />
+              )}
+            />
+          )}
+
+          {dayType === "multiple_days" && (
+            <>
+              <Controller
+                name="fromHourType"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    label="From Day Type"
+                    options={HOUR_OPTIONS}
+                    value={field.value}
+                    onChange={(val) => {
+                      field.onChange(val);
+                      setValue("fromHour", hourTypeToHours(val));
+                    }}
+                  />
+                )}
               />
-            )}
-          />
+
+              <Controller
+                name="toHourType"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    label="To Day Type"
+                    options={HOUR_OPTIONS}
+                    value={field.value}
+                    onChange={(val) => {
+                      field.onChange(val);
+                      setValue("toHour", hourTypeToHours(val));
+                    }}
+                  />
+                )}
+              />
+            </>
+          )}
 
           <Input
             required
@@ -264,11 +364,6 @@ export default function AddEditLeaveForm() {
               }
             }}
           />
-          {errors.file && (
-            <p className="text-sm text-red-600">
-              {errors.file.message as string}
-            </p>
-          )}
         </div>
       </div>
     </form>
