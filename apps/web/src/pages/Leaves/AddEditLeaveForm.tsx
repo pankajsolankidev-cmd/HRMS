@@ -192,7 +192,7 @@ export default function AddEditLeaveForm() {
     try {
       let filePath = data?.leave.file;
 
-      if (formData.file instanceof File) {
+      if (formData.file) {
         const uploadedFile = await uploadFile(formData.file);
         filePath = uploadedFile.path;
       }

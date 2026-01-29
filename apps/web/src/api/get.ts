@@ -97,7 +97,6 @@ export const getLeaves = async (params?: ListQueryParams) => {
 
 export const getLeaveById = async (id: string) => {
   const res = await api.get(`/leave-requests/${id}`);
-  console.log(res.data);
   return res.data?.data ?? res.data;
 };
 
