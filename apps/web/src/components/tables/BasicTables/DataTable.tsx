@@ -58,7 +58,10 @@ export default function DataTable<T>({
             <TableRow className="bg-gray-50 dark:bg-gray-800/50">
               {columns.map((col, index) => {
                 const isSortable = col.sortable && col.accessor && onSort;
-                const isActive = sortBy === col.accessor;
+                const isActive =
+                  sortBy !== undefined &&
+                  sortOrder !== undefined &&
+                  sortBy === col.accessor;
 
                 return (
                   <TableCell
@@ -81,9 +84,8 @@ export default function DataTable<T>({
                   >
                     <div className="inline-flex items-center gap-1">
                       {col.header}
-                      {isActive && (
-                        <span>{sortOrder === "asc" ? "▲" : "▼"}</span>
-                      )}
+                      {isActive && sortOrder === "asc" && <span>▲</span>}
+                      {isActive && sortOrder === "desc" && <span>▼</span>}
                     </div>
                   </TableCell>
                 );
@@ -115,5 +117,3 @@ export default function DataTable<T>({
     </div>
   );
 }
-
-

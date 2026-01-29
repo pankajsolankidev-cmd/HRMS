@@ -31,20 +31,32 @@ export default function GetExpenseTable({ search }: Props) {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
 
-  const [sortBy, setSortBy] = useState<keyof Expense | undefined>();
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [sortBy, setSortBy] = useState<keyof Expense | undefined>(undefined);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | undefined>(
+    undefined,
+  );
 
   useEffect(() => {
     setPage(1);
   }, [search]);
 
   const handleSort = (field: keyof Expense) => {
-    if (sortBy === field) {
-      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
-    } else {
+    if (sortBy !== field) {
       setSortBy(field);
       setSortOrder("asc");
+      setPage(1);
+      return;
     }
+
+    if (sortOrder === "asc") {
+      setSortOrder("desc");
+    } else if (sortOrder === "desc") {
+      setSortBy(undefined);
+      setSortOrder(undefined);
+    } else {
+      setSortOrder("asc");
+    }
+
     setPage(1);
   };
 
@@ -105,6 +117,7 @@ export default function GetExpenseTable({ search }: Props) {
     {
       header: "Date",
       accessor: "expenseDate",
+      sortable: true,
       cell: (row) => row.expenseDate,
     },
     {

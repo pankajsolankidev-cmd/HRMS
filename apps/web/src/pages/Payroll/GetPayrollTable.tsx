@@ -46,16 +46,28 @@ export default function GetPayrollTable() {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
 
-  const [sortBy, setSortBy] = useState<keyof Payroll | undefined>();
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [sortBy, setSortBy] = useState<keyof Payroll | undefined>(undefined);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | undefined>(
+    undefined,
+  );
 
   const handleSort = (field: keyof Payroll) => {
-    if (sortBy === field) {
-      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
-    } else {
+    if (sortBy !== field) {
       setSortBy(field);
       setSortOrder("asc");
+      setPage(1);
+      return;
     }
+
+    if (sortOrder === "asc") {
+      setSortOrder("desc");
+    } else if (sortOrder === "desc") {
+      setSortBy(undefined);
+      setSortOrder(undefined);
+    } else {
+      setSortOrder("asc");
+    }
+
     setPage(1);
   };
 
@@ -139,16 +151,17 @@ export default function GetPayrollTable() {
     {
       header: "Employee",
       accessor: "employeeName",
-      sortable: true,
       cell: (r) => r.employeeName,
     },
     {
       header: "Month",
+
       accessor: "month",
       cell: (r) => r.month,
     },
     {
       header: "Year",
+      sortable: true,
       accessor: "year",
       cell: (r) => r.year,
     },

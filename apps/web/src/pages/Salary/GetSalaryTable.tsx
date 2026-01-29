@@ -31,20 +31,34 @@ export default function GetSalaryTable({ search }: Props) {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
 
-  const [sortBy, setSortBy] = useState<keyof SalaryStructure | undefined>();
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [sortBy, setSortBy] = useState<keyof SalaryStructure | undefined>(
+    undefined,
+  );
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | undefined>(
+    undefined,
+  );
 
   useEffect(() => {
     setPage(1);
   }, [search]);
 
   const handleSort = (field: keyof SalaryStructure) => {
-    if (sortBy === field) {
-      setSortOrder((p) => (p === "asc" ? "desc" : "asc"));
-    } else {
+    if (sortBy !== field) {
       setSortBy(field);
       setSortOrder("asc");
+      setPage(1);
+      return;
     }
+
+    if (sortOrder === "asc") {
+      setSortOrder("desc");
+    } else if (sortOrder === "desc") {
+      setSortBy(undefined);
+      setSortOrder(undefined);
+    } else {
+      setSortOrder("asc");
+    }
+
     setPage(1);
   };
 
