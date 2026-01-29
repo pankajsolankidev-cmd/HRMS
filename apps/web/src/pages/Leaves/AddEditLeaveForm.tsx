@@ -30,22 +30,33 @@ const DAY_TYPES = [
 ];
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
-const leaveSchema = z.object({
-  fromDate: z.string().min(1, "From date is required"),
-  toDate: z.string().min(1, "To date is required"),
-  type: z.enum(["sick", "casual", "marriage", "wfh"]),
-  dayType: z.enum(["full_day", "first_half", "second_half"]),
-  reason: z.string().min(1, "Reason is required"),
-  status: z.enum(["pending", "approved", "rejected"]).optional(),
-  file: z
-    .instanceof(File)
-    .refine(
-      (file) => file.size <= MAX_FILE_SIZE,
-      "File size must be less than 10MB",
-    )
-    .optional()
-    .nullable(),
-});
+const leaveSchema = z
+  .object({
+    fromDate: z.string().min(1, "From date is required"),
+    toDate: z.string().min(1, "To date is required"),
+    type: z.enum(["sick", "casual", "marriage", "wfh"]),
+    dayType: z.enum(["full_day", "first_half", "second_half"]),
+    reason: z.string().min(1, "Reason is required"),
+    status: z.enum(["pending", "approved", "rejected"]).optional(),
+    file: z
+      .instanceof(File)
+      .refine(
+        (file) => file.size <= MAX_FILE_SIZE,
+        "File size must be less than 10MB",
+      )
+      .optional()
+      .nullable(),
+  })
+  .refine(
+    (data) => {
+      if (!data.fromDate || !data.toDate) return true;
+      return new Date(data.fromDate) <= new Date(data.toDate);
+    },
+    {
+      message: "From date cannot be after To date",
+      path: ["toDate"],
+    },
+  );
 
 type LeaveFormData = z.infer<typeof leaveSchema>;
 
@@ -162,6 +173,7 @@ export default function AddEditLeaveForm() {
             control={control}
             render={({ field }) => (
               <Select
+                required
                 label="Leave Type"
                 options={LEAVE_TYPES}
                 value={field.value}
@@ -177,6 +189,7 @@ export default function AddEditLeaveForm() {
             control={control}
             render={({ field }) => (
               <Select
+                required
                 label="Day Type"
                 options={DAY_TYPES}
                 value={field.value}
@@ -192,6 +205,7 @@ export default function AddEditLeaveForm() {
             control={control}
             render={({ field }) => (
               <DatePicker
+                required
                 id="fromDate"
                 label="From Date"
                 placeholder="Select start date"
@@ -214,6 +228,7 @@ export default function AddEditLeaveForm() {
             control={control}
             render={({ field }) => (
               <DatePicker
+                required
                 id="toDate"
                 label="To Date"
                 placeholder="Select end date"
