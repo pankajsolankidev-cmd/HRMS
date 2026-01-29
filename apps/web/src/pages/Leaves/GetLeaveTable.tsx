@@ -35,11 +35,13 @@ export type LeaveRow = {
   file?: string;
 
   approvedByUser?: {
-    username: string;
+    firstName: string;
+    lastName: string;
   } | null;
 
   rejectedByUser?: {
-    username: string;
+    firstName: string;
+    lastName: string;
   } | null;
 };
 
@@ -104,11 +106,17 @@ export default function GetLeaveTable({ search }: Props) {
     file: item.leave.file,
 
     approvedByUser: item.approvedByUser
-      ? { username: item.approvedByUser.username }
+      ? {
+          firstName: item.approvedByUser.firstName,
+          lastName: item.approvedByUser.lastName,
+        }
       : null,
 
     rejectedByUser: item.rejectedByUser
-      ? { username: item.rejectedByUser.username }
+      ? {
+          firstName: item.rejectedByUser.firstName,
+          lastName: item.rejectedByUser.lastName,
+        }
       : null,
   }));
 
@@ -242,18 +250,18 @@ export default function GetLeaveTable({ search }: Props) {
     {
       header: "Action By",
       cell: (row) => {
-        if (row.status === "approved") {
+        if (row.status === "approved" && row.approvedByUser) {
           return (
             <span className="text-green-700 font-medium">
-              {row.approvedByUser?.username ?? "—"}
+              {row.approvedByUser.firstName} {row.approvedByUser.lastName}
             </span>
           );
         }
 
-        if (row.status === "rejected") {
+        if (row.status === "rejected" && row.rejectedByUser) {
           return (
             <span className="text-red-700 font-medium">
-              {row.rejectedByUser?.username ?? "—"}
+              {row.rejectedByUser.firstName} {row.rejectedByUser.lastName}
             </span>
           );
         }

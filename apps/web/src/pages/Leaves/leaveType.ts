@@ -15,7 +15,8 @@ export type Employee = {
 };
 export type ActionUser = {
   id: string;
-  username: string;
+  firstName: string;
+  lastName: string;
 };
 
 export type LeaveBase = {
