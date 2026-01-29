@@ -10,13 +10,15 @@ const userMiniSchema = {
       type: "object",
       properties: {
         id: { type: "string", format: "uuid" },
-        username: { type: "string" },
+        firstName: { type: "string" },
+        lastName: { type: "string" },
       },
-      required: ["id", "username"],
+      required: ["id", "firstName", "lastName"],
     },
-    { type: "null" },   
+    { type: "null" },
   ],
 };
+
 
 const errorResponse = {
   type: "object",

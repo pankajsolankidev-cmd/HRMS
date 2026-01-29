@@ -10,8 +10,8 @@ import { userRoles } from "../../db/schema/user-roles.schema";
 import { roles } from "../../db/schema/roles.schema";
 import { users } from "../../db/schema/users.schema";
 import { alias } from "drizzle-orm/pg-core";
-const approverUser = alias(users, "approverUser");
-const rejecterUser = alias(users, "rejecterUser");
+const approverEmployee = alias(employees, "approverEmployee");
+const rejecterEmployee = alias(employees, "rejecterEmployee");
 
 import {
   CreateLeaveRequestDto,
@@ -237,19 +237,27 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
       },
 
       approvedByUser: {
-        id: approverUser.id,
-        username: approverUser.username,
+        id: approverEmployee.id,
+        firstName: approverEmployee.firstName,
+        lastName: approverEmployee.lastName,
       },
 
       rejectedByUser: {
-        id: rejecterUser.id,
-        username: rejecterUser.username,
+        id: rejecterEmployee.id,
+        firstName: rejecterEmployee.firstName,
+        lastName: rejecterEmployee.lastName,
       },
     })
     .from(leaveRequests)
     .leftJoin(employees, eq(leaveRequests.employeeId, employees.id))
-    .leftJoin(approverUser, eq(leaveRequests.approvedBy, approverUser.id))
-    .leftJoin(rejecterUser, eq(leaveRequests.rejectedBy, rejecterUser.id))
+    .leftJoin(
+      approverEmployee,
+      eq(leaveRequests.approvedBy, approverEmployee.userId),
+    )
+    .leftJoin(
+      rejecterEmployee,
+      eq(leaveRequests.rejectedBy, rejecterEmployee.userId),
+    )
 
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(order)
@@ -312,19 +320,28 @@ export async function getLeaveRequestByIdHandler(
       },
 
       approvedByUser: {
-        id: approverUser.id,
-        username: approverUser.username,
+        id: approverEmployee.id,
+        firstName: approverEmployee.firstName,
+        lastName: approverEmployee.lastName,
       },
 
       rejectedByUser: {
-        id: rejecterUser.id,
-        username: rejecterUser.username,
+        id: rejecterEmployee.id,
+        firstName: rejecterEmployee.firstName,
+        lastName: rejecterEmployee.lastName,
       },
     })
     .from(leaveRequests)
     .leftJoin(employees, eq(leaveRequests.employeeId, employees.id))
-    .leftJoin(approverUser, eq(leaveRequests.approvedBy, approverUser.id))
-    .leftJoin(rejecterUser, eq(leaveRequests.rejectedBy, rejecterUser.id))
+    .leftJoin(
+      approverEmployee,
+      eq(leaveRequests.approvedBy, approverEmployee.userId),
+    )
+    .leftJoin(
+      rejecterEmployee,
+      eq(leaveRequests.rejectedBy, rejecterEmployee.userId),
+    )
+
     .where(and(...conditions));
 
   if (!row) {
