@@ -1,6 +1,6 @@
 {
-  "id": "d977805c-b287-4b8d-b97f-b354843b5693",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "672b7a4f-21ab-4849-a8b9-e12fe17eabf5",
+  "prevId": "9e242a24-1a86-45a8-a335-7b1abc54f6d7",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -785,6 +785,30 @@
           "primaryKey": false,
           "notNull": true
         },
+        "from_hour": {
+          "name": "from_hour",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "to_hour": {
+          "name": "to_hour",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "total_hours": {
+          "name": "total_hours",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "total_days": {
+          "name": "total_days",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
         "status": {
           "name": "status",
           "type": "leave_status",
@@ -804,6 +828,36 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "approved_by": {
+          "name": "approved_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "approved_at": {
+          "name": "approved_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rejected_by": {
+          "name": "rejected_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rejected_at": {
+          "name": "rejected_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rejection_reason": {
+          "name": "rejection_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
@@ -814,6 +868,32 @@
           "tableTo": "employees",
           "columnsFrom": [
             "employee_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "leave_requests_approved_by_users_id_fk": {
+          "name": "leave_requests_approved_by_users_id_fk",
+          "tableFrom": "leave_requests",
+          "tableTo": "users",
+          "columnsFrom": [
+            "approved_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "leave_requests_rejected_by_users_id_fk": {
+          "name": "leave_requests_rejected_by_users_id_fk",
+          "tableFrom": "leave_requests",
+          "tableTo": "users",
+          "columnsFrom": [
+            "rejected_by"
           ],
           "columnsTo": [
             "id"
@@ -1356,7 +1436,8 @@
       "values": [
         "full_day",
         "first_half",
-        "second_half"
+        "second_half",
+        "multiple_days"
       ]
     },
     "public.leave_status": {

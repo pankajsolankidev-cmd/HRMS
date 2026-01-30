@@ -65,7 +65,7 @@ export default function AddEditComponentForm() {
         res?.message ??
           (isEdit
             ? "Component updated successfully"
-            : "Component added successfully")
+            : "Component added successfully"),
       );
       queryClient.invalidateQueries({ queryKey: ["components"] });
       navigate("/components");
@@ -74,7 +74,7 @@ export default function AddEditComponentForm() {
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(
         error?.response?.data?.message ??
-          "Something went wrong. Please try again."
+          "Something went wrong. Please try again.",
       );
     },
   });
@@ -110,6 +110,7 @@ export default function AddEditComponentForm() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Input
+            required
             placeholder="Enter component name"
             label="Component Name"
             {...register("name")}
@@ -118,6 +119,7 @@ export default function AddEditComponentForm() {
           />
 
           <Input
+            required
             placeholder="Enter component code"
             label="Component Code"
             {...register("code")}

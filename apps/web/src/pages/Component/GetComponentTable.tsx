@@ -31,20 +31,32 @@ export default function GetComponentTable({ search }: Props) {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
 
-  const [sortBy, setSortBy] = useState<keyof Component | undefined>();
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [sortBy, setSortBy] = useState<keyof Component | undefined>(undefined);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | undefined>(
+    undefined,
+  );
 
   useEffect(() => {
     setPage(1);
   }, [search]);
 
   const handleSort = (field: keyof Component) => {
-    if (sortBy === field) {
-      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
-    } else {
+    if (sortBy !== field) {
       setSortBy(field);
       setSortOrder("asc");
+      setPage(1);
+      return;
     }
+
+    if (sortOrder === "asc") {
+      setSortOrder("desc");
+    } else if (sortOrder === "desc") {
+      setSortBy(undefined);
+      setSortOrder(undefined);
+    } else {
+      setSortOrder("asc");
+    }
+
     setPage(1);
   };
 
@@ -54,10 +66,10 @@ export default function GetComponentTable({ search }: Props) {
       getComponents({
         page,
         limit,
-        sortBy: sortBy as string | undefined,
-        sortOrder,
+        ...(sortBy && sortOrder ? { sortBy: sortBy as string, sortOrder } : {}),
         search,
       }),
+
     placeholderData: (prev) => prev,
   });
 
@@ -92,6 +104,7 @@ export default function GetComponentTable({ search }: Props) {
     {
       header: "Code",
       accessor: "code",
+
       cell: (row) => (
         <div className="text-gray-600 dark:text-gray-400">{row.code}</div>
       ),
