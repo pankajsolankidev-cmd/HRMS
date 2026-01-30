@@ -136,7 +136,7 @@ export async function updateExpenseHandler(
       expenseType: body.expenseType,
       description: body.description,
       file: body.file,
-      status: body.status,
+      // status: body.status,
 
       amount: body.amount !== undefined ? body.amount.toString() : undefined,
 
