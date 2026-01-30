@@ -62,12 +62,12 @@ export const approveExpense = async (id: number) => {
 
 export const rejectExpense = async ({
   id,
-  rejectionReason,
+  reason,
 }: {
   id: number;
-  rejectionReason?: string;
+  reason?: string;
 }) => {
-  const res = await api.patch(`/expenses/${id}/reject`, { rejectionReason });
+  const res = await api.patch(`/expenses/${id}/reject`, { reason });
   return res.data;
 };
 export const createExpense = async (id: number) => {

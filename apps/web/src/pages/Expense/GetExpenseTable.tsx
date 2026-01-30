@@ -20,6 +20,7 @@ type Expense = {
   expenseType: string;
   amount: number | string;
   expenseDate: string;
+  rejectionReason?: string;
   status: "DRAFT" | "CREATED" | "APPROVED" | "REJECTED";
 };
 
@@ -128,9 +129,14 @@ export default function GetExpenseTable({ search }: Props) {
 
   const { mutate: create } = useMutation({
     mutationFn: createExpense,
-    onSuccess: () => {
-      toast.success("Expense submitted for approval");
+    onSuccess: (res) => {
+      toast.success(res?.message ?? "Expense submitted for approval");
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(
+        error?.response?.data?.message ?? "An unexpected error occurred",
+      );
     },
   });
 
@@ -196,6 +202,15 @@ export default function GetExpenseTable({ search }: Props) {
       ),
     },
     {
+      header: "Reason",
+      accessor: "rejectionReason",
+      cell: (row) => (
+        <span className="text-gray-800 dark:text-white">
+          {row.rejectionReason || "-"}
+        </span>
+      ),
+    },
+    {
       header: "Action",
       align: "center",
       cell: (row) => (
@@ -244,6 +259,13 @@ export default function GetExpenseTable({ search }: Props) {
           {row.status === "CREATED" && (
             <IconLock size={18} className="text-gray-400 cursor-not-allowed" />
           )}
+          {row.status === "APPROVED" ||
+            (row.status === "REJECTED" && (
+              <IconLock
+                size={18}
+                className="text-gray-400 cursor-not-allowed"
+              />
+            ))}
         </div>
       ),
     },
@@ -324,7 +346,7 @@ export default function GetExpenseTable({ search }: Props) {
                 onClick={() =>
                   reject({
                     id: rejectId,
-                    rejectionReason: rejectionReason.trim() || undefined,
+                    reason: rejectionReason.trim() || undefined,
                   })
                 }
                 className="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
