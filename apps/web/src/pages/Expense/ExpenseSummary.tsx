@@ -18,14 +18,12 @@ export default function ExpenseSummary() {
     enabled: run,
   });
 
-  // For Success
   useEffect(() => {
     if (data) {
       toast.success("Expense summary loaded!");
     }
   }, [data]);
 
-  // For Error
   useEffect(() => {
     if (error) {
       toast.error(`Failed to fetch: ${error.message}`);

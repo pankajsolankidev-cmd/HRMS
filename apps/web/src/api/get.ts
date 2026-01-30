@@ -97,13 +97,12 @@ export const getLeaves = async (params?: ListQueryParams) => {
 
 export const getLeaveById = async (id: string) => {
   const res = await api.get(`/leave-requests/${id}`);
-  console.log(res.data);
   return res.data?.data ?? res.data;
 };
 
 export const getExpenses = async (params: ListQueryParams) => {
   const res = await api.get<PaginatedResponse<any>>("/expenses", { params });
-
+  console.log(res.data);
   return res.data;
 };
 export const getExpenseById = async (id: string) => {

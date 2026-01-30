@@ -304,7 +304,10 @@ export default function GetLeaveTable({ search }: Props) {
             )}
           </Can>
 
-          <Can permissions={["leave.update", "leave.delete"]} requireAll>
+          <Can
+            permissions={["leave.update_own", "leave.delete_own"]}
+            requireAll
+          >
             {row.status === "pending" && (
               <>
                 <IconEdit

@@ -1,13 +1,16 @@
-import { IconEdit, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconLock, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
 
 import type { AxiosError } from "axios";
+import { useSelector } from "react-redux";
 import { deleteExpense } from "../../api/delete";
 import { getExpenses } from "../../api/get";
+import { approveExpense, createExpense, rejectExpense } from "../../api/patch";
 import type { PaginatedResponse } from "../../api/types";
+import Can from "../../components/common/Can";
 import DataTable, {
   type Column,
 } from "../../components/tables/BasicTables/DataTable";
@@ -17,7 +20,7 @@ type Expense = {
   expenseType: string;
   amount: number | string;
   expenseDate: string;
-  status: "Draft" | "Submitted" | "Approved" | "Rejected";
+  status: "DRAFT" | "CREATED" | "APPROVED" | "REJECTED";
 };
 
 type Props = {
@@ -25,6 +28,13 @@ type Props = {
 };
 
 export default function GetExpenseTable({ search }: Props) {
+  const roles = useSelector((state: any) => state.auth.roles);
+
+  const isEmployee = roles?.includes("EMPLOYEE");
+  const isHr = roles?.includes("HR") || roles?.includes("ADMIN");
+
+  const canCreateExpense = isEmployee || isHr;
+
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -33,6 +43,8 @@ export default function GetExpenseTable({ search }: Props) {
 
   const [sortBy, setSortBy] = useState<keyof Expense | undefined>();
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [rejectId, setRejectId] = useState<number | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
 
   useEffect(() => {
     setPage(1);
@@ -75,17 +87,51 @@ export default function GetExpenseTable({ search }: Props) {
     },
   });
 
+  const { mutate: approve } = useMutation({
+    mutationFn: approveExpense,
+    onSuccess: (res) => {
+      toast.success(res?.message ?? "Expense Approved");
+      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(
+        error?.response?.data?.message ?? "An unexpected error occurred",
+      );
+    },
+  });
+
+  const { mutate: reject } = useMutation({
+    mutationFn: rejectExpense,
+    onSuccess: (res) => {
+      toast.success(res?.message ?? "Expense rejected");
+      setRejectId(null);
+      setRejectionReason("");
+      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(
+        error?.response?.data?.message ?? "An unexpected error occurred",
+      );
+    },
+  });
+
+  const { mutate: create } = useMutation({
+    mutationFn: createExpense,
+    onSuccess: () => {
+      toast.success("Expense submitted for approval");
+      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+    },
+  });
+
   const expenses: Expense[] = data?.data ?? [];
-  const total = data?.meta?.total ?? 0;
+  const total = data?.meta?.total ?? expenses.length;
 
   const columns: Column<Expense>[] = [
     {
       header: "Type",
       accessor: "expenseType",
       cell: (row) => (
-        <span className=" text-gray-800 dark:text-white">
-          {row.expenseType}
-        </span>
+        <span className="text-gray-800 dark:text-white">{row.expenseType}</span>
       ),
     },
     {
@@ -111,21 +157,30 @@ export default function GetExpenseTable({ search }: Props) {
       header: "Status",
       accessor: "status",
       cell: (row) => (
-        <span
-          className={`rounded-full px-3 py-1 text-xs font-medium
-            ${
-              row.status === "Approved"
+        <div className="flex items-center gap-3">
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-medium ${
+              row.status === "APPROVED"
                 ? "bg-green-100 text-green-700"
-                : row.status === "Rejected"
+                : row.status === "REJECTED"
                   ? "bg-red-100 text-red-700"
-                  : row.status === "Submitted"
+                  : row.status === "CREATED"
                     ? "bg-blue-100 text-blue-700"
                     : "bg-gray-100 text-gray-700"
-            }
-          `}
-        >
-          {row.status}
-        </span>
+            }`}
+          >
+            {row.status}
+          </span>
+
+          {canCreateExpense && row.status === "DRAFT" && (
+            <button
+              onClick={() => create(row.id)}
+              className="rounded-md bg-green-600 px-2 py-1 text-xs font-medium text-white hover:bg-green-700"
+            >
+              Create
+            </button>
+          )}
+        </div>
       ),
     },
     {
@@ -133,16 +188,50 @@ export default function GetExpenseTable({ search }: Props) {
       align: "center",
       cell: (row) => (
         <div className="flex items-center justify-center gap-3">
-          <IconEdit
-            size={18}
-            onClick={() => navigate(`/expenses/${row.id}`)}
-            className="cursor-pointer text-blue-600 dark:text-blue-400"
-          />
-          <IconTrash
-            size={18}
-            onClick={() => confirm("Delete expense?") && removeExpense(row.id)}
-            className="cursor-pointer text-red-600 dark:text-red-400"
-          />
+          <Can permissions={["expense.approve", "expense.reject"]}>
+            {row.status === "CREATED" && (
+              <>
+                <button
+                  onClick={() => approve(row.id)}
+                  className="rounded-md bg-green-600 px-2 py-1 text-xs font-medium text-white hover:bg-green-700"
+                >
+                  Approve
+                </button>
+                <button
+                  onClick={() => setRejectId(row.id)}
+                  className="rounded-md bg-red-800 px-2 py-1 text-xs font-medium text-white hover:bg-orange-600"
+                >
+                  Reject
+                </button>
+              </>
+            )}
+          </Can>
+
+          <Can
+            permissions={["expense.update_own", "expense.delete_own"]}
+            requireAll
+          >
+            {row.status === "DRAFT" && (
+              <>
+                <IconEdit
+                  size={18}
+                  onClick={() => navigate(`/expenses/${row.id}`)}
+                  className="cursor-pointer text-blue-600 dark:text-blue-400"
+                />
+                <IconTrash
+                  size={18}
+                  onClick={() =>
+                    confirm("Delete expense?") && removeExpense(row.id)
+                  }
+                  className="cursor-pointer text-red-600 dark:text-red-400"
+                />
+              </>
+            )}
+          </Can>
+
+          {row.status === "CREATED" && (
+            <IconLock size={18} className="text-gray-400 cursor-not-allowed" />
+          )}
         </div>
       ),
     },
@@ -155,13 +244,6 @@ export default function GetExpenseTable({ search }: Props) {
           <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
             No data found
           </p>
-
-          {search && (
-            <p className="mt-1 text-sm text-gray-500">
-              No results matching{" "}
-              <span className="font-medium">"{search}"</span>
-            </p>
-          )}
         </div>
       ) : (
         <DataTable
@@ -198,6 +280,46 @@ export default function GetExpenseTable({ search }: Props) {
             >
               Next
             </button>
+          </div>
+        </div>
+      )}
+
+      {rejectId && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg">
+            <h3 className="text-lg font-semibold mb-2">Reject Expense</h3>
+
+            <textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="Enter rejection reason (optional)"
+              className="w-full rounded-md border p-2 text-sm"
+              rows={3}
+            />
+
+            <div className="mt-4 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setRejectId(null);
+                  setRejectionReason("");
+                }}
+                className="rounded-md border px-4 py-2 text-sm"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={() =>
+                  reject({
+                    id: rejectId,
+                    rejectionReason: rejectionReason.trim() || undefined,
+                  })
+                }
+                className="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
+              >
+                Reject
+              </button>
+            </div>
           </div>
         </div>
       )}
