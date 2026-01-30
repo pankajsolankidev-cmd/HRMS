@@ -14,11 +14,14 @@ import type { AxiosError } from "axios";
 import { getEmployees, getSalaryStructureById } from "../../api/get";
 import { updateSalaryStructure } from "../../api/patch";
 import { addSalaryStructure } from "../../api/post";
-
+const MAX_AMOUNT = 1_000_000;
 const schema = z.object({
   employeeId: z.string().min(1, "Employee is required"),
-  basicSalary: z.number().min(1, "Basic salary must be greater than 0"),
-  description: z.string().min(1, "Description is required"),
+  basicSalary: z
+    .number()
+    .min(1, "Basic salary must be greater than 0")
+    .max(MAX_AMOUNT, "Amount is too large"),
+  description: z.string().optional(),
   appraisalDate: z.string(),
 });
 
@@ -165,12 +168,9 @@ export default function AddEditSalaryForm() {
           />
 
           <Input
-            required
             label="Description"
             placeholder="Description"
             {...register("description")}
-            error={!!errors.description}
-            hint={errors.description?.message}
           />
 
           <Controller

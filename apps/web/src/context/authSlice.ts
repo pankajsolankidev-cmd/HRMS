@@ -24,6 +24,7 @@ const authSlice = createSlice({
       state.roles = action.payload.roles;
       state.permissions = action.payload.permissions;
     },
+
     clearAuth: () => initialState,
   },
 });

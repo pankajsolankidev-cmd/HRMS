@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router";
 
+import { useSelector } from "react-redux";
 import { deleteLeave } from "../../api/delete";
 import { getLeaves } from "../../api/get";
 import { approveLeave, rejectLeave } from "../../api/patch";
@@ -13,6 +14,7 @@ import Can from "../../components/common/Can";
 import DataTable, {
   type Column,
 } from "../../components/tables/BasicTables/DataTable";
+import type { RootState } from "../../context";
 import type {
   Employee,
   LeaveApiResponse,
@@ -162,18 +164,24 @@ export default function GetLeaveTable({ search }: Props) {
       );
     },
   });
+  const roles = useSelector((state: RootState) => state.auth.roles);
 
+  const isEmployee = roles.includes("EMPLOYEE");
   const columns: Column<LeaveRow>[] = [
-    {
-      header: "Employee",
-      cell: (row) => (
-        <span className="">
-          {row.employee
-            ? `${row.employee.firstName} ${row.employee.lastName}`
-            : "—"}
-        </span>
-      ),
-    },
+    ...(!isEmployee
+      ? [
+          {
+            header: "Employee",
+            cell: (row: LeaveRow) => (
+              <span>
+                {row.employee
+                  ? `${row.employee.firstName} ${row.employee.lastName}`
+                  : "—"}
+              </span>
+            ),
+          },
+        ]
+      : []),
     {
       header: "Type",
       accessor: "type",
@@ -210,6 +218,12 @@ export default function GetLeaveTable({ search }: Props) {
       ),
     },
     {
+      header: "User Reason",
+      cell: (row) => (
+        <span className="text-red-700 dark:text-gray-300">{row.reason}</span>
+      ),
+    },
+    {
       header: "Total Days",
       accessor: "totalDays",
       cell: (row) => (
@@ -235,25 +249,20 @@ export default function GetLeaveTable({ search }: Props) {
       ),
     },
     {
-      header: "Reason",
+      header: "Rejected Reason",
       cell: (row) => (
         <span className="text-red-700 dark:text-gray-300">
           {row.rejectionReason}
         </span>
       ),
     },
-    {
-      header: "User Reason",
-      cell: (row) => (
-        <span className="text-red-700 dark:text-gray-300">{row.reason}</span>
-      ),
-    },
+
     {
       header: "Action By",
       cell: (row) => {
         if (row.status === "approved" && row.approvedByUser) {
           return (
-            <span className="text-green-700 font-medium">
+            <span className=" font-medium">
               {row.approvedByUser.firstName} {row.approvedByUser.lastName}
             </span>
           );
@@ -261,7 +270,7 @@ export default function GetLeaveTable({ search }: Props) {
 
         if (row.status === "rejected" && row.rejectedByUser) {
           return (
-            <span className="text-red-700 font-medium">
+            <span className=" font-medium">
               {row.rejectedByUser.firstName} {row.rejectedByUser.lastName}
             </span>
           );
@@ -270,7 +279,6 @@ export default function GetLeaveTable({ search }: Props) {
         return <span className="text-gray-400">—</span>;
       },
     },
-
     {
       header: "Action",
       align: "center",
