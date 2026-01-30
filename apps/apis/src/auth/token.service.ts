@@ -5,7 +5,9 @@ import bcrypt from "bcryptjs";
 export interface AccessTokenPayload {
   id: string;
   email: string;
-  roles: string[]; 
+  username: string;
+  roles: string[];
+  permissions: string[];
 }
 
 function getJwtSecret(): string {
