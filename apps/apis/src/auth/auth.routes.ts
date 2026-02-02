@@ -45,7 +45,7 @@ export default async function authRoutes(app: FastifyInstance) {
     if (!email || !password) {
       return reply
         .status(400)
-        .send({ error: "Email and password are required" });
+        .send({ error: "Email or password are required" });
     }
 
     const [user] = await db
