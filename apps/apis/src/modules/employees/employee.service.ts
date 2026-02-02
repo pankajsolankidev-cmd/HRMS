@@ -278,7 +278,22 @@ export async function updateEmployeeHandler(
   const { id } = request.params as { id: string };
   const body = request.body as UpdateEmployeeDto;
 
+  const loggedInUserId = (request.user as any)?.id;
+
   const updated = await db.transaction(async (tx) => {
+    const [employee] = await tx
+      .select({ id: employees.id, userId: employees.userId })
+      .from(employees)
+      .where(eq(employees.id, id));
+
+    if (!employee) return null;
+
+    if (employee.userId === loggedInUserId) {
+      return reply.code(403).send({
+        message: "You cannot update your own record",
+      });
+    }
+
     const employeeUpdateData: Partial<typeof employees.$inferInsert> = {
       firstName: body.firstName,
       lastName: body.lastName,
@@ -307,8 +322,6 @@ export async function updateEmployeeHandler(
       .where(eq(employees.id, id))
       .returning();
 
-    if (!result) return null;
-
     if (body.documents) {
       await tx
         .update(documentGeneration)
@@ -326,15 +339,18 @@ export async function updateEmployeeHandler(
   if (!updated) {
     return reply.code(404).send({ message: "Employee not found" });
   }
+  
 
   return sendMessage(reply, "Employee updated successfully");
 }
+
 
 export async function deleteEmployeeHandler(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
+  const loggedInUserId = (request.user as any)?.id;
 
   try {
     const deleted = await db.transaction(async (tx) => {
@@ -343,22 +359,26 @@ export async function deleteEmployeeHandler(
         .from(employees)
         .where(eq(employees.id, id));
 
-      if (!employee) {
-        return null;
+      if (!employee) return null;
+
+      
+      if (employee.userId === loggedInUserId) {
+        throw new Error("SELF_DELETE_NOT_ALLOWED");
       }
 
       await tx
         .delete(documentGeneration)
         .where(eq(documentGeneration.employeeId, id));
 
-      await tx.delete(userRoles).where(eq(userRoles.userId, employee.userId));
+      await tx
+        .delete(userRoles)
+        .where(eq(userRoles.userId, employee.userId));
 
       await tx
         .delete(refreshTokens)
         .where(eq(refreshTokens.userId, employee.userId));
 
       await tx.delete(employees).where(eq(employees.id, id));
-
       await tx.delete(users).where(eq(users.id, employee.userId));
 
       return { employeeId: id };
@@ -371,10 +391,17 @@ export async function deleteEmployeeHandler(
     }
 
     return sendMessage(reply, "Employee deleted successfully");
-  } catch (err) {
+  } catch (err: any) {
+    if (err.message === "SELF_DELETE_NOT_ALLOWED") {
+      return reply.code(403).send({
+        message: "You cannot delete your own record",
+      });
+    }
+
     request.log.error(err);
     return reply.code(500).send({
       message: "Internal server error",
     });
   }
 }
+
