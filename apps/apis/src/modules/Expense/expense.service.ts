@@ -78,7 +78,7 @@ export async function getExpensesHandler(request: FastifyRequest) {
 
   const userId = request.user!.id;
 
-  // ✅ ROLE BASED LOGIC (LIKE LEAVE MODULE)
+  
   const userRolesRows = await db
     .select({ roleName: roles.name })
     .from(userRoles)
@@ -90,7 +90,7 @@ export async function getExpensesHandler(request: FastifyRequest) {
   const isHRorAdmin =
     roleNames.includes("HR") || roleNames.includes("ADMIN");
 
-  // ✅ IF NOT HR/ADMIN → ONLY OWN EXPENSES
+  
   if (!isHRorAdmin) {
     const [employee] = await db
       .select()
@@ -107,22 +107,21 @@ export async function getExpensesHandler(request: FastifyRequest) {
     conditions.push(eq(expenses.employeeId, employee.id));
   }
 
-  // ✅ SEARCH
   if (query.search) {
     conditions.push(ilike(expenses.expenseType, `%${query.search}%`));
   }
 
-  // ✅ STATUS FILTER
+  
   if (query.status) {
     conditions.push(eq(expenses.status, query.status as any));
   }
 
-  // ✅ PAGINATION
+  
   const page = Math.max(1, Number(query.page) || 1);
   const limit = Math.min(100, Number(query.limit) || 10);
   const offset = (page - 1) * limit;
 
-  // ✅ SORTING
+
   const sortColumn =
     query.sortBy === "amount"
       ? expenses.amount
@@ -132,7 +131,7 @@ export async function getExpensesHandler(request: FastifyRequest) {
 
   const order = query.sortOrder === "asc" ? asc(sortColumn) : desc(sortColumn);
 
-  // ✅ DATA QUERY
+  
   const data = await db
     .select()
     .from(expenses)
@@ -141,7 +140,7 @@ export async function getExpensesHandler(request: FastifyRequest) {
     .limit(limit)
     .offset(offset);
 
-  // ✅ COUNT QUERY
+ 
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)` })
     .from(expenses)

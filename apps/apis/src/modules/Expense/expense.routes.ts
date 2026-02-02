@@ -77,7 +77,7 @@ export default async function expenseRoutes(app: FastifyInstance) {
     "/expenses/:id",
     {
       ...secured,
-      preHandler: [verifyAccessToken, authorize(PERMISSIONS.EXPENSE_VIEW_OWN)],
+      preHandler: [verifyAccessToken],
       schema: {
         ...secured.schema,
         ...getExpenseByIdSchema,
@@ -91,8 +91,8 @@ export default async function expenseRoutes(app: FastifyInstance) {
     {
       ...secured,
       preHandler: [
-        verifyAccessToken,
-        authorize(PERMISSIONS.EXPENSE_UPDATE_OWN),
+        verifyAccessToken
+       
       ],
       schema: {
         ...secured.schema,
@@ -108,7 +108,7 @@ export default async function expenseRoutes(app: FastifyInstance) {
       ...secured,
       preHandler: [
         verifyAccessToken,
-        authorize(PERMISSIONS.EXPENSE_DELETE_OWN),
+        
       ],
       schema: {
         ...secured.schema,
