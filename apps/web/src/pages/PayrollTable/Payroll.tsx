@@ -24,7 +24,7 @@ export default function Payroll() {
             <button
               onClick={() => navigate("/payrolls/new")}
               className="rounded-lg bg-black px-4 py-2 text-sm text-white
-                 dark:bg-white dark:text-black just"
+                 dark:bg-white dark:text-black"
             >
               Add payrolls
             </button>
