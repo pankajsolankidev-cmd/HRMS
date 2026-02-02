@@ -1,5 +1,5 @@
 interface ComponentCardProps {
-  title: string;
+  title?: string;
   children: React.ReactNode;
   className?: string;
   desc?: string;
@@ -7,7 +7,7 @@ interface ComponentCardProps {
   middle?: React.ReactNode;
 }
 
-const ComponentCard: React.FC<ComponentCardProps> = ({
+const Card: React.FC<ComponentCardProps> = ({
   title,
   children,
   className = "",
@@ -15,6 +15,8 @@ const ComponentCard: React.FC<ComponentCardProps> = ({
   action,
   middle,
 }) => {
+  const showHeader = title || desc || action || middle;
+
   return (
     <div
       className={`
@@ -24,27 +26,34 @@ const ComponentCard: React.FC<ComponentCardProps> = ({
         ${className}
       `}
     >
-      <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
-        <div className="flex flex-wrap items-center gap-4">
-          <div>
-            <h3 className="text-base font-medium text-gray-800 dark:text-white/90">
-              {title}
-            </h3>
-            {desc && (
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                {desc}
-              </p>
-            )}
-          </div>
+      {showHeader && (
+        <div className="px-4 py-4 sm:px-6">
+          <div className="flex items-center gap-4 pt-2">
+            {(title || desc) && (
+              <div>
+                {title && (
+                  <h3 className="text-2xl font-medium text-gray-800 dark:text-white/90">
+                    {title}
+                  </h3>
+                )}
 
-          {middle && <div className="flex-1">{middle}</div>}
-          {action && <div>{action}</div>}
+                {desc && (
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    {desc}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {action && <div>{action}</div>}
+            {middle && <div className="ml-auto">{middle}</div>}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="p-4 sm:p-6 dark:bg-gray-950">{children}</div>
     </div>
   );
 };
 
-export default ComponentCard;
+export default Card;

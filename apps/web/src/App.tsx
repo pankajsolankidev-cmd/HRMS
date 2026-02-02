@@ -17,9 +17,6 @@ import PublicRoute from "./pages/OtherPage/PublicRoute";
 import AddEmployee from "./pages/EmployeeTable/AddEditEmployee";
 import Employee from "./pages/EmployeeTable/Employee";
 
-import AddEditComponent from "./pages/ComponentTable/AddEditComponent";
-import Component from "./pages/ComponentTable/Component";
-
 import AddEditSystem from "./pages/SystemTable/AddEditSystem";
 import System from "./pages/SystemTable/System";
 
@@ -36,14 +33,16 @@ import Leave from "./pages/LeaveTable/Leave";
 
 import { Toaster } from "react-hot-toast";
 import SmallAuthLayout from "./layout/SmallAuthLayout";
-import AddEditExpense from "./pages/ExpenseTable/AddEditExpense";
-import Expense from "./pages/ExpenseTable/Expense";
-import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
-import RootRedirect from "./pages/OtherPage/RootRedirect";
 import ForgetPassword from "./pages/auth/ForgetPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import SignInForm from "./pages/auth/SignInForm";
 import SignUpForm from "./pages/auth/SignUpForm";
+import AddEditComponentPage from "./pages/Component/AddEditComponentPage";
+import ComponentPage from "./pages/Component/ComponentPage";
+import AddEditExpense from "./pages/ExpenseTable/AddEditExpense";
+import Expense from "./pages/ExpenseTable/Expense";
+import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
+import RootRedirect from "./pages/OtherPage/RootRedirect";
 
 function AppRoutes() {
   return (
@@ -69,8 +68,8 @@ function AppRoutes() {
           <Route path="/employees" element={<Employee />} />
           <Route path="/employees/:id" element={<AddEmployee />} />
 
-          <Route path="/components" element={<Component />} />
-          <Route path="/components/:id" element={<AddEditComponent />} />
+          <Route path="/components" element={<ComponentPage />} />
+          <Route path="/components/:id" element={<AddEditComponentPage />} />
 
           <Route path="/systems" element={<System />} />
           <Route path="/systems/:id" element={<AddEditSystem />} />

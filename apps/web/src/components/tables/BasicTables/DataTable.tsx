@@ -17,12 +17,18 @@ export type Column<T> = {
 export interface DataTableProps<T> {
   columns: Column<T>[];
   data: T[];
+
   isLoading?: boolean;
   isError?: boolean;
 
   sortBy?: keyof T;
   sortOrder?: "asc" | "desc";
   onSort?: (field: keyof T) => void;
+
+  page?: number;
+  limit?: number;
+  total?: number;
+  onPageChange?: (page: number) => void;
 }
 
 export default function DataTable<T>({
@@ -33,11 +39,15 @@ export default function DataTable<T>({
   sortBy,
   sortOrder,
   onSort,
+  page = 1,
+  limit = 10,
+  total = 0,
+  onPageChange,
 }: DataTableProps<T>) {
   if (isLoading) {
     return (
-      <div className="p-6 text-center text-gray-500 dark:text-gray-400">
-        Loading data...
+      <div className="flex items-center justify-center py-10">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-black dark:border-gray-600 dark:border-t-white" />
       </div>
     );
   }
@@ -74,18 +84,47 @@ export default function DataTable<T>({
                     }
                     className={`
                       px-6 py-4 text-${col.align ?? "left"}
-                      text-xs font-semibold uppercase
+                      text-sm font-semibold uppercase
                       ${
                         isSortable
-                          ? "cursor-pointer select-none hover:text-black dark:hover:text-white"
+                          ? "cursor-pointer select-none"
                           : "text-gray-500 dark:text-gray-400"
                       }
                     `}
                   >
-                    <div className="inline-flex items-center gap-1">
-                      {col.header}
-                      {isActive && sortOrder === "asc" && <span>▲</span>}
-                      {isActive && sortOrder === "desc" && <span>▼</span>}
+                    <div
+                      className={`flex items-center gap-2 ${
+                        col.align === "center"
+                          ? "justify-center"
+                          : col.align === "right"
+                            ? "justify-end"
+                            : "justify-start"
+                      }`}
+                    >
+                      <span>{col.header}</span>
+
+                      {isSortable && (
+                        <div className="flex flex-col leading-none">
+                          <span
+                            className={`text-[10px] ${
+                              isActive && sortOrder === "asc"
+                                ? "text-gray-900 dark:text-white"
+                                : "text-gray-300 dark:text-gray-600"
+                            }`}
+                          >
+                            ▲
+                          </span>
+                          <span
+                            className={`text-[10px] ${
+                              isActive && sortOrder === "desc"
+                                ? "text-gray-900 dark:text-white"
+                                : "text-gray-300 dark:text-gray-600"
+                            }`}
+                          >
+                            ▼
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </TableCell>
                 );
@@ -102,11 +141,19 @@ export default function DataTable<T>({
                 {columns.map((col, colIndex) => (
                   <TableCell
                     key={colIndex}
-                    className={`px-6 py-5 text-${
-                      col.align ?? "left"
-                    } align-middle`}
+                    className={`px-6 py-5 align-middle`}
                   >
-                    {col.cell(row)}
+                    <div
+                      className={`flex w-full ${
+                        col.align === "center"
+                          ? "justify-center"
+                          : col.align === "right"
+                            ? "justify-end"
+                            : "justify-start"
+                      }`}
+                    >
+                      {col.cell(row)}
+                    </div>
                   </TableCell>
                 ))}
               </TableRow>
@@ -114,6 +161,33 @@ export default function DataTable<T>({
           </TableBody>
         </Table>
       </div>
+
+      {onPageChange && total > 0 && (
+        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 dark:border-gray-800">
+          <span className="text-sm text-gray-500">
+            Showing {(page - 1) * limit + 1} – {Math.min(page * limit, total)}{" "}
+            of {total}
+          </span>
+
+          <div className="flex gap-2">
+            <button
+              disabled={page === 1}
+              onClick={() => onPageChange(page - 1)}
+              className="rounded border px-3 py-1 text-sm disabled:opacity-50"
+            >
+              Prev
+            </button>
+
+            <button
+              disabled={page * limit >= total}
+              onClick={() => onPageChange(page + 1)}
+              className="rounded border px-3 py-1 text-sm disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
