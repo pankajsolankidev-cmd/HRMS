@@ -39,40 +39,6 @@ function generateRefreshToken() {
 }
 
 export default async function authRoutes(app: FastifyInstance) {
-  app.post("/signup", { schema: signUpSchema }, async (request, reply) => {
-    const { username, email, password } = request.body as AuthSignUpDto;
-
-    if (!username || !email || !password) {
-      return reply.status(400).send({ error: "All fields are required" });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    try {
-      const [user] = await db
-        .insert(users)
-        .values({ username, email, password: hashedPassword })
-        .returning({
-          id: users.id,
-          email: users.email,
-        });
-
-      const accessToken = generateAccessToken({
-        id: user.id,
-        email: user.email,
-      });
-
-      return reply.status(201).send({ accessToken });
-    } catch (err: any) {
-      if (err?.code === "23505") {
-        return reply.status(409).send({
-          error: "User with this email or username already exists",
-        });
-      }
-      return reply.status(500).send({ error: "Internal server error" });
-    }
-  });
-
   app.post("/signin", { schema: signInSchema }, async (request, reply) => {
     const { email, password } = request.body as AuthSignInDto;
 
