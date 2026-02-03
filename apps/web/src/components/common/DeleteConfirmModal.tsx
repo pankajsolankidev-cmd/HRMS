@@ -53,7 +53,12 @@ export default function DeleteConfirm<T>({
               </button>
 
               <button
-                onClick={() => value && onConfirm(value)}
+                onClick={() => {
+                  if (value) {
+                    onConfirm(value);
+                    close();
+                  }
+                }}
                 disabled={loading}
                 className="rounded-lg bg-red-600 px-4 py-2 text-sm text-white disabled:opacity-50"
               >

@@ -1,3 +1,4 @@
+import { IconChevronDown } from "@tabler/icons-react";
 import {
   Table,
   TableBody,
@@ -29,6 +30,7 @@ export interface DataTableProps<T> {
   limit?: number;
   total?: number;
   onPageChange?: (page: number) => void;
+  onLimitChange?: (limit: number) => void;
 }
 
 export default function DataTable<T>({
@@ -43,6 +45,7 @@ export default function DataTable<T>({
   limit = 10,
   total = 0,
   onPageChange,
+  onLimitChange,
 }: DataTableProps<T>) {
   if (isLoading) {
     return (
@@ -62,6 +65,44 @@ export default function DataTable<T>({
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+      {onLimitChange && (
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+              Rows per page:
+            </span>
+
+            <div className="relative">
+              <select
+                value={limit}
+                onChange={(e) => onLimitChange(Number(e.target.value))}
+                className={`
+            appearance-none
+            h-10 min-w-[70px] rounded-lg border border-gray-300 bg-white 
+            px-4 pr-10 text-sm font-medium outline-none transition-all
+            focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10
+            dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200
+            cursor-pointer
+          `}
+              >
+                {[5, 10, 50, 100].map((v) => (
+                  <option key={v} value={v} className="dark:bg-gray-900">
+                    {v}
+                  </option>
+                ))}
+              </select>
+
+              <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                <IconChevronDown
+                  size={18}
+                  className="pointer-events-none text-gray-400 dark:text-gray-500"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-full overflow-x-auto">
         <Table>
           <TableHeader className="border-b border-gray-100 dark:border-gray-800">
@@ -163,25 +204,26 @@ export default function DataTable<T>({
       </div>
 
       {onPageChange && total > 0 && (
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 dark:border-gray-800">
-          <span className="text-sm text-gray-500">
-            Showing {(page - 1) * limit + 1} – {Math.min(page * limit, total)}{" "}
-            of {total}
-          </span>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-gray-100 dark:border-gray-800">
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-500">
+              Showing {(page - 1) * limit + 1} – {Math.min(page * limit, total)}{" "}
+              of {total}
+            </span>
+          </div>
 
           <div className="flex gap-2">
             <button
               disabled={page === 1}
               onClick={() => onPageChange(page - 1)}
-              className="rounded border px-3 py-1 text-sm disabled:opacity-50"
+              className="rounded border px-3 py-1 text-sm disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
               Prev
             </button>
-
             <button
               disabled={page * limit >= total}
               onClick={() => onPageChange(page + 1)}
-              className="rounded border px-3 py-1 text-sm disabled:opacity-50"
+              className="rounded border px-3 py-1 text-sm disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
               Next
             </button>

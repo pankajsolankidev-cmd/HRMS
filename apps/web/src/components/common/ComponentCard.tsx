@@ -19,16 +19,11 @@ const Card: React.FC<ComponentCardProps> = ({
 
   return (
     <div
-      className={`
-        rounded-2xl border
-        bg-white dark:bg-gray-900
-        border-gray-200 dark:border-gray-800
-        ${className}
-      `}
+      className={`rounded-2xl border bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 ${className}`}
     >
       {showHeader && (
         <div className="px-4 py-4 sm:px-6">
-          <div className="flex items-center gap-4 pt-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             {(title || desc) && (
               <div>
                 {title && (
@@ -36,7 +31,6 @@ const Card: React.FC<ComponentCardProps> = ({
                     {title}
                   </h3>
                 )}
-
                 {desc && (
                   <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                     {desc}
@@ -45,8 +39,10 @@ const Card: React.FC<ComponentCardProps> = ({
               </div>
             )}
 
-            {action && <div>{action}</div>}
-            {middle && <div className="ml-auto">{middle}</div>}
+            <div className="flex flex-1 items-center justify-end gap-3">
+              {middle && <div>{middle}</div>}
+              {action && <div>{action}</div>}
+            </div>
           </div>
         </div>
       )}

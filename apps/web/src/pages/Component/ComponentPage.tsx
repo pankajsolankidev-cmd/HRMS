@@ -1,4 +1,4 @@
-import { IconEdit, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconSearch, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { useEffect, useState } from "react";
@@ -34,7 +34,7 @@ export default function ComponentPage() {
   const [search, setSearch] = useState<string | undefined>();
   const [rawSearch, setRawSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit, setLimit] = useState(10);
 
   const { sortBy, sortOrder, handleSort } = useTableSort<Component>();
 
@@ -42,7 +42,6 @@ export default function ComponentPage() {
     setPage(1);
   }, [search, sortBy, sortOrder]);
 
-  // debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearch(rawSearch.trim() || undefined);
@@ -144,47 +143,47 @@ export default function ComponentPage() {
       <PageBreadcrumb pageTitle="Components" />
 
       <Card
-        middle={
-          <div className="relative w-full sm:max-w-xs">
-            <Input
-              placeholder="Search here..."
-              value={rawSearch}
-              onChange={(e) => setRawSearch(e.target.value)}
-              className="pr-12"
-            />
-
-            {rawSearch && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setRawSearch("");
-                  setSearch(undefined);
-                }}
-                className="
-                  absolute right-2 top-1/2 -translate-y-1/2
-                  h-7 w-7 p-0 rounded-full
-                "
-              >
-                ✕
-              </Button>
-            )}
-          </div>
-        }
         action={
-          <Button
-            onClick={() => navigate("/components/new")}
-            size="md"
-            className="bg-black hover:bg-black dark:bg-blue-500 dark:hover:bg-blue-600"
-          >
-            Add Component
-          </Button>
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <div className="relative w-full sm:max-w-xs">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                <IconSearch size={18} stroke={2} />
+              </div>
+              <Input
+                placeholder="Search here..."
+                value={rawSearch}
+                onChange={(e) => setRawSearch(e.target.value)}
+                className="pl-10 pr-12"
+              />
+              {rawSearch && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setRawSearch("");
+                    setSearch(undefined);
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0 rounded-full"
+                >
+                  ✕
+                </Button>
+              )}
+            </div>
+
+            <Button
+              onClick={() => navigate("/components/new")}
+              size="md"
+              className="bg-black dark:bg-blue-500 dark:hover:bg-brand-600 whitespace-nowrap"
+            >
+              Add Employee
+            </Button>
+          </div>
         }
       >
         {!isLoading && components.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
-              No data found
+              No records found
             </p>
 
             {search && (
@@ -207,6 +206,10 @@ export default function ComponentPage() {
             limit={limit}
             total={total}
             onPageChange={setPage}
+            onLimitChange={(newLimit) => {
+              setLimit(newLimit);
+              setPage(1);
+            }}
           />
         )}
       </Card>

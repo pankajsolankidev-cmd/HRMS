@@ -14,6 +14,7 @@ import Input from "../../components/form/input/InputField";
 import { getComponentById } from "../../api/get";
 import { addComponent } from "../../api/post";
 import { updateComponent } from "../../api/put";
+import Button from "../../components/ui/button/Button";
 
 const componentSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -131,6 +132,7 @@ export default function AddEditComponentPage() {
 
             <div className="md:col-span-2">
               <Input
+                required
                 label="Description"
                 placeholder="Enter description"
                 {...register("description")}
@@ -140,21 +142,20 @@ export default function AddEditComponentPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-2">
-            <button
-              type="submit"
-              className="bg-blue-500 text-white px-4 py-2 rounded"
+          <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
+            <Button
+              disabled={saveMutation.isPending}
+              className="bg-blue-500 text-white"
             >
-              Save
-            </button>
-
-            <button
-              type="button"
-              onClick={() => navigate("/components")}
-              className="bg-gray-500 text-white px-4 py-2 rounded"
-            >
+              {saveMutation.isPending
+                ? "Saving..."
+                : isEditMode
+                  ? "Update"
+                  : "Save"}
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/components")}>
               Back
-            </button>
+            </Button>
           </div>
         </form>
       </ComponentCard>
