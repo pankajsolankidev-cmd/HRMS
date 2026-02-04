@@ -175,7 +175,7 @@ export default function ComponentPage() {
               size="md"
               className="bg-black dark:bg-blue-500 dark:hover:bg-brand-600 whitespace-nowrap"
             >
-              Add Employee
+              Add Component
             </Button>
           </div>
         }

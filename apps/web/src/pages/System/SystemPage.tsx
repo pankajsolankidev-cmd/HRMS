@@ -180,7 +180,7 @@ export default function SystemPage() {
               size="md"
               className="bg-black dark:bg-blue-500  whitespace-nowrap"
             >
-              Add Employee
+              Add System
             </Button>
           </div>
         }
