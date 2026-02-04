@@ -16,7 +16,7 @@ import { sendMessage } from "../../utils/api-response";
 
 export async function processPayrollHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const payload = request.body as ProcessPayrollDto;
   const processedBy = request.user!.id;
@@ -53,8 +53,8 @@ export async function processPayrollHandler(
       and(
         eq(payrolls.employeeId, payload.employeeId),
         eq(payrolls.month, payload.month),
-        eq(payrolls.year, payload.year)
-      )
+        eq(payrolls.year, payload.year),
+      ),
     );
 
   if (existingPayroll) {
@@ -104,27 +104,32 @@ export async function getPayrollsHandler(request: FastifyRequest) {
     conditions.push(eq(payrolls.employeeId, filters.employeeId));
   }
 
-  const { limit, offset, page } = getPagination(filters ?? {});
+  const { page, limit, offset } = getPagination(filters ?? {});
 
   const sortColumn =
     filters?.sortBy === "netSalary"
       ? payrolls.netSalary
       : filters?.sortBy === "year"
-      ? payrolls.year
-      : payrolls.processedAt;
+        ? payrolls.year
+        : payrolls.processedAt;
 
   const order =
     filters?.sortOrder === "asc" ? asc(sortColumn) : desc(sortColumn);
 
   const whereClause = conditions.length ? and(...conditions) : undefined;
 
-  const data = await db
+  let queryBuilder = db
     .select()
     .from(payrolls)
     .where(whereClause)
     .orderBy(order)
-    .limit(limit)
-    .offset(offset);
+    .$dynamic();
+
+  if (limit !== undefined && offset !== undefined) {
+    queryBuilder = queryBuilder.limit(limit).offset(offset);
+  }
+
+  const data = await queryBuilder;
 
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)` })
@@ -135,7 +140,7 @@ export async function getPayrollsHandler(request: FastifyRequest) {
     data,
     meta: {
       page,
-      limit,
+      limit: limit ?? null,
       total: Number(count),
     },
   };
@@ -143,7 +148,7 @@ export async function getPayrollsHandler(request: FastifyRequest) {
 
 export async function getPayrollByIdHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
 
@@ -158,7 +163,7 @@ export async function getPayrollByIdHandler(
 
 export async function updatePayrollHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
   const payload = request.body as UpdatePayrollDto;
@@ -216,7 +221,7 @@ export async function updatePayrollHandler(
 
 export async function deletePayrollHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
 

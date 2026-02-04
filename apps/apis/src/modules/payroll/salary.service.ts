@@ -14,7 +14,7 @@ import { sendMessage } from "../../utils/api-response";
 
 export async function createSalaryHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const payload = request.body as CreateSalaryDto;
 
@@ -71,7 +71,7 @@ export async function getSalariesHandler(request: FastifyRequest) {
     conditions.push(lte(salary.basicSalary, query.maxSalary.toString()));
   }
 
-  const { limit, offset, page } = getPagination(query ?? {});
+  const { page, limit, offset } = getPagination(query ?? {});
 
   const sortColumn =
     query?.sortBy === "basicSalary" ? salary.basicSalary : salary.createdAt;
@@ -80,13 +80,18 @@ export async function getSalariesHandler(request: FastifyRequest) {
 
   const whereClause = conditions.length ? and(...conditions) : undefined;
 
-  const data = await db
+  let queryBuilder = db
     .select()
     .from(salary)
     .where(whereClause)
     .orderBy(order)
-    .limit(limit)
-    .offset(offset);
+    .$dynamic();
+
+  if (limit !== undefined && offset !== undefined) {
+    queryBuilder = queryBuilder.limit(limit).offset(offset);
+  }
+
+  const data = await queryBuilder;
 
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)` })
@@ -97,7 +102,7 @@ export async function getSalariesHandler(request: FastifyRequest) {
     data,
     meta: {
       page,
-      limit,
+      limit: limit ?? null,
       total: Number(count),
     },
   };
@@ -105,7 +110,7 @@ export async function getSalariesHandler(request: FastifyRequest) {
 
 export async function getSalaryByIdHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
 
@@ -123,7 +128,7 @@ export async function getSalaryByIdHandler(
 
 export async function getSalaryByEmployeeHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { employeeId } = request.params as { employeeId: string };
 
@@ -143,7 +148,7 @@ export async function getSalaryByEmployeeHandler(
 
 export async function updateSalaryHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
   const payload = request.body as UpdateSalaryDto;
@@ -173,7 +178,7 @@ export async function updateSalaryHandler(
 
 export async function deleteSalaryHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
 

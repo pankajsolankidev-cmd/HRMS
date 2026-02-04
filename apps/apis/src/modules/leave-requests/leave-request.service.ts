@@ -19,6 +19,7 @@ import {
 } from "@shared/types/src/leave-request/leave-request.types";
 
 import { sendMessage } from "../../utils/api-response";
+import { getPagination } from "../../utils/pagination";
 
 function isWeekend(date: Date) {
   const day = date.getDay();
@@ -179,7 +180,6 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
     .where(eq(userRoles.userId, userId));
 
   const roleNames = userRolesRows.map((r) => r.roleName);
-
   const isHRorAdmin = roleNames.includes("HR") || roleNames.includes("ADMIN");
 
   const [employee] = await db
@@ -191,7 +191,7 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
     if (!employee) {
       return {
         data: [],
-        meta: { page: 1, limit: 10, total: 0 },
+        meta: { page: 1, limit: null, total: 0 },
       };
     }
 
@@ -210,9 +210,7 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
     conditions.push(eq(leaveRequests.type, query.type as any));
   }
 
-  const page = Math.max(1, Number(query?.page) || 1);
-  const limit = Math.min(50, Number(query?.limit) || 10);
-  const offset = (page - 1) * limit;
+  const { page, limit, offset } = getPagination(query);
 
   const sortColumn =
     query?.sortBy === "fromDate"
@@ -227,7 +225,7 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
     .leftJoin(employees, eq(leaveRequests.employeeId, employees.id))
     .where(conditions.length ? and(...conditions) : undefined);
 
-  const data = await db
+  let queryBuilder = db
     .select({
       leave: leaveRequests,
       employee: {
@@ -258,21 +256,26 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
       rejecterEmployee,
       eq(leaveRequests.rejectedBy, rejecterEmployee.userId),
     )
-
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(order)
-    .limit(limit)
-    .offset(offset);
+    .$dynamic();
+
+  if (limit !== undefined && offset !== undefined) {
+    queryBuilder = queryBuilder.limit(limit).offset(offset);
+  }
+
+  const data = await queryBuilder;
 
   return {
     data,
     meta: {
       page,
-      limit,
+      limit: limit ?? null,
       total: countResult?.count ?? 0,
     },
   };
 }
+
 export async function getLeaveRequestByIdHandler(
   request: FastifyRequest,
   reply: FastifyReply,

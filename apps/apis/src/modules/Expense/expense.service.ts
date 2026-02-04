@@ -9,10 +9,11 @@ import type { CreateExpenseDto } from "@shared/types/src/expense/create-expense.
 import type { UpdateExpenseDto } from "@shared/types/src/expense/update-expense.dto";
 import { ExpenseStatus } from "../../db/schema/expense.enums";
 import { employees } from "../../db/schema";
+import { getPagination } from "../../utils/pagination";
 
 export async function createExpenseHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const body = request.body as CreateExpenseDto;
 
@@ -57,26 +58,29 @@ export async function getExpensesHandler(request: FastifyRequest) {
     conditions.push(eq(expenses.status, query.status as ExpenseStatus));
   }
 
-  const page = Math.max(1, Number(query.page) || 1);
-  const limit = Math.min(100, Number(query.limit) || 10);
-  const offset = (page - 1) * limit;
+  const { page, limit, offset } = getPagination(query);
 
   const sortColumn =
     query.sortBy === "amount"
       ? expenses.amount
       : query.sortBy === "expenseDate"
-      ? expenses.expenseDate
-      : expenses.createdAt;
+        ? expenses.expenseDate
+        : expenses.createdAt;
 
   const order = query.sortOrder === "asc" ? asc(sortColumn) : desc(sortColumn);
 
-  const data = await db
+  let queryBuilder = db
     .select()
     .from(expenses)
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(order)
-    .limit(limit)
-    .offset(offset);
+    .$dynamic();
+
+  if (limit !== undefined && offset !== undefined) {
+    queryBuilder = queryBuilder.limit(limit).offset(offset);
+  }
+
+  const data = await queryBuilder;
 
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)` })
@@ -87,7 +91,7 @@ export async function getExpensesHandler(request: FastifyRequest) {
     data,
     meta: {
       page,
-      limit,
+      limit: limit ?? null,
       total: Number(count),
     },
   };
@@ -95,7 +99,7 @@ export async function getExpensesHandler(request: FastifyRequest) {
 
 export async function getExpenseByIdHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
 
@@ -110,7 +114,7 @@ export async function getExpenseByIdHandler(
 
 export async function updateExpenseHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
   const body = request.body as UpdateExpenseDto;
@@ -151,7 +155,7 @@ export async function updateExpenseHandler(
 
 export async function deleteExpenseHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
 
@@ -201,8 +205,8 @@ export async function getExpenseSummaryHandler(request: FastifyRequest) {
         eq(expenses.employeeId, employee.id),
         eq(expenses.status, "DRAFT"),
         sql`EXTRACT(MONTH FROM ${expenses.expenseDate}) = ${month}`,
-        sql`EXTRACT(YEAR FROM ${expenses.expenseDate}) = ${year}`
-      )
+        sql`EXTRACT(YEAR FROM ${expenses.expenseDate}) = ${year}`,
+      ),
     );
 
   return {

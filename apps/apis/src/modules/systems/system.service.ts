@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { eq, inArray, ilike, asc, desc, and } from "drizzle-orm";
+import { eq, inArray, ilike, asc, desc, and, sql } from "drizzle-orm";
 
 import { db } from "../../db";
 import { systems } from "../../db/schema/systems.schema";
@@ -15,7 +15,7 @@ import type {
 
 export async function createSystemHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const body = request.body as CreateSystemDto;
 
@@ -33,7 +33,7 @@ export async function createSystemHandler(
         body.componentIds.map((componentId) => ({
           systemId: system.id,
           componentId,
-        }))
+        })),
       );
     }
   });
@@ -50,7 +50,7 @@ export async function getSystemsHandler(request: FastifyRequest) {
     sortOrder?: "asc" | "desc";
   };
 
-  const { limit, offset, page } = getPagination(query || {});
+  const { page, limit, offset } = getPagination(query || {});
   const sortBy = query?.sortBy ?? "createdAt";
   const sortOrder = query?.sortOrder ?? "desc";
 
@@ -65,16 +65,33 @@ export async function getSystemsHandler(request: FastifyRequest) {
   const orderBy =
     sortOrder === "asc" ? asc(systems[sortBy]) : desc(systems[sortBy]);
 
-  const systemsList = await db
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(systems)
+    .where(whereClause);
+
+  let systemsQuery = db
     .select()
     .from(systems)
     .where(whereClause)
     .orderBy(orderBy)
-    .limit(limit)
-    .offset(offset);
+    .$dynamic();
+
+  if (limit !== undefined && offset !== undefined) {
+    systemsQuery = systemsQuery.limit(limit).offset(offset);
+  }
+
+  const systemsList = await systemsQuery;
 
   if (!systemsList.length) {
-    return { data: [], page, limit };
+    return {
+      data: [],
+      meta: {
+        page,
+        limit: limit ?? null,
+        total: Number(count),
+      },
+    };
   }
 
   const systemIds = systemsList.map((s) => s.id);
@@ -95,14 +112,17 @@ export async function getSystemsHandler(request: FastifyRequest) {
         .filter((r) => r.systemId === system.id)
         .map((r) => r.component),
     })),
-    page,
-    limit,
+    meta: {
+      page,
+      limit: limit ?? null,
+      total: Number(count),
+    },
   };
 }
 
 export async function getSystemByIdHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
 
@@ -126,7 +146,7 @@ export async function getSystemByIdHandler(
 
 export async function updateSystemHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
   const body = request.body as UpdateSystemDto;
@@ -156,7 +176,7 @@ export async function updateSystemHandler(
           body.componentIds.map((componentId) => ({
             systemId: id,
             componentId,
-          }))
+          })),
         );
       }
     }
@@ -173,7 +193,7 @@ export async function updateSystemHandler(
 
 export async function deleteSystemHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
 
