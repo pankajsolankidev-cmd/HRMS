@@ -68,8 +68,8 @@ export default function DataTable<T>({
       {onLimitChange && (
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20">
           <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
-              Rows per page:
+            <span className="text-lg  text-gray-700 dark:text-gray-300 whitespace-nowrap">
+              Show
             </span>
 
             <div className="relative">
@@ -99,6 +99,9 @@ export default function DataTable<T>({
                 />
               </div>
             </div>
+            <span className="text-lg  text-gray-700 dark:text-gray-300 whitespace-nowrap">
+              entries
+            </span>
           </div>
         </div>
       )}
@@ -147,7 +150,7 @@ export default function DataTable<T>({
                       {isSortable && (
                         <div className="flex flex-col leading-none">
                           <span
-                            className={`text-[10px] ${
+                            className={`text-[8px] ${
                               isActive && sortOrder === "asc"
                                 ? "text-gray-900 dark:text-white"
                                 : "text-gray-300 dark:text-gray-600"
@@ -156,7 +159,7 @@ export default function DataTable<T>({
                             ▲
                           </span>
                           <span
-                            className={`text-[10px] ${
+                            className={`text-[8px] ${
                               isActive && sortOrder === "desc"
                                 ? "text-gray-900 dark:text-white"
                                 : "text-gray-300 dark:text-gray-600"

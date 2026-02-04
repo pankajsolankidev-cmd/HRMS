@@ -33,7 +33,7 @@ export default function DeleteConfirm<T>({
       {children(askDelete)}
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        <div className="fixed inset-0 z-999 flex items-center justify-center bg-black/40">
           <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg dark:bg-gray-600">
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
               {title}
