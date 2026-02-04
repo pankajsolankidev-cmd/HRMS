@@ -1,98 +1,73 @@
-import { IconEdit, IconTrash } from "@tabler/icons-react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  IconCheck,
+  IconDotsVertical,
+  IconEdit,
+  IconEye,
+  IconSearch,
+  IconTrash,
+  IconX,
+} from "@tabler/icons-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 
-import { useSelector } from "react-redux";
+import Can from "../../components/common/Can";
+import Card from "../../components/common/ComponentCard";
+import DeleteConfirm from "../../components/common/DeleteConfirmModal";
+import PageBreadcrumb from "../../components/common/PageBreadCrumb";
+import PageMeta from "../../components/common/PageMeta";
+import DataTable, {
+  type Column,
+} from "../../components/tables/BasicTables/DataTable";
+import Button from "../../components/ui/button/Button";
+
 import { deleteLeave } from "../../api/delete";
 import { getLeaves } from "../../api/get";
 import { approveLeave, rejectLeave } from "../../api/patch";
 import type { PaginatedResponse } from "../../api/types";
-import Can from "../../components/common/Can";
-import DataTable, {
-  type Column,
-} from "../../components/tables/BasicTables/DataTable";
+import Input from "../../components/form/input/InputField";
+import { useTableSort } from "../../components/tables/useTableSort";
 import type { RootState } from "../../context";
-import type {
-  Employee,
-  LeaveApiResponse,
-  LeaveDayType,
-  LeaveList,
-  LeaveStatus,
-  LeaveType,
-} from "./leaveType";
+import type { LeaveApiResponse, LeaveList, LeaveRow } from "./leaveType";
 
-export type LeaveRow = {
-  id: string;
-  employee: Employee;
-  fromDate: string;
-  toDate: string;
-  type: LeaveType;
-  dayType: LeaveDayType;
-  status: LeaveStatus;
-  reason: string;
-  totalDays: string;
-  rejectionReason?: string | null;
-  file?: string;
-
-  approvedByUser?: {
-    firstName: string;
-    lastName: string;
-  } | null;
-
-  rejectedByUser?: {
-    firstName: string;
-    lastName: string;
-  } | null;
-};
-
-type Props = {
-  search?: string;
-};
-
-export default function GetLeaveTable({ search }: Props) {
+export default function LeavePage() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { roles } = useSelector((state: RootState) => state.auth);
 
+  const [search, setSearch] = useState<string | undefined>();
+  const [rawSearch, setRawSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit, setLimit] = useState(10);
 
-  const [sortBy, setSortBy] = useState<keyof LeaveRow | undefined>(undefined);
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | undefined>(
-    undefined,
-  );
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
 
+  const { sortBy, sortOrder, handleSort } = useTableSort<LeaveRow>();
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [viewLeave, setViewLeave] = useState<LeaveRow | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = () => setActiveDropdown(null);
+    window.addEventListener("click", handleClickOutside);
+    return () => window.removeEventListener("click", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(rawSearch.trim() || undefined);
+      setPage(1);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [rawSearch]);
+
   useEffect(() => {
     setPage(1);
-  }, [search]);
+  }, [search, sortBy, sortOrder]);
 
-  const handleSort = (field: keyof LeaveRow) => {
-    if (sortBy === field) {
-      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
-    } else {
-      setSortBy(field);
-      setSortOrder("asc");
-      setPage(1);
-      return;
-    }
-
-    if (sortOrder === "asc") {
-      setSortOrder("desc");
-    } else if (sortOrder === "desc") {
-      setSortBy(undefined);
-      setSortOrder(undefined);
-    } else {
-      setSortOrder("asc");
-    }
-
-    setPage(1);
-  };
-
-  const { data, isLoading, isError } = useQuery<
+  const { data, isLoading, isError, refetch } = useQuery<
     PaginatedResponse<LeaveApiResponse<LeaveList>>
   >({
     queryKey: ["leaves", page, limit, sortBy, sortOrder, search ?? "all"],
@@ -100,16 +75,44 @@ export default function GetLeaveTable({ search }: Props) {
       getLeaves({
         page,
         limit,
-        sortBy: sortBy as string | undefined,
-        sortOrder,
+        ...(sortBy && sortOrder ? { sortBy: sortBy as string, sortOrder } : {}),
         search,
       }),
     placeholderData: (prev) => prev,
   });
 
-  const apiLeaves = data?.data ?? [];
+  const { mutate: removeLeave, isPending: isDeletePending } = useMutation({
+    mutationFn: deleteLeave,
+    onSuccess: (res) => {
+      toast.success(res?.message ?? "Leave deleted successfully");
+      refetch();
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(
+        error?.response?.data?.message ?? "An unexpected error occurred",
+      );
+    },
+  });
 
-  const leaves: LeaveRow[] = apiLeaves.map((item) => ({
+  const { mutate: approve } = useMutation({
+    mutationFn: approveLeave,
+    onSuccess: (res) => {
+      toast.success(res?.message ?? "Leave Approved");
+      refetch();
+    },
+  });
+
+  const { mutate: reject } = useMutation({
+    mutationFn: rejectLeave,
+    onSuccess: (res) => {
+      toast.success(res?.message ?? "Leave rejected");
+      setRejectId(null);
+      setRejectionReason("");
+      refetch();
+    },
+  });
+
+  const leaves: LeaveRow[] = (data?.data ?? []).map((item) => ({
     id: item.leave.id,
     employee: item.employee,
     fromDate: item.leave.fromDate,
@@ -121,16 +124,16 @@ export default function GetLeaveTable({ search }: Props) {
     totalDays: item.leave.totalDays,
     rejectionReason: item.leave.rejectionReason ?? null,
     file: item.leave.file,
-
     approvedByUser: item.approvedByUser
       ? {
+          id: item.approvedByUser.id,
           firstName: item.approvedByUser.firstName,
           lastName: item.approvedByUser.lastName,
         }
       : null,
-
     rejectedByUser: item.rejectedByUser
       ? {
+          id: item.rejectedByUser.id,
           firstName: item.rejectedByUser.firstName,
           lastName: item.rejectedByUser.lastName,
         }
@@ -138,56 +141,15 @@ export default function GetLeaveTable({ search }: Props) {
   }));
 
   const total = data?.meta?.total ?? 0;
-
-  const { mutate: removeLeave } = useMutation({
-    mutationFn: deleteLeave,
-    onSuccess: (res) => {
-      toast.success(res?.message ?? "Leave deleted successfully");
-      queryClient.invalidateQueries({ queryKey: ["leaves"] });
-    },
-    onError: (error: AxiosError<{ message?: string }>) => {
-      toast.error(
-        error?.response?.data?.message ?? "An unexpected error occurred",
-      );
-    },
-  });
-  const { mutate: approve } = useMutation({
-    mutationFn: approveLeave,
-    onSuccess: (res) => {
-      toast.success(res?.message ?? "Leave Approved");
-      queryClient.invalidateQueries({ queryKey: ["leaves"] });
-    },
-    onError: (error: AxiosError<{ message?: string }>) => {
-      toast.error(
-        error?.response?.data?.message ?? "An unexpected error occurred",
-      );
-    },
-  });
-
-  const { mutate: reject } = useMutation({
-    mutationFn: rejectLeave,
-    onSuccess: (res) => {
-      toast.success(res?.message ?? "Leave rejected");
-      setRejectId(null);
-      setRejectionReason("");
-      queryClient.invalidateQueries({ queryKey: ["leaves"] });
-    },
-    onError: (error: AxiosError<{ message?: string }>) => {
-      toast.error(
-        error?.response?.data?.message ?? "An unexpected error occurred",
-      );
-    },
-  });
-  const roles = useSelector((state: RootState) => state.auth.roles);
-
   const isEmployee = roles.includes("EMPLOYEE");
+
   const columns: Column<LeaveRow>[] = [
     ...(!isEmployee
       ? [
           {
             header: "Employee",
             cell: (row: LeaveRow) => (
-              <span>
+              <span className="font-medium text-gray-800 dark:text-white/90">
                 {row.employee
                   ? `${row.employee.firstName} ${row.employee.lastName}`
                   : "—"}
@@ -199,152 +161,139 @@ export default function GetLeaveTable({ search }: Props) {
     {
       header: "Type",
       accessor: "type",
-      cell: (row) => (
-        <span className="capitalize  text-gray-800 dark:text-white/90">
-          {row.type}
-        </span>
-      ),
+      cell: (row) => <span className="capitalize">{row.type}</span>,
     },
     {
       header: "From Date",
       accessor: "fromDate",
       sortable: true,
-      cell: (row) => (
-        <span className="text-gray-700 font-medium dark:text-gray-300">
-          {row.fromDate}
-        </span>
-      ),
+      cell: (row) => <span className="font-medium">{row.fromDate}</span>,
     },
     {
       header: "To Date",
       accessor: "toDate",
-      cell: (row) => (
-        <span className="text-gray-700 dark:text-gray-300">{row.toDate}</span>
-      ),
+      cell: (row) => row.toDate,
     },
     {
       header: "Day Type",
       accessor: "dayType",
-      cell: (row) => (
-        <span className="capitalize text-gray-700 dark:text-gray-300">
-          {row.dayType.replace("_", " ")}
-        </span>
-      ),
-    },
-    {
-      header: "User Reason",
-      cell: (row) => (
-        <span className="text-red-700 dark:text-gray-300">{row.reason}</span>
-      ),
-    },
-    {
-      header: "Total Days",
-      accessor: "totalDays",
-      cell: (row) => (
-        <span className="text-red-700 dark:text-gray-300">{row.totalDays}</span>
-      ),
+      cell: (row) => row.dayType,
     },
     {
       header: "Status",
       accessor: "status",
       cell: (row) => (
         <span
-          className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold
-            ${
-              row.status === "pending"
-                ? "bg-yellow-100 text-yellow-800"
-                : row.status === "approved"
-                  ? "bg-green-100 text-green-800"
-                  : "bg-red-100 text-red-800"
-            }`}
+          className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+            row.status === "pending"
+              ? "bg-yellow-100 text-yellow-800"
+              : row.status === "approved"
+                ? "bg-green-100 text-green-800"
+                : "bg-red-100 text-red-800"
+          }`}
         >
           {row.status}
         </span>
       ),
     },
     {
-      header: "Rejected Reason",
+      header: "Total Days",
       cell: (row) => (
-        <span className="text-red-700 dark:text-gray-300">
-          {row.rejectionReason}
-        </span>
+        <span className="text-red-600 dark:text-red-400">{row.totalDays}</span>
       ),
     },
-
     {
       header: "Action By",
-      cell: (row) => {
-        if (row.status === "approved" && row.approvedByUser) {
-          return (
-            <span className=" font-medium">
-              {row.approvedByUser.firstName} {row.approvedByUser.lastName}
-            </span>
-          );
+      cell: (row: LeaveRow) => {
+        const user = row.approvedByUser ?? row.rejectedByUser;
+
+        if (!user) {
+          return <span className="text-gray-400">—</span>;
         }
 
-        if (row.status === "rejected" && row.rejectedByUser) {
-          return (
-            <span className=" font-medium">
-              {row.rejectedByUser.firstName} {row.rejectedByUser.lastName}
-            </span>
-          );
-        }
-
-        return <span className="text-gray-400">—</span>;
+        return (
+          <span className="text-sm font-medium">
+            {user.firstName} {user.lastName}
+          </span>
+        );
       },
     },
     {
       header: "Action",
       align: "center",
       cell: (row) => (
-        <div className="flex items-center justify-center gap-2">
-          <Can permission="leave.approve">
-            {row.status === "pending" && (
-              <>
-                <button
-                  onClick={() => approve(row.id)}
-                  className="rounded-md bg-green-600 px-2 py-1 text-xs font-medium text-white hover:bg-green-700"
-                >
-                  Approve
-                </button>
-
-                <button
-                  onClick={() => setRejectId(row.id)}
-                  className="rounded-md bg-red-800 px-2 py-1 text-xs font-medium text-white hover:bg-orange-600"
-                >
-                  Reject
-                </button>
-              </>
-            )}
-          </Can>
-
-          <Can
-            permissions={["leave.update_own", "leave.delete_own"]}
-            requireAll
+        <div
+          className="relative flex justify-center"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={() =>
+              setActiveDropdown(activeDropdown === row.id ? null : row.id)
+            }
+            className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
-            {row.status === "pending" && (
-              <>
-                <IconEdit
-                  size={18}
-                  onClick={() => navigate(`/leave-requests/${row.id}`)}
-                  className="cursor-pointer text-blue-600 hover:text-blue-700"
-                  title="Edit"
-                />
+            <IconDotsVertical size={20} className="text-gray-500" />
+          </button>
 
-                <IconTrash
-                  size={18}
-                  onClick={() =>
-                    confirm("Delete Leave?") && removeLeave(row.id)
-                  }
-                  className="cursor-pointer text-red-600 hover:text-red-700"
-                  title="Delete"
-                />
-              </>
-            )}
-          </Can>
+          {activeDropdown === row.id && (
+            <div className="absolute right-0 top-8 z-[100] w-44 rounded-lg border border-gray-200 bg-white py-2 shadow-xl dark:border-gray-700 dark:bg-gray-800">
+              <button
+                onClick={() => setViewLeave(row)}
+                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-900/60"
+              >
+                <IconEye size={16} /> View Details
+              </button>
 
-          {row.status !== "pending" && (
-            <span className="text-xs text-gray-400">Locked</span>
+              {row.status === "pending" ? (
+                <>
+                  <Can permission="leave.approve">
+                    <button
+                      onClick={() => approve(row.id)}
+                      className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
+                    >
+                      <IconCheck size={16} /> Approve
+                    </button>
+                    <button
+                      onClick={() => setRejectId(row.id)}
+                      className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
+                    >
+                      <IconX size={16} /> Reject
+                    </button>
+                  </Can>
+
+                  <Can
+                    permissions={["leave.update_own", "leave.delete_own"]}
+                    requireAll
+                  >
+                    <button
+                      onClick={() => navigate(`/leave-requests/${row.id}`)}
+                      className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
+                    >
+                      <IconEdit size={16} /> Edit Request
+                    </button>
+                    <DeleteConfirm<string>
+                      title="Delete Leave Request"
+                      description="Are you sure you want to delete this leave request?"
+                      loading={isDeletePending}
+                      onConfirm={(id) => removeLeave(id)}
+                    >
+                      {(askDelete) => (
+                        <button
+                          onClick={() => askDelete(row.id)}
+                          className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
+                        >
+                          <IconTrash size={16} /> Delete
+                        </button>
+                      )}
+                    </DeleteConfirm>
+                  </Can>
+                </>
+              ) : (
+                <div className="px-4 py-2 text-xs italic text-gray-400 text-center">
+                  Request {row.status} (Locked)
+                </div>
+              )}
+            </div>
           )}
         </div>
       ),
@@ -353,95 +302,176 @@ export default function GetLeaveTable({ search }: Props) {
 
   return (
     <>
-      {!isLoading && leaves.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
-            No matching leave records found
-          </p>
+      <PageMeta title="Leaves" description="Manage leave requests" />
+      <PageBreadcrumb pageTitle="Leaves" />
+      <Card
+        action={
+          <div className="flex items-center justify-between gap-3">
+            <div className="relative w-full max-w-xs">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                <IconSearch size={18} stroke={2} />
+              </div>
+              <Input
+                placeholder="Search here..."
+                value={rawSearch}
+                onChange={(e) => setRawSearch(e.target.value)}
+                className="pl-10 pr-12 h-[42px]"
+              />
+              {rawSearch && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setRawSearch("");
+                    setSearch(undefined);
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0 rounded-full"
+                >
+                  ✕
+                </Button>
+              )}
+            </div>
 
-          {search && (
-            <p className="mt-1 text-sm text-gray-500">
-              No results matching{" "}
-              <span className="font-medium">"{search}"</span>
+            <Button
+              onClick={() => navigate("/leave-requests/new")}
+              size="md"
+              className="h-[42px] bg-black dark:bg-blue-500 whitespace-nowrap"
+            >
+              Add Leave
+            </Button>
+          </div>
+        }
+      >
+        {!isLoading && leaves.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
+              No records found
             </p>
-          )}
-        </div>
-      ) : (
-        <DataTable
-          columns={columns}
-          data={leaves}
-          isLoading={isLoading}
-          isError={isError}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          onSort={handleSort}
-        />
-      )}
+          </div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={leaves}
+            isLoading={isLoading}
+            isError={isError}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSort={handleSort}
+            page={page}
+            limit={limit}
+            total={total}
+            onPageChange={setPage}
+            onLimitChange={(newLimit) => {
+              setLimit(newLimit);
+              setPage(1);
+            }}
+          />
+        )}
+      </Card>
 
-      {leaves.length > 0 && (
-        <div className="mt-4 flex items-center justify-between">
-          <span className="text-sm text-gray-500">
-            Showing {(page - 1) * limit + 1} – {Math.min(page * limit, total)}{" "}
-            of {total}
-          </span>
+      {viewLeave && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-8 shadow-2xl dark:bg-gray-800 border dark:border-gray-700">
+            <div className="mb-6 flex items-center justify-between border-b pb-3 dark:border-gray-700">
+              <h3 className="text-lg font-bold text-gray-800 dark:text-white">
+                Leave Details
+              </h3>
+              <button
+                onClick={() => setViewLeave(null)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              >
+                <IconX size={25} />
+              </button>
+            </div>
 
-          <div className="flex gap-2">
-            <button
-              disabled={page === 1}
-              onClick={() => setPage((p) => p - 1)}
-              className="rounded border px-3 py-1 text-sm disabled:opacity-50"
-            >
-              Prev
-            </button>
+            <div className="grid grid-cols-2 gap-y-6 gap-x-8 text-sm">
+              <div className="flex flex-col">
+                <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  Employee
+                </span>
+                <span className="mt-1 font-medium text-gray-900 dark:text-gray-100 truncate">
+                  {viewLeave.employee?.firstName} {viewLeave.employee?.lastName}
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  Leave Type
+                </span>
+                <span className="mt-1 font-medium text-gray-900 dark:text-gray-100 capitalize">
+                  {viewLeave.type}
+                </span>
+              </div>
 
-            <button
-              disabled={page * limit >= total}
-              onClick={() => setPage((p) => p + 1)}
-              className="rounded border px-3 py-1 text-sm disabled:opacity-50"
-            >
-              Next
-            </button>
+              <div className="flex flex-col">
+                <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  Duration
+                </span>
+                <span className="mt-1 font-medium text-gray-900 dark:text-gray-100">
+                  {viewLeave.fromDate}{" "}
+                  <span className="mx-1 text-gray-400">→</span>{" "}
+                  {viewLeave.toDate}
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  Day Type
+                </span>
+                <span className="mt-1 font-medium text-gray-900 dark:text-gray-100 capitalize">
+                  {viewLeave.dayType.replace("_", " ")}
+                </span>
+              </div>
+
+              <div className="flex flex-col">
+                <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  Total Days
+                </span>
+                <span className="mt-1 font-bold text-red-600">
+                  {viewLeave.totalDays}
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  Reason
+                </span>
+                <span className="mt-1 font-medium text-gray-900 dark:text-gray-100">
+                  {viewLeave.reason}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       )}
-      {rejectId && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg">
-            <h3 className="text-lg font-semibold mb-2">Reject Leave</h3>
-            <p className="text-sm text-gray-500 mb-4">
-              You may optionally provide a rejection reason.
-            </p>
 
+      {rejectId && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-gray-800">
+            <h3 className="text-lg font-semibold mb-2">Reject Leave Request</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Please provide a reason for rejection.
+            </p>
             <textarea
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
-              placeholder="Enter rejection reason (optional)"
-              className="w-full rounded-md border p-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+              placeholder="Enter reason..."
+              className="w-full rounded-md border p-2 text-sm dark:bg-gray-700 dark:border-gray-600 outline-none focus:ring-1 focus:ring-blue-500"
               rows={3}
             />
-
             <div className="mt-4 flex justify-end gap-3">
-              <button
-                onClick={() => {
-                  setRejectId(null);
-                  setRejectionReason("");
-                }}
-                className="rounded-md border px-4 py-2 text-sm"
-              >
+              <Button variant="outline" onClick={() => setRejectId(null)}>
                 Cancel
-              </button>
-
-              <button
+              </Button>
+              <Button
                 onClick={() =>
                   reject({
                     id: rejectId,
-                    rejectionReason: rejectionReason.trim() || undefined,
+                    rejectionReason: rejectionReason.trim(),
                   })
                 }
-                className="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
+                className="bg-red-600 text-white hover:bg-red-700"
+                disabled={!rejectionReason.trim()}
               >
-                Reject
-              </button>
+                Confirm Reject
+              </Button>
             </div>
           </div>
         </div>

@@ -19,9 +19,6 @@ import { ScrollToTop } from "./components/common/ScrollToTop";
 import AddEditPayroll from "./pages/PayrollTable/AddEditPayroll";
 import Payroll from "./pages/PayrollTable/Payroll";
 
-import AddEditLeave from "./pages/LeaveTable/AddEditLeave";
-import Leave from "./pages/LeaveTable/Leave";
-
 import { Toaster } from "react-hot-toast";
 import SmallAuthLayout from "./layout/SmallAuthLayout";
 import ForgetPassword from "./pages/auth/ForgetPassword";
@@ -34,6 +31,8 @@ import AddEditEmployeePage from "./pages/Employee/AddEditEmployeePage";
 import EmployeePage from "./pages/Employee/EmployeePage";
 import AddEditExpense from "./pages/ExpenseTable/AddEditExpense";
 import Expense from "./pages/ExpenseTable/Expense";
+import AddEditLeavePage from "./pages/Leaves/AddEditLeaveForm";
+import LeavePage from "./pages/Leaves/GetLeaveTable";
 import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
 import RootRedirect from "./pages/OtherPage/RootRedirect";
 import AddEditSalaryPage from "./pages/Salary/AddEditSalaryPage";
@@ -77,8 +76,8 @@ function AppRoutes() {
           <Route path="/payrolls" element={<Payroll />} />
           <Route path="/payrolls/:id" element={<AddEditPayroll />} />
 
-          <Route path="/leave-requests" element={<Leave />} />
-          <Route path="/leave-requests/:id" element={<AddEditLeave />} />
+          <Route path="/leave-requests" element={<LeavePage />} />
+          <Route path="/leave-requests/:id" element={<AddEditLeavePage />} />
 
           <Route path="/expenses" element={<Expense />} />
           <Route path="/expenses/:id" element={<AddEditExpense />} />

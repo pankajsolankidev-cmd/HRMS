@@ -46,3 +46,20 @@ export type LeaveApiResponse<TLeave = LeaveBase> = {
   approvedByUser?: ActionUser | null;
   rejectedByUser?: ActionUser | null;
 };
+
+export interface LeaveRow {
+  id: string;
+  employee: Employee;
+  fromDate: string;
+  toDate: string;
+  type: LeaveType;
+  dayType: LeaveDayType;
+  status: LeaveStatus;
+  reason: string;
+  totalDays: string;
+  rejectionReason?: string | null;
+  file?: string;
+
+  approvedByUser?: ActionUser | null;
+  rejectedByUser?: ActionUser | null;
+}
