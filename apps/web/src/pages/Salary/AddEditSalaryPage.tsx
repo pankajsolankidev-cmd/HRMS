@@ -204,7 +204,7 @@ export default function AddEditSalaryPage() {
           <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
             <Button
               disabled={saveMutation.isPending}
-              className="bg-blue-500 text-white"
+              className="bg-black dark:bg-blue-500 text-white"
             >
               {saveMutation.isPending
                 ? "Saving..."

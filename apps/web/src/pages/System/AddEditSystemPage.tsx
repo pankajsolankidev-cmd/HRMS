@@ -50,7 +50,7 @@ export default function AddEditSystemPage() {
     PaginatedResponse<any>
   >({
     queryKey: ["components-lookup"],
-    queryFn: () => getComponents({ page: 1, limit: 100 }),
+    queryFn: () => getComponents(),
   });
 
   const componentOptions = (componentsData?.data ?? []).map((c: any) => ({
@@ -161,7 +161,7 @@ export default function AddEditSystemPage() {
           <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
             <Button
               disabled={saveMutation.isPending}
-              className="bg-blue-500 text-white"
+              className="bg-black dark:bg-blue-500 text-white"
             >
               {saveMutation.isPending
                 ? "Saving..."
