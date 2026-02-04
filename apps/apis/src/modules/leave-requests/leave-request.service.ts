@@ -171,15 +171,12 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
   const conditions = [];
 
   const userRolesRows = await db
-    .select({
-      roleName: roles.name,
-    })
+    .select({ roleName: roles.name })
     .from(userRoles)
     .leftJoin(roles, eq(userRoles.roleId, roles.id))
     .where(eq(userRoles.userId, userId));
 
   const roleNames = userRolesRows.map((r) => r.roleName);
-
   const isHRorAdmin = roleNames.includes("HR") || roleNames.includes("ADMIN");
 
   const [employee] = await db
@@ -194,7 +191,6 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
         meta: { page: 1, limit: 10, total: 0 },
       };
     }
-
     conditions.push(eq(leaveRequests.employeeId, employee.id));
   }
 
@@ -214,12 +210,17 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
   const limit = Math.min(50, Number(query?.limit) || 10);
   const offset = (page - 1) * limit;
 
-  const sortColumn =
-    query?.sortBy === "fromDate"
-      ? leaveRequests.fromDate
-      : leaveRequests.createdAt;
+  const orderByClauses = [];
 
-  const order = query?.sortOrder === "asc" ? asc(sortColumn) : desc(sortColumn);
+  if (!query?.sortBy) {
+    orderByClauses.push(desc(leaveRequests.updatedAt));
+  } else {
+    orderByClauses.push(
+      query.sortOrder === "asc"
+        ? asc(leaveRequests[query.sortBy])
+        : desc(leaveRequests[query.sortBy]),
+    );
+  }
 
   const [countResult] = await db
     .select({ count: sql<number>`cast(count(*) as integer)` })
@@ -235,13 +236,11 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
         firstName: employees.firstName,
         lastName: employees.lastName,
       },
-
       approvedByUser: {
         id: approverEmployee.id,
         firstName: approverEmployee.firstName,
         lastName: approverEmployee.lastName,
       },
-
       rejectedByUser: {
         id: rejecterEmployee.id,
         firstName: rejecterEmployee.firstName,
@@ -258,9 +257,8 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
       rejecterEmployee,
       eq(leaveRequests.rejectedBy, rejecterEmployee.userId),
     )
-
     .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(order)
+    .orderBy(...orderByClauses)
     .limit(limit)
     .offset(offset);
 
@@ -273,6 +271,7 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
     },
   };
 }
+
 export async function getLeaveRequestByIdHandler(
   request: FastifyRequest,
   reply: FastifyReply,
@@ -431,8 +430,6 @@ export async function updateLeaveRequestHandler(
 
       totalHours,
       totalDays: totalDays.toString(),
-
-      updatedAt: new Date(),
     })
     .where(and(...conditions))
     .returning();
@@ -610,7 +607,6 @@ export async function rejectLeaveRequestHandler(
     .leftJoin(roles, eq(userRoles.roleId, roles.id))
     .where(eq(userRoles.userId, userId));
 
-  // ✅ NORMALIZE ROLE NAMES
   const approverRoleNames = approverRolesRows.map((r) =>
     r.roleName?.toUpperCase(),
   );

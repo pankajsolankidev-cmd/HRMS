@@ -130,12 +130,13 @@ export const updateEmployeeSchema = {
       firstName: { type: "string" },
       lastName: { type: "string" },
 
-      // ✅ changed
+      
       positionId: { type: "string", format: "uuid" },
 
       departmentId: { type: "number" },
       managerId: { type: ["string", "null"], format: "uuid" },
       systemId: { type: ["string", "null"], format: "uuid" },
+      joiningDate: { type: "string", format: "date" },
 
       welcome: {
         type: "object",

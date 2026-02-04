@@ -11,7 +11,7 @@ import { sendMessage } from "../../utils/api-response";
 
 export async function createComponentHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const body = request.body as CreateComponentDto;
 
@@ -39,16 +39,23 @@ export async function getComponentsHandler(request: FastifyRequest) {
   const limit = Math.min(100, Number(query?.limit) || 10);
   const offset = (page - 1) * limit;
 
-  const sortColumn =
-    query?.sortBy === "createdAt" ? components.createdAt : components.name;
+  const orderByClauses = [];
 
-  const order = query?.sortOrder === "asc" ? asc(sortColumn) : desc(sortColumn);
+  if (!query?.sortBy) {
+    orderByClauses.push(desc(components.updatedAt));
+  } else {
+    orderByClauses.push(
+      query.sortOrder === "asc"
+        ? asc(components[query.sortBy])
+        : desc(components[query.sortBy]),
+    );
+  }
 
   const data = await db
     .select()
     .from(components)
     .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(order)
+    .orderBy(...orderByClauses)
     .limit(limit)
     .offset(offset);
 
@@ -69,7 +76,7 @@ export async function getComponentsHandler(request: FastifyRequest) {
 
 export async function getComponentByIdHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
 
@@ -87,7 +94,7 @@ export async function getComponentByIdHandler(
 
 export async function updateComponentHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
   const body = request.body as UpdateComponentDto;
@@ -96,7 +103,6 @@ export async function updateComponentHandler(
     .update(components)
     .set({
       ...body,
-      updatedAt: new Date(),
     })
     .where(eq(components.id, id))
     .returning();
@@ -110,7 +116,7 @@ export async function updateComponentHandler(
 
 export async function deleteComponentHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
 

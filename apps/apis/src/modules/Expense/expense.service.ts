@@ -12,7 +12,7 @@ import { employees } from "../../db/schema";
 
 export async function createExpenseHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const body = request.body as CreateExpenseDto;
 
@@ -61,20 +61,23 @@ export async function getExpensesHandler(request: FastifyRequest) {
   const limit = Math.min(100, Number(query.limit) || 10);
   const offset = (page - 1) * limit;
 
-  const sortColumn =
-    query.sortBy === "amount"
-      ? expenses.amount
-      : query.sortBy === "expenseDate"
-      ? expenses.expenseDate
-      : expenses.createdAt;
+  const orderByClauses = [];
 
-  const order = query.sortOrder === "asc" ? asc(sortColumn) : desc(sortColumn);
+  if (!query?.sortBy) {
+    orderByClauses.push(desc(expenses.updatedAt));
+  } else {
+    orderByClauses.push(
+      query.sortOrder === "asc"
+        ? asc(expenses[query.sortBy])
+        : desc(expenses[query.sortBy]),
+    );
+  }
 
   const data = await db
     .select()
     .from(expenses)
     .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(order)
+    .orderBy(...orderByClauses)
     .limit(limit)
     .offset(offset);
 
@@ -95,7 +98,7 @@ export async function getExpensesHandler(request: FastifyRequest) {
 
 export async function getExpenseByIdHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
 
@@ -110,7 +113,7 @@ export async function getExpenseByIdHandler(
 
 export async function updateExpenseHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
   const body = request.body as UpdateExpenseDto;
@@ -141,8 +144,6 @@ export async function updateExpenseHandler(
       amount: body.amount !== undefined ? body.amount.toString() : undefined,
 
       expenseDate: body.expenseDate,
-
-      updatedAt: new Date(),
     })
     .where(eq(expenses.id, id));
 
@@ -151,7 +152,7 @@ export async function updateExpenseHandler(
 
 export async function deleteExpenseHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
 
@@ -201,8 +202,8 @@ export async function getExpenseSummaryHandler(request: FastifyRequest) {
         eq(expenses.employeeId, employee.id),
         eq(expenses.status, "DRAFT"),
         sql`EXTRACT(MONTH FROM ${expenses.expenseDate}) = ${month}`,
-        sql`EXTRACT(YEAR FROM ${expenses.expenseDate}) = ${year}`
-      )
+        sql`EXTRACT(YEAR FROM ${expenses.expenseDate}) = ${year}`,
+      ),
     );
 
   return {
