@@ -20,7 +20,7 @@ export const deleteSalaryStructure = async (id: string) => {
   return res.data;
 };
 
-export const deletePayroll = async (id: string) => {
+export const deletePayroll = async (id: number) => {
   const res = await api.delete(`/payrolls/${id}`);
   return res.data;
 };

@@ -265,6 +265,7 @@ export default function AddEditLeavePage() {
                     required
                     id="toDate"
                     label="To Date"
+                    placeholder="Select to date"
                     value={field.value ? new Date(field.value) : null}
                     onChange={(dates) => {
                       if (dates?.[0])
@@ -292,7 +293,7 @@ export default function AddEditLeavePage() {
                   control={control}
                   render={({ field }) => (
                     <Select
-                      label="From Day Type (Start)"
+                      label="From Day Type"
                       options={HOUR_OPTIONS}
                       value={field.value}
                       onChange={(val) => {
@@ -307,7 +308,7 @@ export default function AddEditLeavePage() {
                   control={control}
                   render={({ field }) => (
                     <Select
-                      label="To Day Type (End)"
+                      label="To Day Type"
                       options={HOUR_OPTIONS}
                       value={field.value}
                       onChange={(val) => {

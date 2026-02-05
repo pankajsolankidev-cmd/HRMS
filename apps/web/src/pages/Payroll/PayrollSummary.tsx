@@ -3,31 +3,30 @@ import { useState } from "react";
 
 import { getPayrollSummary } from "../../api/get";
 import Select from "../../components/form/Select";
-import Input from "../../components/form/input/InputField";
-
-const MONTHS = [
-  { label: "January", value: "JANUARY" },
-  { label: "February", value: "FEBRUARY" },
-  { label: "March", value: "MARCH" },
-  { label: "April", value: "APRIL" },
-  { label: "May", value: "MAY" },
-  { label: "June", value: "JUNE" },
-  { label: "July", value: "JULY" },
-  { label: "August", value: "AUGUST" },
-  { label: "September", value: "SEPTEMBER" },
-  { label: "October", value: "OCTOBER" },
-  { label: "November", value: "NOVEMBER" },
-  { label: "December", value: "DECEMBER" },
-];
+import { MONTHS } from "./PayrollPage";
 
 export default function PayrollSummary() {
   const currentMonth = new Date()
     .toLocaleString("en-US", { month: "long" })
     .toUpperCase();
-  const currentYear = new Date().getFullYear();
+
+  const START_YEAR = 2020;
+
+  const CURRENT_YEAR = new Date().getFullYear();
+
+  const YEAR_OPTIONS = Array.from(
+    { length: CURRENT_YEAR - START_YEAR + 1 },
+    (_, i) => {
+      const year = CURRENT_YEAR - i;
+      return {
+        label: year.toString(),
+        value: year.toString(),
+      };
+    },
+  );
 
   const [month, setMonth] = useState(currentMonth);
-  const [year, setYear] = useState(currentYear);
+  const [year, setYear] = useState<number | null>(CURRENT_YEAR);
 
   const [appliedMonth, setAppliedMonth] = useState<string | null>(null);
   const [appliedYear, setAppliedYear] = useState<number | null>(null);
@@ -39,6 +38,7 @@ export default function PayrollSummary() {
   });
 
   const handleProcess = () => {
+    if (!month || !year) return;
     setAppliedMonth(month);
     setAppliedYear(year);
   };
@@ -46,25 +46,30 @@ export default function PayrollSummary() {
   return (
     <div className="space-y-4">
       <div className="flex items-end justify-end gap-3">
-        <Select
-          options={MONTHS}
-          value={month}
-          onChange={setMonth}
-          className="w-[160px]"
-        />
-
-        <Input
-          type="number"
-          value={year}
-          onChange={(e) => setYear(Number(e.target.value))}
-          className="w-[120px]"
-        />
+        <div className="w-40">
+          <Select
+            options={MONTHS}
+            value={month}
+            onChange={setMonth}
+            className="w-[160px]"
+            placeholder="Select month"
+          />
+        </div>
+        <div className="w-32">
+          <Select
+            options={YEAR_OPTIONS}
+            value={year?.toString() ?? ""}
+            onChange={(v) => setYear(v ? Number(v) : null)}
+            className="w-[120px]"
+            placeholder="Select year"
+          />
+        </div>
 
         <button
           onClick={handleProcess}
           disabled={isFetching}
           className="h-[45px] rounded-lg bg-black px-6 text-sm text-white
-                     disabled:opacity-50 dark:bg-white dark:text-black"
+                     disabled:opacity-50 dark:bg-blue-500 dark:text-white"
         >
           {isFetching ? "Processing..." : "Process Payroll"}
         </button>
