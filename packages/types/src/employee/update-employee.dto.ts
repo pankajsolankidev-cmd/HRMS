@@ -5,6 +5,7 @@ export interface UpdateEmployeeDto {
   departmentId?: number;
   managerId?: string | null;
   systemId?: string | null;
+  joiningDate?: string;
 
   welcome?: {
     welcomewithWhatsapp?: boolean;

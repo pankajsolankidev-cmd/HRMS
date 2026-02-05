@@ -1,8 +1,8 @@
-import { SidebarProvider, useSidebar } from "../context/SidebarContext";
 import { Outlet } from "react-router";
+import { SidebarProvider, useSidebar } from "../context/SidebarContext";
 import AppHeader from "./AppHeader";
-import Backdrop from "./Backdrop";
 import AppSidebar from "./AppSidebar";
+import Backdrop from "./Backdrop";
 
 const LayoutContent: React.FC = () => {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
@@ -13,6 +13,7 @@ const LayoutContent: React.FC = () => {
         <AppSidebar />
         <Backdrop />
       </div>
+
       <div
         className={`dark:bg-gray-900 flex-1 transition-all duration-300 ease-in-out ${
           isExpanded || isHovered ? "lg:ml-[290px]" : "lg:ml-[90px]"

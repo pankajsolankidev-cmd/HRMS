@@ -1,5 +1,5 @@
 interface ComponentCardProps {
-  title: string;
+  title?: string;
   children: React.ReactNode;
   className?: string;
   desc?: string;
@@ -7,7 +7,7 @@ interface ComponentCardProps {
   middle?: React.ReactNode;
 }
 
-const ComponentCard: React.FC<ComponentCardProps> = ({
+const Card: React.FC<ComponentCardProps> = ({
   title,
   children,
   className = "",
@@ -15,36 +15,41 @@ const ComponentCard: React.FC<ComponentCardProps> = ({
   action,
   middle,
 }) => {
+  const showHeader = title || desc || action || middle;
+
   return (
     <div
-      className={`
-        rounded-2xl border
-        bg-white dark:bg-gray-900
-        border-gray-200 dark:border-gray-800
-        ${className}
-      `}
+      className={`rounded-2xl border bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 ${className}`}
     >
-      <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800">
-        <div className="flex flex-wrap items-center gap-4">
-          <div>
-            <h3 className="text-base font-medium text-gray-800 dark:text-white/90">
-              {title}
-            </h3>
-            {desc && (
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                {desc}
-              </p>
+      {showHeader && (
+        <div className="px-4 py-4 sm:px-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            {(title || desc) && (
+              <div>
+                {title && (
+                  <h3 className="text-2xl font-medium text-gray-800 dark:text-white/90">
+                    {title}
+                  </h3>
+                )}
+                {desc && (
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    {desc}
+                  </p>
+                )}
+              </div>
             )}
-          </div>
 
-          {middle && <div className="flex-1">{middle}</div>}
-          {action && <div>{action}</div>}
+            <div className="flex flex-1 items-center justify-end gap-3">
+              {middle && <div>{middle}</div>}
+              {action && <div>{action}</div>}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="p-4 sm:p-6 dark:bg-gray-950">{children}</div>
     </div>
   );
 };
 
-export default ComponentCard;
+export default Card;

@@ -106,23 +106,25 @@ export async function getPayrollsHandler(request: FastifyRequest) {
 
   const { page, limit, offset } = getPagination(filters ?? {});
 
-  const sortColumn =
-    filters?.sortBy === "netSalary"
-      ? payrolls.netSalary
-      : filters?.sortBy === "year"
-        ? payrolls.year
-        : payrolls.processedAt;
-
-  const order =
-    filters?.sortOrder === "asc" ? asc(sortColumn) : desc(sortColumn);
-
   const whereClause = conditions.length ? and(...conditions) : undefined;
+
+  const orderByClauses = [];
+
+  if (!filters?.sortBy) {
+    orderByClauses.push(desc(payrolls.updatedAt));
+  } else {
+    orderByClauses.push(
+      filters.sortOrder === "asc"
+        ? asc(payrolls[filters.sortBy])
+        : desc(payrolls[filters.sortBy]),
+    );
+  }
 
   let queryBuilder = db
     .select()
     .from(payrolls)
     .where(whereClause)
-    .orderBy(order)
+    .orderBy(...orderByClauses)
     .$dynamic();
 
   if (limit !== undefined && offset !== undefined) {

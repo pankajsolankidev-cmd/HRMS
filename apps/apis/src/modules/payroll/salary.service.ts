@@ -73,18 +73,25 @@ export async function getSalariesHandler(request: FastifyRequest) {
 
   const { page, limit, offset } = getPagination(query ?? {});
 
-  const sortColumn =
-    query?.sortBy === "basicSalary" ? salary.basicSalary : salary.createdAt;
-
-  const order = query?.sortOrder === "asc" ? asc(sortColumn) : desc(sortColumn);
-
   const whereClause = conditions.length ? and(...conditions) : undefined;
+
+  const orderByClauses = [];
+
+  if (!query?.sortBy) {
+    orderByClauses.push(desc(salary.updatedAt));
+  } else {
+    orderByClauses.push(
+      query.sortOrder === "asc"
+        ? asc(salary[query.sortBy])
+        : desc(salary[query.sortBy]),
+    );
+  }
 
   let queryBuilder = db
     .select()
     .from(salary)
     .where(whereClause)
-    .orderBy(order)
+    .orderBy(...orderByClauses)
     .$dynamic();
 
   if (limit !== undefined && offset !== undefined) {

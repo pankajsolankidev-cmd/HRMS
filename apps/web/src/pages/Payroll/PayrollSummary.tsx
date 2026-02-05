@@ -1,9 +1,9 @@
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 
+import { getPayrollSummary } from "../../api/get";
 import Select from "../../components/form/Select";
 import Input from "../../components/form/input/InputField";
-import { getPayrollSummary } from "../../api/get";
 
 const MONTHS = [
   { label: "January", value: "JANUARY" },
@@ -28,13 +28,20 @@ export default function PayrollSummary() {
 
   const [month, setMonth] = useState(currentMonth);
   const [year, setYear] = useState(currentYear);
-  const [run, setRun] = useState(false);
+
+  const [appliedMonth, setAppliedMonth] = useState<string | null>(null);
+  const [appliedYear, setAppliedYear] = useState<number | null>(null);
 
   const { data, isFetching } = useQuery({
-    queryKey: ["payroll-summary", month, year],
-    queryFn: () => getPayrollSummary(month, year),
-    enabled: run,
+    queryKey: ["payroll-summary", appliedMonth, appliedYear],
+    queryFn: () => getPayrollSummary(appliedMonth!, appliedYear!),
+    enabled: Boolean(appliedMonth && appliedYear),
   });
+
+  const handleProcess = () => {
+    setAppliedMonth(month);
+    setAppliedYear(year);
+  };
 
   return (
     <div className="space-y-4">
@@ -42,27 +49,21 @@ export default function PayrollSummary() {
         <Select
           options={MONTHS}
           value={month}
-          onChange={(v) => {
-            setMonth(v);
-            setRun(false);
-          }}
+          onChange={setMonth}
           className="w-[160px]"
         />
 
         <Input
           type="number"
           value={year}
-          onChange={(e) => {
-            setYear(Number(e.target.value));
-            setRun(false);
-          }}
-          className=" w-[120px]"
+          onChange={(e) => setYear(Number(e.target.value))}
+          className="w-[120px]"
         />
 
         <button
-          onClick={() => setRun(true)}
+          onClick={handleProcess}
           disabled={isFetching}
-          className="h-[42px] rounded-lg bg-black px-6 text-sm text-white
+          className="h-[45px] rounded-lg bg-black px-6 text-sm text-white
                      disabled:opacity-50 dark:bg-white dark:text-black"
         >
           {isFetching ? "Processing..." : "Process Payroll"}

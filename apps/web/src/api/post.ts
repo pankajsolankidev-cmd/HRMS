@@ -1,5 +1,5 @@
 import Cookies from "js-cookie";
-import type { EmployeePayload } from "../pages/Employee/AddEditEmpForm";
+import type { EmployeePayload } from "../pages/Employee/AddEditEmployeePage";
 import api, { refreshApi } from "./axios";
 
 export const signInApi = async (data: { email: string; password: string }) => {

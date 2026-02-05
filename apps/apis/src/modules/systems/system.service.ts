@@ -50,9 +50,7 @@ export async function getSystemsHandler(request: FastifyRequest) {
     sortOrder?: "asc" | "desc";
   };
 
-  const { page, limit, offset } = getPagination(query || {});
-  const sortBy = query?.sortBy ?? "createdAt";
-  const sortOrder = query?.sortOrder ?? "desc";
+  const { limit, offset, page } = getPagination(query ?? {});
 
   const conditions = [];
 
@@ -62,8 +60,17 @@ export async function getSystemsHandler(request: FastifyRequest) {
 
   const whereClause = conditions.length ? and(...conditions) : undefined;
 
-  const orderBy =
-    sortOrder === "asc" ? asc(systems[sortBy]) : desc(systems[sortBy]);
+  const orderByClauses = [];
+
+  if (!query?.sortBy) {
+    orderByClauses.push(desc(systems.updatedAt));
+  } else {
+    orderByClauses.push(
+      query.sortOrder === "asc"
+        ? asc(systems[query.sortBy])
+        : desc(systems[query.sortBy]),
+    );
+  }
 
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)` })
@@ -74,7 +81,7 @@ export async function getSystemsHandler(request: FastifyRequest) {
     .select()
     .from(systems)
     .where(whereClause)
-    .orderBy(orderBy)
+    .orderBy(...orderByClauses)
     .$dynamic();
 
   if (limit !== undefined && offset !== undefined) {

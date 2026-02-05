@@ -12,7 +12,7 @@ import { getPagination } from "../../utils/pagination";
 
 export async function createComponentHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const body = request.body as CreateComponentDto;
 
@@ -38,17 +38,24 @@ export async function getComponentsHandler(request: FastifyRequest) {
 
   const { page, limit, offset } = getPagination(query);
 
-  const sortColumn =
-    query?.sortBy === "createdAt" ? components.createdAt : components.name;
+  const orderByClauses = [];
 
-  const order = query?.sortOrder === "asc" ? asc(sortColumn) : desc(sortColumn);
+  if (!query?.sortBy) {
+    orderByClauses.push(desc(components.updatedAt));
+  } else {
+    orderByClauses.push(
+      query.sortOrder === "asc"
+        ? asc(components[query.sortBy])
+        : desc(components[query.sortBy]),
+    );
+  }
 
   let queryBuilder = db
     .select()
     .from(components)
     .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(order)
-    .$dynamic(); 
+    .orderBy(...orderByClauses)
+    .$dynamic();
 
   if (limit !== undefined && offset !== undefined) {
     queryBuilder = queryBuilder.limit(limit).offset(offset);
@@ -75,7 +82,7 @@ export async function getComponentsHandler(request: FastifyRequest) {
 
 export async function getComponentByIdHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
 
@@ -93,7 +100,7 @@ export async function getComponentByIdHandler(
 
 export async function updateComponentHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
   const body = request.body as UpdateComponentDto;
@@ -102,7 +109,6 @@ export async function updateComponentHandler(
     .update(components)
     .set({
       ...body,
-      updatedAt: new Date(),
     })
     .where(eq(components.id, id))
     .returning();
@@ -116,7 +122,7 @@ export async function updateComponentHandler(
 
 export async function deleteComponentHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
 
