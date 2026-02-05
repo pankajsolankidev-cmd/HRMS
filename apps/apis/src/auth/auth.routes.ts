@@ -3,21 +3,17 @@ import type { FastifyInstance } from "fastify";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-
 import { users } from "../db/schema/users.schema";
 import { refreshTokens } from "../db/schema/refresh-tokens.schema";
 import { passwordResetTokens } from "../db/schema/password-reset-tokens.schema";
 import { db } from "../db";
-
 import { generateResetKey } from "./password-reset.service";
 import { userRoles } from "../db/schema/user-roles.schema";
 import { roles } from "../db/schema/roles.schema";
 import { rolePermissions } from "../db/schema/role-permissions.schema";
 import { permissions } from "../db/schema/permissions.schema";
-import { and } from "drizzle-orm";
 
 import {
-  signUpSchema,
   signInSchema,
   refreshTokenSchema,
   logoutSchema,
@@ -25,10 +21,8 @@ import {
   resetPasswordSchema,
 } from "./auth.schema";
 
-import type {
-  AuthSignUpDto,
-  AuthSignInDto,
-} from "@shared/types/src/auth/auth.dto";
+import type { AuthSignInDto } from "@shared/types/src/auth/auth.dto";
+import { verifyAccessToken } from "../middlewares/auth.middlewares";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
@@ -41,157 +35,34 @@ function generateRefreshToken() {
 }
 
 export default async function authRoutes(app: FastifyInstance) {
-  app.post("/signup", { schema: signUpSchema }, async (request, reply) => {
-    const { username, email, password } = request.body as AuthSignUpDto;
-
-    if (!username || !email || !password) {
-      return reply.status(400).send({ error: "All fields are required" });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    try {
-      const [user] = await db
-        .insert(users)
-        .values({ username, email, password: hashedPassword })
-        .returning({
-          id: users.id,
-          email: users.email,
-        });
-
-      const accessToken = generateAccessToken({
-        id: user.id,
-        email: user.email,
-      });
-
-      return reply.status(201).send({ accessToken });
-    } catch (err: any) {
-      if (err?.code === "23505") {
-        return reply.status(409).send({
-          error: "User with this email or username already exists",
-        });
-      }
-      return reply.status(500).send({ error: "Internal server error" });
-    }
-  });
-
   app.post("/signin", { schema: signInSchema }, async (request, reply) => {
-  const { email, password } = request.body as AuthSignInDto;
+    const { email, password } = request.body as AuthSignInDto;
 
-  if (!email || !password) {
-    return reply
-      .status(400)
-      .send({ error: "Email and password are required" });
-  }
-
-  // 1. Get user
-  const [user] = await db
-    .select({
-      id: users.id,
-      email: users.email,
-      password: users.password,
-    })
-    .from(users)
-    .where(eq(users.email, email));
-
-  if (!user) {
-    return reply.status(401).send({ error: "Invalid credentials" });
-  }
-
-  const isValid = await bcrypt.compare(password, user.password);
-  if (!isValid) {
-    return reply.status(401).send({ error: "Invalid credentials" });
-  }
-
-  // 2. Fetch roles + permissions
-  const rows = await db
-    .select({
-      roleName: roles.name,
-      permissionName: permissions.name,
-    })
-    .from(userRoles)
-    .innerJoin(roles, eq(userRoles.roleId, roles.id))
-    .innerJoin(
-      rolePermissions,
-      eq(rolePermissions.roleId, roles.id)
-    )
-    .innerJoin(
-      permissions,
-      eq(rolePermissions.permissionId, permissions.id)
-    )
-    .where(eq(userRoles.userId, user.id));
-
-  // 3. Normalize roles & permissions
-  const roleSet = new Set<string>();
-  const permissionSet = new Set<string>();
-
-  for (const row of rows) {
-    if (row.roleName) roleSet.add(row.roleName);
-    if (row.permissionName) permissionSet.add(row.permissionName);
-  }
-
-  const rolesArr = Array.from(roleSet);
-  const permissionsArr = Array.from(permissionSet);
-
-  // 4. Tokens
-  const accessToken = generateAccessToken({
-    id: user.id,
-    email: user.email,
-    roles: rolesArr,           
-  });
-
-  const refreshToken = generateRefreshToken();
-
-  await db.insert(refreshTokens).values({
-    userId: user.id,
-    token: refreshToken,
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-  });
-
-  // 5. Final response
-  return reply.send({
-    accessToken,
-    refreshToken,
-    roles: rolesArr,
-    permissions: permissionsArr,
-  });
-});
-
-
-app.post(
-  "/auth/refresh",
-  { schema: refreshTokenSchema },
-  async (request, reply) => {
-    const { refreshToken } = request.body as { refreshToken: string };
-
-    if (!refreshToken) {
-      return reply.status(401).send({ error: "Refresh token missing" });
-    }
-
-    const [record] = await db
-      .select()
-      .from(refreshTokens)
-      .where(eq(refreshTokens.token, refreshToken));
-
-    if (!record || record.expiresAt < new Date()) {
+    if (!email || !password) {
       return reply
-        .status(401)
-        .send({ error: "Invalid or expired refresh token" });
+        .status(400)
+        .send({ error: "Email and password are required" });
     }
 
     const [user] = await db
       .select({
         id: users.id,
         email: users.email,
+        username: users.username,
+        password: users.password,
       })
       .from(users)
-      .where(eq(users.id, record.userId));
+      .where(eq(users.email, email));
 
     if (!user) {
-      return reply.status(401).send({ error: "User not found" });
+      return reply.status(401).send({ error: "Invalid credentials" });
     }
 
-    // 🔥 Fetch roles + permissions again
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) {
+      return reply.status(401).send({ error: "Invalid credentials" });
+    }
+
     const rows = await db
       .select({
         roleName: roles.name,
@@ -199,14 +70,8 @@ app.post(
       })
       .from(userRoles)
       .innerJoin(roles, eq(userRoles.roleId, roles.id))
-      .innerJoin(
-        rolePermissions,
-        eq(rolePermissions.roleId, roles.id)
-      )
-      .innerJoin(
-        permissions,
-        eq(rolePermissions.permissionId, permissions.id)
-      )
+      .innerJoin(rolePermissions, eq(rolePermissions.roleId, roles.id))
+      .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
       .where(eq(userRoles.userId, user.id));
 
     const roleSet = new Set<string>();
@@ -220,21 +85,166 @@ app.post(
     const rolesArr = Array.from(roleSet);
     const permissionsArr = Array.from(permissionSet);
 
-    // 🔐 New access token WITH ROLES
-    const newAccessToken = generateAccessToken({
+    const accessToken = generateAccessToken({
       id: user.id,
       email: user.email,
-      roles: rolesArr,
-    });
-
-    return reply.send({
-      accessToken: newAccessToken,
+      username: user.username,
       roles: rolesArr,
       permissions: permissionsArr,
     });
-  }
-);
 
+    const refreshToken = generateRefreshToken();
+
+    await db.insert(refreshTokens).values({
+      userId: user.id,
+      token: refreshToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+
+    return reply.send({
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      accessToken,
+      refreshToken,
+      roles: rolesArr,
+      permissions: permissionsArr,
+    });
+  });
+
+  app.get(
+    "/auth/session",
+    { preHandler: [verifyAccessToken] },
+    async (request, reply) => {
+      const authUser = request.user as {
+        id: string;
+        email: string;
+      };
+
+      if (!authUser?.id) {
+        return reply.status(401).send({ error: "Unauthorized" });
+      }
+
+      const [user] = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          username: users.username,
+        })
+        .from(users)
+        .where(eq(users.id, authUser.id));
+
+      if (!user) {
+        return reply.status(401).send({ error: "User not found" });
+      }
+
+      const rows = await db
+        .select({
+          roleName: roles.name,
+          permissionName: permissions.name,
+        })
+        .from(userRoles)
+        .innerJoin(roles, eq(userRoles.roleId, roles.id))
+        .innerJoin(rolePermissions, eq(rolePermissions.roleId, roles.id))
+        .innerJoin(
+          permissions,
+          eq(rolePermissions.permissionId, permissions.id),
+        )
+        .where(eq(userRoles.userId, user.id));
+
+      const roleSet = new Set<string>();
+      const permissionSet = new Set<string>();
+
+      for (const row of rows) {
+        if (row.roleName) roleSet.add(row.roleName);
+        if (row.permissionName) permissionSet.add(row.permissionName);
+      }
+
+      return reply.send({
+        user,
+        roles: Array.from(roleSet),
+        permissions: Array.from(permissionSet),
+      });
+    },
+  );
+
+  app.post(
+    "/auth/refresh",
+    { schema: refreshTokenSchema },
+    async (request, reply) => {
+      const { refreshToken } = request.body as { refreshToken: string };
+
+      if (!refreshToken) {
+        return reply.status(401).send({ error: "Refresh token missing" });
+      }
+
+      const [record] = await db
+        .select()
+        .from(refreshTokens)
+        .where(eq(refreshTokens.token, refreshToken));
+
+      if (!record || record.expiresAt < new Date()) {
+        return reply
+          .status(401)
+          .send({ error: "Invalid or expired refresh token" });
+      }
+
+      const [user] = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          username: users.username,
+        })
+        .from(users)
+        .where(eq(users.id, record.userId));
+
+      if (!user) {
+        return reply.status(401).send({ error: "User not found" });
+      }
+
+      const rows = await db
+        .select({
+          roleName: roles.name,
+          permissionName: permissions.name,
+        })
+        .from(userRoles)
+        .innerJoin(roles, eq(userRoles.roleId, roles.id))
+        .innerJoin(rolePermissions, eq(rolePermissions.roleId, roles.id))
+        .innerJoin(
+          permissions,
+          eq(rolePermissions.permissionId, permissions.id),
+        )
+        .where(eq(userRoles.userId, user.id));
+
+      const roleSet = new Set<string>();
+      const permissionSet = new Set<string>();
+
+      for (const row of rows) {
+        if (row.roleName) roleSet.add(row.roleName);
+        if (row.permissionName) permissionSet.add(row.permissionName);
+      }
+
+      const rolesArr = Array.from(roleSet);
+      const permissionsArr = Array.from(permissionSet);
+
+      const newAccessToken = generateAccessToken({
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        roles: rolesArr,
+        permissions: permissionsArr,
+      });
+
+      return reply.send({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        accessToken: newAccessToken,
+        roles: rolesArr,
+        permissions: permissionsArr,
+      });
+    },
+  );
 
   app.post("/auth/logout", { schema: logoutSchema }, async (request, reply) => {
     const { refreshToken } = request.body as { refreshToken: string };
@@ -279,7 +289,7 @@ app.post(
         message: "Reset Key is Generated",
         key: resetKey,
       });
-    }
+    },
   );
 
   app.post(
@@ -324,6 +334,6 @@ app.post(
         .where(eq(passwordResetTokens.id, record.id));
 
       return reply.send({ message: "Password reset successful" });
-    }
+    },
   );
 }

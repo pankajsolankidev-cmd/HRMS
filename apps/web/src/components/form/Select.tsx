@@ -1,3 +1,4 @@
+import { IconChevronDown, IconX } from "@tabler/icons-react";
 import React from "react";
 
 interface Option {
@@ -37,32 +38,63 @@ const Select: React.FC<SelectProps> = ({
         </label>
       )}
 
-      <select
-        className={`
-          h-11 w-full rounded-lg border px-4 py-2.5 text-sm
-          bg-white dark:bg-gray-900
-          text-gray-900 dark:text-gray-100
-          focus:outline-none focus:ring-2
-          ${
-            error
-              ? "border-red-500 focus:ring-red-500/20"
-              : "border-gray-300 dark:border-gray-700 focus:ring-black/20"
-          }
-          ${className}
-        `}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        <option value="" disabled>
-          {placeholder}
-        </option>
-
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
+      <div className="relative">
+        <select
+          className={`
+            h-11 w-full rounded-lg border px-4 py-2.5 text-sm
+            bg-white dark:bg-gray-900
+            focus:outline-none focus:ring-2
+            appearance-none 
+            ${
+              value === ""
+                ? "text-gray-400 dark:text-gray-500"
+                : "text-gray-900 dark:text-gray-100"
+            }
+            ${
+              error
+                ? "border-red-500 focus:ring-red-500/20"
+                : "border-gray-300 dark:border-gray-700 focus:ring-black/20"
+            }
+            ${className}
+          `}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        >
+          <option value="" disabled>
+            {placeholder}
           </option>
-        ))}
-      </select>
+
+          {options.map((option) => (
+            <option
+              key={option.value}
+              value={option.value}
+              className="text-gray-900 dark:text-gray-100"
+            >
+              {option.label}
+            </option>
+          ))}
+        </select>
+
+        <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-2">
+          {value && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                onChange("");
+              }}
+              className="text-gray-400 hover:text-red-500 transition-colors dark:text-gray-500"
+            >
+              <IconX size={16} stroke={2.5} />
+            </button>
+          )}
+
+          <IconChevronDown
+            size={18}
+            className="pointer-events-none text-gray-400 dark:text-gray-500"
+          />
+        </div>
+      </div>
 
       {hint && (
         <p

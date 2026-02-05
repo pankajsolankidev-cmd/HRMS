@@ -1,6 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { eq, desc, asc, and, ilike, sql } from "drizzle-orm";
-
 import { db } from "../../db";
 import { employees } from "../../db/schema/employees.schema";
 import { leaveRequests } from "../../db/schema/leave-requests.schema";
@@ -8,7 +7,6 @@ import { positions } from "../../db/schema/positions.schema";
 import { LeaveStatus } from "../../db/schema/leave.enums";
 import { userRoles } from "../../db/schema/user-roles.schema";
 import { roles } from "../../db/schema/roles.schema";
-import { users } from "../../db/schema/users.schema";
 import { alias } from "drizzle-orm/pg-core";
 const approverEmployee = alias(employees, "approverEmployee");
 const rejecterEmployee = alias(employees, "rejecterEmployee");
@@ -19,6 +17,7 @@ import {
 } from "@shared/types/src/leave-request/leave-request.types";
 
 import { sendMessage } from "../../utils/api-response";
+import { hasAnyRole, hasRole } from "../../utils/role.utils";
 
 function isWeekend(date: Date) {
   const day = date.getDay();
@@ -176,8 +175,11 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
     .leftJoin(roles, eq(userRoles.roleId, roles.id))
     .where(eq(userRoles.userId, userId));
 
-  const roleNames = userRolesRows.map((r) => r.roleName);
-  const isHRorAdmin = roleNames.includes("HR") || roleNames.includes("ADMIN");
+  const roleNames = userRolesRows
+    .map((r) => r.roleName)
+    .filter((role): role is string => role !== null);
+
+  const isHRorAdmin = hasAnyRole(roleNames, ["HR", "ADMIN"]);
 
   const [employee] = await db
     .select({ id: employees.id })
@@ -287,9 +289,11 @@ export async function getLeaveRequestByIdHandler(
     .leftJoin(roles, eq(userRoles.roleId, roles.id))
     .where(eq(userRoles.userId, userId));
 
-  const roleNames = userRolesRows.map((r) => r.roleName);
+  const roleNames = userRolesRows
+    .map((r) => r.roleName)
+    .filter((role): role is string => role !== null);
 
-  const isHRorAdmin = roleNames.includes("HR") || roleNames.includes("ADMIN");
+  const isHRorAdmin = hasAnyRole(roleNames, ["HR", "ADMIN"]);
 
   const conditions = [eq(leaveRequests.id, id)];
 
@@ -373,9 +377,17 @@ export async function updateLeaveRequestHandler(
     return reply.code(403).send({ message: "Employee not found" });
   }
 
-  const isHRorAdmin =
-    employeeWithPosition.positionName === "HR" ||
-    employeeWithPosition.positionName === "Admin";
+  const userRolesRows = await db
+    .select({ roleName: roles.name })
+    .from(userRoles)
+    .leftJoin(roles, eq(userRoles.roleId, roles.id))
+    .where(eq(userRoles.userId, userId));
+
+  const roleNames = userRolesRows
+    .map((r) => r.roleName)
+    .filter((role): role is string => role !== null);
+
+  const isHRorAdmin = hasAnyRole(roleNames, ["HR", "ADMIN"]);
 
   const conditions = [
     eq(leaveRequests.id, id),
@@ -459,9 +471,17 @@ export async function deleteLeaveRequestHandler(
     .leftJoin(positions, eq(employees.positionId, positions.id))
     .where(eq(employees.userId, userId));
 
-  const isHRorAdmin =
-    employeeWithPosition?.positionName === "HR" ||
-    employeeWithPosition?.positionName === "Admin";
+  const userRolesRows = await db
+    .select({ roleName: roles.name })
+    .from(userRoles)
+    .leftJoin(roles, eq(userRoles.roleId, roles.id))
+    .where(eq(userRoles.userId, userId));
+
+  const roleNames = userRolesRows
+    .map((r) => r.roleName)
+    .filter((role): role is string => role !== null);
+
+  const isHRorAdmin = hasAnyRole(roleNames, ["HR", "ADMIN"]);
 
   const conditions = [
     eq(leaveRequests.id, id),
@@ -511,8 +531,12 @@ export async function approveLeaveRequestHandler(
 
   const approverRoleNames = approverRolesRows.map((r) => r.roleName);
 
-  const isApproverAdmin = approverRoleNames.includes("ADMIN");
-  const isApproverHR = approverRoleNames.includes("HR");
+  const cleanedApproverRoles = approverRoleNames.filter(
+    (role): role is string => role !== null,
+  );
+
+  const isApproverAdmin = hasRole(cleanedApproverRoles, "ADMIN");
+  const isApproverHR = hasRole(cleanedApproverRoles, "HR");
 
   const leaveRows = await db
     .select({
@@ -611,8 +635,12 @@ export async function rejectLeaveRequestHandler(
     r.roleName?.toUpperCase(),
   );
 
-  const isApproverAdmin = approverRoleNames.includes("ADMIN");
-  const isApproverHR = approverRoleNames.includes("HR");
+  const cleanedApproverRoles = approverRoleNames.filter(
+    (role): role is string => role !== null,
+  );
+
+  const isApproverAdmin = hasRole(cleanedApproverRoles, "ADMIN");
+  const isApproverHR = hasRole(cleanedApproverRoles, "HR");
 
   const leaveRows = await db
     .select({
@@ -653,7 +681,11 @@ export async function rejectLeaveRequestHandler(
 
   const targetRoleNames = targetRolesRows.map((r) => r.roleName?.toUpperCase());
 
-  const isTargetHR = targetRoleNames.includes("HR");
+  const cleanedTargetRoles = targetRoleNames.filter(
+    (role): role is string => role !== null,
+  );
+
+  const isTargetHR = hasRole(cleanedTargetRoles, "HR");
 
   if (isTargetHR && !isApproverAdmin) {
     return reply.code(403).send({

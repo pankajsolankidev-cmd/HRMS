@@ -1,0 +1,251 @@
+import { IconEdit, IconSearch, IconTrash } from "@tabler/icons-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import type { AxiosError } from "axios";
+import { useEffect, useMemo, useState } from "react";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router";
+import { deleteSalaryStructure } from "../../api/delete";
+import { getEmployees, getSalaryStructures } from "../../api/get";
+import type { PaginatedResponse } from "../../api/types";
+import Card from "../../components/common/ComponentCard";
+import DeleteConfirm from "../../components/common/DeleteConfirmModal";
+import PageBreadcrumb from "../../components/common/PageBreadCrumb";
+import PageMeta from "../../components/common/PageMeta";
+import Input from "../../components/form/input/InputField";
+import DataTable, {
+  type Column,
+} from "../../components/tables/BasicTables/DataTable";
+import { useTableSort } from "../../components/tables/useTableSort";
+import Button from "../../components/ui/button/Button";
+
+export type SalaryStructure = {
+  id: string;
+  employeeName: string;
+  basicSalary: number;
+  description?: string;
+  appraisalDate?: string;
+};
+
+export default function SalaryPage() {
+  const navigate = useNavigate();
+
+  const [rawSearch, setRawSearch] = useState("");
+  const [search, setSearch] = useState<string | undefined>();
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const { sortBy, sortOrder, handleSort } = useTableSort<SalaryStructure>();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(rawSearch.trim() || undefined);
+      setPage(1);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [rawSearch]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [sortBy, sortOrder]);
+
+  const { data: employees } = useQuery({
+    queryKey: ["employees", "lookup"],
+    queryFn: () => getEmployees(),
+  });
+
+  const employeeMap = useMemo(() => {
+    const map = new Map<string, string>();
+    employees?.data?.forEach((emp: any) => {
+      map.set(emp.id, `${emp.firstName} ${emp.lastName}`);
+    });
+    return map;
+  }, [employees]);
+
+  const { data, isLoading, isError, refetch } = useQuery<
+    PaginatedResponse<any>
+  >({
+    queryKey: [
+      "salary-structures",
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+      search ?? "all",
+    ],
+    queryFn: () =>
+      getSalaryStructures({
+        page,
+        limit,
+        ...(sortBy && sortOrder ? { sortBy: sortBy as string, sortOrder } : {}),
+        search,
+      }),
+    placeholderData: (prev) => prev,
+  });
+
+  const salaryData: SalaryStructure[] = useMemo(
+    () =>
+      data?.data?.map((s: any) => ({
+        id: s.id,
+        employeeName: employeeMap.get(s.employeeId) ?? "—",
+        basicSalary: Number(s.basicSalary),
+        description: s.description,
+        appraisalDate: s.appraisalDate
+          ? s.appraisalDate.split("T")[0]
+          : undefined,
+      })) ?? [],
+    [data, employeeMap],
+  );
+
+  const total = data?.meta?.total ?? 0;
+
+  const { mutate: removeSalary, isPending } = useMutation({
+    mutationFn: deleteSalaryStructure,
+    onSuccess: (res) => {
+      toast.success(res?.message ?? "Salary record deleted successfully");
+      refetch();
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(
+        error?.response?.data?.message ?? "An unexpected error occurred",
+      );
+    },
+  });
+
+  const columns: Column<SalaryStructure>[] = [
+    {
+      header: "Employee",
+      accessor: "employeeName",
+      cell: (row) => (
+        <span className="font-medium text-gray-800 dark:text-white/90">
+          {row.employeeName}
+        </span>
+      ),
+    },
+    {
+      header: "Basic Salary",
+      accessor: "basicSalary",
+      sortable: true,
+      cell: (row) => (
+        <span className="font-medium text-green-600 dark:text-green-400">
+          ₹ {row.basicSalary.toLocaleString("en-IN")}
+        </span>
+      ),
+    },
+    {
+      header: "Description",
+      cell: (row) => row.description || "—",
+    },
+    {
+      header: "Appraisal Date",
+      accessor: "appraisalDate",
+      cell: (row) => row.appraisalDate || "—",
+    },
+    {
+      header: "Action",
+      align: "center",
+      cell: (row) => (
+        <div className="flex items-center justify-center gap-3">
+          <IconEdit
+            size={18}
+            onClick={() => navigate(`/salary/${row.id}`)}
+            className="cursor-pointer text-blue-600 dark:text-blue-400"
+          />
+
+          <DeleteConfirm<string>
+            title="Delete Salary Structure"
+            description="Are you sure you want to delete this employee's salary record?"
+            loading={isPending}
+            onConfirm={(id) => removeSalary(id)}
+          >
+            {(askDelete) => (
+              <IconTrash
+                size={18}
+                onClick={() => askDelete(row.id)}
+                className="cursor-pointer text-red-600 dark:text-red-400"
+              />
+            )}
+          </DeleteConfirm>
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <>
+      <PageMeta
+        title="Salary Management"
+        description="Manage employee salary structures"
+      />
+      <PageBreadcrumb pageTitle="Salary" />
+
+      <Card
+        action={
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <div className="relative w-full sm:max-w-xs">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                <IconSearch size={18} stroke={2} />
+              </div>
+              <Input
+                placeholder="Search here..."
+                value={rawSearch}
+                onChange={(e) => setRawSearch(e.target.value)}
+                className="pl-10 pr-12"
+              />
+              {rawSearch && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setRawSearch("");
+                    setSearch(undefined);
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0 rounded-full"
+                >
+                  ✕
+                </Button>
+              )}
+            </div>
+
+            <Button
+              onClick={() => navigate("/salary/new")}
+              size="md"
+              className="bg-black dark:bg-blue-500 dark:hover:bg-brand-600 whitespace-nowrap"
+            >
+              Add Salary
+            </Button>
+          </div>
+        }
+      >
+        {!isLoading && salaryData.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
+              No records found
+            </p>
+            {search && (
+              <p className="mt-1 text-sm text-gray-500">
+                No results for <span className="font-medium">"{search}"</span>
+              </p>
+            )}
+          </div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={salaryData}
+            isLoading={isLoading}
+            isError={isError}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSort={handleSort}
+            page={page}
+            limit={limit}
+            total={total}
+            onPageChange={setPage}
+            onLimitChange={(newLimit) => {
+              setLimit(newLimit);
+              setPage(1);
+            }}
+          />
+        )}
+      </Card>
+    </>
+  );
+}

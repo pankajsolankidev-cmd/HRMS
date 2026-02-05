@@ -10,10 +10,12 @@ export const PERMISSIONS = {
   EMPLOYEE_DELETE: "employee.delete",
 
   LEAVE_CREATE: "leave.create",
-  LEAVE_VIEW_OWN: "leave.view_own",
+
   LEAVE_VIEW_ALL: "leave.view_all",
-  LEAVE_UPDATE: "leave.update",
-  LEAVE_DELETE: "leave.delete",
+  
+  LEAVE_UPDATE_ALL: "leave.update_all",
+  
+  LEAVE_DELETE_ALL: "leave.delete_all",
   LEAVE_APPROVE: "leave.approve",
 
   PAYROLL_PROCESS: "payroll.process",
@@ -33,10 +35,12 @@ export const PERMISSIONS = {
   SYSTEM_DELETE: "system.delete",
 
   EXPENSE_CREATE: "expense.create",
-  EXPENSE_VIEW_OWN: "expense.view_own",
+ 
   EXPENSE_VIEW_ALL: "expense.view_all",
-  EXPENSE_UPDATE: "expense.update",
-  EXPENSE_DELETE: "expense.delete",
+  
+  EXPENSE_UPDATE_ALL: "expense.update_all",
+
+  EXPENSE_DELETE_ALL: "expense.delete_all",
   EXPENSE_SUBMIT: "expense.submit",
   EXPENSE_APPROVE: "expense.approve",
   EXPENSE_VIEW_SUMMARY: "expense.view_summary",

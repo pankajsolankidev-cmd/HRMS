@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import Can from "../../components/common/Can";
 import ComponentCard from "../../components/common/ComponentCard";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
@@ -17,9 +18,12 @@ export default function Expense() {
       <PageMeta title="Expenses" description="Expense list" />
       <PageBreadcrumb pageTitle="Expenses" />
       <div className="space-y-6">
-        <ComponentCard title="Expense Summary">
-          <ExpenseSummary />
-        </ComponentCard>
+        <Can permission="expense.view_summary">
+          <ComponentCard title="Expense Summary">
+            <ExpenseSummary />
+          </ComponentCard>
+        </Can>
+
         <ComponentCard
           title="Expense Details"
           middle={

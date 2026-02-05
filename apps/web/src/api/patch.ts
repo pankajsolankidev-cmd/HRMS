@@ -54,3 +54,23 @@ export const rejectLeave = async ({
   });
   return res.data;
 };
+
+export const approveExpense = async (id: number) => {
+  const res = await api.patch(`/expenses/${id}/approve`);
+  return res.data;
+};
+
+export const rejectExpense = async ({
+  id,
+  reason,
+}: {
+  id: number;
+  reason?: string;
+}) => {
+  const res = await api.patch(`/expenses/${id}/reject`, { reason });
+  return res.data;
+};
+export const createExpense = async (id: number) => {
+  const res = await api.patch(`/expenses/${id}/create`);
+  return res.data;
+};
