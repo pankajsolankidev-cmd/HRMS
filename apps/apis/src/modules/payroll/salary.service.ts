@@ -71,7 +71,7 @@ export async function getSalariesHandler(request: FastifyRequest) {
     conditions.push(lte(salary.basicSalary, query.maxSalary.toString()));
   }
 
-  const { limit, offset, page } = getPagination(query ?? {});
+  const { page, limit, offset } = getPagination(query ?? {});
 
   const whereClause = conditions.length ? and(...conditions) : undefined;
 
@@ -87,13 +87,18 @@ export async function getSalariesHandler(request: FastifyRequest) {
     );
   }
 
-  const data = await db
+  let queryBuilder = db
     .select()
     .from(salary)
     .where(whereClause)
     .orderBy(...orderByClauses)
-    .limit(limit)
-    .offset(offset);
+    .$dynamic();
+
+  if (limit !== undefined && offset !== undefined) {
+    queryBuilder = queryBuilder.limit(limit).offset(offset);
+  }
+
+  const data = await queryBuilder;
 
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)` })
@@ -104,7 +109,7 @@ export async function getSalariesHandler(request: FastifyRequest) {
     data,
     meta: {
       page,
-      limit,
+      limit: limit ?? null,
       total: Number(count),
     },
   };

@@ -18,6 +18,7 @@ import { RoleName, ROLES } from "../../db/schema/roles.enums";
 import { positions } from "../../db/schema/positions.schema";
 
 import { sendMessage } from "../../utils/api-response";
+import { getPagination } from "../../utils/pagination";
 
 const DEFAULT_EMPLOYEE_PASSWORD: string = (() => {
   const pwd = process.env.DEFAULT_EMPLOYEE_PASSWORD;
@@ -169,9 +170,7 @@ export async function getEmployeesHandler(request: FastifyRequest) {
     );
   }
 
-  const page = Math.max(1, Number(query?.page) || 1);
-  const limit = Math.min(100, Number(query?.limit) || 10);
-  const offset = (page - 1) * limit;
+  const { page, limit, offset } = getPagination(query);
 
   const orderByClauses = [];
 
@@ -185,7 +184,7 @@ export async function getEmployeesHandler(request: FastifyRequest) {
     );
   }
 
-  const data = await db
+  let queryBuilder = db
     .select({
       id: employees.id,
       firstName: employees.firstName,
@@ -214,8 +213,13 @@ export async function getEmployeesHandler(request: FastifyRequest) {
     )
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(...orderByClauses)
-    .limit(limit)
-    .offset(offset);
+    .$dynamic();
+
+  if (limit !== undefined && offset !== undefined) {
+    queryBuilder = queryBuilder.limit(limit).offset(offset);
+  }
+
+  const data = await queryBuilder;
 
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)` })
@@ -226,7 +230,7 @@ export async function getEmployeesHandler(request: FastifyRequest) {
     data,
     meta: {
       page,
-      limit,
+      limit: limit ?? null,
       total: Number(count),
     },
   };

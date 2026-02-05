@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { eq, inArray, ilike, asc, desc, and } from "drizzle-orm";
+import { eq, inArray, ilike, asc, desc, and, sql } from "drizzle-orm";
 
 import { db } from "../../db";
 import { systems } from "../../db/schema/systems.schema";
@@ -72,16 +72,33 @@ export async function getSystemsHandler(request: FastifyRequest) {
     );
   }
 
-  const systemsList = await db
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(systems)
+    .where(whereClause);
+
+  let systemsQuery = db
     .select()
     .from(systems)
     .where(whereClause)
     .orderBy(...orderByClauses)
-    .limit(limit)
-    .offset(offset);
+    .$dynamic();
+
+  if (limit !== undefined && offset !== undefined) {
+    systemsQuery = systemsQuery.limit(limit).offset(offset);
+  }
+
+  const systemsList = await systemsQuery;
 
   if (!systemsList.length) {
-    return { data: [], page, limit };
+    return {
+      data: [],
+      meta: {
+        page,
+        limit: limit ?? null,
+        total: Number(count),
+      },
+    };
   }
 
   const systemIds = systemsList.map((s) => s.id);
@@ -102,8 +119,11 @@ export async function getSystemsHandler(request: FastifyRequest) {
         .filter((r) => r.systemId === system.id)
         .map((r) => r.component),
     })),
-    page,
-    limit,
+    meta: {
+      page,
+      limit: limit ?? null,
+      total: Number(count),
+    },
   };
 }
 

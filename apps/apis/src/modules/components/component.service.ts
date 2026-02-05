@@ -8,6 +8,7 @@ import type { CreateComponentDto } from "@shared/types/src/components/create-com
 import type { UpdateComponentDto } from "@shared/types/src/components/update-component.dto";
 
 import { sendMessage } from "../../utils/api-response";
+import { getPagination } from "../../utils/pagination";
 
 export async function createComponentHandler(
   request: FastifyRequest,
@@ -35,9 +36,7 @@ export async function getComponentsHandler(request: FastifyRequest) {
     conditions.push(ilike(components.name, `%${query.search}%`));
   }
 
-  const page = Math.max(1, Number(query?.page) || 1);
-  const limit = Math.min(100, Number(query?.limit) || 10);
-  const offset = (page - 1) * limit;
+  const { page, limit, offset } = getPagination(query);
 
   const orderByClauses = [];
 
@@ -51,13 +50,18 @@ export async function getComponentsHandler(request: FastifyRequest) {
     );
   }
 
-  const data = await db
+  let queryBuilder = db
     .select()
     .from(components)
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(...orderByClauses)
-    .limit(limit)
-    .offset(offset);
+    .$dynamic();
+
+  if (limit !== undefined && offset !== undefined) {
+    queryBuilder = queryBuilder.limit(limit).offset(offset);
+  }
+
+  const data = await queryBuilder;
 
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)` })
@@ -68,11 +72,13 @@ export async function getComponentsHandler(request: FastifyRequest) {
     data,
     meta: {
       page,
-      limit,
+      limit: limit ?? null,
       total: Number(count),
     },
   };
 }
+
+
 
 export async function getComponentByIdHandler(
   request: FastifyRequest,

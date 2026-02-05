@@ -6,6 +6,7 @@ import { expenses } from "../../db/schema/expenses";
 import type { CreateExpenseDto } from "@shared/types/src/expense/create-expense.dto";
 import type { UpdateExpenseDto } from "@shared/types/src/expense/update-expense.dto";
 import { ExpenseStatus } from "../../db/schema/expense.enums";
+import { getPagination } from "../../utils/pagination";
 import { employees, roles, userRoles } from "../../db/schema";
 import { PERMISSIONS } from "../../db/schema/permissions.enums";
 
@@ -111,9 +112,7 @@ export async function getExpensesHandler(request: FastifyRequest) {
     conditions.push(eq(expenses.status, query.status as any));
   }
 
-  const page = Math.max(1, Number(query.page) || 1);
-  const limit = Math.min(100, Number(query.limit) || 10);
-  const offset = (page - 1) * limit;
+  const { page, limit, offset } = getPagination(query);
 
   const orderByClauses = [];
 
@@ -134,13 +133,18 @@ export async function getExpensesHandler(request: FastifyRequest) {
     );
   }
 
-  const data = await db
+  let queryBuilder = db
     .select()
     .from(expenses)
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(...orderByClauses)
-    .limit(limit)
-    .offset(offset);
+    .$dynamic();
+
+  if (limit !== undefined && offset !== undefined) {
+    queryBuilder = queryBuilder.limit(limit).offset(offset);
+  }
+
+  const data = await queryBuilder;
 
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)` })
@@ -151,7 +155,7 @@ export async function getExpensesHandler(request: FastifyRequest) {
     data,
     meta: {
       page,
-      limit,
+      limit: limit ?? null,
       total: Number(count),
     },
   };

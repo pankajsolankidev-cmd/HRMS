@@ -104,7 +104,7 @@ export async function getPayrollsHandler(request: FastifyRequest) {
     conditions.push(eq(payrolls.employeeId, filters.employeeId));
   }
 
-  const { limit, offset, page } = getPagination(filters ?? {});
+  const { page, limit, offset } = getPagination(filters ?? {});
 
   const whereClause = conditions.length ? and(...conditions) : undefined;
 
@@ -120,13 +120,18 @@ export async function getPayrollsHandler(request: FastifyRequest) {
     );
   }
 
-  const data = await db
+  let queryBuilder = db
     .select()
     .from(payrolls)
     .where(whereClause)
     .orderBy(...orderByClauses)
-    .limit(limit)
-    .offset(offset);
+    .$dynamic();
+
+  if (limit !== undefined && offset !== undefined) {
+    queryBuilder = queryBuilder.limit(limit).offset(offset);
+  }
+
+  const data = await queryBuilder;
 
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)` })
@@ -137,7 +142,7 @@ export async function getPayrollsHandler(request: FastifyRequest) {
     data,
     meta: {
       page,
-      limit,
+      limit: limit ?? null,
       total: Number(count),
     },
   };

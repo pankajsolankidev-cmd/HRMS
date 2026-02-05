@@ -17,6 +17,7 @@ import {
 } from "@shared/types/src/leave-request/leave-request.types";
 
 import { sendMessage } from "../../utils/api-response";
+import { getPagination } from "../../utils/pagination";
 import { hasAnyRole, hasRole } from "../../utils/role.utils";
 
 function isWeekend(date: Date) {
@@ -190,7 +191,7 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
     if (!employee) {
       return {
         data: [],
-        meta: { page: 1, limit: 10, total: 0 },
+        meta: { page: 1, limit: null, total: 0 },
       };
     }
     conditions.push(eq(leaveRequests.employeeId, employee.id));
@@ -208,9 +209,7 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
     conditions.push(eq(leaveRequests.type, query.type as any));
   }
 
-  const page = Math.max(1, Number(query?.page) || 1);
-  const limit = Math.min(50, Number(query?.limit) || 10);
-  const offset = (page - 1) * limit;
+  const { page, limit, offset } = getPagination(query);
 
   const orderByClauses = [];
 
@@ -230,7 +229,7 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
     .leftJoin(employees, eq(leaveRequests.employeeId, employees.id))
     .where(conditions.length ? and(...conditions) : undefined);
 
-  const data = await db
+  let queryBuilder = db
     .select({
       leave: leaveRequests,
       employee: {
@@ -261,14 +260,19 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
     )
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(...orderByClauses)
-    .limit(limit)
-    .offset(offset);
+    .$dynamic();
+
+  if (limit !== undefined && offset !== undefined) {
+    queryBuilder = queryBuilder.limit(limit).offset(offset);
+  }
+
+  const data = await queryBuilder;
 
   return {
     data,
     meta: {
       page,
-      limit,
+      limit: limit ?? null,
       total: countResult?.count ?? 0,
     },
   };
