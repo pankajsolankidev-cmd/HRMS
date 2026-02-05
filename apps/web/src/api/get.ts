@@ -11,7 +11,7 @@ export const getEmployeeById = async (id: string) => {
   return res.data;
 };
 
-export const getComponents = async (params: ListQueryParams) => {
+export const getComponents = async (params?: ListQueryParams) => {
   const res = await api.get<PaginatedResponse<any>>("/components", { params });
   return res.data;
 };

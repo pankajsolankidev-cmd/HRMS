@@ -72,7 +72,7 @@ export default function AddEditPayrollPage() {
 
   const { data: employeesData } = useQuery({
     queryKey: ["employees", "all"],
-    queryFn: () => getEmployees({ page: 1, limit: 100 }),
+    queryFn: () => getEmployees(),
   });
 
   const employeeList = employeesData?.data ?? [];

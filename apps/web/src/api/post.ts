@@ -1,5 +1,4 @@
 import Cookies from "js-cookie";
-import type { EmployeePayload } from "../pages/Employee/AddEditEmployeePage";
 import api, { refreshApi } from "./axios";
 
 export const signInApi = async (data: { email: string; password: string }) => {
@@ -7,14 +6,6 @@ export const signInApi = async (data: { email: string; password: string }) => {
   return res.data;
 };
 
-export const signUpApi = async (data: {
-  username: string;
-  email: string;
-  password: string;
-}) => {
-  const res = await api.post("/signup", data);
-  return res.data;
-};
 export const logoutUser = async (refreshToken: string) => {
   const res = await api.post("/auth/logout", {
     refreshToken,
@@ -50,7 +41,7 @@ export const resetPassword = async (params: {
   return res.data;
 };
 
-export const addEmployee = async (payload: EmployeePayload) => {
+export const addEmployee = async (payload: any) => {
   const res = await api.post("/employees", payload);
   return res.data;
 };

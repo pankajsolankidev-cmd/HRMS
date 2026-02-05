@@ -58,7 +58,7 @@ export default function AddEditSalaryPage() {
 
   const { data: employeesData } = useQuery<PaginatedResponse<any>>({
     queryKey: ["employees", "lookup"],
-    queryFn: () => getEmployees({ page: 1, limit: 100 }),
+    queryFn: () => getEmployees(),
   });
 
   const employeeOptions = (employeesData?.data ?? []).map((emp: any) => ({

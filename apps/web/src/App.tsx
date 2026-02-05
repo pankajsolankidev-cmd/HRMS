@@ -23,13 +23,12 @@ import SmallAuthLayout from "./layout/SmallAuthLayout";
 import ForgetPassword from "./pages/auth/ForgetPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import SignInForm from "./pages/auth/SignInForm";
-import SignUpForm from "./pages/auth/SignUpForm";
 import AddEditComponentPage from "./pages/Component/AddEditComponentPage";
 import ComponentPage from "./pages/Component/ComponentPage";
 import AddEditEmployeePage from "./pages/Employee/AddEditEmployeePage";
 import EmployeePage from "./pages/Employee/EmployeePage";
-import AddEditExpense from "./pages/ExpenseTable/AddEditExpense";
-import Expense from "./pages/ExpenseTable/Expense";
+import AddEditExpensePage from "./pages/Expense/AddEditExpensePage";
+import Expense from "./pages/Expense/Expense";
 import AddEditLeavePage from "./pages/Leaves/AddEditLeaveForm";
 import LeavePage from "./pages/Leaves/GetLeaveTable";
 import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
@@ -49,7 +48,6 @@ function AppRoutes() {
         <Route element={<AuthLayout />}>
           <Route path="/" element={<Navigate to="/signin" replace />} />
           <Route path="/signin" element={<SignInForm />} />
-          <Route path="/signup" element={<SignUpForm />} />
         </Route>
         <Route element={<SmallAuthLayout />}>
           <Route path="/forgot-password" element={<ForgetPassword />} />
@@ -80,7 +78,7 @@ function AppRoutes() {
           <Route path="/leave-requests/:id" element={<AddEditLeavePage />} />
 
           <Route path="/expenses" element={<Expense />} />
-          <Route path="/expenses/:id" element={<AddEditExpense />} />
+          <Route path="/expenses/:id" element={<AddEditExpensePage />} />
         </Route>
       </Route>
 

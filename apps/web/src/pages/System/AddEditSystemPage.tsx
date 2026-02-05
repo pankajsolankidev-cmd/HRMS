@@ -50,7 +50,7 @@ export default function AddEditSystemPage() {
     PaginatedResponse<any>
   >({
     queryKey: ["components-lookup"],
-    queryFn: () => getComponents({ page: 1, limit: 100 }),
+    queryFn: () => getComponents(),
   });
 
   const componentOptions = (componentsData?.data ?? []).map((c: any) => ({
