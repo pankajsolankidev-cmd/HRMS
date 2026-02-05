@@ -4,5 +4,5 @@ export interface UpdateExpenseDto {
   expenseDate?: string;
   description?: string;
   file?: string;
-  status?: "DRAFT" | "SUBMITTED";
+  status?: "DRAFT" | "CREATED";
 }

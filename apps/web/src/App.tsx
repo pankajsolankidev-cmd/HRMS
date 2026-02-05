@@ -14,19 +14,7 @@ import Home from "./pages/Dashboard/Home";
 import NotFound from "./pages/OtherPage/NotFound";
 import PublicRoute from "./pages/OtherPage/PublicRoute";
 
-import AddEmployee from "./pages/EmployeeTable/AddEditEmployee";
-import Employee from "./pages/EmployeeTable/Employee";
-
-import AddEditComponent from "./pages/ComponentTable/AddEditComponent";
-import Component from "./pages/ComponentTable/Component";
-
-import AddEditSystem from "./pages/SystemTable/AddEditSystem";
-import System from "./pages/SystemTable/System";
-
 import { ScrollToTop } from "./components/common/ScrollToTop";
-
-import AddEditSalary from "./pages/SalaryTable/AddEditSalary";
-import Salary from "./pages/SalaryTable/Salary";
 
 import AddEditPayroll from "./pages/PayrollTable/AddEditPayroll";
 import Payroll from "./pages/PayrollTable/Payroll";
@@ -36,14 +24,22 @@ import Leave from "./pages/LeaveTable/Leave";
 
 import { Toaster } from "react-hot-toast";
 import SmallAuthLayout from "./layout/SmallAuthLayout";
-import AddEditExpense from "./pages/ExpenseTable/AddEditExpense";
-import Expense from "./pages/ExpenseTable/Expense";
-import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
-import RootRedirect from "./pages/OtherPage/RootRedirect";
 import ForgetPassword from "./pages/auth/ForgetPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import SignInForm from "./pages/auth/SignInForm";
 import SignUpForm from "./pages/auth/SignUpForm";
+import AddEditComponentPage from "./pages/Component/AddEditComponentPage";
+import ComponentPage from "./pages/Component/ComponentPage";
+import AddEditEmployeePage from "./pages/Employee/AddEditEmployeePage";
+import EmployeePage from "./pages/Employee/EmployeePage";
+import AddEditExpense from "./pages/ExpenseTable/AddEditExpense";
+import Expense from "./pages/ExpenseTable/Expense";
+import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
+import RootRedirect from "./pages/OtherPage/RootRedirect";
+import AddEditSalaryPage from "./pages/Salary/AddEditSalaryPage";
+import SalaryPage from "./pages/Salary/SalaryPage";
+import AddEditSystemPage from "./pages/System/AddEditSystemPage";
+import SystemPage from "./pages/System/SystemPage";
 
 function AppRoutes() {
   return (
@@ -66,17 +62,17 @@ function AppRoutes() {
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Home />} />
 
-          <Route path="/employees" element={<Employee />} />
-          <Route path="/employees/:id" element={<AddEmployee />} />
+          <Route path="/employees" element={<EmployeePage />} />
+          <Route path="/employees/:id" element={<AddEditEmployeePage />} />
 
-          <Route path="/components" element={<Component />} />
-          <Route path="/components/:id" element={<AddEditComponent />} />
+          <Route path="/components" element={<ComponentPage />} />
+          <Route path="/components/:id" element={<AddEditComponentPage />} />
 
-          <Route path="/systems" element={<System />} />
-          <Route path="/systems/:id" element={<AddEditSystem />} />
+          <Route path="/systems" element={<SystemPage />} />
+          <Route path="/systems/:id" element={<AddEditSystemPage />} />
 
-          <Route path="/salary" element={<Salary />} />
-          <Route path="/salary/:id" element={<AddEditSalary />} />
+          <Route path="/salary" element={<SalaryPage />} />
+          <Route path="/salary/:id" element={<AddEditSalaryPage />} />
 
           <Route path="/payrolls" element={<Payroll />} />
           <Route path="/payrolls/:id" element={<AddEditPayroll />} />
@@ -119,11 +115,14 @@ export default function App() {
       <Toaster
         position="top-right"
         toastOptions={{
-          duration: 4000,
+          duration: 2000,
           style: {
-            marginTop: "60px",
-            fontSize: "14px",
+            marginTop: "15px",
+            fontSize: "15px",
           },
+        }}
+        containerStyle={{
+          zIndex: 99999,
         }}
       />
       <ScrollToTop />

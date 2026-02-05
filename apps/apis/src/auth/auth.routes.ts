@@ -14,7 +14,6 @@ import { rolePermissions } from "../db/schema/role-permissions.schema";
 import { permissions } from "../db/schema/permissions.schema";
 
 import {
-  signUpSchema,
   signInSchema,
   refreshTokenSchema,
   logoutSchema,
@@ -22,10 +21,7 @@ import {
   resetPasswordSchema,
 } from "./auth.schema";
 
-import type {
-  AuthSignUpDto,
-  AuthSignInDto,
-} from "@shared/types/src/auth/auth.dto";
+import type { AuthSignInDto } from "@shared/types/src/auth/auth.dto";
 import { verifyAccessToken } from "../middlewares/auth.middlewares";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
@@ -45,13 +41,14 @@ export default async function authRoutes(app: FastifyInstance) {
     if (!email || !password) {
       return reply
         .status(400)
-        .send({ error: "Email or password are required" });
+        .send({ error: "Email and password are required" });
     }
 
     const [user] = await db
       .select({
         id: users.id,
         email: users.email,
+        username: users.username,
         password: users.password,
       })
       .from(users)
@@ -91,7 +88,9 @@ export default async function authRoutes(app: FastifyInstance) {
     const accessToken = generateAccessToken({
       id: user.id,
       email: user.email,
+      username: user.username,
       roles: rolesArr,
+      permissions: permissionsArr,
     });
 
     const refreshToken = generateRefreshToken();
@@ -103,6 +102,9 @@ export default async function authRoutes(app: FastifyInstance) {
     });
 
     return reply.send({
+      id: user.id,
+      email: user.email,
+      username: user.username,
       accessToken,
       refreshToken,
       roles: rolesArr,
@@ -191,6 +193,7 @@ export default async function authRoutes(app: FastifyInstance) {
         .select({
           id: users.id,
           email: users.email,
+          username: users.username,
         })
         .from(users)
         .where(eq(users.id, record.userId));
@@ -227,10 +230,15 @@ export default async function authRoutes(app: FastifyInstance) {
       const newAccessToken = generateAccessToken({
         id: user.id,
         email: user.email,
+        username: user.username,
         roles: rolesArr,
+        permissions: permissionsArr,
       });
 
       return reply.send({
+        id: user.id,
+        username: user.username,
+        email: user.email,
         accessToken: newAccessToken,
         roles: rolesArr,
         permissions: permissionsArr,

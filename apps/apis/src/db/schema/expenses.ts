@@ -38,5 +38,9 @@ export const expenses = pgTable("expenses", {
 
   approvedAt: timestamp("approved_at"),
 
+  rejectedBy: uuid("rejected_by").references(() => users.id),
+
+  rejectedAt: timestamp("rejected_at"),
+
   rejectionReason: text("rejection_reason"),
 });
