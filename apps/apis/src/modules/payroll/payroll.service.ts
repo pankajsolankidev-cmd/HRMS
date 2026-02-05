@@ -16,7 +16,7 @@ import { sendMessage } from "../../utils/api-response";
 
 export async function processPayrollHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const payload = request.body as ProcessPayrollDto;
   const processedBy = request.user!.id;
@@ -53,8 +53,8 @@ export async function processPayrollHandler(
       and(
         eq(payrolls.employeeId, payload.employeeId),
         eq(payrolls.month, payload.month),
-        eq(payrolls.year, payload.year)
-      )
+        eq(payrolls.year, payload.year),
+      ),
     );
 
   if (existingPayroll) {
@@ -106,23 +106,25 @@ export async function getPayrollsHandler(request: FastifyRequest) {
 
   const { limit, offset, page } = getPagination(filters ?? {});
 
-  const sortColumn =
-    filters?.sortBy === "netSalary"
-      ? payrolls.netSalary
-      : filters?.sortBy === "year"
-      ? payrolls.year
-      : payrolls.processedAt;
-
-  const order =
-    filters?.sortOrder === "asc" ? asc(sortColumn) : desc(sortColumn);
-
   const whereClause = conditions.length ? and(...conditions) : undefined;
+
+  const orderByClauses = [];
+
+  if (!filters?.sortBy) {
+    orderByClauses.push(desc(payrolls.updatedAt));
+  } else {
+    orderByClauses.push(
+      filters.sortOrder === "asc"
+        ? asc(payrolls[filters.sortBy])
+        : desc(payrolls[filters.sortBy]),
+    );
+  }
 
   const data = await db
     .select()
     .from(payrolls)
     .where(whereClause)
-    .orderBy(order)
+    .orderBy(...orderByClauses)
     .limit(limit)
     .offset(offset);
 
@@ -143,7 +145,7 @@ export async function getPayrollsHandler(request: FastifyRequest) {
 
 export async function getPayrollByIdHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
 
@@ -158,7 +160,7 @@ export async function getPayrollByIdHandler(
 
 export async function updatePayrollHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
   const payload = request.body as UpdatePayrollDto;
@@ -216,7 +218,7 @@ export async function updatePayrollHandler(
 
 export async function deletePayrollHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
 

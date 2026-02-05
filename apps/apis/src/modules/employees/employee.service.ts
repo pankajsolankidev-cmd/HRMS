@@ -173,10 +173,17 @@ export async function getEmployeesHandler(request: FastifyRequest) {
   const limit = Math.min(100, Number(query?.limit) || 10);
   const offset = (page - 1) * limit;
 
-  const sortColumn =
-    query?.sortBy === "createdAt" ? employees.createdAt : employees.firstName;
+  const orderByClauses = [];
 
-  const order = query?.sortOrder === "asc" ? asc(sortColumn) : desc(sortColumn);
+  if (!query?.sortBy) {
+    orderByClauses.push(desc(employees.updatedAt));
+  } else {
+    orderByClauses.push(
+      query.sortOrder === "asc"
+        ? asc(employees[query.sortBy])
+        : desc(employees[query.sortBy]),
+    );
+  }
 
   const data = await db
     .select({
@@ -190,13 +197,11 @@ export async function getEmployeesHandler(request: FastifyRequest) {
       managerId: employees.managerId,
       systemId: employees.systemId,
       userId: employees.userId,
-
       welcome: {
         welcomewithWhatsapp: employees.welcomeWithWhatsapp,
         welcomewithGmail: employees.welcomeWithGmail,
         welcomewithSlack: employees.welcomeWithSlack,
       },
-
       documents: {
         generateOfferLetter: documentGeneration.generateOfferLetter,
         generateAppointmentLetter: documentGeneration.generateAppointmentLetter,
@@ -208,7 +213,7 @@ export async function getEmployeesHandler(request: FastifyRequest) {
       eq(documentGeneration.employeeId, employees.id),
     )
     .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(order)
+    .orderBy(...orderByClauses)
     .limit(limit)
     .offset(offset);
 
@@ -301,12 +306,10 @@ export async function updateEmployeeHandler(
       departmentId: body.departmentId,
       managerId: body.managerId,
       systemId: body.systemId,
-
+      joiningDate: body.joiningDate,
       welcomeWithWhatsapp: body.welcome?.welcomewithWhatsapp,
       welcomeWithGmail: body.welcome?.welcomewithGmail,
       welcomeWithSlack: body.welcome?.welcomewithSlack,
-
-      updatedAt: new Date(),
     };
 
     Object.keys(employeeUpdateData).forEach(

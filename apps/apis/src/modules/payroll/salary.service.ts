@@ -14,7 +14,7 @@ import { sendMessage } from "../../utils/api-response";
 
 export async function createSalaryHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const payload = request.body as CreateSalaryDto;
 
@@ -73,18 +73,25 @@ export async function getSalariesHandler(request: FastifyRequest) {
 
   const { limit, offset, page } = getPagination(query ?? {});
 
-  const sortColumn =
-    query?.sortBy === "basicSalary" ? salary.basicSalary : salary.createdAt;
-
-  const order = query?.sortOrder === "asc" ? asc(sortColumn) : desc(sortColumn);
-
   const whereClause = conditions.length ? and(...conditions) : undefined;
+
+  const orderByClauses = [];
+
+  if (!query?.sortBy) {
+    orderByClauses.push(desc(salary.updatedAt));
+  } else {
+    orderByClauses.push(
+      query.sortOrder === "asc"
+        ? asc(salary[query.sortBy])
+        : desc(salary[query.sortBy]),
+    );
+  }
 
   const data = await db
     .select()
     .from(salary)
     .where(whereClause)
-    .orderBy(order)
+    .orderBy(...orderByClauses)
     .limit(limit)
     .offset(offset);
 
@@ -105,7 +112,7 @@ export async function getSalariesHandler(request: FastifyRequest) {
 
 export async function getSalaryByIdHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
 
@@ -123,7 +130,7 @@ export async function getSalaryByIdHandler(
 
 export async function getSalaryByEmployeeHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { employeeId } = request.params as { employeeId: string };
 
@@ -143,7 +150,7 @@ export async function getSalaryByEmployeeHandler(
 
 export async function updateSalaryHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
   const payload = request.body as UpdateSalaryDto;
@@ -173,7 +180,7 @@ export async function updateSalaryHandler(
 
 export async function deleteSalaryHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
 

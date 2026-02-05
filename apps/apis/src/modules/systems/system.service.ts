@@ -15,7 +15,7 @@ import type {
 
 export async function createSystemHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const body = request.body as CreateSystemDto;
 
@@ -33,7 +33,7 @@ export async function createSystemHandler(
         body.componentIds.map((componentId) => ({
           systemId: system.id,
           componentId,
-        }))
+        })),
       );
     }
   });
@@ -50,9 +50,7 @@ export async function getSystemsHandler(request: FastifyRequest) {
     sortOrder?: "asc" | "desc";
   };
 
-  const { limit, offset, page } = getPagination(query || {});
-  const sortBy = query?.sortBy ?? "createdAt";
-  const sortOrder = query?.sortOrder ?? "desc";
+  const { limit, offset, page } = getPagination(query ?? {});
 
   const conditions = [];
 
@@ -62,14 +60,23 @@ export async function getSystemsHandler(request: FastifyRequest) {
 
   const whereClause = conditions.length ? and(...conditions) : undefined;
 
-  const orderBy =
-    sortOrder === "asc" ? asc(systems[sortBy]) : desc(systems[sortBy]);
+  const orderByClauses = [];
+
+  if (!query?.sortBy) {
+    orderByClauses.push(desc(systems.updatedAt));
+  } else {
+    orderByClauses.push(
+      query.sortOrder === "asc"
+        ? asc(systems[query.sortBy])
+        : desc(systems[query.sortBy]),
+    );
+  }
 
   const systemsList = await db
     .select()
     .from(systems)
     .where(whereClause)
-    .orderBy(orderBy)
+    .orderBy(...orderByClauses)
     .limit(limit)
     .offset(offset);
 
@@ -102,7 +109,7 @@ export async function getSystemsHandler(request: FastifyRequest) {
 
 export async function getSystemByIdHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
 
@@ -126,7 +133,7 @@ export async function getSystemByIdHandler(
 
 export async function updateSystemHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
   const body = request.body as UpdateSystemDto;
@@ -156,7 +163,7 @@ export async function updateSystemHandler(
           body.componentIds.map((componentId) => ({
             systemId: id,
             componentId,
-          }))
+          })),
         );
       }
     }
@@ -173,7 +180,7 @@ export async function updateSystemHandler(
 
 export async function deleteSystemHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
 

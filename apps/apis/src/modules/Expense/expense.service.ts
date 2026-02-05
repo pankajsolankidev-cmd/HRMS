@@ -1,6 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { and, eq, ilike, asc, desc, sql } from "drizzle-orm";
-
 import { db } from "../../db";
 import { sendMessage } from "../../utils/api-response";
 import { expenses } from "../../db/schema/expenses";
@@ -78,7 +77,6 @@ export async function getExpensesHandler(request: FastifyRequest) {
 
   const userId = request.user!.id;
 
-  
   const userRolesRows = await db
     .select({ roleName: roles.name })
     .from(userRoles)
@@ -87,10 +85,8 @@ export async function getExpensesHandler(request: FastifyRequest) {
 
   const roleNames = userRolesRows.map((r) => r.roleName?.toUpperCase());
 
-  const isHRorAdmin =
-    roleNames.includes("HR") || roleNames.includes("ADMIN");
+  const isHRorAdmin = roleNames.includes("HR") || roleNames.includes("ADMIN");
 
-  
   if (!isHRorAdmin) {
     const [employee] = await db
       .select()
@@ -111,16 +107,15 @@ export async function getExpensesHandler(request: FastifyRequest) {
     conditions.push(ilike(expenses.expenseType, `%${query.search}%`));
   }
 
-  
   if (query.status) {
     conditions.push(eq(expenses.status, query.status as any));
   }
 
-  
   const page = Math.max(1, Number(query.page) || 1);
   const limit = Math.min(100, Number(query.limit) || 10);
   const offset = (page - 1) * limit;
 
+  const orderByClauses = [];
 
   const sortColumn =
     query.sortBy === "amount"
@@ -129,18 +124,24 @@ export async function getExpensesHandler(request: FastifyRequest) {
         ? expenses.expenseDate
         : expenses.createdAt;
 
-  const order = query.sortOrder === "asc" ? asc(sortColumn) : desc(sortColumn);
+  if (!query?.sortBy) {
+    orderByClauses.push(desc(expenses.updatedAt));
+  } else {
+    orderByClauses.push(
+      query.sortOrder === "asc"
+        ? asc(expenses[query.sortBy])
+        : desc(expenses[query.sortBy]),
+    );
+  }
 
-  
   const data = await db
     .select()
     .from(expenses)
     .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(order)
+    .orderBy(...orderByClauses)
     .limit(limit)
     .offset(offset);
 
- 
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)` })
     .from(expenses)
@@ -239,8 +240,6 @@ export async function updateExpenseHandler(
 
       amount: body.amount !== undefined ? body.amount.toString() : undefined,
       expenseDate: body.expenseDate,
-
-      updatedAt: new Date(),
     })
     .where(eq(expenses.id, id));
 
@@ -323,7 +322,6 @@ export async function getExpenseSummaryHandler(
 
   const userId = request.user!.id;
 
-  // ✅ ROLE BASED (LIKE LEAVE)
   const userRolesRows = await db
     .select({ roleName: roles.name })
     .from(userRoles)
@@ -332,16 +330,13 @@ export async function getExpenseSummaryHandler(
 
   const roleNames = userRolesRows.map((r) => r.roleName?.toUpperCase());
 
-  const isHRorAdmin =
-    roleNames.includes("HR") || roleNames.includes("ADMIN");
+  const isHRorAdmin = roleNames.includes("HR") || roleNames.includes("ADMIN");
 
   let whereCondition;
 
   if (isHRorAdmin) {
-    // ✅ HR/ADMIN → ALL EXPENSES
     whereCondition = sql`${expenses.expenseDate} BETWEEN ${from} AND ${to}`;
   } else {
-    // ✅ EMPLOYEE → ONLY OWN EXPENSES
     const [employee] = await db
       .select()
       .from(employees)
@@ -374,7 +369,6 @@ export async function getExpenseSummaryHandler(
     totalExpenses: summary.totalCount,
   };
 }
-
 
 export async function createExpenseRequestHandler(
   request: FastifyRequest,
