@@ -231,7 +231,7 @@ export default function GetPayrollTable() {
               setYear(tempYear);
               setPage(1);
             }}
-            className="rounded-lg bg-black px-6 py-2 text-sm text-white
+            className="rounded-lg bg-black px-6 py-3 text-sm text-white
                        disabled:opacity-50 dark:bg-white dark:text-black"
           >
             Apply
@@ -246,7 +246,7 @@ export default function GetPayrollTable() {
                 setYear(undefined);
                 setPage(1);
               }}
-              className="rounded-lg border px-4 py-2 text-sm"
+              className="rounded-lg border px-4 py-3 text-sm"
             >
               Clear
             </button>

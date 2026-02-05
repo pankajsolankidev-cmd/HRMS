@@ -178,6 +178,7 @@ export default function AddEditExpenseForm() {
             control={control}
             render={({ field }) => (
               <DatePicker
+                required
                 id="expenseDate"
                 label="Expense Date"
                 placeholder="Select expense date"

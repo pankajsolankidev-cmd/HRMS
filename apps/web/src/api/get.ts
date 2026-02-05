@@ -102,7 +102,6 @@ export const getLeaveById = async (id: string) => {
 
 export const getExpenses = async (params: ListQueryParams) => {
   const res = await api.get<PaginatedResponse<any>>("/expenses", { params });
-
   return res.data;
 };
 export const getExpenseById = async (id: string) => {
