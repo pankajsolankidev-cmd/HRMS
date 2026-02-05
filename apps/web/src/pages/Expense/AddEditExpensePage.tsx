@@ -7,7 +7,6 @@ import { toast } from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
 
-import ComponentCard from "../../components/common/ComponentCard";
 import DatePicker from "../../components/form/date-picker";
 import FileInput from "../../components/form/input/FileInput";
 import Input from "../../components/form/input/InputField";
@@ -16,6 +15,7 @@ import Button from "../../components/ui/button/Button";
 import { getExpenseById } from "../../api/get";
 import { addExpense, uploadFile } from "../../api/post";
 import { updateExpense } from "../../api/put";
+import Card from "../../components/common/ComponentCard";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const MAX_AMOUNT = 1_000_000;
@@ -135,7 +135,7 @@ export default function AddEditExpensePage() {
 
   return (
     <>
-      <ComponentCard title={isEditMode ? "Edit Expense" : "Add Expense"}>
+      <Card title={isEditMode ? "Edit Expense" : "Add Expense"}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Input
@@ -227,7 +227,7 @@ export default function AddEditExpensePage() {
             </Button>
           </div>
         </form>
-      </ComponentCard>
+      </Card>
     </>
   );
 }

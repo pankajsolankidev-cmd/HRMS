@@ -1,4 +1,4 @@
-import ComponentCard from "../../components/common/ComponentCard";
+import Card from "../../components/common/ComponentCard";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import PayrollPage from "./PayrollPage";
@@ -13,9 +13,9 @@ export default function Payroll() {
       />
       <PageBreadcrumb pageTitle="Payroll" />
       <div className="space-y-6">
-        <ComponentCard title="Summary">
+        <Card title="Summary">
           <PayrollSummary />
-        </ComponentCard>
+        </Card>
         <PayrollPage />
       </div>
     </>

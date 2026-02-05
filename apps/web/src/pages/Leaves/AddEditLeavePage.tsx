@@ -7,7 +7,6 @@ import { toast } from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
 
-// UI Components
 import ComponentCard from "../../components/common/ComponentCard";
 import PageMeta from "../../components/common/PageMeta";
 import Select from "../../components/form/Select";
@@ -16,7 +15,6 @@ import FileInput from "../../components/form/input/FileInput";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 
-// API & Types
 import { getLeaveById } from "../../api/get";
 import { updateLeave } from "../../api/patch";
 import { addLeave, uploadFile } from "../../api/post";

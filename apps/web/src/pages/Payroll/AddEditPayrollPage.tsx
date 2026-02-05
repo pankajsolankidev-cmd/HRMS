@@ -7,7 +7,6 @@ import { toast } from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
 
-import ComponentCard from "../../components/common/ComponentCard";
 import PageMeta from "../../components/common/PageMeta";
 import Select from "../../components/form/Select";
 import Input from "../../components/form/input/InputField";
@@ -16,6 +15,7 @@ import Button from "../../components/ui/button/Button";
 import { getEmployees, getPayrollById } from "../../api/get";
 import { updatePayroll } from "../../api/patch";
 import { addPayroll } from "../../api/post";
+import Card from "../../components/common/ComponentCard";
 
 const payrollSchema = z.object({
   employeeId: z.string().min(1, "Employee is required"),
@@ -133,7 +133,7 @@ export default function AddEditPayrollPage() {
         }
       />
 
-      <ComponentCard title={isEditMode ? "Edit Payroll" : "Add Payroll"}>
+      <Card title={isEditMode ? "Edit Payroll" : "Add Payroll"}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Controller
@@ -219,7 +219,7 @@ export default function AddEditPayrollPage() {
             </Button>
           </div>
         </form>
-      </ComponentCard>
+      </Card>
     </>
   );
 }
