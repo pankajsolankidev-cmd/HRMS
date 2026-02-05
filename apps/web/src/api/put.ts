@@ -1,4 +1,4 @@
-import type { EmployeePayload } from "../pages/Employee/AddEditEmpForm";
+import type { EmployeePayload } from "../pages/Employee/AddEditEmployeePage";
 import api from "./axios";
 import type { ExpensePayload } from "./post";
 

@@ -1,21 +1,18 @@
 import api from "./axios";
 import type { ListQueryParams, PaginatedResponse } from "./types";
 
-export const getEmployees = async (params: ListQueryParams) => {
+export const getEmployees = async (params?: ListQueryParams) => {
   const res = await api.get<PaginatedResponse<any>>("/employees", { params });
-
   return res.data;
 };
 
 export const getEmployeeById = async (id: string) => {
   const res = await api.get(`/employees/${id}`);
-
   return res.data;
 };
 
-export const getComponents = async (params: ListQueryParams) => {
+export const getComponents = async (params?: ListQueryParams) => {
   const res = await api.get<PaginatedResponse<any>>("/components", { params });
-
   return res.data;
 };
 
@@ -24,12 +21,11 @@ export const getComponentById = async (id: string) => {
   return res.data;
 };
 
-export const getSystems = async (params: ListQueryParams) => {
+export const getSystems = async (params?: ListQueryParams) => {
   const res = await api.get<PaginatedResponse<any>>("/systems", { params });
-
   return res.data;
 };
-export const getPositions = async (params: ListQueryParams) => {
+export const getPositions = async (params?: ListQueryParams) => {
   const res = await api.get<PaginatedResponse<any>>("/positions", { params });
   return res.data;
 };
@@ -57,7 +53,6 @@ export type GetPayrollParams = ListQueryParams & {
 
 export const getPayrolls = async (params: GetPayrollParams) => {
   const res = await api.get<PaginatedResponse<any>>("/payrolls", { params });
-
   return res.data;
 };
 
