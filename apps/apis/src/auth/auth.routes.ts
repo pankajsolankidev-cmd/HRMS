@@ -76,122 +76,35 @@ export default async function authRoutes(app: FastifyInstance) {
   });
 
   app.post("/signin", { schema: signInSchema }, async (request, reply) => {
-  const { email, password } = request.body as AuthSignInDto;
+    const { email, password } = request.body as AuthSignInDto;
 
-  if (!email || !password) {
-    return reply
-      .status(400)
-      .send({ error: "Email and password are required" });
-  }
-
-  // 1. Get user
-  const [user] = await db
-    .select({
-      id: users.id,
-      email: users.email,
-      password: users.password,
-    })
-    .from(users)
-    .where(eq(users.email, email));
-
-  if (!user) {
-    return reply.status(401).send({ error: "Invalid credentials" });
-  }
-
-  const isValid = await bcrypt.compare(password, user.password);
-  if (!isValid) {
-    return reply.status(401).send({ error: "Invalid credentials" });
-  }
-
-  // 2. Fetch roles + permissions
-  const rows = await db
-    .select({
-      roleName: roles.name,
-      permissionName: permissions.name,
-    })
-    .from(userRoles)
-    .innerJoin(roles, eq(userRoles.roleId, roles.id))
-    .innerJoin(
-      rolePermissions,
-      eq(rolePermissions.roleId, roles.id)
-    )
-    .innerJoin(
-      permissions,
-      eq(rolePermissions.permissionId, permissions.id)
-    )
-    .where(eq(userRoles.userId, user.id));
-
-  // 3. Normalize roles & permissions
-  const roleSet = new Set<string>();
-  const permissionSet = new Set<string>();
-
-  for (const row of rows) {
-    if (row.roleName) roleSet.add(row.roleName);
-    if (row.permissionName) permissionSet.add(row.permissionName);
-  }
-
-  const rolesArr = Array.from(roleSet);
-  const permissionsArr = Array.from(permissionSet);
-
-  // 4. Tokens
-  const accessToken = generateAccessToken({
-    id: user.id,
-    email: user.email,
-    roles: rolesArr,           
-  });
-
-  const refreshToken = generateRefreshToken();
-
-  await db.insert(refreshTokens).values({
-    userId: user.id,
-    token: refreshToken,
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-  });
-
-  // 5. Final response
-  return reply.send({
-    accessToken,
-    refreshToken,
-    roles: rolesArr,
-    permissions: permissionsArr,
-  });
-});
-
-
-app.post(
-  "/auth/refresh",
-  { schema: refreshTokenSchema },
-  async (request, reply) => {
-    const { refreshToken } = request.body as { refreshToken: string };
-
-    if (!refreshToken) {
-      return reply.status(401).send({ error: "Refresh token missing" });
-    }
-
-    const [record] = await db
-      .select()
-      .from(refreshTokens)
-      .where(eq(refreshTokens.token, refreshToken));
-
-    if (!record || record.expiresAt < new Date()) {
+    if (!email || !password) {
       return reply
-        .status(401)
-        .send({ error: "Invalid or expired refresh token" });
+        .status(400)
+        .send({ error: "Email and password are required" });
     }
 
+    // 1. Get user
     const [user] = await db
       .select({
         id: users.id,
         email: users.email,
+        username: users.username,
+        password: users.password,
       })
       .from(users)
-      .where(eq(users.id, record.userId));
+      .where(eq(users.email, email));
 
     if (!user) {
-      return reply.status(401).send({ error: "User not found" });
+      return reply.status(401).send({ error: "Invalid credentials" });
     }
 
-    // 🔥 Fetch roles + permissions again
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) {
+      return reply.status(401).send({ error: "Invalid credentials" });
+    }
+
+    // 2. Fetch roles + permissions
     const rows = await db
       .select({
         roleName: roles.name,
@@ -199,16 +112,11 @@ app.post(
       })
       .from(userRoles)
       .innerJoin(roles, eq(userRoles.roleId, roles.id))
-      .innerJoin(
-        rolePermissions,
-        eq(rolePermissions.roleId, roles.id)
-      )
-      .innerJoin(
-        permissions,
-        eq(rolePermissions.permissionId, permissions.id)
-      )
+      .innerJoin(rolePermissions, eq(rolePermissions.roleId, roles.id))
+      .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
       .where(eq(userRoles.userId, user.id));
 
+    // 3. Normalize roles & permissions
     const roleSet = new Set<string>();
     const permissionSet = new Set<string>();
 
@@ -220,21 +128,114 @@ app.post(
     const rolesArr = Array.from(roleSet);
     const permissionsArr = Array.from(permissionSet);
 
-    // 🔐 New access token WITH ROLES
-    const newAccessToken = generateAccessToken({
+    // 4. Tokens
+    const accessToken = generateAccessToken({
       id: user.id,
       email: user.email,
-      roles: rolesArr,
-    });
-
-    return reply.send({
-      accessToken: newAccessToken,
+      username: user.username,
       roles: rolesArr,
       permissions: permissionsArr,
     });
-  }
-);
 
+    const refreshToken = generateRefreshToken();
+
+    await db.insert(refreshTokens).values({
+      userId: user.id,
+      token: refreshToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+
+    // 5. Final response
+    return reply.send({
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      accessToken,
+      refreshToken,
+      roles: rolesArr,
+      permissions: permissionsArr,
+    });
+  });
+
+  app.post(
+    "/auth/refresh",
+    { schema: refreshTokenSchema },
+    async (request, reply) => {
+      const { refreshToken } = request.body as { refreshToken: string };
+
+      if (!refreshToken) {
+        return reply.status(401).send({ error: "Refresh token missing" });
+      }
+
+      const [record] = await db
+        .select()
+        .from(refreshTokens)
+        .where(eq(refreshTokens.token, refreshToken));
+
+      if (!record || record.expiresAt < new Date()) {
+        return reply
+          .status(401)
+          .send({ error: "Invalid or expired refresh token" });
+      }
+
+      const [user] = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          username: users.username,
+        })
+        .from(users)
+        .where(eq(users.id, record.userId));
+
+      if (!user) {
+        return reply.status(401).send({ error: "User not found" });
+      }
+
+      // 🔥 Fetch roles + permissions again
+      const rows = await db
+        .select({
+          roleName: roles.name,
+          permissionName: permissions.name,
+        })
+        .from(userRoles)
+        .innerJoin(roles, eq(userRoles.roleId, roles.id))
+        .innerJoin(rolePermissions, eq(rolePermissions.roleId, roles.id))
+        .innerJoin(
+          permissions,
+          eq(rolePermissions.permissionId, permissions.id),
+        )
+        .where(eq(userRoles.userId, user.id));
+
+      const roleSet = new Set<string>();
+      const permissionSet = new Set<string>();
+
+      for (const row of rows) {
+        if (row.roleName) roleSet.add(row.roleName);
+        if (row.permissionName) permissionSet.add(row.permissionName);
+      }
+
+      const rolesArr = Array.from(roleSet);
+      const permissionsArr = Array.from(permissionSet);
+
+      // 🔐 New access token WITH ROLES
+      const newAccessToken = generateAccessToken({
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        roles: rolesArr,
+        permissions: permissionsArr,
+      });
+
+      return reply.send({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        accessToken: newAccessToken,
+        roles: rolesArr,
+        permissions: permissionsArr,
+      });
+    },
+  );
 
   app.post("/auth/logout", { schema: logoutSchema }, async (request, reply) => {
     const { refreshToken } = request.body as { refreshToken: string };
@@ -279,7 +280,7 @@ app.post(
         message: "Reset Key is Generated",
         key: resetKey,
       });
-    }
+    },
   );
 
   app.post(
@@ -324,6 +325,6 @@ app.post(
         .where(eq(passwordResetTokens.id, record.id));
 
       return reply.send({ message: "Password reset successful" });
-    }
+    },
   );
 }

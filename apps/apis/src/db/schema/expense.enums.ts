@@ -1,6 +1,6 @@
 export const expenseStatusEnum = [
   "DRAFT",
-  "SUBMITTED",
+  "CREATED",
   "APPROVED",
   "REJECTED",
 ] as const;

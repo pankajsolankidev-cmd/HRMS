@@ -1,6 +1,6 @@
 {
-  "id": "672b7a4f-21ab-4849-a8b9-e12fe17eabf5",
-  "prevId": "9e242a24-1a86-45a8-a335-7b1abc54f6d7",
+  "id": "bf04dc2d-41a2-47ae-9936-b2710ca435c8",
+  "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -362,6 +362,18 @@
           "primaryKey": false,
           "notNull": false
         },
+        "rejected_by": {
+          "name": "rejected_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rejected_at": {
+          "name": "rejected_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
         "rejection_reason": {
           "name": "rejection_reason",
           "type": "text",
@@ -390,6 +402,19 @@
           "tableTo": "users",
           "columnsFrom": [
             "approved_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "expenses_rejected_by_users_id_fk": {
+          "name": "expenses_rejected_by_users_id_fk",
+          "tableFrom": "expenses",
+          "tableTo": "users",
+          "columnsFrom": [
+            "rejected_by"
           ],
           "columnsTo": [
             "id"
@@ -1407,7 +1432,7 @@
       "schema": "public",
       "values": [
         "DRAFT",
-        "SUBMITTED",
+        "CREATED",
         "APPROVED",
         "REJECTED"
       ]

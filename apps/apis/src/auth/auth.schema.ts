@@ -43,8 +43,13 @@ export const signInSchema = {
     200: {
       type: "object",
       properties: {
+        id: { type: "string" },
+        username: { type: "string" },
+        email: { type: "string", format: "email" },
+
         accessToken: { type: "string" },
         refreshToken: { type: "string" },
+
         roles: {
           type: "array",
           items: { type: "string" },
@@ -74,7 +79,20 @@ export const refreshTokenSchema = {
     200: {
       type: "object",
       properties: {
+        id: { type: "string" },
+        username: { type: "string" },
+        email: { type: "string", format: "email" },
+
         accessToken: { type: "string" },
+
+        roles: {
+          type: "array",
+          items: { type: "string" },
+        },
+        permissions: {
+          type: "array",
+          items: { type: "string" },
+        },
       },
     },
     401: errorResponse,
