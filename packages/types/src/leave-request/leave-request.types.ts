@@ -28,5 +28,7 @@ export type UpdateLeaveRequestDto = {
   toHour?: number;
   reason?: string;
   file?: string;
-  
 };
+
+
+
