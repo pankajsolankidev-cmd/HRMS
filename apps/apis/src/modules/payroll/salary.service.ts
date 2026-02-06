@@ -30,9 +30,9 @@ export async function createSalaryHandler(
       .send({ message: "Salary structure already exists for this employee" });
   }
 
-  const basicSalary = payload.basicSalary;
-  const tax = payload.tax ?? 0;
-  const pf = payload.pf ?? 0;
+  const basicSalary = Number(payload.basicSalary);
+  const tax = payload.tax !== undefined ? Number(payload.tax) : 0;
+  const pf = payload.pf !== undefined ? Number(payload.pf) : 0;
 
   const netSalary = calculateNetSalary({
     basicSalary,
@@ -174,10 +174,7 @@ export async function updateSalaryHandler(
   const { id } = request.params as { id: string };
   const payload = request.body as UpdateSalaryDto;
 
-  const [existing] = await db
-    .select()
-    .from(salary)
-    .where(eq(salary.id, id));
+  const [existing] = await db.select().from(salary).where(eq(salary.id, id));
 
   if (!existing) {
     return reply.code(404).send({ message: "Salary structure not found" });
@@ -185,14 +182,12 @@ export async function updateSalaryHandler(
 
   const basicSalary =
     payload.basicSalary !== undefined
-      ? payload.basicSalary
+      ? Number(payload.basicSalary)
       : Number(existing.basicSalary);
 
-  const tax =
-    payload.tax !== undefined ? payload.tax : Number(existing.tax);
+  const tax = payload.tax !== undefined ? payload.tax : Number(existing.tax);
 
-  const pf =
-    payload.pf !== undefined ? payload.pf : Number(existing.pf);
+  const pf = payload.pf !== undefined ? payload.pf : Number(existing.pf);
 
   const netSalary = calculateNetSalary({
     basicSalary,

@@ -3,17 +3,25 @@ export function calculateNetSalary({
   tax = 0,
   pf = 0,
 }: {
-  basicSalary: number;
-  tax?: number;
-  pf?: number;
+  basicSalary: number | string;
+  tax?: number | string;
+  pf?: number | string;
 }) {
-  if (tax < 0 || pf < 0) {
+  const basic = Number(basicSalary);
+  const taxAmount = Number(tax);
+  const pfAmount = Number(pf);
+
+  if (Number.isNaN(basic) || Number.isNaN(taxAmount) || Number.isNaN(pfAmount)) {
+    throw new Error("Invalid salary values");
+  }
+
+  if (taxAmount < 0 || pfAmount < 0) {
     throw new Error("Tax and PF cannot be negative");
   }
 
-  if (tax + pf > basicSalary) {
+  if (taxAmount + pfAmount > basic) {
     throw new Error("Tax + PF cannot exceed basic salary");
   }
 
-  return basicSalary - tax - pf;
+  return basic - taxAmount - pfAmount;
 }

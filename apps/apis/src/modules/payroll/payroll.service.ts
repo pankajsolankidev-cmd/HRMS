@@ -74,15 +74,15 @@ export async function processPayrollHandler(
 
   const netSalary = basicSalary - deductions;
 
-  await db.insert(payrolls).values({
-    employeeId: payload.employeeId,
-    month: payload.month,
-    year: payload.year,
-    processedBy,
-    totalDeductions: deductions.toString(),
-    netSalary: netSalary.toString(),
-    file: payload.file,
-  });
+  // await db.insert(payrolls).values({
+  //   employeeId: payload.employeeId,
+  //   month: payload.month,
+  //   year: payload.year,
+  //   processedBy,
+  //   totalDeductions: deductions.toString(),
+  //   netSalary: netSalary.toString(),
+  //   file: payload.file,
+  // });
 
   return sendMessage(reply, "Payroll processed successfully", 201);
 }
