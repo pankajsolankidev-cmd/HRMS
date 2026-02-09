@@ -65,6 +65,7 @@ export const payrolls = pgTable(
     })
       .default("0")
       .notNull(),
+    deductionReason: text("deduction_reason"),
 
     leaveDeduction: numeric("leave_deduction", {
       precision: 12,
@@ -79,6 +80,7 @@ export const payrolls = pgTable(
     })
       .default("0")
       .notNull(),
+    bonusDescription: text("bonus_description"),
 
     netSalary: numeric("net_salary", { precision: 12, scale: 2 }).notNull(),
 
