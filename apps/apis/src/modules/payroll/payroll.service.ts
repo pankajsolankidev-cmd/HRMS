@@ -22,7 +22,6 @@ export async function processPayrollHandler(
 ) {
   const payload = request.body as ProcessPayrollDto;
   const processedBy = request.user!.id;
-
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonthIndex = now.getMonth();
@@ -97,8 +96,10 @@ export async function processPayrollHandler(
     year: payload.year,
     processedBy,
     deductions: deductions.toString(),
+    deductionReason: payload.deductionReason ?? null,
     leaveDeduction: leaveDeduction.toString(),
     bonus: bonus.toString(),
+    bonusDescription: payload.bonusDescription ?? null,
     netSalary: finalNetSalary.toString(),
     file: payload.file,
   });
@@ -255,11 +256,12 @@ export async function updatePayrollHandler(
       month: payloadMonth,
       year: payloadYear,
       deductions: deductions.toString(),
+      deductionReason: null,
       bonus: bonus.toString(),
+      bonusDescription: null,
       leaveDeduction: leaveDeduction.toString(),
       netSalary: finalNetSalary.toString(),
       file: payload.file ?? existing.file,
-      updatedAt: new Date(),
     })
     .where(eq(payrolls.id, id));
 
