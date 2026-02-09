@@ -3,6 +3,7 @@ import type { ListQueryParams, PaginatedResponse } from "./types";
 
 export const getEmployees = async (params?: ListQueryParams) => {
   const res = await api.get<PaginatedResponse<any>>("/employees", { params });
+  console.log(res.data);
   return res.data;
 };
 
@@ -87,6 +88,7 @@ export const getLeaves = async (params?: ListQueryParams) => {
   const res = await api.get<PaginatedResponse<any>>("/leave-requests", {
     params,
   });
+  console.log(res.data);
   return res.data;
 };
 
@@ -97,6 +99,7 @@ export const getLeaveById = async (id: string) => {
 
 export const getExpenses = async (params: ListQueryParams) => {
   const res = await api.get<PaginatedResponse<any>>("/expenses", { params });
+  console.log(res.data);
   return res.data;
 };
 export const getExpenseById = async (id: string) => {

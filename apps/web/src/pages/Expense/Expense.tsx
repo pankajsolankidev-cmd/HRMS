@@ -1,3 +1,4 @@
+import Can from "../../components/common/Can";
 import Card from "../../components/common/ComponentCard";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
@@ -10,12 +11,12 @@ export default function Expense() {
       <PageMeta title="Expenses" description="Expense list" />
       <PageBreadcrumb pageTitle="Expenses" />
       <div className="space-y-6">
-        {/* <Can permission="expense.view_summary"> */}
-        <Card title="Summary">
-          <ExpenseSummary />
-        </Card>
+        <Can permission="expense.view_summary">
+          <Card title="Summary">
+            <ExpenseSummary />
+          </Card>
+        </Can>
         <GetExpenseTable />
-        {/* </Can> */}
       </div>
     </>
   );

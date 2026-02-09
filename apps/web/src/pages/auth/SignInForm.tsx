@@ -44,19 +44,20 @@ export default function SignInForm() {
   const signInMutation = useMutation({
     mutationFn: signInApi,
     onSuccess: (res) => {
-      const token = res.accessToken;
-      const refreshToken = res.refreshToken;
+      const authData = {
+        accessToken: res.accessToken,
+        refreshToken: res.refreshToken,
+        roles: res.roles,
+        permissions: res.permissions,
+        id: res.id,
+      };
 
-      Cookies.set("refresh", refreshToken);
-      Cookies.set("access", token);
-      dispatch(
-        setAuth({
-          accessToken: res.accessToken,
-          refreshToken: res.refreshToken,
-          roles: res.roles,
-          permissions: res.permissions,
-        }),
-      );
+      Cookies.set("refresh", res.refreshToken);
+      Cookies.set("access", res.accessToken);
+
+      dispatch(setAuth(authData));
+
+      localStorage.setItem("auth", JSON.stringify(authData));
 
       toast.success(res?.message ?? "Signed in successfully");
       navigate("/dashboard", { replace: true });

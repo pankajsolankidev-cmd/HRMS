@@ -3,7 +3,6 @@ import {
   IconDotsVertical,
   IconEdit,
   IconEye,
-  IconLock,
   IconSearch,
   IconTrash,
   IconX,
@@ -228,12 +227,6 @@ export default function ExpensePage() {
                   </button>
                 </Can>
               )}
-
-              {(row.status === "APPROVED" || row.status === "REJECTED") && (
-                <div className="px-4 py-2 text-xs italic text-gray-400 text-center border-t dark:border-gray-700">
-                  <IconLock size={14} className="inline mr-1" /> Locked
-                </div>
-              )}
             </div>
           )}
         </div>
@@ -336,14 +329,7 @@ export default function ExpensePage() {
                 </span>
                 <span className="mt-1 font-bold">{viewExpense.status}</span>
               </div>
-              <div className="flex flex-col col-span-2 border-t pt-4 dark:border-gray-700">
-                <span className="text-gray-500 uppercase text-xs font-semibold">
-                  Description
-                </span>
-                <p className="mt-1">
-                  {viewExpense.description || "No description provided."}
-                </p>
-              </div>
+
               {viewExpense.rejectionReason && (
                 <div className="flex flex-col col-span-2 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
                   <span className="text-red-500 uppercase text-xs font-semibold">

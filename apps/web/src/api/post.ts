@@ -3,6 +3,7 @@ import api, { refreshApi } from "./axios";
 
 export const signInApi = async (data: { email: string; password: string }) => {
   const res = await api.post("/signin", data);
+  console.log(res.data);
   return res.data;
 };
 
@@ -117,6 +118,12 @@ export type AddLeavePayload = {
 
 export const addLeave = async (payload: AddLeavePayload) => {
   const res = await api.post("/leave-requests", payload);
+  return res.data;
+};
+export const addEmployeeLeave = async (
+  payload: AddLeavePayload & { employeeId: string },
+) => {
+  const res = await api.post("/leave-requests/manual", payload);
   return res.data;
 };
 export type ExpensePayload = {

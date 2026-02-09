@@ -14,25 +14,42 @@ import { toast } from "react-hot-toast";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 
+import { deleteLeave } from "../../api/delete";
+import { getEmployees, getLeaves } from "../../api/get";
+import { approveLeave, rejectLeave } from "../../api/patch";
+import type { PaginatedResponse } from "../../api/types";
 import Can from "../../components/common/Can";
 import Card from "../../components/common/ComponentCard";
 import DeleteConfirm from "../../components/common/DeleteConfirmModal";
+import FilterCard from "../../components/common/FilterCard";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
+import DatePicker from "../../components/form/date-picker";
+import Input from "../../components/form/input/InputField";
+import Select from "../../components/form/Select";
 import DataTable, {
   type Column,
 } from "../../components/tables/BasicTables/DataTable";
-import Button from "../../components/ui/button/Button";
-
-import { deleteLeave } from "../../api/delete";
-import { getLeaves } from "../../api/get";
-import { approveLeave, rejectLeave } from "../../api/patch";
-import type { PaginatedResponse } from "../../api/types";
-import Input from "../../components/form/input/InputField";
 import { useTableSort } from "../../components/tables/useTableSort";
+import Button from "../../components/ui/button/Button";
 import type { RootState } from "../../context";
 import type { LeaveApiResponse, LeaveList, LeaveRow } from "./leaveType";
-
+export const LEAVE_TYPES = [
+  { label: "Sick", value: "sick" },
+  { label: "Casual", value: "casual" },
+  { label: "Marriage", value: "marriage" },
+  { label: "WFH", value: "wfh" },
+];
+export const LEAVE_STATUS = [
+  { label: "Pending", value: "pending" },
+  { label: "Approved", value: "approved" },
+  { label: "Rejected", value: "rejected" },
+];
+const LEAVE_SOURCE_OPTIONS = [
+  { label: "All", value: "" },
+  { label: "Employee Leave", value: "employee" },
+  { label: "Manual Leave", value: "manual" },
+];
 export default function LeavePage() {
   const navigate = useNavigate();
   const { roles } = useSelector((state: RootState) => state.auth);
@@ -49,6 +66,12 @@ export default function LeavePage() {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [viewLeave, setViewLeave] = useState<LeaveRow | null>(null);
 
+  const [type, setType] = useState<string | undefined>();
+  const [status, setStatus] = useState<string | undefined>();
+  const [employeeId, setEmployeeId] = useState<string | undefined>();
+  const [fromDate, setFromDate] = useState<string | undefined>();
+  const [toDate, setToDate] = useState<string | undefined>();
+  const [leaveSource, setLeaveSource] = useState<string | undefined>();
   useEffect(() => {
     const handleClickOutside = () => setActiveDropdown(null);
     window.addEventListener("click", handleClickOutside);
@@ -66,17 +89,37 @@ export default function LeavePage() {
   useEffect(() => {
     setPage(1);
   }, [search, sortBy, sortOrder]);
-
+  const filters = {
+    ...(type && { type }),
+    ...(status && { status }),
+    ...(employeeId && { employeeId }),
+    ...(fromDate && toDate && { fromDate, toDate }),
+    ...(leaveSource && { source: leaveSource }),
+  };
   const { data, isLoading, isError, refetch } = useQuery<
     PaginatedResponse<LeaveApiResponse<LeaveList>>
   >({
-    queryKey: ["leaves", page, limit, sortBy, sortOrder, search ?? "all"],
+    queryKey: [
+      "leaves",
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+      search ?? "all",
+      type ?? "all",
+      status ?? "all",
+      employeeId ?? "all",
+      leaveSource ?? "all",
+      fromDate ?? "none",
+      toDate ?? "none",
+    ],
     queryFn: () =>
       getLeaves({
         page,
         limit,
         ...(sortBy && sortOrder ? { sortBy: sortBy as string, sortOrder } : {}),
         search,
+        ...filters,
       }),
     placeholderData: (prev) => prev,
   });
@@ -101,6 +144,17 @@ export default function LeavePage() {
       refetch();
     },
   });
+
+  const { data: employeesData } = useQuery({
+    queryKey: ["employees", "all"],
+    queryFn: () => getEmployees(),
+  });
+
+  const employeeOptions =
+    employeesData?.data?.map((emp: any) => ({
+      label: `${emp.firstName} ${emp.lastName}`,
+      value: emp.id,
+    })) ?? [];
 
   const { mutate: reject } = useMutation({
     mutationFn: rejectLeave,
@@ -192,7 +246,7 @@ export default function LeavePage() {
                 : "bg-red-100 text-red-800"
           }`}
         >
-          {row.status}
+          {row.status.toLocaleUpperCase()}
         </span>
       ),
     },
@@ -261,37 +315,35 @@ export default function LeavePage() {
                     </button>
                   </Can>
 
-                  <Can
-                    permissions={["leave.update_own", "leave.delete_own"]}
+                  {/* <Can
+                    permissions={["leave.update_all", "leave.delete_all"]}
                     requireAll
+                  > */}
+                  <button
+                    onClick={() => navigate(`/leave-requests/${row.id}`)}
+                    className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
                   >
-                    <button
-                      onClick={() => navigate(`/leave-requests/${row.id}`)}
-                      className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
-                    >
-                      <IconEdit size={16} /> Edit Request
-                    </button>
-                    <DeleteConfirm<string>
-                      title="Delete Leave Request"
-                      description="Are you sure you want to delete this leave request?"
-                      loading={isDeletePending}
-                      onConfirm={(id) => removeLeave(id)}
-                    >
-                      {(askDelete) => (
-                        <button
-                          onClick={() => askDelete(row.id)}
-                          className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
-                        >
-                          <IconTrash size={16} /> Delete
-                        </button>
-                      )}
-                    </DeleteConfirm>
-                  </Can>
+                    <IconEdit size={16} /> Edit Request
+                  </button>
+                  <DeleteConfirm<string>
+                    title="Delete Leave Request"
+                    description="Are you sure you want to delete this leave request?"
+                    loading={isDeletePending}
+                    onConfirm={(id) => removeLeave(id)}
+                  >
+                    {(askDelete) => (
+                      <button
+                        onClick={() => askDelete(row.id)}
+                        className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
+                      >
+                        <IconTrash size={16} /> Delete
+                      </button>
+                    )}
+                  </DeleteConfirm>
+                  {/* </Can> */}
                 </>
               ) : (
-                <div className="px-4 py-2 text-xs italic text-gray-400 text-center">
-                  Request {row.status} (Locked)
-                </div>
+                <div></div>
               )}
             </div>
           )}
@@ -304,19 +356,119 @@ export default function LeavePage() {
     <>
       <PageMeta title="Leaves" description="Manage leave requests" />
       <PageBreadcrumb pageTitle="Leaves" />
+      <FilterCard className="mb-5">
+        <div className="grid grid-cols-6 gap-4 w-full">
+          <div className="col-span-6 md:col-span-2">
+            <Select
+              options={LEAVE_TYPES}
+              placeholder="Select Type"
+              value={type ?? ""}
+              onChange={(val) => {
+                setType(val || undefined);
+                setPage(1);
+              }}
+              className="w-full"
+            />
+          </div>
+
+          <div className="col-span-6 md:col-span-2">
+            <Select
+              options={LEAVE_STATUS}
+              placeholder="Select Status"
+              value={status ?? ""}
+              onChange={(val) => {
+                setStatus(val || undefined);
+                setPage(1);
+              }}
+              className="w-full"
+            />
+          </div>
+
+          <div className="col-span-6 md:col-span-2">
+            <Select
+              options={employeeOptions}
+              placeholder="Select Employee"
+              value={employeeId ?? ""}
+              onChange={(val) => {
+                setEmployeeId(val || undefined);
+                setPage(1);
+              }}
+              className="w-full"
+            />
+          </div>
+
+          <div className="col-span-6 md:col-span-2">
+            <Select
+              options={LEAVE_SOURCE_OPTIONS}
+              placeholder="Leave Source"
+              value={leaveSource ?? ""}
+              onChange={(val) => {
+                setLeaveSource(val || undefined);
+                setPage(1);
+              }}
+              className="w-full"
+            />
+          </div>
+
+          <div className="col-span-6 md:col-span-2">
+            <DatePicker
+              id="dateRange"
+              mode="range"
+              placeholder="Select Date Range"
+              value={
+                fromDate && toDate
+                  ? [new Date(fromDate), new Date(toDate)]
+                  : undefined
+              }
+              onChange={(dates) => {
+                if (dates?.length === 2) {
+                  setFromDate(dates[0].toLocaleDateString("en-CA"));
+                  setToDate(dates[1].toLocaleDateString("en-CA"));
+                  setPage(1);
+                } else {
+                  setFromDate(undefined);
+                  setToDate(undefined);
+                }
+              }}
+            />
+          </div>
+
+          <div className="col-span-6 md:col-span-2 flex items-end">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                setType(undefined);
+                setStatus(undefined);
+                setEmployeeId(undefined);
+                setLeaveSource(undefined);
+                setFromDate(undefined);
+                setToDate(undefined);
+                setSearch(undefined);
+                setRawSearch("");
+                setPage(1);
+              }}
+            >
+              Clear
+            </Button>
+          </div>
+        </div>
+      </FilterCard>
       <Card
         action={
-          <div className="flex items-center justify-between gap-3">
-            <div className="relative w-full max-w-xs">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                <IconSearch size={18} stroke={2} />
+          <div className="flex items-center gap-3">
+            <div className="relative w-64">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                <IconSearch size={18} />
               </div>
+
               <Input
                 placeholder="Search here..."
                 value={rawSearch}
                 onChange={(e) => setRawSearch(e.target.value)}
-                className="pl-10 pr-12 h-[42px]"
+                className="pl-10 pr-10 h-[42px]"
               />
+
               {rawSearch && (
                 <Button
                   size="sm"
@@ -339,6 +491,17 @@ export default function LeavePage() {
             >
               Add Leave
             </Button>
+            {!isEmployee && (
+              <>
+                <Button
+                  onClick={() => navigate("/leave-requests/new/Employee")}
+                  size="md"
+                  className="h-[42px] bg-black dark:bg-blue-500 whitespace-nowrap"
+                >
+                  Add Employee Leave
+                </Button>
+              </>
+            )}
           </div>
         }
       >

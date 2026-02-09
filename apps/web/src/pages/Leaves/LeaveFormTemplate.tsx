@@ -1,0 +1,282 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
+import { z } from "zod";
+
+import Select from "../../components/form/Select";
+import DatePicker from "../../components/form/date-picker";
+import FileInput from "../../components/form/input/FileInput";
+import Input from "../../components/form/input/InputField";
+import Button from "../../components/ui/button/Button";
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+export const LEAVE_TYPES = [
+  { label: "Sick", value: "sick" },
+  { label: "Casual", value: "casual" },
+  { label: "Marriage", value: "marriage" },
+  { label: "WFH", value: "wfh" },
+];
+
+const DAY_TYPES = [
+  { label: "Full Day", value: "full_day" },
+  { label: "First Half", value: "first_half" },
+  { label: "Second Half", value: "second_half" },
+  { label: "Multiple Days", value: "multiple_days" },
+];
+
+const HOUR_OPTIONS = [
+  { label: "Full Day", value: "full_day" },
+  { label: "First Half", value: "first_half" },
+  { label: "Second Half", value: "second_half" },
+];
+
+export const leaveSchema = z
+  .object({
+    employeeId: z.string().optional(),
+
+    fromDate: z.string().min(1, "From date is required"),
+    toDate: z.string().min(1, "To date is required"),
+
+    type: z.enum(["sick", "casual", "marriage", "wfh"]),
+    dayType: z.enum(["full_day", "first_half", "second_half", "multiple_days"]),
+
+    reason: z.string().min(1, "Reason is required"),
+
+    fromHourType: z.enum(["first_half", "second_half", "full_day"]),
+    toHourType: z.enum(["first_half", "second_half", "full_day"]),
+
+    fromHour: z.number(),
+    toHour: z.number(),
+
+    file: z
+      .union([
+        z
+          .instanceof(File)
+          .refine(
+            (file) => file.size <= MAX_FILE_SIZE,
+            "File size must be less than 10MB",
+          ),
+        z.null(),
+        z.undefined(),
+      ])
+      .optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.dayType === "multiple_days" && (!data.fromDate || !data.toDate)) {
+      ctx.addIssue({
+        path: ["toDate"],
+        message: "Date range is required",
+        code: z.ZodIssueCode.custom,
+      });
+    }
+  });
+
+export type LeaveFormData = z.infer<typeof leaveSchema>;
+
+const hourTypeToHours = (val: string) => (val === "full_day" ? 8 : 4);
+
+type Props = {
+  defaultValues?: Partial<LeaveFormData>;
+  onSubmit: (data: LeaveFormData) => void;
+  onBack: () => void;
+  loading?: boolean;
+  showEmployeeSelect?: boolean;
+  employeeOptions?: { label: string; value: string }[];
+};
+
+export default function LeaveForm({
+  defaultValues,
+  onSubmit,
+  onBack,
+  loading,
+  showEmployeeSelect,
+  employeeOptions = [],
+}: Props) {
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    formState: { errors },
+  } = useForm<LeaveFormData>({
+    resolver: zodResolver(leaveSchema),
+    defaultValues: {
+      fromHour: 8,
+      toHour: 8,
+      fromHourType: "full_day",
+      toHourType: "full_day",
+      ...defaultValues,
+    },
+  });
+
+  const dayType = useWatch({ control, name: "dayType" });
+  const fromDate = useWatch({ control, name: "fromDate" });
+
+  useEffect(() => {
+    if (dayType && dayType !== "multiple_days" && fromDate) {
+      setValue("toDate", fromDate);
+      const hours = dayType === "full_day" ? 8 : 4;
+      setValue("fromHour", hours);
+      setValue("toHour", hours);
+    }
+  }, [dayType, fromDate, setValue]);
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {showEmployeeSelect && (
+          <Controller
+            name="employeeId"
+            control={control}
+            render={({ field }) => (
+              <Select
+                required
+                label="Employee"
+                options={employeeOptions}
+                value={field.value}
+                onChange={field.onChange}
+                error={!!errors.employeeId}
+              />
+            )}
+          />
+        )}
+
+        <Controller
+          name="type"
+          control={control}
+          render={({ field }) => (
+            <Select
+              required
+              label="Leave Type"
+              options={LEAVE_TYPES}
+              value={field.value}
+              onChange={field.onChange}
+              error={!!errors.type}
+            />
+          )}
+        />
+
+        <Controller
+          name="dayType"
+          control={control}
+          render={({ field }) => (
+            <Select
+              required
+              label="Day Type"
+              options={DAY_TYPES}
+              value={field.value}
+              onChange={field.onChange}
+              error={!!errors.dayType}
+            />
+          )}
+        />
+
+        <Controller
+          name="fromDate"
+          control={control}
+          render={({ field }) => (
+            <DatePicker
+              id="fromDate"
+              placeholder="Select from date"
+              required
+              label="From Date"
+              value={field.value ? new Date(field.value) : null}
+              onChange={(d) =>
+                d?.[0] && field.onChange(d[0].toLocaleDateString("en-CA"))
+              }
+            />
+          )}
+        />
+
+        {dayType === "multiple_days" ? (
+          <Controller
+            name="toDate"
+            control={control}
+            render={({ field }) => (
+              <DatePicker
+                id="toDate"
+                placeholder="Select to date"
+                required
+                label="To Date"
+                value={field.value ? new Date(field.value) : null}
+                onChange={(d) =>
+                  d?.[0] && field.onChange(d[0].toLocaleDateString("en-CA"))
+                }
+              />
+            )}
+          />
+        ) : (
+          <Input
+            label="To Date"
+            required
+            placeholder="Select to date"
+            value={fromDate || ""}
+            disabled
+          />
+        )}
+
+        {dayType === "multiple_days" && (
+          <>
+            <Controller
+              name="fromHourType"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="From Day Type"
+                  options={HOUR_OPTIONS}
+                  value={field.value}
+                  onChange={(val) => {
+                    field.onChange(val);
+                    setValue("fromHour", hourTypeToHours(val));
+                  }}
+                />
+              )}
+            />
+
+            <Controller
+              name="toHourType"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="To Day Type"
+                  options={HOUR_OPTIONS}
+                  value={field.value}
+                  onChange={(val) => {
+                    field.onChange(val);
+                    setValue("toHour", hourTypeToHours(val));
+                  }}
+                />
+              )}
+            />
+          </>
+        )}
+
+        <Input
+          required
+          label="Reason"
+          placeholder="Enter reason"
+          {...register("reason")}
+          error={!!errors.reason}
+        />
+
+        <FileInput
+          label="Supporting Document"
+          onChange={(e) =>
+            e.target.files?.[0] &&
+            setValue("file", e.target.files[0], { shouldValidate: true })
+          }
+        />
+      </div>
+
+      <div className="flex justify-end gap-3 pt-6 border-t dark:border-gray-700">
+        <Button className="bg-black dark:bg-blue-500" disabled={loading}>
+          {loading ? "Processing..." : "Save"}
+        </Button>
+        <Button variant="outline" onClick={onBack} disabled={loading}>
+          Back
+        </Button>
+      </div>
+    </form>
+  );
+}

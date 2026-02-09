@@ -5,11 +5,13 @@ type AuthState = {
   refreshToken: string | null;
   roles: string[];
   permissions: string[];
+  id: string | null;
 };
 
 const initialState: AuthState = {
   accessToken: null,
   refreshToken: null,
+  id: null,
   roles: [],
   permissions: [],
 };
@@ -23,8 +25,8 @@ const authSlice = createSlice({
       state.refreshToken = action.payload.refreshToken;
       state.roles = action.payload.roles;
       state.permissions = action.payload.permissions;
+      state.id = action.payload.id;
     },
-
     clearAuth: () => initialState,
   },
 });

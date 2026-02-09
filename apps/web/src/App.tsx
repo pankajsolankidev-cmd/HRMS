@@ -18,7 +18,10 @@ import { ScrollToTop } from "./components/common/ScrollToTop";
 
 import Payroll from "./pages/Payroll/Payroll";
 
+import { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
+import { useDispatch } from "react-redux";
+import { setAuth } from "./context/authSlice";
 import SmallAuthLayout from "./layout/SmallAuthLayout";
 import ForgetPassword from "./pages/auth/ForgetPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
@@ -29,8 +32,9 @@ import AddEditEmployeePage from "./pages/Employee/AddEditEmployeePage";
 import EmployeePage from "./pages/Employee/EmployeePage";
 import AddEditExpensePage from "./pages/Expense/AddEditExpensePage";
 import Expense from "./pages/Expense/Expense";
-import AddEditLeavePage from "./pages/Leaves/AddEditLeavePage";
+import EmployeeLeavePage from "./pages/Leaves/EmployeeLeavePage";
 import LeavePage from "./pages/Leaves/LeavePage";
+import SelfLeavePage from "./pages/Leaves/SelfLeavePage";
 import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
 import RootRedirect from "./pages/OtherPage/RootRedirect";
 import AddEditPayrollPage from "./pages/Payroll/AddEditPayrollPage";
@@ -40,6 +44,14 @@ import AddEditSystemPage from "./pages/System/AddEditSystemPage";
 import SystemPage from "./pages/System/SystemPage";
 
 function AppRoutes() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const savedAuth = localStorage.getItem("auth");
+    if (savedAuth) {
+      dispatch(setAuth(JSON.parse(savedAuth)));
+    }
+  }, [dispatch]);
   return (
     <Routes>
       <Route path="/" element={<RootRedirect />} />
@@ -75,7 +87,11 @@ function AppRoutes() {
           <Route path="/payrolls/:id" element={<AddEditPayrollPage />} />
 
           <Route path="/leave-requests" element={<LeavePage />} />
-          <Route path="/leave-requests/:id" element={<AddEditLeavePage />} />
+          <Route path="/leave-requests/:id" element={<SelfLeavePage />} />
+          <Route
+            path="/leave-requests/:id/employee"
+            element={<EmployeeLeavePage />}
+          />
 
           <Route path="/expenses" element={<Expense />} />
           <Route path="/expenses/:id" element={<AddEditExpensePage />} />

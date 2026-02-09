@@ -14,11 +14,13 @@ import DataTable, {
 } from "../../components/tables/BasicTables/DataTable";
 import Button from "../../components/ui/button/Button";
 
+import { useSelector } from "react-redux";
 import { deleteEmployee } from "../../api/delete";
 import { getEmployees, getPositions } from "../../api/get";
 import type { PaginatedResponse } from "../../api/types";
 import Card from "../../components/common/ComponentCard";
 import { useTableSort } from "../../components/tables/useTableSort";
+import type { RootState } from "../../context";
 
 type Employee = {
   id: number;
@@ -28,9 +30,11 @@ type Employee = {
   position: string;
   joiningDate: string;
   onboardingBuddy: string;
+  userId: string;
 };
 
 export default function EmployeePage() {
+  const { id } = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
 
   const [search, setSearch] = useState<string | undefined>();
@@ -102,6 +106,7 @@ export default function EmployeePage() {
       position: positionMap[u.positionId] ?? "—",
       joiningDate: u.joiningDate,
       onboardingBuddy: u.onboardingBuddy ?? "HR Team",
+      userId: u.userId,
     })) ?? [];
 
   const total = data?.meta?.total ?? 0;
@@ -146,26 +151,30 @@ export default function EmployeePage() {
       align: "center",
       cell: (row) => (
         <div className="flex items-center justify-center gap-3">
-          <IconEdit
-            size={18}
-            onClick={() => navigate(`/employees/${row.id}`)}
-            className="cursor-pointer text-blue-600 dark:text-blue-400"
-          />
-
-          <DeleteConfirm<number>
-            title="Delete Employee"
-            description={`Are you sure you want to delete ${row.firstName}? This action cannot be undone.`}
-            loading={isPending}
-            onConfirm={(id) => removeEmployee(id)}
-          >
-            {(askDelete) => (
-              <IconTrash
+          {row.userId != id && (
+            <>
+              <IconEdit
                 size={18}
-                onClick={() => askDelete(row.id)}
-                className="cursor-pointer text-red-600 dark:text-red-400"
+                onClick={() => navigate(`/employees/${row.id}`)}
+                className="cursor-pointer text-blue-600 dark:text-blue-400"
               />
-            )}
-          </DeleteConfirm>
+
+              <DeleteConfirm<number>
+                title="Delete Employee"
+                description={`Are you sure you want to delete ${row.firstName}? This action cannot be undone.`}
+                loading={isPending}
+                onConfirm={(id) => removeEmployee(id)}
+              >
+                {(askDelete) => (
+                  <IconTrash
+                    size={18}
+                    onClick={() => askDelete(row.id)}
+                    className="cursor-pointer text-red-600 dark:text-red-400"
+                  />
+                )}
+              </DeleteConfirm>
+            </>
+          )}
         </div>
       ),
     },
