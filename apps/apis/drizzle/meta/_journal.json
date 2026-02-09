@@ -15,6 +15,13 @@
       "when": 1770378637293,
       "tag": "0001_lame_moon_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1770633799142,
+      "tag": "0002_chilly_avengers",
+      "breakpoints": true
     }
   ]
 }
