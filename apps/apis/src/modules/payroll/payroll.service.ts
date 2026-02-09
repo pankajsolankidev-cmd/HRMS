@@ -2,7 +2,7 @@ import type { FastifyRequest, FastifyReply } from "fastify";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 
 import { db } from "../../db";
-import { payrolls, salary } from "../../db/schema";
+import { employees, payrolls, salary } from "../../db/schema";
 
 import type {
   ProcessPayrollDto,
@@ -325,9 +325,14 @@ export async function previewBulkPayrollHandler(request: FastifyRequest) {
   const employeesWithSalary = await db
     .select({
       employeeId: salary.employeeId,
+      firstName: employees.firstName,
+      lastName: employees.lastName,
       salaryNet: salary.netSalary,
+      pf: salary.pf,
+      tax: salary.tax,
     })
-    .from(salary);
+    .from(salary)
+    .innerJoin(employees, eq(employees.id, salary.employeeId));
 
   const preview = [];
 
@@ -343,7 +348,11 @@ export async function previewBulkPayrollHandler(request: FastifyRequest) {
 
     preview.push({
       employeeId: row.employeeId,
+      firstName: row.firstName,
+      lastName: row.lastName,
       salaryNet,
+      pf: row.pf,
+      tax: row.tax,
       leaveDeduction,
       suggestedNetSalary: salaryNet - leaveDeduction,
     });
