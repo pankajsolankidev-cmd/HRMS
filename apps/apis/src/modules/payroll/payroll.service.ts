@@ -143,6 +143,7 @@ export async function getPayrollsHandler(request: FastifyRequest) {
   let queryBuilder = db
     .select()
     .from(payrolls)
+    .innerJoin(employees, eq(employees.id, payrolls.employeeId))
     .where(whereClause)
     .orderBy(...orderByClauses)
     .$dynamic();
@@ -174,7 +175,17 @@ export async function getPayrollByIdHandler(
 ) {
   const { id } = request.params as { id: string };
 
-  const [payroll] = await db.select().from(payrolls).where(eq(payrolls.id, id));
+  const [payroll] = await db
+    .select({
+      payroll: payrolls,
+      employee: {
+        firstName: employees.firstName,
+        lastName: employees.lastName,
+      },
+    })
+    .from(payrolls)
+    .innerJoin(employees, eq(employees.id, payrolls.employeeId))
+    .where(eq(payrolls.id, id));
 
   if (!payroll) {
     return reply.code(404).send({ message: "Payroll not found" });
@@ -256,9 +267,15 @@ export async function updatePayrollHandler(
       month: payloadMonth,
       year: payloadYear,
       deductions: deductions.toString(),
-      deductionReason: null,
+      deductionReason:
+        payload.deductionReason !== undefined
+          ? payload.deductionReason
+          : existing.deductionReason,
       bonus: bonus.toString(),
-      bonusDescription: null,
+      bonusDescription:
+        payload.bonusDescription !== undefined
+          ? payload.bonusDescription
+          : existing.bonusDescription,
       leaveDeduction: leaveDeduction.toString(),
       netSalary: finalNetSalary.toString(),
       file: payload.file ?? existing.file,
@@ -336,6 +353,17 @@ export async function previewBulkPayrollHandler(request: FastifyRequest) {
     .from(salary)
     .innerJoin(employees, eq(employees.id, salary.employeeId));
 
+  const processedPayrolls = await db
+    .select({
+      employeeId: payrolls.employeeId,
+    })
+    .from(payrolls)
+    .where(and(eq(payrolls.month, month), eq(payrolls.year, year)));
+
+  const processedEmployeeSet = new Set(
+    processedPayrolls.map((p) => p.employeeId),
+  );
+
   const preview = [];
 
   for (const row of employeesWithSalary) {
@@ -357,6 +385,7 @@ export async function previewBulkPayrollHandler(request: FastifyRequest) {
       tax: row.tax,
       leaveDeduction,
       suggestedNetSalary: salaryNet - leaveDeduction,
+      isSalaryProcessed: processedEmployeeSet.has(row.employeeId),
     });
   }
 
@@ -442,7 +471,9 @@ export async function processBulkPayrollHandler(
         year,
         processedBy,
         deductions: adjustment.deductions.toString(),
+        deductionReason: null,
         bonus: adjustment.bonus.toString(),
+        bonusDescription: null,
         leaveDeduction: leaveDeduction.toString(),
         netSalary: finalNetSalary.toString(),
       });
