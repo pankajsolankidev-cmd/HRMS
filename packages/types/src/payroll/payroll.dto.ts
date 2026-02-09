@@ -4,15 +4,18 @@ export type ProcessPayrollDto = {
   employeeId: string;
   month: PayrollMonthType;
   year: number;
-  totalDeductions?: number;
+  deductions?: string;
+  bonus?: string;
   file?: string;
 };
+
 
 export interface UpdatePayrollDto {
   employeeId?: string;
   month?: PayrollMonthType;
   year?: number;
-  totalDeductions?: string;
+  deductions?: string;
+  bonus?: string;
   netSalary?: string;
   file?: string;
 }
