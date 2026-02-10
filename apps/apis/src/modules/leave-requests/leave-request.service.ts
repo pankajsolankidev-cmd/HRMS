@@ -777,7 +777,6 @@ export async function updateManualLeaveRequestHandler(
   const { id } = request.params as { id: string };
   const body = request.body as Partial<CreateManualLeaveRequestDto>;
 
-  // Role check
   const userRolesRows = await db
     .select({ roleName: roles.name })
     .from(userRoles)
@@ -792,7 +791,6 @@ export async function updateManualLeaveRequestHandler(
     return sendMessage(reply, "Only HR or Admin allowed", 403);
   }
 
-  // Fetch leave (must be manual & approved)
   const [leave] = await db
     .select()
     .from(leaveRequests)
@@ -802,7 +800,6 @@ export async function updateManualLeaveRequestHandler(
     return sendMessage(reply, "Manual leave not found", 404);
   }
 
-  // Past-date validation
   if (body.fromDate || body.toDate) {
     const validation = validatePastDatesOnly(
       body.fromDate ?? leave.fromDate,
@@ -814,7 +811,6 @@ export async function updateManualLeaveRequestHandler(
     }
   }
 
-  // Recalculate
   const { totalHours, totalDays } = calculateLeaveTotalsSimple({
     fromDate: body.fromDate ?? leave.fromDate,
     toDate: body.toDate ?? leave.toDate,
@@ -829,7 +825,6 @@ export async function updateManualLeaveRequestHandler(
       ...body,
       totalHours,
       totalDays: totalDays.toString(),
-      updatedAt: new Date(),
     })
     .where(eq(leaveRequests.id, id));
 
