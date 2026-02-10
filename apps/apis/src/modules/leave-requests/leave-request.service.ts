@@ -23,7 +23,7 @@ import { getPagination } from "../../utils/pagination";
 import { hasAnyRole, hasRole } from "../../utils/role.utils";
 import { calculateLeaveTotalsSimple } from "./utils/leave-calculation";
 import { validatePastDatesOnly } from "./utils/past-date-validation";
-import { users } from "../../db/schema";
+
 
 function validateFutureDates(fromDate: string, toDate: string) {
   const today = new Date();
