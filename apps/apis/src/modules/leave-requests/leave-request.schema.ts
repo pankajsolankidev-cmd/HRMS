@@ -49,6 +49,7 @@ const leaveObjectSchema = {
   type: "object",
   properties: {
     id: { type: "string", format: "uuid" },
+    createdBy: { type: "string", format: "uuid" },
     fromDate: { type: "string", format: "date" },
     toDate: { type: "string", format: "date" },
 
@@ -317,5 +318,40 @@ export const rejectLeaveRequestSchema = {
     403: errorResponse,
     404: errorResponse,
     500: errorResponse,
+  },
+};
+
+export const updateManualLeaveRequestSchema = {
+  tags: ["Leave Requests"],
+  params: leaveRequestIdParams,
+  body: {
+    type: "object",
+    properties: {
+      fromDate: { type: "string", format: "date" },
+      toDate: { type: "string", format: "date" },
+      type: { type: "string", enum: Object.values(LeaveType) },
+      dayType: { type: "string", enum: Object.values(LeaveDayType) },
+      fromHour: { type: "number", minimum: 0, maximum: 24 },
+      toHour: { type: "number", minimum: 0, maximum: 24 },
+      reason: { type: "string" },
+      file: { type: "string" },
+    },
+    additionalProperties: false,
+  },
+  response: {
+    200: { type: "object", properties: { message: { type: "string" } } },
+    400: errorResponse,
+    403: errorResponse,
+    404: errorResponse,
+  },
+};
+
+export const deleteManualLeaveRequestSchema = {
+  tags: ["Leave Requests"],
+  params: leaveRequestIdParams,
+  response: {
+    200: { type: "object", properties: { message: { type: "string" } } },
+    403: errorResponse,
+    404: errorResponse,
   },
 };

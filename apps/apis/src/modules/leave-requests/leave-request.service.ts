@@ -67,6 +67,7 @@ export async function createLeaveRequestHandler(
 
   await db.insert(leaveRequests).values({
     employeeId: employee.id,
+    createdBy: userId,
     fromDate: body.fromDate,
     toDate: body.toDate,
     type: body.type,
@@ -706,6 +707,7 @@ export async function createManualLeaveRequestHandler(
 
   await db.insert(leaveRequests).values({
     employeeId: employee.id,
+     createdBy: userId, 
     fromDate: body.fromDate,
     toDate: body.toDate,
     type: body.type,
@@ -725,4 +727,109 @@ export async function createManualLeaveRequestHandler(
   });
 
   return sendMessage(reply, "Manual leave created successfully", 201);
+}
+
+export async function updateManualLeaveRequestHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const userId = request.user!.id;
+  const { id } = request.params as { id: string };
+  const body = request.body as Partial<CreateManualLeaveRequestDto>;
+
+  // Role check
+  const userRolesRows = await db
+    .select({ roleName: roles.name })
+    .from(userRoles)
+    .leftJoin(roles, eq(userRoles.roleId, roles.id))
+    .where(eq(userRoles.userId, userId));
+
+  const roleNames = userRolesRows
+    .map((r) => r.roleName)
+    .filter((r): r is string => r !== null);
+
+  if (!hasAnyRole(roleNames, ["HR", "ADMIN"])) {
+    return sendMessage(reply, "Only HR or Admin allowed", 403);
+  }
+
+  // Fetch leave (must be manual & approved)
+  const [leave] = await db
+    .select()
+    .from(leaveRequests)
+    .where(eq(leaveRequests.id, id));
+
+  if (!leave || !leave.approvedBy) {
+    return sendMessage(reply, "Manual leave not found", 404);
+  }
+
+  // Past-date validation
+  if (body.fromDate || body.toDate) {
+    const validation = validatePastDatesOnly(
+      body.fromDate ?? leave.fromDate,
+      body.toDate ?? leave.toDate,
+    );
+
+    if (!validation.valid) {
+      return sendMessage(reply, validation.message!, 400);
+    }
+  }
+
+  // Recalculate
+  const { totalHours, totalDays } = calculateLeaveTotalsSimple({
+    fromDate: body.fromDate ?? leave.fromDate,
+    toDate: body.toDate ?? leave.toDate,
+    dayType: body.dayType ?? leave.dayType,
+    fromHour: body.fromHour ?? leave.fromHour,
+    toHour: body.toHour ?? leave.toHour,
+  });
+
+  await db
+    .update(leaveRequests)
+    .set({
+      ...body,
+      totalHours,
+      totalDays: totalDays.toString(),
+      updatedAt: new Date(),
+    })
+    .where(eq(leaveRequests.id, id));
+
+  return sendMessage(reply, "Manual leave updated successfully");
+}
+
+export async function deleteManualLeaveRequestHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const userId = request.user!.id;
+  const { id } = request.params as { id: string };
+
+  const userRolesRows = await db
+    .select({ roleName: roles.name })
+    .from(userRoles)
+    .leftJoin(roles, eq(userRoles.roleId, roles.id))
+    .where(eq(userRoles.userId, userId));
+
+  const roleNames = userRolesRows
+    .map((r) => r.roleName)
+    .filter((r): r is string => r !== null);
+
+  if (!hasAnyRole(roleNames, ["HR", "ADMIN"])) {
+    return sendMessage(reply, "Only HR or Admin allowed", 403);
+  }
+
+  const [deleted] = await db
+    .delete(leaveRequests)
+    .where(
+      and(
+        eq(leaveRequests.id, id),
+        sql`${leaveRequests.approvedBy} IS NOT NULL`,
+      ),
+    )
+    .returning({ id: leaveRequests.id });
+
+  if (!deleted) {
+    return sendMessage(reply, "Manual leave not found", 404);
+  }
+
+  return sendMessage(reply, "Manual leave deleted successfully");
 }
