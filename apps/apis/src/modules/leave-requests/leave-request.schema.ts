@@ -39,6 +39,7 @@ const employeeObjectSchema = {
   type: "object",
   properties: {
     id: { type: "string", format: "uuid" },
+    userId: { type: "string", format: "uuid" },
     firstName: { type: "string" },
     lastName: { type: "string" },
   },

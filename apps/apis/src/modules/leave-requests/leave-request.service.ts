@@ -168,6 +168,7 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
       leave: leaveRequests,
       employee: {
         id: employees.id,
+        userId: employees.userId,
         firstName: employees.firstName,
         lastName: employees.lastName,
       },
@@ -266,6 +267,7 @@ export async function getLeaveRequestByIdHandler(
       leave: leaveRequests,
       employee: {
         id: employees.id,
+        userId: employees.userId,
         firstName: employees.firstName,
         lastName: employees.lastName,
       },
