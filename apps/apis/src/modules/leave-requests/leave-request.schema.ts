@@ -4,6 +4,22 @@ import {
   LeaveStatus,
 } from "../../db/schema/leave.enums";
 
+const employeeMiniWithUserIdSchema = {
+  anyOf: [
+    {
+      type: "object",
+      properties: {
+        id: { type: "string", format: "uuid" },
+        userId: { type: "string", format: "uuid" },
+        firstName: { type: "string" },
+        lastName: { type: "string" },
+      },
+      required: ["id", "userId", "firstName", "lastName"],
+    },
+    { type: "null" },
+  ],
+};
+
 const userMiniSchema = {
   anyOf: [
     {
@@ -126,6 +142,10 @@ export const getAllLeaveRequestsSchema = {
       limit: { type: "number", minimum: 1, maximum: 50 },
       sortBy: { type: "string", enum: ["createdAt", "fromDate"] },
       sortOrder: { type: "string", enum: ["asc", "desc"] },
+      createdByType: {
+        type: "string",
+        enum: ["all", "manual", "self"],
+      },
     },
     additionalProperties: false,
   },
@@ -140,8 +160,7 @@ export const getAllLeaveRequestsSchema = {
             properties: {
               leave: leaveObjectSchema,
               employee: employeeObjectSchema,
-              createdByEmployee: userMiniSchema,
-
+              createdByEmployee: employeeMiniWithUserIdSchema,
               approvedByUser: userMiniSchema,
               rejectedByUser: userMiniSchema,
             },
@@ -175,8 +194,7 @@ export const getLeaveRequestByIdSchema = {
           properties: {
             leave: leaveObjectSchema,
             employee: employeeObjectSchema,
-            createdByEmployee: userMiniSchema,
-
+            createdByEmployee: employeeMiniWithUserIdSchema,
             approvedByUser: userMiniSchema,
             rejectedByUser: userMiniSchema,
           },

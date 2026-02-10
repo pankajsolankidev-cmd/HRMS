@@ -24,7 +24,6 @@ import { hasAnyRole, hasRole } from "../../utils/role.utils";
 import { calculateLeaveTotalsSimple } from "./utils/leave-calculation";
 import { validatePastDatesOnly } from "./utils/past-date-validation";
 
-
 function validateFutureDates(fromDate: string, toDate: string) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -100,6 +99,7 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
     limit?: number;
     sortBy?: "createdAt" | "fromDate";
     sortOrder?: "asc" | "desc";
+    createdByType?: "all" | "manual" | "self";
   };
 
   const conditions = [];
@@ -117,7 +117,7 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
   const isHRorAdmin = hasAnyRole(roleNames, ["HR", "ADMIN"]);
 
   const [employee] = await db
-    .select({ id: employees.id })
+    .select({ id: employees.id, userId: employees.userId })
     .from(employees)
     .where(eq(employees.userId, userId));
 
@@ -129,6 +129,21 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
       };
     }
     conditions.push(eq(leaveRequests.employeeId, employee.id));
+  }
+
+  if (isHRorAdmin && query.createdByType) {
+    if (query.createdByType === "manual") {
+      conditions.push(eq(leaveRequests.createdBy, userId));
+    }
+
+    if (query.createdByType === "self" && employee) {
+      conditions.push(
+        and(
+          eq(leaveRequests.createdBy, userId),
+          eq(leaveRequests.employeeId, employee.id),
+        ),
+      );
+    }
   }
 
   if (query?.search) {
@@ -174,6 +189,7 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
       },
       createdByEmployee: {
         id: createdByEmployee.id,
+        userId: createdByEmployee.userId,
         firstName: createdByEmployee.firstName,
         lastName: createdByEmployee.lastName,
       },
@@ -273,6 +289,7 @@ export async function getLeaveRequestByIdHandler(
       },
       createdByEmployee: {
         id: createdByEmployee.id,
+        userId: createdByEmployee.userId,
         firstName: createdByEmployee.firstName,
         lastName: createdByEmployee.lastName,
       },
