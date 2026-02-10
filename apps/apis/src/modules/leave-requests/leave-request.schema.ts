@@ -348,6 +348,7 @@ export const updateManualLeaveRequestSchema = {
   body: {
     type: "object",
     properties: {
+      employeeId: { type: "string", format: "uuid" },
       fromDate: { type: "string", format: "date" },
       toDate: { type: "string", format: "date" },
       type: { type: "string", enum: Object.values(LeaveType) },
@@ -372,6 +373,30 @@ export const deleteManualLeaveRequestSchema = {
   params: leaveRequestIdParams,
   response: {
     200: { type: "object", properties: { message: { type: "string" } } },
+    403: errorResponse,
+    404: errorResponse,
+  },
+};
+
+export const getManualLeaveRequestByIdSchema = {
+  tags: ["Leave Requests"],
+  params: leaveRequestIdParams,
+  response: {
+    200: {
+      type: "object",
+      properties: {
+        data: {
+          type: "object",
+          properties: {
+            leave: leaveObjectSchema,
+            employee: employeeObjectSchema,
+            createdByEmployee: employeeMiniWithUserIdSchema,
+          },
+          required: ["leave", "employee"],
+        },
+      },
+      required: ["data"],
+    },
     403: errorResponse,
     404: errorResponse,
   },

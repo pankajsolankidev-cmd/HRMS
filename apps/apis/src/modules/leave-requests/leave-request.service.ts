@@ -682,7 +682,6 @@ export async function rejectLeaveRequestHandler(
       rejectedBy: userId,
       rejectedAt: new Date(),
       rejectionReason: body.rejectionReason ?? null,
-      updatedAt: new Date(),
     })
     .where(
       and(
@@ -791,40 +790,76 @@ export async function updateManualLeaveRequestHandler(
     return sendMessage(reply, "Only HR or Admin allowed", 403);
   }
 
-  const [leave] = await db
-    .select()
+  const [row] = await db
+    .select({
+      leave: leaveRequests,
+      employeeUserId: employees.userId,
+    })
     .from(leaveRequests)
+    .leftJoin(employees, eq(leaveRequests.employeeId, employees.id))
     .where(eq(leaveRequests.id, id));
 
-  if (!leave || !leave.approvedBy) {
+  if (
+    !row ||
+    row.leave.createdBy === row.employeeUserId // ❗ not manual
+  ) {
     return sendMessage(reply, "Manual leave not found", 404);
   }
 
-  if (body.fromDate || body.toDate) {
-    const validation = validatePastDatesOnly(
-      body.fromDate ?? leave.fromDate,
-      body.toDate ?? leave.toDate,
-    );
+  const existingLeave = row.leave;
 
-    if (!validation.valid) {
-      return sendMessage(reply, validation.message!, 400);
+  let finalEmployeeId = existingLeave.employeeId;
+
+  if (body.employeeId) {
+    const [employee] = await db
+      .select({ id: employees.id })
+      .from(employees)
+      .where(eq(employees.id, body.employeeId));
+
+    if (!employee) {
+      return sendMessage(reply, "Target employee not found", 404);
     }
+
+    finalEmployeeId = body.employeeId;
+  }
+
+  const finalFromDate = body.fromDate ?? existingLeave.fromDate;
+  const finalToDate = body.toDate ?? existingLeave.toDate;
+
+  const validation = validatePastDatesOnly(finalFromDate, finalToDate);
+
+  if (!validation.valid) {
+    return sendMessage(reply, validation.message!, 400);
   }
 
   const { totalHours, totalDays } = calculateLeaveTotalsSimple({
-    fromDate: body.fromDate ?? leave.fromDate,
-    toDate: body.toDate ?? leave.toDate,
-    dayType: body.dayType ?? leave.dayType,
-    fromHour: body.fromHour ?? leave.fromHour,
-    toHour: body.toHour ?? leave.toHour,
+    fromDate: finalFromDate,
+    toDate: finalToDate,
+    dayType: body.dayType ?? existingLeave.dayType,
+    fromHour: body.fromHour ?? existingLeave.fromHour,
+    toHour: body.toHour ?? existingLeave.toHour,
   });
 
   await db
     .update(leaveRequests)
     .set({
-      ...body,
+      employeeId: finalEmployeeId,
+
+      fromDate: finalFromDate,
+      toDate: finalToDate,
+
+      type: body.type ?? existingLeave.type,
+      dayType: body.dayType ?? existingLeave.dayType,
+      fromHour: body.fromHour ?? existingLeave.fromHour,
+      toHour: body.toHour ?? existingLeave.toHour,
+
       totalHours,
       totalDays: totalDays.toString(),
+
+      reason: body.reason ?? existingLeave.reason,
+      file: body.file ?? existingLeave.file,
+
+      updatedAt: new Date(),
     })
     .where(eq(leaveRequests.id, id));
 
@@ -867,4 +902,57 @@ export async function deleteManualLeaveRequestHandler(
   }
 
   return sendMessage(reply, "Manual leave deleted successfully");
+}
+
+export async function getManualLeaveRequestByIdHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const userId = request.user!.id;
+  const { id } = request.params as { id: string };
+
+  
+  const userRolesRows = await db
+    .select({ roleName: roles.name })
+    .from(userRoles)
+    .leftJoin(roles, eq(userRoles.roleId, roles.id))
+    .where(eq(userRoles.userId, userId));
+
+  const roleNames = userRolesRows
+    .map((r) => r.roleName)
+    .filter((r): r is string => r !== null);
+
+  if (!hasAnyRole(roleNames, ["HR", "ADMIN"])) {
+    return sendMessage(reply, "Only HR or Admin allowed", 403);
+  }
+
+  const [row] = await db
+    .select({
+      leave: leaveRequests,
+      employee: {
+        id: employees.id,
+        userId: employees.userId,
+        firstName: employees.firstName,
+        lastName: employees.lastName,
+      },
+      createdByEmployee: {
+        id: createdByEmployee.id,
+        userId: createdByEmployee.userId,
+        firstName: createdByEmployee.firstName,
+        lastName: createdByEmployee.lastName,
+      },
+    })
+    .from(leaveRequests)
+    .leftJoin(employees, eq(leaveRequests.employeeId, employees.id))
+    .leftJoin(
+      createdByEmployee,
+      eq(leaveRequests.createdBy, createdByEmployee.userId),
+    )
+    .where(eq(leaveRequests.id, id));
+
+  if (!row || !row.employee || row.leave.createdBy === row.employee.userId) {
+    return sendMessage(reply, "Manual leave not found", 404);
+  }
+
+  return { data: row };
 }
