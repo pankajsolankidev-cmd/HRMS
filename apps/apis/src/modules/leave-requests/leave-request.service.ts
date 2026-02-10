@@ -10,6 +10,7 @@ import { roles } from "../../db/schema/roles.schema";
 import { alias } from "drizzle-orm/pg-core";
 const approverEmployee = alias(employees, "approverEmployee");
 const rejecterEmployee = alias(employees, "rejecterEmployee");
+const createdByEmployee = alias(employees, "createdByEmployee");
 
 import {
   CreateLeaveRequestDto,
@@ -22,6 +23,7 @@ import { getPagination } from "../../utils/pagination";
 import { hasAnyRole, hasRole } from "../../utils/role.utils";
 import { calculateLeaveTotalsSimple } from "./utils/leave-calculation";
 import { validatePastDatesOnly } from "./utils/past-date-validation";
+import { users } from "../../db/schema";
 
 function validateFutureDates(fromDate: string, toDate: string) {
   const today = new Date();
@@ -169,6 +171,11 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
         firstName: employees.firstName,
         lastName: employees.lastName,
       },
+      createdByEmployee: {
+        id: createdByEmployee.id,
+        firstName: createdByEmployee.firstName,
+        lastName: createdByEmployee.lastName,
+      },
       approvedByUser: {
         id: approverEmployee.id,
         firstName: approverEmployee.firstName,
@@ -190,6 +197,11 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
       rejecterEmployee,
       eq(leaveRequests.rejectedBy, rejecterEmployee.userId),
     )
+    .leftJoin(
+      createdByEmployee,
+      eq(leaveRequests.createdBy, createdByEmployee.userId),
+    )
+
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(...orderByClauses)
     .$dynamic();
@@ -257,6 +269,11 @@ export async function getLeaveRequestByIdHandler(
         firstName: employees.firstName,
         lastName: employees.lastName,
       },
+      createdByEmployee: {
+        id: createdByEmployee.id,
+        firstName: createdByEmployee.firstName,
+        lastName: createdByEmployee.lastName,
+      },
 
       approvedByUser: {
         id: approverEmployee.id,
@@ -279,6 +296,10 @@ export async function getLeaveRequestByIdHandler(
     .leftJoin(
       rejecterEmployee,
       eq(leaveRequests.rejectedBy, rejecterEmployee.userId),
+    )
+    .leftJoin(
+      createdByEmployee,
+      eq(leaveRequests.createdBy, createdByEmployee.userId),
     )
 
     .where(and(...conditions));
@@ -707,7 +728,7 @@ export async function createManualLeaveRequestHandler(
 
   await db.insert(leaveRequests).values({
     employeeId: employee.id,
-     createdBy: userId, 
+    createdBy: userId,
     fromDate: body.fromDate,
     toDate: body.toDate,
     type: body.type,

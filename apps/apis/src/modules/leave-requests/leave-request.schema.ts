@@ -139,6 +139,7 @@ export const getAllLeaveRequestsSchema = {
             properties: {
               leave: leaveObjectSchema,
               employee: employeeObjectSchema,
+              createdByEmployee: userMiniSchema,
 
               approvedByUser: userMiniSchema,
               rejectedByUser: userMiniSchema,
@@ -173,6 +174,7 @@ export const getLeaveRequestByIdSchema = {
           properties: {
             leave: leaveObjectSchema,
             employee: employeeObjectSchema,
+            createdByEmployee: userMiniSchema,
 
             approvedByUser: userMiniSchema,
             rejectedByUser: userMiniSchema,
