@@ -14,83 +14,14 @@ const rejecterEmployee = alias(employees, "rejecterEmployee");
 import {
   CreateLeaveRequestDto,
   UpdateLeaveRequestDto,
+  CreateManualLeaveRequestDto,
 } from "@shared/types/src/leave-request/leave-request.types";
 
 import { sendMessage } from "../../utils/api-response";
 import { getPagination } from "../../utils/pagination";
 import { hasAnyRole, hasRole } from "../../utils/role.utils";
-
-function isWeekend(date: Date) {
-  const day = date.getDay();
-  return day === 0 || day === 6;
-}
-
-function countWeekendDays(start: Date, end: Date) {
-  let count = 0;
-  const current = new Date(start);
-
-  while (current <= end) {
-    if (isWeekend(current)) {
-      count++;
-    }
-    current.setDate(current.getDate() + 1);
-  }
-
-  return count;
-}
-
-function calculateLeaveTotalsSimple(params: {
-  fromDate: string;
-  toDate: string;
-  dayType: string;
-  fromHour: number;
-  toHour: number;
-}) {
-  const { fromDate, toDate, dayType, fromHour, toHour } = params;
-
-  let totalHours = 0;
-
-  const start = new Date(fromDate);
-  const end = new Date(toDate);
-
-  if (isWeekend(start)) {
-    throw new Error("Leave cannot start on weekend");
-  }
-  if (isWeekend(end)) {
-    throw new Error("Leave cannot end on weekend");
-  }
-
-  if (fromDate === toDate) {
-    if (dayType === "full_day") totalHours = 8;
-    else if (dayType === "first_half") totalHours = 4;
-    else if (dayType === "second_half") totalHours = 4;
-    else if (dayType === "multiple_days") {
-      totalHours = fromHour + toHour;
-    }
-  } else {
-    const diffDays =
-      Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-
-    const weekendCount = countWeekendDays(start, end);
-    const workingDays = diffDays - weekendCount;
-
-    if (dayType === "multiple_days") {
-      totalHours += fromHour;
-
-      if (workingDays > 2) {
-        totalHours += (workingDays - 2) * 8;
-      }
-
-      totalHours += toHour;
-    } else if (dayType === "full_day") {
-      totalHours = workingDays * 8;
-    }
-  }
-
-  const totalDays = totalHours / 8;
-
-  return { totalHours, totalDays };
-}
+import { calculateLeaveTotalsSimple } from "./utils/leave-calculation";
+import { validatePastDatesOnly } from "./utils/past-date-validation";
 
 function validateFutureDates(fromDate: string, toDate: string) {
   const today = new Date();
@@ -752,4 +683,71 @@ export async function rejectLeaveRequestHandler(
   }
 
   return sendMessage(reply, "Leave request rejected successfully");
+}
+
+export async function createManualLeaveRequestHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const userId = request.user!.id;
+  const body = request.body as CreateManualLeaveRequestDto;
+
+  const userRolesRows = await db
+    .select({ roleName: roles.name })
+    .from(userRoles)
+    .leftJoin(roles, eq(userRoles.roleId, roles.id))
+    .where(eq(userRoles.userId, userId));
+
+  const roleNames = userRolesRows
+    .map((r) => r.roleName)
+    .filter((r): r is string => r !== null);
+
+  if (!hasAnyRole(roleNames, ["HR", "ADMIN"])) {
+    return sendMessage(reply, "Only HR or Admin allowed", 403);
+  }
+
+  const validation = validatePastDatesOnly(body.fromDate, body.toDate);
+
+  if (!validation.valid) {
+    return sendMessage(reply, validation.message!, 400);
+  }
+
+  const [employee] = await db
+    .select({ id: employees.id })
+    .from(employees)
+    .where(eq(employees.id, body.employeeId));
+
+  if (!employee) {
+    return sendMessage(reply, "Target employee not found", 404);
+  }
+
+  const { totalHours, totalDays } = calculateLeaveTotalsSimple({
+    fromDate: body.fromDate,
+    toDate: body.toDate,
+    dayType: body.dayType,
+    fromHour: body.fromHour,
+    toHour: body.toHour,
+  });
+
+  await db.insert(leaveRequests).values({
+    employeeId: employee.id,
+    fromDate: body.fromDate,
+    toDate: body.toDate,
+    type: body.type,
+    dayType: body.dayType,
+    fromHour: body.fromHour,
+    toHour: body.toHour,
+    totalHours,
+    totalDays: totalDays.toString(),
+    reason: body.reason,
+    file: body.file,
+    status: LeaveStatus.Approved,
+    approvedBy: userId,
+    approvedAt: new Date(),
+    rejectedBy: null,
+    rejectedAt: null,
+    rejectionReason: null,
+  });
+
+  return sendMessage(reply, "Manual leave created successfully", 201);
 }

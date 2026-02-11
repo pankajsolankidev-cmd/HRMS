@@ -30,6 +30,8 @@ export const createSalarySchema = {
     properties: {
       employeeId: { type: "string", format: "uuid" },
       basicSalary: { type: "string" },
+      tax: { type: "string", default: "0" },
+      pf: { type: "string", default: "0" },
       description: { type: "string" },
       appraisalDate: { type: "string", format: "date" },
     },
@@ -91,6 +93,8 @@ export const updateSalarySchema = {
     type: "object",
     properties: {
       basicSalary: { type: "string" },
+      tax: { type: "string" },
+      pf: { type: "string" },
       description: { type: "string" },
       appraisalDate: { type: "string", format: "date" },
     },

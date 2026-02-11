@@ -7,6 +7,9 @@ import {
   updatePayrollHandler,
   deletePayrollHandler,
   getPayrollSummaryHandler,
+  processBulkPayrollHandler,
+  previewBulkPayrollHandler,
+  getCurrentPayrollStatusHandler,
 } from "./payroll.service";
 
 import {
@@ -16,6 +19,9 @@ import {
   payrollSummarySchema,
   updatePayrollSchema,
   deletePayrollSchema,
+  previewBulkPayrollSchema,
+  processBulkPayrollSchema,
+  payrollStatusCurrentSchema,
 } from "./payroll.schema";
 
 import { verifyAccessToken } from "../../middlewares/auth.middlewares";
@@ -78,5 +84,32 @@ export async function payrollRoutes(app: FastifyInstance) {
       ],
     },
     getPayrollSummaryHandler,
+  );
+
+  app.get(
+    "/payrolls/bulk/preview",
+    {
+      schema: previewBulkPayrollSchema,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.PAYROLL_PROCESS)],
+    },
+    previewBulkPayrollHandler,
+  );
+
+  app.post(
+    "/payrolls/bulk/process",
+    {
+      schema: processBulkPayrollSchema,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.PAYROLL_PROCESS)],
+    },
+    processBulkPayrollHandler,
+  );
+
+  app.get(
+    "/payrolls/status/current",
+    {
+      schema: payrollStatusCurrentSchema,
+      preHandler: [verifyAccessToken],
+    },
+    getCurrentPayrollStatusHandler,
   );
 }

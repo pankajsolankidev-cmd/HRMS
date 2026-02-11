@@ -30,5 +30,14 @@ export type UpdateLeaveRequestDto = {
   file?: string;
 };
 
-
-
+export interface CreateManualLeaveRequestDto {
+  employeeId: string;
+  fromDate: string;
+  toDate: string;
+  type: string;
+  dayType: string;
+  fromHour: number;
+  toHour: number;
+  reason?: string;
+  file?: string;
+}
