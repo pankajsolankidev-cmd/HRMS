@@ -118,8 +118,13 @@ export const getAllLeaveRequestsSchema = {
     type: "object",
     properties: {
       search: { type: "string" },
+
       status: { type: "string", enum: Object.values(LeaveStatus) },
       type: { type: "string", enum: Object.values(LeaveType) },
+
+      employeeId: { type: "string", format: "uuid" },
+      fromDate: { type: "string", format: "date" },
+      toDate: { type: "string", format: "date" },
       page: { type: "number", minimum: 1 },
       limit: { type: "number", minimum: 1, maximum: 50 },
       sortBy: { type: "string", enum: ["createdAt", "fromDate"] },

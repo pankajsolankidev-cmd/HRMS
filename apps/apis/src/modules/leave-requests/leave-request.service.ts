@@ -93,12 +93,14 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
     search?: string;
     status?: (typeof LeaveStatus)[keyof typeof LeaveStatus];
     type?: string;
+    employeeId?: string;
+    fromDate?: string;
+    toDate?: string;
     page?: number;
     limit?: number;
     sortBy?: "createdAt" | "fromDate";
     sortOrder?: "asc" | "desc";
   };
-
   const conditions = [];
 
   const userRolesRows = await db
@@ -113,6 +115,12 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
 
   const isHRorAdmin = hasAnyRole(roleNames, ["HR", "ADMIN"]);
 
+  if (!isHRorAdmin && query.employeeId) {
+    throw new Error("Employee cannot filter other employees");
+  }
+
+  let resolvedEmployeeId: string | undefined;
+
   const [employee] = await db
     .select({ id: employees.id })
     .from(employees)
@@ -125,7 +133,16 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
         meta: { page: 1, limit: null, total: 0 },
       };
     }
-    conditions.push(eq(leaveRequests.employeeId, employee.id));
+
+    resolvedEmployeeId = employee.id;
+  } else {
+    if (query.employeeId) {
+      resolvedEmployeeId = query.employeeId;
+    }
+  }
+
+  if (resolvedEmployeeId) {
+    conditions.push(eq(leaveRequests.employeeId, resolvedEmployeeId));
   }
 
   if (query?.search) {
@@ -138,6 +155,14 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
 
   if (query?.type) {
     conditions.push(eq(leaveRequests.type, query.type as any));
+  }
+
+  if (query.fromDate) {
+    conditions.push(sql`${leaveRequests.fromDate} >= ${query.fromDate}`);
+  }
+
+  if (query.toDate) {
+    conditions.push(sql`${leaveRequests.toDate} <= ${query.toDate}`);
   }
 
   const { page, limit, offset } = getPagination(query);
