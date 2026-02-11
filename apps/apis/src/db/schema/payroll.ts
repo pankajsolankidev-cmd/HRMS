@@ -8,10 +8,11 @@ import {
   uniqueIndex,
   pgEnum,
 } from "drizzle-orm/pg-core";
+
 import { employees } from "./employees.schema";
+import { users } from "./users.schema";
 import { baseColumns } from "../base-columns";
 import { PayrollMonth } from "./payroll.enums";
-import { users } from "./users.schema";
 
 export const salary = pgTable(
   "salary",
@@ -23,14 +24,21 @@ export const salary = pgTable(
       .references(() => employees.id, { onDelete: "cascade" }),
 
     basicSalary: numeric("basic_salary", { precision: 12, scale: 2 }).notNull(),
+
+    tax: numeric("tax", { precision: 12, scale: 2 }).default("0").notNull(),
+
+    pf: numeric("pf", { precision: 12, scale: 2 }).default("0").notNull(),
+
+    netSalary: numeric("net_salary", { precision: 12, scale: 2 }).notNull(),
+
     description: text("description"),
     appraisalDate: timestamp("appraisal_date"),
   },
   (table) => ({
     uniqueEmployeeSalary: uniqueIndex("uniq_salary_employee").on(
-      table.employeeId
+      table.employeeId,
     ),
-  })
+  }),
 );
 
 export const payrollMonthEnum = pgEnum("payroll_month", PayrollMonth);
@@ -45,29 +53,45 @@ export const payrolls = pgTable(
       .references(() => employees.id, { onDelete: "cascade" }),
 
     month: payrollMonthEnum("month").notNull(),
-
     year: integer("year").notNull(),
 
     processedBy: uuid("processed_by")
       .notNull()
       .references(() => users.id),
 
-    totalDeductions: numeric("total_deductions", {
+    deductions: numeric("deductions", {
       precision: 12,
       scale: 2,
-    }).default("0"),
+    })
+      .default("0")
+      .notNull(),
+    deductionReason: text("deduction_reason"),
+
+    leaveDeduction: numeric("leave_deduction", {
+      precision: 12,
+      scale: 2,
+    })
+      .default("0")
+      .notNull(),
+
+    bonus: numeric("bonus", {
+      precision: 12,
+      scale: 2,
+    })
+      .default("0")
+      .notNull(),
+    bonusDescription: text("bonus_description"),
 
     netSalary: numeric("net_salary", { precision: 12, scale: 2 }).notNull(),
 
     file: text("file"),
-
     processedAt: timestamp("processed_at").defaultNow().notNull(),
   },
   (table) => ({
     uniquePayroll: uniqueIndex("uniq_employee_month_year").on(
       table.employeeId,
       table.month,
-      table.year
+      table.year,
     ),
-  })
+  }),
 );
