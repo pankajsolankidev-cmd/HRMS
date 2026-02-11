@@ -143,9 +143,7 @@ export default function PayrollPage() {
     {
       header: "Month",
       accessor: "month",
-      cell: (row) => (
-        <span className="capitalize">{row.month.toLowerCase()}</span>
-      ),
+      cell: (row) => <span className="capitalize">{row.month}</span>,
     },
     {
       header: "Year",

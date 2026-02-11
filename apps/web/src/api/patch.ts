@@ -43,6 +43,7 @@ export const updateEmployeeLeave = async ({
 }: {
   id: string;
   payload: {
+    employeeId: string;
     fromDate: string;
     toDate: string;
     type: "sick" | "casual" | "marriage" | "wfh";

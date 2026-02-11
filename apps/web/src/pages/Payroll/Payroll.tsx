@@ -13,9 +13,11 @@ export default function Payroll() {
       />
       <PageBreadcrumb pageTitle="Payroll" />
       <div className="space-y-6">
+        {/* <Can permission="payroll.view_summary"> */}
         <Card title="Summary">
           <PayrollSummary />
         </Card>
+        {/* </Can> */}
         <PayrollPage />
       </div>
     </>

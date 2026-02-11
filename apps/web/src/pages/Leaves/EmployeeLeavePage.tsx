@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
-import { useNavigate, useParams } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 
-import { getEmployees, getLeaveById } from "../../api/get";
+import { getEmployees, getLeaveById, getManualLeaveById } from "../../api/get";
 import { updateEmployeeLeave } from "../../api/patch";
 import { addEmployeeLeave, type AddLeavePayload } from "../../api/post";
-import Card from "../../components/common/ComponentCard";
+import ComponentCard from "../../components/common/ComponentCard";
 import LeaveForm, { type LeaveFormData } from "./LeaveFormTemplate";
 
 export const mapFormToAddLeavePayload = (
@@ -23,6 +23,9 @@ export const mapFormToAddLeavePayload = (
 });
 
 export default function EmployeeLeavePage() {
+  const location = useLocation();
+  const isManualLeave = location.pathname.includes("/leave-requests/manual");
+
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -42,8 +45,9 @@ export default function EmployeeLeavePage() {
     })) ?? [];
 
   const { data, isLoading } = useQuery({
-    queryKey: ["leave", id],
-    queryFn: () => getLeaveById(id!),
+    queryKey: [isManualLeave ? "manual-leave" : "leave", id],
+    queryFn: () =>
+      isManualLeave ? getManualLeaveById(id!) : getLeaveById(id!),
     enabled: isEditMode,
   });
 
@@ -73,22 +77,38 @@ export default function EmployeeLeavePage() {
     return <div className="p-6 text-gray-500">Loading leave details…</div>;
   }
 
-  const leave = data?.leave;
+  /**
+   * ✅ Normalize ONLY in edit mode
+   */
+  const normalizedLeave =
+    isEditMode && data
+      ? isManualLeave
+        ? {
+            ...data.leave,
+            employeeId: data.employee.id,
+          }
+        : {
+            ...data.leave,
+            employeeId: data.leave.employeeId,
+          }
+      : null;
 
-  const defaultValues: Partial<LeaveFormData> | undefined = isEditMode
-    ? {
-        fromDate: leave.fromDate,
-        toDate: leave.toDate,
-        type: leave.type,
-        dayType: leave.dayType,
-        reason: leave.reason,
-        fromHour: leave.fromHour,
-        toHour: leave.toHour,
-        fromHourType: leave.fromHour === 4 ? "first_half" : "full_day",
-        toHourType: leave.toHour === 4 ? "first_half" : "full_day",
-        employeeId: leave.employeeId,
-      }
-    : undefined;
+  const defaultValues: Partial<LeaveFormData> | undefined =
+    isEditMode && normalizedLeave
+      ? {
+          fromDate: normalizedLeave.fromDate,
+          toDate: normalizedLeave.toDate,
+          type: normalizedLeave.type,
+          dayType: normalizedLeave.dayType,
+          reason: normalizedLeave.reason,
+          fromHour: normalizedLeave.fromHour,
+          toHour: normalizedLeave.toHour,
+          fromHourType:
+            normalizedLeave.fromHour === 4 ? "first_half" : "full_day",
+          toHourType: normalizedLeave.toHour === 4 ? "first_half" : "full_day",
+          employeeId: normalizedLeave.employeeId,
+        }
+      : undefined;
 
   const handleSubmit = (data: LeaveFormData) => {
     const basePayload = mapFormToAddLeavePayload(data);
@@ -96,7 +116,10 @@ export default function EmployeeLeavePage() {
     if (isEditMode) {
       updateMutation.mutate({
         id: id!,
-        payload: basePayload,
+        payload: {
+          ...basePayload,
+          employeeId: data.employeeId!,
+        },
       });
       return;
     }
@@ -113,15 +136,17 @@ export default function EmployeeLeavePage() {
   };
 
   return (
-    <Card title={isEditMode ? "Edit Employee Leave" : "Add Employee Leave"}>
+    <ComponentCard
+      title={isEditMode ? "Edit Employee Leave" : "Add Employee Leave"}
+    >
       <LeaveForm
         defaultValues={defaultValues}
-        showEmployeeSelect={!isEditMode}
+        showEmployeeSelect={true}
         employeeOptions={employeeOptions}
         loading={addMutation.isPending || updateMutation.isPending}
         onBack={() => navigate("/leave-requests")}
         onSubmit={handleSubmit}
       />
-    </Card>
+    </ComponentCard>
   );
 }

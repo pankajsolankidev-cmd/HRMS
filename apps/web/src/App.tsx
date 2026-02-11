@@ -89,7 +89,7 @@ function AppRoutes() {
           <Route path="/leave-requests" element={<LeavePage />} />
           <Route path="/leave-requests/:id" element={<SelfLeavePage />} />
           <Route
-            path="/leave-requests/:id/employee"
+            path="/leave-requests/manual/:id"
             element={<EmployeeLeavePage />}
           />
 

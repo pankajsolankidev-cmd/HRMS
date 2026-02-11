@@ -124,7 +124,7 @@ export const addEmployeeLeave = async (
   payload: AddLeavePayload & { employeeId: string },
 ) => {
   const res = await api.post("/leave-requests/manual", payload);
-  return res.data;
+  return res.data.message;
 };
 export type ExpensePayload = {
   expense_type: string;

@@ -14,7 +14,7 @@ import { toast } from "react-hot-toast";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 
-import { deleteLeave } from "../../api/delete";
+import { deleteLeave, deleteManualLeave } from "../../api/delete";
 import { getEmployees, getLeaves } from "../../api/get";
 import { approveLeave, rejectLeave } from "../../api/patch";
 import type { PaginatedResponse } from "../../api/types";
@@ -46,13 +46,13 @@ export const LEAVE_STATUS = [
   { label: "Rejected", value: "rejected" },
 ];
 const LEAVE_SOURCE_OPTIONS = [
-  { label: "All", value: "" },
-  { label: "Employee Leave", value: "employee" },
+  { label: "All", value: "all" },
+  { label: "Self Leave", value: "self" },
   { label: "Manual Leave", value: "manual" },
 ];
 export default function LeavePage() {
   const navigate = useNavigate();
-  const { roles } = useSelector((state: RootState) => state.auth);
+  const { id, roles } = useSelector((state: RootState) => state.auth);
 
   const [search, setSearch] = useState<string | undefined>();
   const [rawSearch, setRawSearch] = useState("");
@@ -71,7 +71,7 @@ export default function LeavePage() {
   const [employeeId, setEmployeeId] = useState<string | undefined>();
   const [fromDate, setFromDate] = useState<string | undefined>();
   const [toDate, setToDate] = useState<string | undefined>();
-  const [leaveSource, setLeaveSource] = useState<string | undefined>();
+  const [createdByType, setCreatedByType] = useState<string | undefined>();
   useEffect(() => {
     const handleClickOutside = () => setActiveDropdown(null);
     window.addEventListener("click", handleClickOutside);
@@ -94,7 +94,7 @@ export default function LeavePage() {
     ...(status && { status }),
     ...(employeeId && { employeeId }),
     ...(fromDate && toDate && { fromDate, toDate }),
-    ...(leaveSource && { source: leaveSource }),
+    ...(createdByType && { createdByType }),
   };
   const { data, isLoading, isError, refetch } = useQuery<
     PaginatedResponse<LeaveApiResponse<LeaveList>>
@@ -109,7 +109,7 @@ export default function LeavePage() {
       type ?? "all",
       status ?? "all",
       employeeId ?? "all",
-      leaveSource ?? "all",
+      createdByType ?? "all",
       fromDate ?? "none",
       toDate ?? "none",
     ],
@@ -126,6 +126,18 @@ export default function LeavePage() {
 
   const { mutate: removeLeave, isPending: isDeletePending } = useMutation({
     mutationFn: deleteLeave,
+    onSuccess: (res) => {
+      toast.success(res?.message ?? "Leave deleted successfully");
+      refetch();
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(
+        error?.response?.data?.message ?? "An unexpected error occurred",
+      );
+    },
+  });
+  const { mutate: removeManualLeave } = useMutation({
+    mutationFn: deleteManualLeave,
     onSuccess: (res) => {
       toast.success(res?.message ?? "Leave deleted successfully");
       refetch();
@@ -178,6 +190,7 @@ export default function LeavePage() {
     totalDays: item.leave.totalDays,
     rejectionReason: item.leave.rejectionReason ?? null,
     file: item.leave.file,
+    createdByEmployee: item.createdByEmployee,
     approvedByUser: item.approvedByUser
       ? {
           id: item.approvedByUser.id,
@@ -298,27 +311,52 @@ export default function LeavePage() {
                 <IconEye size={16} /> View Details
               </button>
 
-              {row.status === "pending" ? (
-                <>
-                  <Can permission="leave.approve">
-                    <button
-                      onClick={() => approve(row.id)}
-                      className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
-                    >
-                      <IconCheck size={16} /> Approve
-                    </button>
-                    <button
-                      onClick={() => setRejectId(row.id)}
-                      className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
-                    >
-                      <IconX size={16} /> Reject
-                    </button>
-                  </Can>
+              {row.status == "pending" && (
+                <Can permission="leave.approve">
+                  <button
+                    onClick={() => approve(row.id)}
+                    className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
+                  >
+                    <IconCheck size={16} /> Approve
+                  </button>
 
-                  {/* <Can
-                    permissions={["leave.update_all", "leave.delete_all"]}
-                    requireAll
-                  > */}
+                  <button
+                    onClick={() => setRejectId(row.id)}
+                    className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
+                  >
+                    <IconX size={16} /> Reject
+                  </button>
+                </Can>
+              )}
+              
+              {row.createdByEmployee?.userId === id && (
+                <>
+                  <button
+                    onClick={() => navigate(`/leave-requests/manual/${row.id}`)}
+                    className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
+                  >
+                    <IconEdit size={16} /> Edit Request
+                  </button>
+                  <DeleteConfirm<string>
+                    title="Delete Leave Request"
+                    description="Are you sure you want to delete this leave request?"
+                    loading={isDeletePending}
+                    onConfirm={(id) => removeManualLeave(id)}
+                  >
+                    {(askDelete) => (
+                      <button
+                        onClick={() => askDelete(row.id)}
+                        className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
+                      >
+                        <IconTrash size={16} /> Delete
+                      </button>
+                    )}
+                  </DeleteConfirm>
+                </>
+              )}
+
+              {isEmployee && (
+                <>
                   <button
                     onClick={() => navigate(`/leave-requests/${row.id}`)}
                     className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
@@ -340,10 +378,7 @@ export default function LeavePage() {
                       </button>
                     )}
                   </DeleteConfirm>
-                  {/* </Can> */}
                 </>
-              ) : (
-                <div></div>
               )}
             </div>
           )}
@@ -401,9 +436,9 @@ export default function LeavePage() {
             <Select
               options={LEAVE_SOURCE_OPTIONS}
               placeholder="Leave Source"
-              value={leaveSource ?? ""}
+              value={createdByType ?? ""}
               onChange={(val) => {
-                setLeaveSource(val || undefined);
+                setCreatedByType(val || undefined);
                 setPage(1);
               }}
               className="w-full"
@@ -441,7 +476,7 @@ export default function LeavePage() {
                 setType(undefined);
                 setStatus(undefined);
                 setEmployeeId(undefined);
-                setLeaveSource(undefined);
+                setCreatedByType(undefined);
                 setFromDate(undefined);
                 setToDate(undefined);
                 setSearch(undefined);
@@ -494,7 +529,7 @@ export default function LeavePage() {
             {!isEmployee && (
               <>
                 <Button
-                  onClick={() => navigate("/leave-requests/new/Employee")}
+                  onClick={() => navigate("/leave-requests/manual/new")}
                   size="md"
                   className="h-[42px] bg-black dark:bg-blue-500 whitespace-nowrap"
                 >
