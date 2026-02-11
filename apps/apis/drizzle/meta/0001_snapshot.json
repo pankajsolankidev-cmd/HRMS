@@ -1,5 +1,5 @@
 {
-  "id": "5ac9cd2f-86e4-45ac-b4fe-0745215f18fb",
+  "id": "9fe08ad0-0bf9-46c1-85f0-97ed841b7ace",
   "prevId": "bf04dc2d-41a2-47ae-9936-b2710ca435c8",
   "version": "7",
   "dialect": "postgresql",
@@ -1002,11 +1002,25 @@
           "primaryKey": false,
           "notNull": true
         },
-        "total_deductions": {
-          "name": "total_deductions",
+        "deductions": {
+          "name": "deductions",
           "type": "numeric(12, 2)",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "leave_deduction": {
+          "name": "leave_deduction",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "bonus": {
+          "name": "bonus",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true,
           "default": "'0'"
         },
         "net_salary": {
