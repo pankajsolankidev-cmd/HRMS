@@ -480,5 +480,5 @@ export async function processBulkPayrollHandler(
     }
   });
 
-  return sendMessage(reply, "Bulk payroll processed successfully", 201);
+  return sendMessage(reply, "Bulk payroll processed  successfully", 201);
 }
