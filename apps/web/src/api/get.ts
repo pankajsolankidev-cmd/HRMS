@@ -36,10 +36,11 @@ export const getSystemById = async (id: string) => {
   return res.data;
 };
 
-export const getSalaryStructures = async (params: ListQueryParams) => {
+export const getSalaryStructures = async (params?: ListQueryParams) => {
   const res = await api.get<PaginatedResponse<any>>("/salary", {
     params,
   });
+  console.log(res.data);
   return res.data;
 };
 
@@ -52,11 +53,20 @@ export type GetPayrollParams = ListQueryParams & {
   year?: number;
 };
 
-export const getPayrolls = async (params: GetPayrollParams) => {
+export const getPayrolls = async (params?: GetPayrollParams) => {
   const res = await api.get<PaginatedResponse<any>>("/payrolls", { params });
+  console.log(res.data);
   return res.data;
 };
-
+export const getPayrollPreview = async (params?: {
+  month?: string;
+  year?: number;
+}) => {
+  const res = await api.get("/payrolls/bulk/preview", {
+    params,
+  });
+  return res.data;
+};
 export const getPayrollById = async (id: string) => {
   const res = await api.get(`/payrolls/${id}`);
   return res.data;

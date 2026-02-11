@@ -1,12 +1,12 @@
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
 
 import { deletePayroll } from "../../api/delete";
-import { getEmployees, getPayrolls } from "../../api/get";
+import { getPayrollPreview, getPayrolls } from "../../api/get";
 import type { PaginatedResponse } from "../../api/types";
 import Card from "../../components/common/ComponentCard";
 import DeleteConfirm from "../../components/common/DeleteConfirmModal";
@@ -24,6 +24,7 @@ export type Payroll = {
   year: number;
   totalDeductions: number;
   netSalary: number;
+  bonus: number;
   baseSalary?: number;
 };
 
@@ -41,8 +42,11 @@ export const MONTHS = [
   { label: "November", value: "NOVEMBER" },
   { label: "December", value: "DECEMBER" },
 ];
-
-export default function PayrollPage() {
+export default function PayrollPage({
+  setBulkEmployees,
+}: {
+  setBulkEmployees: (data: any[]) => void;
+}) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -51,7 +55,8 @@ export default function PayrollPage() {
 
   const [month, setMonth] = useState<string | undefined>();
   const [year, setYear] = useState<number | undefined>();
-
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const { sortBy, sortOrder, handleSort } = useTableSort<Payroll>();
   const START_YEAR = 2020;
   const CURRENT_YEAR = new Date().getFullYear();
@@ -65,22 +70,6 @@ export default function PayrollPage() {
         value: year.toString(),
       };
     },
-  );
-
-  const { data: employeesData } = useQuery({
-    queryKey: ["employees", "all"],
-    queryFn: () => getEmployees({ page: 1, limit: 100 }),
-  });
-
-  const employeeMap = useMemo(
-    () =>
-      new Map(
-        employeesData?.data?.map((emp: any) => [
-          emp.id,
-          `${emp.firstName} ${emp.lastName}`,
-        ]),
-      ),
-    [employeesData],
   );
 
   const { data, isLoading, isError } = useQuery<PaginatedResponse<any>>({
@@ -104,6 +93,15 @@ export default function PayrollPage() {
       }),
     placeholderData: (prev) => prev,
   });
+  const { data: salaryData, isLoading: salaryLoading } = useQuery({
+    queryKey: ["payroll-preview", month ?? "all", year ?? "all"],
+    queryFn: () =>
+      getPayrollPreview({
+        month,
+        year,
+      }),
+    enabled: bulkOpen && !!month && !!year,
+  });
 
   const { mutate: removePayroll, isPending } = useMutation({
     mutationFn: deletePayroll,
@@ -118,14 +116,15 @@ export default function PayrollPage() {
     },
   });
 
-  const payrolls: Payroll[] = (data?.data ?? []).map((p: any) => ({
-    id: p.id,
-    employeeName: employeeMap.get(p.employeeId) || p.employeeId,
-    month: p.month,
-    year: p.year,
-    totalDeductions: Number(p.totalDeductions),
-    netSalary: Number(p.netSalary),
-    baseSalary: Number(p.baseSalary ?? 0),
+  const payrolls: Payroll[] = (data?.data ?? []).map((item: any) => ({
+    id: item.payrolls.id,
+    employeeName: `${item.employees.firstName} ${item.employees.lastName}`,
+    month: item.payrolls.month,
+    year: item.payrolls.year,
+    bonus: item.payrolls.bonus,
+    totalDeductions: Number(item.payrolls.deductions ?? 0),
+    netSalary: Number(item.payrolls.netSalary ?? 0),
+    baseSalary: Number(item.payrolls.baseSalary ?? 0),
   }));
 
   const total = data?.meta?.total ?? 0;
@@ -156,6 +155,8 @@ export default function PayrollPage() {
       cell: (row) => (
         <span className="text-red-600 dark:text-red-400 font-medium">
           ₹ {row.totalDeductions.toLocaleString("en-IN")}
+          {"   "}
+          {row.bonus}
         </span>
       ),
     },
@@ -232,6 +233,13 @@ export default function PayrollPage() {
           >
             Add Payroll
           </Button>
+          <Button
+            onClick={() => setBulkOpen(true)}
+            size="md"
+            className="h-[42px] bg-black dark:bg-blue-500 whitespace-nowrap"
+          >
+            Bulk Payroll process
+          </Button>
         </div>
       }
     >
@@ -252,6 +260,112 @@ export default function PayrollPage() {
           setPage(1);
         }}
       />
+      {bulkOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-[800px] max-h-[75vh] bg-white dark:bg-gray-900 rounded-xl shadow-xl flex flex-col">
+            <div className="px-5 py-3 border-b flex justify-between items-center">
+              <h2 className="text-base font-semibold">Bulk Payroll Process</h2>
+              <button
+                onClick={() => setBulkOpen(false)}
+                className="text-gray-500 hover:text-red-500 text-lg"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="px-5 py-4 border-b flex gap-3">
+              <div className="w-40">
+                <Select
+                  options={MONTHS}
+                  value={month ?? ""}
+                  onChange={(v) => {
+                    setMonth(v || undefined);
+                    setSelectedIds([]);
+                  }}
+                  placeholder="Select Month"
+                />
+              </div>
+
+              <div className="w-32">
+                <Select
+                  options={YEAR_OPTIONS}
+                  value={year?.toString() ?? ""}
+                  onChange={(v) => {
+                    setYear(v ? Number(v) : undefined);
+                    setSelectedIds([]);
+                  }}
+                  placeholder="Select Year"
+                />
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2">
+              {!month || !year ? (
+                <p className="text-sm text-gray-500 text-center">
+                  Please select month and year to preview payroll
+                </p>
+              ) : salaryLoading ? (
+                <p className="text-sm text-gray-500 text-center">Loading...</p>
+              ) : salaryData?.data?.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center">
+                  No employees found
+                </p>
+              ) : (
+                salaryData?.data?.map((emp: any) => (
+                  <div
+                    key={emp.id}
+                    className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                  >
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4"
+                        checked={selectedIds.includes(emp.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedIds((prev) => [...prev, emp.id]);
+                          } else {
+                            setSelectedIds((prev) =>
+                              prev.filter((id) => id !== emp.id),
+                            );
+                          }
+                        }}
+                      />
+
+                      <span className="text-sm font-medium text-gray-800 dark:text-white">
+                        {emp.firstName} {emp.lastName}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="px-5 py-3 border-t flex justify-end gap-3">
+              <Button
+                onClick={() => setBulkOpen(false)}
+                className="bg-gray-500"
+              >
+                Back
+              </Button>
+
+              <Button
+                onClick={() => {
+                  const selectedEmployeesData =
+                    salaryData?.data?.filter((emp: any) =>
+                      selectedIds.includes(emp.id),
+                    ) ?? [];
+
+                  setBulkEmployees(selectedEmployeesData);
+                  setBulkOpen(false);
+                  setSelectedIds([]);
+                }}
+                className="bg-green-600"
+              >
+                Process
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </Card>
   );
 }

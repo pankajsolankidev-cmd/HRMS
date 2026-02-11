@@ -12,7 +12,7 @@ import Select from "../../components/form/Select";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 
-import { getEmployees, getPayrollById } from "../../api/get";
+import { getPayrollById, getSalaryStructures } from "../../api/get";
 import { updatePayroll } from "../../api/patch";
 import { addPayroll } from "../../api/post";
 import Card from "../../components/common/ComponentCard";
@@ -72,7 +72,7 @@ export default function AddEditPayrollPage() {
 
   const { data: employeesData } = useQuery({
     queryKey: ["employees", "all"],
-    queryFn: () => getEmployees(),
+    queryFn: () => getSalaryStructures(),
   });
 
   const employeeList = employeesData?.data ?? [];
