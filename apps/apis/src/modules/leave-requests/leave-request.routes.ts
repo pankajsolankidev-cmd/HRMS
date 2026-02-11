@@ -9,6 +9,9 @@ import {
   approveLeaveRequestHandler,
   rejectLeaveRequestHandler,
   createManualLeaveRequestHandler,
+  updateManualLeaveRequestHandler,
+  deleteManualLeaveRequestHandler,
+  getManualLeaveRequestByIdHandler,
 } from "./leave-request.service";
 
 import {
@@ -20,6 +23,9 @@ import {
   createManualLeaveRequestSchema,
   rejectLeaveRequestSchema,
   approveLeaveRequestSchema,
+  updateManualLeaveRequestSchema,
+  deleteManualLeaveRequestSchema,
+  getManualLeaveRequestByIdSchema,
 } from "./leave-request.schema";
 
 import { authenticate } from "../../plugins/auth.plugin";
@@ -95,5 +101,31 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
       preHandler: [authenticate],
     },
     createManualLeaveRequestHandler,
+  );
+
+  app.patch(
+    "/leave-requests/manual/:id",
+    {
+      schema: updateManualLeaveRequestSchema,
+      preHandler: [authenticate],
+    },
+    updateManualLeaveRequestHandler,
+  );
+
+  app.delete(
+    "/leave-requests/manual/:id",
+    {
+      schema: deleteManualLeaveRequestSchema,
+      preHandler: [authenticate],
+    },
+    deleteManualLeaveRequestHandler,
+  );
+  app.get(
+    "/leave-requests/manual/:id",
+    {
+      schema: getManualLeaveRequestByIdSchema,
+      preHandler: [authenticate],
+    },
+    getManualLeaveRequestByIdHandler,
   );
 }

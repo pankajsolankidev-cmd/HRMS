@@ -24,6 +24,10 @@ export const leaveRequests = pgTable("leave_requests", {
     .references(() => employees.id)
     .notNull(),
 
+  createdBy: uuid("created_by")
+    .references(() => users.id)
+    .notNull(),
+
   fromDate: date("from_date").notNull(),
   toDate: date("to_date").notNull(),
 

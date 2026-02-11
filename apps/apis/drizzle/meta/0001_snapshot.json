@@ -784,6 +784,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
         "from_date": {
           "name": "from_date",
           "type": "date",
@@ -893,6 +899,19 @@
           "tableTo": "employees",
           "columnsFrom": [
             "employee_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "leave_requests_created_by_users_id_fk": {
+          "name": "leave_requests_created_by_users_id_fk",
+          "tableFrom": "leave_requests",
+          "tableTo": "users",
+          "columnsFrom": [
+            "created_by"
           ],
           "columnsTo": [
             "id"
@@ -1120,26 +1139,6 @@
         },
         "basic_salary": {
           "name": "basic_salary",
-          "type": "numeric(12, 2)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "tax": {
-          "name": "tax",
-          "type": "numeric(12, 2)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'0'"
-        },
-        "pf": {
-          "name": "pf",
-          "type": "numeric(12, 2)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'0'"
-        },
-        "net_salary": {
-          "name": "net_salary",
           "type": "numeric(12, 2)",
           "primaryKey": false,
           "notNull": true
