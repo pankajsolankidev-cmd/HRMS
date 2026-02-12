@@ -1,5 +1,5 @@
 {
-  "id": "bf04dc2d-41a2-47ae-9936-b2710ca435c8",
+  "id": "2b5bb538-ccbd-4696-ab0b-b2c7f083b735",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -784,6 +784,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
         "from_date": {
           "name": "from_date",
           "type": "date",
@@ -900,6 +906,19 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
+        "leave_requests_created_by_users_id_fk": {
+          "name": "leave_requests_created_by_users_id_fk",
+          "tableFrom": "leave_requests",
+          "tableTo": "users",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
         "leave_requests_approved_by_users_id_fk": {
           "name": "leave_requests_approved_by_users_id_fk",
           "tableFrom": "leave_requests",
@@ -983,12 +1002,38 @@
           "primaryKey": false,
           "notNull": true
         },
-        "total_deductions": {
-          "name": "total_deductions",
+        "deductions": {
+          "name": "deductions",
           "type": "numeric(12, 2)",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "'0'"
+        },
+        "deduction_reason": {
+          "name": "deduction_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "leave_deduction": {
+          "name": "leave_deduction",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "bonus": {
+          "name": "bonus",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "bonus_description": {
+          "name": "bonus_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "net_salary": {
           "name": "net_salary",
@@ -1106,6 +1151,26 @@
         },
         "basic_salary": {
           "name": "basic_salary",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tax": {
+          "name": "tax",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "pf": {
+          "name": "pf",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "net_salary": {
+          "name": "net_salary",
           "type": "numeric(12, 2)",
           "primaryKey": false,
           "notNull": true
