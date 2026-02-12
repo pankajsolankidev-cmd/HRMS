@@ -109,6 +109,7 @@ CREATE TABLE "leave_requests" (
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now(),
 	"employee_id" uuid NOT NULL,
+	"created_by" uuid NOT NULL,
 	"from_date" date NOT NULL,
 	"to_date" date NOT NULL,
 	"type" "leave_type" NOT NULL,
@@ -135,7 +136,11 @@ CREATE TABLE "payrolls" (
 	"month" "payroll_month" NOT NULL,
 	"year" integer NOT NULL,
 	"processed_by" uuid NOT NULL,
-	"total_deductions" numeric(12, 2) DEFAULT '0',
+	"deductions" numeric(12, 2) DEFAULT '0' NOT NULL,
+	"deduction_reason" text,
+	"leave_deduction" numeric(12, 2) DEFAULT '0' NOT NULL,
+	"bonus" numeric(12, 2) DEFAULT '0' NOT NULL,
+	"bonus_description" text,
 	"net_salary" numeric(12, 2) NOT NULL,
 	"file" text,
 	"processed_at" timestamp DEFAULT now() NOT NULL
@@ -147,6 +152,9 @@ CREATE TABLE "salary" (
 	"updated_at" timestamp DEFAULT now(),
 	"employee_id" uuid NOT NULL,
 	"basic_salary" numeric(12, 2) NOT NULL,
+	"tax" numeric(12, 2) DEFAULT '0' NOT NULL,
+	"pf" numeric(12, 2) DEFAULT '0' NOT NULL,
+	"net_salary" numeric(12, 2) NOT NULL,
 	"description" text,
 	"appraisal_date" timestamp
 );
@@ -199,6 +207,7 @@ ALTER TABLE "password_reset_tokens" ADD CONSTRAINT "password_reset_tokens_user_i
 ALTER TABLE "system_components" ADD CONSTRAINT "system_components_system_id_systems_id_fk" FOREIGN KEY ("system_id") REFERENCES "public"."systems"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "system_components" ADD CONSTRAINT "system_components_component_id_components_id_fk" FOREIGN KEY ("component_id") REFERENCES "public"."components"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "leave_requests" ADD CONSTRAINT "leave_requests_employee_id_employees_id_fk" FOREIGN KEY ("employee_id") REFERENCES "public"."employees"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "leave_requests" ADD CONSTRAINT "leave_requests_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "leave_requests" ADD CONSTRAINT "leave_requests_approved_by_users_id_fk" FOREIGN KEY ("approved_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "leave_requests" ADD CONSTRAINT "leave_requests_rejected_by_users_id_fk" FOREIGN KEY ("rejected_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "payrolls" ADD CONSTRAINT "payrolls_employee_id_employees_id_fk" FOREIGN KEY ("employee_id") REFERENCES "public"."employees"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint

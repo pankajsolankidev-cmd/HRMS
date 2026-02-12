@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1769755701835,
-      "tag": "0000_empty_gertrude_yorkes",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1770378637293,
-      "tag": "0001_lame_moon_knight",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1770633799142,
-      "tag": "0002_chilly_avengers",
+      "when": 1770810412550,
+      "tag": "0000_dear_darwin",
       "breakpoints": true
     }
   ]
