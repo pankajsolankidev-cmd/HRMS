@@ -8,7 +8,7 @@ import {
 } from "../../ui/table";
 
 export type Column<T> = {
-  header: string;
+  header: React.ReactNode;
   accessor?: keyof T;
   sortable?: boolean;
   align?: "left" | "center" | "right";

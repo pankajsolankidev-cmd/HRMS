@@ -37,6 +37,7 @@ const EMPLOYEE_MENU: NavItem[] = [
   { icon: <GridIcon />, name: "Dashboard", path: "/dashboard" },
   { icon: <CalendarIcon />, name: "Leaves", path: "/leave-requests" },
   { icon: <IconWallet />, name: "Expenses", path: "/expenses" },
+  { icon: <IconReceiptRupee />, name: "Payrolls", path: "/payrolls" },
 ];
 
 const AppSidebar: React.FC = () => {

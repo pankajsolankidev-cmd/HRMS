@@ -1,14 +1,19 @@
-import { IconEdit } from "@tabler/icons-react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { IconEdit, IconHistory } from "@tabler/icons-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
 
-import { getPayrollPreview, getPayrollSummary } from "../../api/get";
+import {
+  getEmployeePayrollHistory,
+  getPayrollPreview,
+  getPayrollSummary,
+} from "../../api/get";
 import { processBulkPayroll } from "../../api/post";
 
 import Card from "../../components/common/ComponentCard";
+import Checkbox from "../../components/form/input/Checkbox";
 import Select from "../../components/form/Select";
 import DataTable, {
   type Column,
@@ -32,7 +37,7 @@ const MONTHS = [
 
 export default function BulkPayrollPage() {
   const navigate = useNavigate();
-
+  const queryClient = useQueryClient();
   const currentMonth = new Date()
     .toLocaleString("en-US", { month: "long" })
     .toUpperCase();
@@ -53,29 +58,25 @@ export default function BulkPayrollPage() {
 
   const [appliedMonth, setAppliedMonth] = useState<string | null>(null);
   const [appliedYear, setAppliedYear] = useState<number | null>(null);
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState<string>();
+  const [selectedYear, setSelectedYear] = useState<number>();
+  const [editingEmployee, setEditingEmployee] = useState<any | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [historyEmployee, setHistoryEmployee] = useState<any | null>(null);
 
   const { data: summaryData, isFetching } = useQuery({
     queryKey: ["payroll-summary", appliedMonth, appliedYear],
     queryFn: () => getPayrollSummary(appliedMonth!, appliedYear!),
     enabled: Boolean(appliedMonth && appliedYear),
   });
-  const {
-    data: bulkData,
-    refetch: loadEmployees,
-    isFetching: isLoadingEmployees,
-  } = useQuery({
-    queryKey: ["bulk-payroll"],
-    queryFn: () => {
-      if (!selectedMonth || !selectedYear) {
-        throw new Error("Month and Year required");
-      }
-
-      return getPayrollPreview({
+  const { data: bulkData, isFetching: isLoadingEmployees } = useQuery({
+    queryKey: ["bulk-payroll", selectedMonth, selectedYear],
+    queryFn: () =>
+      getPayrollPreview({
         month: selectedMonth,
         year: selectedYear,
-      });
-    },
-    enabled: false,
+      }),
   });
   useEffect(() => {
     if (bulkData?.data) {
@@ -89,24 +90,27 @@ export default function BulkPayrollPage() {
     setAppliedYear(summaryYear);
   };
 
-  const [employees, setEmployees] = useState<any[]>([]);
-  const [selectedMonth, setSelectedMonth] = useState<string>();
-  const [selectedYear, setSelectedYear] = useState<number>();
-  const [editingEmployee, setEditingEmployee] = useState<any | null>(null);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-
   const [formData, setFormData] = useState({
     bonus: "",
     bonusDescription: "",
     deduction: "",
     deductionReason: "",
   });
+  const { data: historyData, isFetching: isHistoryLoading } = useQuery({
+    queryKey: ["employee-payroll-history", historyEmployee?.employeeId],
+    queryFn: () =>
+      getEmployeePayrollHistory({ employeeId: historyEmployee?.employeeId }),
+    enabled: !!historyEmployee,
+  });
 
   const { mutate: submitBulk, isPending } = useMutation({
     mutationFn: processBulkPayroll,
     onSuccess: (res) => {
       toast.success(res?.message ?? "Bulk processed successfully");
-      navigate("/payrolls");
+      queryClient.invalidateQueries({
+        queryKey: ["bulk-payroll"],
+      });
+      setSelectedIds([]);
     },
     onError: (
       error: AxiosError<{ message?: string; employees?: string[] }>,
@@ -115,7 +119,7 @@ export default function BulkPayrollPage() {
       const empNames = error?.response?.data?.employees;
 
       if (Array.isArray(empNames) && empNames.length > 0) {
-        toast.error(`${message} - ${empNames.join(", ")}`);
+        toast.error(`${message} [ ${empNames.join(", ")} ]`);
       } else {
         toast.error(message ?? "Something went wrong");
       }
@@ -140,26 +144,41 @@ export default function BulkPayrollPage() {
     setEmployees(updated);
     setEditingEmployee(null);
   };
+  const selectableIds = employees
+    .filter((emp) => !emp.isSalaryProcessed)
+    .map((emp) => emp.employeeId);
+
+  const allSelected =
+    selectableIds.length > 0 &&
+    selectableIds.every((id) => selectedIds.includes(id));
 
   const columns: Column<any>[] = [
     {
-      header: "",
+      header: (
+        <Checkbox
+          checked={allSelected}
+          onChange={(checked) => {
+            if (checked) {
+              setSelectedIds(selectableIds);
+            } else {
+              setSelectedIds([]);
+            }
+          }}
+        />
+      ),
       cell: (row) => {
-        const id = row.employeeId || row.payrolls?.employeeId || row.id;
+        const id = row.employeeId;
         const disabled = row.isSalaryProcessed;
 
         return (
-          <input
-            type="checkbox"
-            disabled={disabled}
+          <Checkbox
             checked={selectedIds.includes(id)}
-            onChange={() => {
+            disabled={disabled}
+            onChange={(checked) => {
               if (disabled) return;
 
               setSelectedIds((prev) =>
-                prev.includes(id)
-                  ? prev.filter((i) => i !== id)
-                  : [...prev, id],
+                checked ? [...prev, id] : prev.filter((i) => i !== id),
               );
             }}
           />
@@ -180,14 +199,49 @@ export default function BulkPayrollPage() {
       ),
     },
     {
+      header: "Tax",
+      accessor: "tax",
+      cell: (row) => (
+        <span className="font-medium  text-red-600 dark:text-red-400">
+          {Number(row.tax)}
+        </span>
+      ),
+    },
+    {
+      header: "Pf",
+      accessor: "pf",
+      cell: (row) => (
+        <span className="font-medium  text-red-600 dark:text-red-400">
+          {Number(row.pf)}
+        </span>
+      ),
+    },
+    {
       header: "Bonus",
       accessor: "bonus",
-      cell: (row) => <span className="font-medium">{row.bonus}</span>,
+      cell: (row) => (
+        <span className="font-medium  text-green-600 dark:text-green-400">
+          {row.bonus ?? "-"}
+        </span>
+      ),
     },
     {
       header: "Deductions",
       accessor: "deductions",
-      cell: (row) => <span className="font-medium">{row.deductions}</span>,
+      cell: (row) => (
+        <span className="font-medium  text-red-600 dark:text-red-400">
+          {row.deductions ?? "-"}
+        </span>
+      ),
+    },
+    {
+      header: "Net Salary",
+      accessor: "salaryNet",
+      cell: (row) => (
+        <span className="font-medium  text-green-600 dark:text-green-400">
+          {row.salaryNet.toLocaleString("en-IN")}
+        </span>
+      ),
     },
     {
       header: "Action",
@@ -195,25 +249,33 @@ export default function BulkPayrollPage() {
         const disabled = row.isSalaryProcessed;
 
         return (
-          <IconEdit
-            size={18}
-            className={`${
-              disabled
-                ? "text-gray-400 cursor-not-allowed"
-                : "cursor-pointer text-blue-600 hover:scale-110 transition"
-            }`}
-            onClick={() => {
-              if (disabled) return;
+          <div className="flex items-center gap-3">
+            <IconEdit
+              size={18}
+              className={`${
+                disabled
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "cursor-pointer text-blue-600 hover:scale-110 transition"
+              }`}
+              onClick={() => {
+                if (disabled) return;
 
-              setEditingEmployee(row);
-              setFormData({
-                bonus: row.bonus ?? "",
-                bonusDescription: row.bonusDescription ?? "",
-                deduction: row.deductions ?? "",
-                deductionReason: row.deductionReason ?? "",
-              });
-            }}
-          />
+                setEditingEmployee(row);
+                setFormData({
+                  bonus: row.bonus ?? "",
+                  bonusDescription: row.bonusDescription ?? "",
+                  deduction: row.deductions ?? "",
+                  deductionReason: row.deductionReason ?? "",
+                });
+              }}
+            />
+
+            <IconHistory
+              size={18}
+              className="cursor-pointer text-purple-600 hover:scale-110 transition"
+              onClick={() => setHistoryEmployee(row)}
+            />
+          </div>
         );
       },
     },
@@ -221,7 +283,7 @@ export default function BulkPayrollPage() {
 
   return (
     <div className="space-y-6">
-      <Card title="Payroll Summary">
+      <Card>
         <div className="flex justify-end mb-6">
           <div className="flex items-end gap-3">
             <div className="w-40">
@@ -241,9 +303,7 @@ export default function BulkPayrollPage() {
             </div>
 
             <Button
-              size="md"
-              variant="primary"
-              className="bg-black dark:bg-blue-500"
+              className="bg-black dark:bg-blue-500 h-11"
               onClick={handleSummaryProcess}
             >
               {isFetching ? "Processing..." : "Process Payroll"}
@@ -268,7 +328,6 @@ export default function BulkPayrollPage() {
       </Card>
 
       <Card
-        title="Bulk Payroll Process"
         action={
           <div className="flex items-end gap-3">
             <div className="w-40">
@@ -290,9 +349,8 @@ export default function BulkPayrollPage() {
             </div>
 
             <Button
-              className="bg-black"
+              className="bg-black h-11"
               disabled={!selectedMonth || !selectedYear || isLoadingEmployees}
-              onClick={() => loadEmployees()}
             >
               {isLoadingEmployees ? "Loading..." : "Load"}
             </Button>
@@ -416,6 +474,104 @@ export default function BulkPayrollPage() {
 
                 <Button className="bg-green-600" onClick={handleSave}>
                   Save
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+        {historyEmployee && (
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+            <div className="w-[800px] bg-white dark:bg-gray-900 rounded-xl shadow-xl flex flex-col max-h-[80vh]">
+              <div className="p-6 border-b flex justify-between items-center">
+                <h2 className="text-lg font-semibold">
+                  Payroll History - {historyEmployee.firstName}
+                  {" " + historyEmployee.lastName}
+                </h2>
+                <button
+                  className="text-gray-500"
+                  onClick={() => setHistoryEmployee(null)}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="p-6 overflow-y-auto">
+                {isHistoryLoading ? (
+                  <div className="text-center py-6">Loading...</div>
+                ) : (
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-2">Month</th>
+                        <th className="text-left py-2">Year</th>
+                        <th className="text-left py-2">Leave Deduction</th>
+                        <th className="text-left py-2">Bonus</th>
+                        <th className="text-left py-2">Deduction</th>
+                        <th className="text-left py-2">Deduction Reason</th>
+                        <th className="text-left py-2">Bonus Description</th>
+                        <th className="text-left py-2">Net Salary</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {historyData?.data?.map((item: any, index: number) => {
+                        const payroll = item.payroll;
+
+                        return (
+                          <tr key={index} className="border-b">
+                            <td className="py-2">{payroll?.month}</td>
+                            <td>{payroll?.year}</td>
+
+                            <td className="text-red-600">
+                              ₹{" "}
+                              {Number(
+                                payroll?.leaveDeduction ?? 0,
+                              ).toLocaleString("en-IN")}
+                            </td>
+
+                            <td className="text-green-600">
+                              ₹{" "}
+                              {Number(payroll?.bonus ?? 0).toLocaleString(
+                                "en-IN",
+                              )}
+                            </td>
+
+                            <td className="text-red-600">
+                              ₹{" "}
+                              {Number(payroll?.deductions ?? 0).toLocaleString(
+                                "en-IN",
+                              )}
+                            </td>
+                            <td className="py-2">
+                              {payroll?.deductionReason
+                                ? payroll.deductionReason
+                                : "-"}
+                            </td>
+                            <td className="py-2">
+                              {payroll?.bonusDescription
+                                ? payroll.bonusDescription
+                                : "-"}
+                            </td>
+
+                            <td className="font-semibold text-blue-600">
+                              ₹{" "}
+                              {Number(payroll?.netSalary ?? 0).toLocaleString(
+                                "en-IN",
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+
+              <div className="p-4 border-t flex justify-end">
+                <Button
+                  className="bg-gray-500"
+                  onClick={() => setHistoryEmployee(null)}
+                >
+                  Close
                 </Button>
               </div>
             </div>
