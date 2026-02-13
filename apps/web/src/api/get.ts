@@ -3,7 +3,6 @@ import type { ListQueryParams, PaginatedResponse } from "./types";
 
 export const getEmployees = async (params?: ListQueryParams) => {
   const res = await api.get<PaginatedResponse<any>>("/employees", { params });
-  console.log(res.data);
   return res.data;
 };
 
@@ -40,7 +39,6 @@ export const getSalaryStructures = async (params?: ListQueryParams) => {
   const res = await api.get<PaginatedResponse<any>>("/salary", {
     params,
   });
-  console.log(res.data);
   return res.data;
 };
 
@@ -55,7 +53,6 @@ export type GetPayrollParams = ListQueryParams & {
 
 export const getPayrolls = async (params?: GetPayrollParams) => {
   const res = await api.get<PaginatedResponse<any>>("/payrolls", { params });
-  console.log(res.data);
   return res.data;
 };
 export const getPayrollPreview = async (params?: {
@@ -98,7 +95,6 @@ export const getLeaves = async (params?: ListQueryParams) => {
   const res = await api.get<PaginatedResponse<any>>("/leave-requests", {
     params,
   });
-  console.log(res.data);
   return res.data;
 };
 
@@ -108,12 +104,10 @@ export const getLeaveById = async (id: string) => {
 };
 export const getManualLeaveById = async (id: string) => {
   const res = await api.get(`/leave-requests/manual/${id}`);
-  console.log(res.data);
   return res.data?.data ?? res.data;
 };
 export const getExpenses = async (params: ListQueryParams) => {
   const res = await api.get<PaginatedResponse<any>>("/expenses", { params });
-  console.log(res.data);
   return res.data;
 };
 export const getExpenseById = async (id: string) => {

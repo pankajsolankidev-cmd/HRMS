@@ -1,5 +1,10 @@
 import { IconEdit } from "@tabler/icons-react";
+import { useMutation } from "@tanstack/react-query";
+import type { AxiosError } from "axios";
 import { useState } from "react";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router";
+import { processBulkPayroll } from "../../api/post";
 import DataTable, {
   type Column,
 } from "../../components/tables/BasicTables/DataTable";
@@ -7,16 +12,18 @@ import Button from "../../components/ui/button/Button";
 
 type Props = {
   employees: any[];
-  onClear: () => void;
-
   onUpdate: (data: any[]) => void;
+  month: string;
+  year: number;
 };
 
 export default function BulkPayrollSelected({
   employees,
-  onClear,
   onUpdate,
+  month,
+  year,
 }: Props) {
+  const navigate = useNavigate();
   const [editingEmployee, setEditingEmployee] = useState<any | null>(null);
 
   const [formData, setFormData] = useState({
@@ -25,11 +32,31 @@ export default function BulkPayrollSelected({
     deduction: "",
     deductionReason: "",
   });
+  const { mutate: submitBulk, isPending } = useMutation({
+    mutationFn: processBulkPayroll,
+    onSuccess: (res) => {
+      toast.success(res.message ?? " successfully");
+      navigate("/payrolls");
+    },
+    onError: (
+      error: AxiosError<{ message?: string; employees?: string[] }>,
+    ) => {
+      const message = error?.response?.data?.message;
+      const employees = error?.response?.data?.employees;
+
+      if (employees && employees.length > 0) {
+        toast.error(`${message}\n Name: ${employees.join(", ")}`);
+      } else {
+        toast.error(message ?? "An unexpected error occurred");
+      }
+    },
+  });
+
   const handleSave = () => {
     if (!editingEmployee) return;
 
     const updated = employees.map((emp) =>
-      emp.id === editingEmployee.id
+      emp.employeeId === editingEmployee.employeeId
         ? {
             ...emp,
             bonus: Number(formData.bonus),
@@ -37,7 +64,7 @@ export default function BulkPayrollSelected({
             deductions: Number(formData.deduction),
             deductionReason: formData.deductionReason,
             netSalary:
-              Number(emp.baseSalary ?? 0) +
+              Number(emp.baseSalary ?? emp.salaryNet ?? 0) +
               Number(formData.bonus) -
               Number(formData.deduction),
           }
@@ -45,9 +72,9 @@ export default function BulkPayrollSelected({
     );
 
     onUpdate(updated);
-
     setEditingEmployee(null);
   };
+
   const columns: Column<any>[] = [
     {
       header: "Employee",
@@ -62,7 +89,10 @@ export default function BulkPayrollSelected({
       header: "Base Salary",
       accessor: "baseSalary",
       cell: (row) => (
-        <span>₹ {Number(row.baseSalary ?? 0).toLocaleString("en-IN")}</span>
+        <span>
+          ₹{" "}
+          {Number(row.baseSalary ?? row.salaryNet ?? 0).toLocaleString("en-IN")}
+        </span>
       ),
     },
     {
@@ -86,7 +116,8 @@ export default function BulkPayrollSelected({
       accessor: "netSalary",
       cell: (row) => (
         <span className="text-green-600 font-semibold">
-          ₹ {Number(row.netSalary ?? 0).toLocaleString("en-IN")}
+          ₹{" "}
+          {Number(row.netSalary ?? row.salaryNet ?? 0).toLocaleString("en-IN")}
         </span>
       ),
     },
@@ -126,6 +157,7 @@ export default function BulkPayrollSelected({
         onPageChange={() => {}}
         onLimitChange={() => {}}
       />
+
       {editingEmployee && (
         <div className="fixed inset-0 bg-black/30 z-50 flex justify-end">
           <div className="w-[400px] bg-white dark:bg-gray-900 h-full shadow-xl p-6 space-y-4">
@@ -202,21 +234,36 @@ export default function BulkPayrollSelected({
           </div>
         </div>
       )}
+
       <div className="flex justify-end gap-3">
-        <Button className="bg-gray-500" onClick={onClear}>
+        <Button className="bg-gray-500" onClick={() => navigate("/payrolls")}>
           Cancel
         </Button>
 
         <Button
           className="bg-green-600"
-          disabled={employees.some(
-            (emp) => emp.bonus === undefined || emp.deductions === undefined,
-          )}
+          disabled={isPending}
           onClick={() => {
-            console.log("Final API Payload", employees);
+            const adjustments = employees.map((emp) => ({
+              employeeId:
+                emp.employeeId || emp.payrolls?.employeeId || emp.employees?.id,
+
+              bonus: Number(emp.bonus ?? 0),
+              bonusDescription: emp.bonusDescription ?? "",
+              deductions: Number(emp.deductions ?? 0),
+              deductionReason: emp.deductionReason ?? "",
+            }));
+
+            const payload = {
+              month,
+              year,
+              adjustments,
+            };
+
+            submitBulk(payload);
           }}
         >
-          Confirm & Process
+          {isPending ? "Processing..." : "Confirm & Process"}
         </Button>
       </div>
     </div>

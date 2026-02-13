@@ -21,7 +21,10 @@ const payrollSchema = z.object({
   employeeId: z.string().min(1, "Employee is required"),
   month: z.string().min(1, "Month is required"),
   year: z.coerce.number().min(2000, "Invalid year"),
-  totalDeductions: z.number().min(0, "Deductions cannot be negative"),
+  deductions: z.number().min(0, "Deductions cannot be negative"),
+  bonus: z.number().min(0, "Deductions cannot be negative"),
+  deductionReason: z.string().optional(),
+  bonusDescription: z.string().optional(),
 });
 
 type PayrollFormData = z.infer<typeof payrollSchema>;
@@ -57,6 +60,7 @@ export default function AddEditPayrollPage() {
     handleSubmit,
     reset,
     control,
+    register,
     setValue,
     watch,
     formState: { errors },
@@ -66,16 +70,19 @@ export default function AddEditPayrollPage() {
       employeeId: "",
       month: currentMonthName,
       year: new Date().getFullYear(),
-      totalDeductions: 0,
+      deductions: 0,
+      bonus: 0,
+      bonusDescription: "",
+      deductionReason: "",
     },
   });
 
-  const { data: employeesData } = useQuery({
+  const { data: salaryData } = useQuery({
     queryKey: ["employees", "all"],
     queryFn: () => getSalaryStructures(),
   });
 
-  const employeeList = employeesData?.data ?? [];
+  const salaryList = salaryData?.data ?? [];
 
   const { data: payrollData, isLoading } = useQuery({
     queryKey: ["payroll", id],
@@ -91,7 +98,10 @@ export default function AddEditPayrollPage() {
         year: payrollData.year
           ? Number(payrollData.year)
           : new Date().getFullYear(),
-        totalDeductions: Number(payrollData.totalDeductions) || 0,
+        deductions: Number(payrollData.deductions) || 0,
+        bonus: Number(payrollData.bonus) || 0,
+        deductionReason: payrollData.deductionReason ?? "",
+        bonusDescription: payrollData.bonusDescription ?? "",
       });
     }
   }, [payrollData, reset]);
@@ -143,8 +153,8 @@ export default function AddEditPayrollPage() {
                 <Select
                   required
                   label="Employee"
-                  options={employeeList.map((emp: any) => ({
-                    label: `${emp.firstName} ${emp.lastName}`,
+                  options={salaryList.map((emp: any) => ({
+                    label: `${emp.id} ${emp.lastName}`,
                     value: emp.id,
                   }))}
                   value={field.value}
@@ -172,21 +182,6 @@ export default function AddEditPayrollPage() {
             />
 
             <Input
-              label="Total Deductions (₹)"
-              type="number"
-              value={watch("totalDeductions") || ""}
-              onChange={(e) => {
-                const val = e.target.value;
-                setValue("totalDeductions", val === "" ? 0 : Number(val), {
-                  shouldValidate: true,
-                });
-              }}
-              placeholder="0"
-              error={!!errors.totalDeductions}
-              hint={errors.totalDeductions?.message}
-            />
-
-            <Input
               required
               label="Year"
               type="number"
@@ -200,6 +195,46 @@ export default function AddEditPayrollPage() {
               placeholder={new Date().getFullYear().toString()}
               error={!!errors.year}
               hint={errors.year?.message}
+            />
+            <Input
+              label="Deductions (₹)"
+              type="number"
+              value={watch("deductions") || ""}
+              onChange={(e) => {
+                const val = e.target.value;
+                setValue("deductions", val === "" ? 0 : Number(val), {
+                  shouldValidate: true,
+                });
+              }}
+              placeholder="0"
+              error={!!errors.deductions}
+              hint={errors.deductions?.message}
+            />
+            <Input
+              label="Bonus (₹)"
+              type="number"
+              value={watch("bonus") || ""}
+              onChange={(e) => {
+                const val = e.target.value;
+                setValue("bonus", val === "" ? 0 : Number(val), {
+                  shouldValidate: true,
+                });
+              }}
+              placeholder="0"
+              error={!!errors.bonus}
+              hint={errors.bonus?.message}
+            />
+            <Input
+              label="Deduction Reason"
+              placeholder="Enter deductionReason"
+              {...register("deductionReason")}
+              error={!!errors.deductionReason}
+            />
+            <Input
+              label="Bonus Description"
+              placeholder="Enter bonusDescription"
+              {...register("bonusDescription")}
+              error={!!errors.bonusDescription}
             />
           </div>
 

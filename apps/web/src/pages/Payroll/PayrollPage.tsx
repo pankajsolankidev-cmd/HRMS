@@ -22,7 +22,7 @@ export type Payroll = {
   employeeName: string;
   month: string;
   year: number;
-  totalDeductions: number;
+  deductions: number;
   netSalary: number;
   bonus: number;
   baseSalary?: number;
@@ -42,11 +42,7 @@ export const MONTHS = [
   { label: "November", value: "NOVEMBER" },
   { label: "December", value: "DECEMBER" },
 ];
-export default function PayrollPage({
-  setBulkEmployees,
-}: {
-  setBulkEmployees: (data: any[]) => void;
-}) {
+export default function PayrollPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -122,7 +118,7 @@ export default function PayrollPage({
     month: item.payrolls.month,
     year: item.payrolls.year,
     bonus: item.payrolls.bonus,
-    totalDeductions: Number(item.payrolls.deductions ?? 0),
+    deductions: Number(item.payrolls.deductions ?? 0),
     netSalary: Number(item.payrolls.netSalary ?? 0),
     baseSalary: Number(item.payrolls.baseSalary ?? 0),
   }));
@@ -150,13 +146,20 @@ export default function PayrollPage({
       cell: (row) => <span className="capitalize">{row.year}</span>,
       sortable: true,
     },
+
+    {
+      header: "Bonus",
+      cell: (row) => (
+        <span className="text-green-600 dark:text-green-400 font-medium">
+          ₹ {row.bonus.toLocaleString("en-IN")}
+        </span>
+      ),
+    },
     {
       header: "Deductions",
       cell: (row) => (
         <span className="text-red-600 dark:text-red-400 font-medium">
-          ₹ {row.totalDeductions.toLocaleString("en-IN")}
-          {"   "}
-          {row.bonus}
+          ₹ {row.deductions.toLocaleString("en-IN")}
         </span>
       ),
     },
@@ -298,6 +301,28 @@ export default function PayrollPage({
               </div>
             </div>
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2">
+              <div className="flex items-center gap-3 pb-3 border-b">
+                <input
+                  type="checkbox"
+                  className="w-4 h-4"
+                  checked={
+                    salaryData?.data?.length > 0 &&
+                    selectedIds.length === salaryData.data.length
+                  }
+                  onChange={() => {
+                    if (selectedIds.length === salaryData?.data?.length) {
+                      setSelectedIds([]);
+                    } else {
+                      setSelectedIds(
+                        salaryData?.data?.map((emp: any) => emp.employeeId) ??
+                          [],
+                      );
+                    }
+                  }}
+                />
+
+                <span className="text-sm font-medium">Select All</span>
+              </div>
               {!month || !year ? (
                 <p className="text-sm text-gray-500 text-center">
                   Please select month and year to preview payroll
@@ -311,22 +336,20 @@ export default function PayrollPage({
               ) : (
                 salaryData?.data?.map((emp: any) => (
                   <div
-                    key={emp.id}
+                    key={emp.employeeId}
                     className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                   >
                     <div className="flex items-center gap-3">
                       <input
                         type="checkbox"
                         className="w-4 h-4"
-                        checked={selectedIds.includes(emp.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedIds((prev) => [...prev, emp.id]);
-                          } else {
-                            setSelectedIds((prev) =>
-                              prev.filter((id) => id !== emp.id),
-                            );
-                          }
+                        checked={selectedIds.includes(emp.employeeId)}
+                        onChange={() => {
+                          setSelectedIds((prev) =>
+                            prev.includes(emp.employeeId)
+                              ? prev.filter((id) => id !== emp.employeeId)
+                              : [...prev, emp.employeeId],
+                          );
                         }}
                       />
 
@@ -348,15 +371,23 @@ export default function PayrollPage({
               </Button>
 
               <Button
+                disabled={selectedIds.length === 0}
                 onClick={() => {
                   const selectedEmployeesData =
                     salaryData?.data?.filter((emp: any) =>
-                      selectedIds.includes(emp.id),
+                      selectedIds.includes(emp.employeeId),
                     ) ?? [];
 
-                  setBulkEmployees(selectedEmployeesData);
                   setBulkOpen(false);
                   setSelectedIds([]);
+
+                  navigate("/payrolls/bulk", {
+                    state: {
+                      employees: selectedEmployeesData,
+                      month,
+                      year,
+                    },
+                  });
                 }}
                 className="bg-green-600"
               >

@@ -3,7 +3,6 @@ import api, { refreshApi } from "./axios";
 
 export const signInApi = async (data: { email: string; password: string }) => {
   const res = await api.post("/signin", data);
-  console.log(res.data);
   return res.data;
 };
 
@@ -74,19 +73,22 @@ export const addSalaryStructure = async (payload: any) => {
   return res.data;
 };
 
-export const addPayroll = async (payload: {
-  employeeId: string;
-  month: string;
-  year: number;
-  totalDeductions: number;
-}) => {
+export const addPayroll = async (payload: any) => {
   const res = await api.post("/payrolls/process", {
     employeeId: payload.employeeId,
     month: payload.month,
     year: payload.year,
-    totalDeductions: payload.totalDeductions,
+    deductions: payload.deductions,
+    bonus: payload.bonus,
+    deductionReason: payload.deductionReason,
+    bonusDescription: payload.bonusDescription,
   });
   return res.data;
+};
+
+export const processBulkPayroll = async (payload: any) => {
+  const { data } = await api.post("/payrolls/bulk/process", payload);
+  return data;
 };
 
 export const uploadFile = async (file: File) => {

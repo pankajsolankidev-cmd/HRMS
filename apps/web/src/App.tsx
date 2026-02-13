@@ -38,6 +38,7 @@ import SelfLeavePage from "./pages/Leaves/SelfLeavePage";
 import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
 import RootRedirect from "./pages/OtherPage/RootRedirect";
 import AddEditPayrollPage from "./pages/Payroll/AddEditPayrollPage";
+import BulkPayrollPage from "./pages/Payroll/BulkPayrollPage";
 import AddEditSalaryPage from "./pages/Salary/AddEditSalaryPage";
 import SalaryPage from "./pages/Salary/SalaryPage";
 import AddEditSystemPage from "./pages/System/AddEditSystemPage";
@@ -52,6 +53,7 @@ function AppRoutes() {
       dispatch(setAuth(JSON.parse(savedAuth)));
     }
   }, [dispatch]);
+
   return (
     <Routes>
       <Route path="/" element={<RootRedirect />} />
@@ -85,6 +87,7 @@ function AppRoutes() {
 
           <Route path="/payrolls" element={<Payroll />} />
           <Route path="/payrolls/:id" element={<AddEditPayrollPage />} />
+          <Route path="/payrolls/bulk" element={<BulkPayrollPage />} />
 
           <Route path="/leave-requests" element={<LeavePage />} />
           <Route path="/leave-requests/:id" element={<SelfLeavePage />} />
