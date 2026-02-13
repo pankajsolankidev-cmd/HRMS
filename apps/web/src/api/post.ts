@@ -73,19 +73,6 @@ export const addSalaryStructure = async (payload: any) => {
   return res.data;
 };
 
-export const addPayroll = async (payload: any) => {
-  const res = await api.post("/payrolls/process", {
-    employeeId: payload.employeeId,
-    month: payload.month,
-    year: payload.year,
-    deductions: payload.deductions,
-    bonus: payload.bonus,
-    deductionReason: payload.deductionReason,
-    bonusDescription: payload.bonusDescription,
-  });
-  return res.data;
-};
-
 export const processBulkPayroll = async (payload: any) => {
   const { data } = await api.post("/payrolls/bulk/process", payload);
   return data;
