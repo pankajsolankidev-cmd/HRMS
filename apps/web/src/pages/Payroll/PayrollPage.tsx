@@ -69,7 +69,7 @@ export default function PayrollPage() {
 
   const { data: employeesData } = useQuery({
     queryKey: ["employees", "all"],
-    queryFn: () => getEmployees({ page: 1, limit: 100 }),
+    queryFn: () => getEmployees(),
   });
 
   const employeeMap = useMemo(

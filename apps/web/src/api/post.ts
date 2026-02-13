@@ -3,7 +3,6 @@ import api, { refreshApi } from "./axios";
 
 export const signInApi = async (data: { email: string; password: string }) => {
   const res = await api.post("/signin", data);
-  console.log(res.data);
   return res.data;
 };
 
