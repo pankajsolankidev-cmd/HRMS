@@ -1,117 +1,69 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
-
 import { db } from "../../db";
-import { employees, payrolls, salary } from "../../db/schema";
-
-import type {
-  ProcessPayrollDto,
-  UpdatePayrollDto,
-} from "@shared/types/src/payroll/payroll.dto";
-
+import { employees, payrolls, roles, salary, userRoles } from "../../db/schema";
 import type { PayrollFilterDto } from "@shared/types/src/payroll/payroll-filter.dto";
 import { PayrollMonth, PayrollMonthType } from "../../db/schema/payroll.enums";
 import { getPagination } from "../../utils/pagination";
 import { sendMessage } from "../../utils/api-response";
 import { calculateLeaveDeductionForPayroll } from "./utils/leave-deduction.utils";
-import { isSalaryProcessedForCurrentMonth } from "./utils/payroll-status.utils";
-
-export async function processPayrollHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
-  const payload = request.body as ProcessPayrollDto;
-  const processedBy = request.user!.id;
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonthIndex = now.getMonth();
-  const payloadMonthIndex = PayrollMonth.indexOf(payload.month);
-
-  if (
-    payload.year > currentYear ||
-    (payload.year === currentYear && payloadMonthIndex > currentMonthIndex)
-  ) {
-    return reply
-      .code(400)
-      .send({ message: "Cannot process payroll for a future month" });
-  }
-
-  const [salaryStructure] = await db
-    .select()
-    .from(salary)
-    .where(eq(salary.employeeId, payload.employeeId));
-
-  if (!salaryStructure) {
-    return reply
-      .code(404)
-      .send({ message: "Salary structure not found for employee" });
-  }
-
-  const [existingPayroll] = await db
-    .select()
-    .from(payrolls)
-    .where(
-      and(
-        eq(payrolls.employeeId, payload.employeeId),
-        eq(payrolls.month, payload.month),
-        eq(payrolls.year, payload.year),
-      ),
-    );
-
-  if (existingPayroll) {
-    return reply
-      .code(409)
-      .send({ message: "Payroll already processed for this month" });
-  }
-
-  const salaryNet = Number(salaryStructure.netSalary);
-
-  const { leaveDeduction } = await calculateLeaveDeductionForPayroll({
-    employeeId: payload.employeeId,
-    month: payloadMonthIndex + 1,
-    year: payload.year,
-    salaryNet,
-  });
-
-  const deductions = Number(payload.deductions ?? 0);
-  const bonus = Number(payload.bonus ?? 0);
-
-  if (deductions < 0 || bonus < 0) {
-    return reply
-      .code(400)
-      .send({ message: "Deductions or bonus cannot be negative" });
-  }
-
-  const finalNetSalary = salaryNet - leaveDeduction - deductions + bonus;
-
-  if (finalNetSalary < 0) {
-    return reply
-      .code(400)
-      .send({ message: "Final net salary cannot be negative" });
-  }
-
-  await db.insert(payrolls).values({
-    employeeId: payload.employeeId,
-    month: payload.month,
-    year: payload.year,
-    processedBy,
-    deductions: deductions.toString(),
-    deductionReason: payload.deductionReason ?? null,
-    leaveDeduction: leaveDeduction.toString(),
-    bonus: bonus.toString(),
-    bonusDescription: payload.bonusDescription ?? null,
-    netSalary: finalNetSalary.toString(),
-    file: payload.file,
-  });
-
-  return sendMessage(reply, "Payroll processed successfully", 201);
-}
+import { hasAnyRole, hasRole } from "../../utils/role.utils";
 
 export async function getPayrollsHandler(request: FastifyRequest) {
+  const userId = request.user!.id;
+
   const filters = request.query as PayrollFilterDto;
 
   const conditions = [];
 
+  // 1️⃣ Fetch user roles from DB (same as leave handler)
+  const userRolesRows = await db
+    .select({ roleName: roles.name })
+    .from(userRoles)
+    .leftJoin(roles, eq(userRoles.roleId, roles.id))
+    .where(eq(userRoles.userId, userId));
+
+  const roleNames = userRolesRows
+    .map((r) => r.roleName)
+    .filter((role): role is string => role !== null);
+
+  const isHRorAdmin = hasAnyRole(roleNames, ["HR", "ADMIN"]);
+
+  // 2️⃣ Employee cannot filter other employees
+  if (!isHRorAdmin && filters?.employeeId) {
+    throw new Error("Employee cannot filter other employees payroll");
+  }
+
+  // 3️⃣ Resolve employeeId
+  let resolvedEmployeeId: string | undefined;
+
+  const [employee] = await db
+    .select({ id: employees.id, userId: employees.userId })
+    .from(employees)
+    .where(eq(employees.userId, userId));
+
+  if (!isHRorAdmin) {
+    // EMPLOYEE: only own payroll
+    if (!employee) {
+      return {
+        data: [],
+        meta: { page: 1, limit: null, total: 0 },
+      };
+    }
+
+    resolvedEmployeeId = employee.id;
+  } else {
+    // HR / ADMIN: optional employee filter
+    if (filters?.employeeId) {
+      resolvedEmployeeId = filters.employeeId;
+    }
+  }
+
+  if (resolvedEmployeeId) {
+    conditions.push(eq(payrolls.employeeId, resolvedEmployeeId));
+  }
+
+  // 4️⃣ Other filters
   if (filters?.month !== undefined) {
     conditions.push(eq(payrolls.month, filters.month));
   }
@@ -120,14 +72,11 @@ export async function getPayrollsHandler(request: FastifyRequest) {
     conditions.push(eq(payrolls.year, filters.year));
   }
 
-  if (filters?.employeeId !== undefined) {
-    conditions.push(eq(payrolls.employeeId, filters.employeeId));
-  }
-
   const { page, limit, offset } = getPagination(filters ?? {});
 
   const whereClause = conditions.length ? and(...conditions) : undefined;
 
+  // 5️⃣ Sorting
   const orderByClauses = [];
 
   if (!filters?.sortBy) {
@@ -140,8 +89,23 @@ export async function getPayrollsHandler(request: FastifyRequest) {
     );
   }
 
+  // 6️⃣ Count
+  const [countResult] = await db
+    .select({ count: sql<number>`cast(count(*) as integer)` })
+    .from(payrolls)
+    .where(whereClause);
+
+  // 7️⃣ Data query
   let queryBuilder = db
-    .select()
+    .select({
+      payroll: payrolls,
+      employee: {
+        id: employees.id,
+        userId: employees.userId,
+        firstName: employees.firstName,
+        lastName: employees.lastName,
+      },
+    })
     .from(payrolls)
     .innerJoin(employees, eq(employees.id, payrolls.employeeId))
     .where(whereClause)
@@ -154,136 +118,17 @@ export async function getPayrollsHandler(request: FastifyRequest) {
 
   const data = await queryBuilder;
 
-  const [{ count }] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(payrolls)
-    .where(whereClause);
-
   return {
     data,
     meta: {
       page,
       limit: limit ?? null,
-      total: Number(count),
+      total: countResult?.count ?? 0,
     },
   };
 }
 
-export async function getPayrollByIdHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
-  const { id } = request.params as { id: string };
 
-  const [payroll] = await db
-    .select({
-      payroll: payrolls,
-      employee: {
-        firstName: employees.firstName,
-        lastName: employees.lastName,
-      },
-    })
-    .from(payrolls)
-    .innerJoin(employees, eq(employees.id, payrolls.employeeId))
-    .where(eq(payrolls.id, id));
-
-  if (!payroll) {
-    return reply.code(404).send({ message: "Payroll not found" });
-  }
-
-  return payroll;
-}
-
-export async function updatePayrollHandler(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
-  const { id } = request.params as { id: string };
-  const payload = request.body as UpdatePayrollDto;
-
-  const [existing] = await db
-    .select()
-    .from(payrolls)
-    .where(eq(payrolls.id, id));
-
-  if (!existing) {
-    return reply.code(404).send({ message: "Payroll not found" });
-  }
-
-  const employeeId = payload.employeeId ?? existing.employeeId;
-
-  const [salaryStructure] = await db
-    .select()
-    .from(salary)
-    .where(eq(salary.employeeId, employeeId));
-
-  if (!salaryStructure) {
-    return reply
-      .code(404)
-      .send({ message: "Salary structure not found for employee" });
-  }
-
-  const salaryNet = Number(salaryStructure.netSalary);
-
-  const payloadMonth = payload.month ?? existing.month;
-  const payloadYear = payload.year ?? existing.year;
-  const payloadMonthIndex = PayrollMonth.indexOf(payloadMonth);
-
-  const { leaveDeduction } = await calculateLeaveDeductionForPayroll({
-    employeeId,
-    month: payloadMonthIndex + 1,
-    year: payloadYear,
-    salaryNet,
-  });
-
-  const deductions =
-    payload.deductions !== undefined
-      ? Number(payload.deductions)
-      : Number(existing.deductions);
-
-  const bonus =
-    payload.bonus !== undefined
-      ? Number(payload.bonus)
-      : Number(existing.bonus);
-
-  if (deductions < 0 || bonus < 0) {
-    return reply
-      .code(400)
-      .send({ message: "Deductions or bonus cannot be negative" });
-  }
-
-  const finalNetSalary = salaryNet - leaveDeduction - deductions + bonus;
-
-  if (finalNetSalary < 0) {
-    return reply
-      .code(400)
-      .send({ message: "Final net salary cannot be negative" });
-  }
-
-  await db
-    .update(payrolls)
-    .set({
-      employeeId,
-      month: payloadMonth,
-      year: payloadYear,
-      deductions: deductions.toString(),
-      deductionReason:
-        payload.deductionReason !== undefined
-          ? payload.deductionReason
-          : existing.deductionReason,
-      bonus: bonus.toString(),
-      bonusDescription:
-        payload.bonusDescription !== undefined
-          ? payload.bonusDescription
-          : existing.bonusDescription,
-      leaveDeduction: leaveDeduction.toString(),
-      netSalary: finalNetSalary.toString(),
-      file: payload.file ?? existing.file,
-    })
-    .where(eq(payrolls.id, id));
-
-  return sendMessage(reply, "Payroll updated successfully");
-}
 
 export async function deletePayrollHandler(
   request: FastifyRequest,
@@ -305,13 +150,9 @@ export async function deletePayrollHandler(
   return sendMessage(reply, "Payroll deleted successfully");
 }
 
-export async function getCurrentPayrollStatusHandler(request: FastifyRequest) {
-  const { employeeId } = request.query as { employeeId: string };
-
-  return isSalaryProcessedForCurrentMonth(employeeId);
-}
-
-export async function getPayrollSummaryHandler(request: FastifyRequest) {
+export async function getPayrollSummaryHandler(
+  request: FastifyRequest,
+) {
   const { month, year } = request.query as {
     month: PayrollMonthType;
     year: number;
@@ -319,27 +160,68 @@ export async function getPayrollSummaryHandler(request: FastifyRequest) {
 
   const [result] = await db
     .select({
-      employeesProcessed: sql<number>`COUNT(${payrolls.id})`,
-      avgSalary: sql<number>`AVG(${payrolls.netSalary})`,
-      netPayroll: sql<number>`SUM(${payrolls.netSalary})`,
+      employeesProcessed: sql<number>`
+        COUNT(DISTINCT ${payrolls.employeeId})
+      `,
+      totalNetPayroll: sql<number>`
+        COALESCE(SUM(${payrolls.netSalary}::numeric), 0)
+      `,
     })
     .from(payrolls)
-    .where(and(eq(payrolls.month, month), eq(payrolls.year, year)));
+    .where(
+      and(
+        eq(payrolls.month, month),
+        eq(payrolls.year, year),
+      ),
+    );
+
+  const employeesProcessed = Number(
+    result?.employeesProcessed ?? 0,
+  );
+  const netPayroll = Number(
+    result?.totalNetPayroll ?? 0,
+  );
+
+  const avgSalary =
+    employeesProcessed > 0
+      ? Math.round(netPayroll / employeesProcessed)
+      : 0;
 
   return {
-    employeesProcessed: Number(result?.employeesProcessed ?? 0),
-    avgSalary: Math.round(Number(result?.avgSalary ?? 0)),
-    netPayroll: Number(result?.netPayroll ?? 0),
+    employeesProcessed,
+    avgSalary,
+    netPayroll,
   };
 }
 
-export async function previewBulkPayrollHandler(request: FastifyRequest) {
+export async function employeeBulkPayrollHandler(request: FastifyRequest) {
   const { month, year } = request.query as {
-    month: PayrollMonthType;
-    year: number;
+    month?: PayrollMonthType;
+    year?: number;
   };
 
-  const monthIndex = PayrollMonth.indexOf(month) + 1;
+  const now = new Date();
+
+  let resolvedMonth: PayrollMonthType;
+  let resolvedYear: number;
+
+  if (!month || !year) {
+    const prevMonthDate = new Date(
+      now.getFullYear(),
+      now.getMonth() - 1,
+      1,
+    );
+
+    resolvedYear = prevMonthDate.getFullYear();
+    resolvedMonth = PayrollMonth[
+      prevMonthDate.getMonth()
+    ] as PayrollMonthType;
+  } else {
+    resolvedMonth = month;
+    resolvedYear = year;
+  }
+
+  const monthIndex = PayrollMonth.indexOf(resolvedMonth) + 1;
 
   const employeesWithSalary = await db
     .select({
@@ -358,7 +240,12 @@ export async function previewBulkPayrollHandler(request: FastifyRequest) {
       employeeId: payrolls.employeeId,
     })
     .from(payrolls)
-    .where(and(eq(payrolls.month, month), eq(payrolls.year, year)));
+    .where(
+      and(
+        eq(payrolls.month, resolvedMonth),
+        eq(payrolls.year, resolvedYear),
+      ),
+    );
 
   const processedEmployeeSet = new Set(
     processedPayrolls.map((p) => p.employeeId),
@@ -372,7 +259,7 @@ export async function previewBulkPayrollHandler(request: FastifyRequest) {
     const { leaveDeduction } = await calculateLeaveDeductionForPayroll({
       employeeId: row.employeeId,
       month: monthIndex,
-      year,
+      year: resolvedYear,
       salaryNet,
     });
 
@@ -390,95 +277,197 @@ export async function previewBulkPayrollHandler(request: FastifyRequest) {
   }
 
   return {
-    month,
-    year,
+    month: resolvedMonth,
+    year: resolvedYear,
     data: preview,
   };
 }
+
 
 export async function processBulkPayrollHandler(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
   const { month, year, adjustments } = request.body as {
-    month: PayrollMonthType;
-    year: number;
+    month?: PayrollMonthType;
+    year?: number;
     adjustments: {
       employeeId: string;
-      deductions?: string;
-      bonus?: string;
+      deductions?: number;
+      deductionReason?: string;
+      bonus?: number;
+      bonusDescription?: string;
     }[];
   };
 
-  const processedBy = request.user!.id;
-  const monthIndex = PayrollMonth.indexOf(month) + 1;
+  const now = new Date();
 
-  const adjustmentMap = new Map<
-    string,
-    { deductions: number; bonus: number }
-  >();
+  let resolvedMonth: PayrollMonthType;
+  let resolvedYear: number;
+
+  if (!month || !year) {
+    const prevMonthDate = new Date(
+      now.getFullYear(),
+      now.getMonth() - 1,
+      1,
+    );
+
+    resolvedYear = prevMonthDate.getFullYear();
+    resolvedMonth = PayrollMonth[
+      prevMonthDate.getMonth()
+    ] as PayrollMonthType;
+  } else {
+    resolvedMonth = month;
+    resolvedYear = year;
+  }
+
+  const currentYear = now.getFullYear();
+  const currentMonthIndex = now.getMonth() + 1;
+  const requestedMonthIndex =
+    PayrollMonth.indexOf(resolvedMonth) + 1;
+
+  if (
+    resolvedYear > currentYear ||
+    (resolvedYear === currentYear &&
+      requestedMonthIndex > currentMonthIndex)
+  ) {
+    return reply.code(400).send({
+      message: "Future month payroll cannot be processed",
+    });
+  }
+
+  if (!adjustments.length) {
+    return reply.code(400).send({
+      message: "No employees selected for payroll processing",
+    });
+  }
+
+  const processedBy = request.user!.id;
+  const monthIndex = requestedMonthIndex;
+  const employeeIds = adjustments.map((a) => a.employeeId);
+
+  const alreadyProcessed = await db
+    .select({
+      employeeId: payrolls.employeeId,
+      firstName: employees.firstName,
+      lastName: employees.lastName,
+    })
+    .from(payrolls)
+    .innerJoin(employees, eq(employees.id, payrolls.employeeId))
+    .where(
+      and(
+        eq(payrolls.month, resolvedMonth),
+        eq(payrolls.year, resolvedYear),
+        sql`${payrolls.employeeId} IN ${employeeIds}`,
+      ),
+    );
+
+  if (alreadyProcessed.length > 0) {
+    return reply.code(409).send({
+      message: `Payroll already processed for ${resolvedMonth} ${resolvedYear}`,
+      employees: alreadyProcessed.map(
+        (e) => `${e.firstName} ${e.lastName}`,
+      ),
+    });
+  }
+
+  const salaryRows = await db
+    .select({
+      employeeId: salary.employeeId,
+      netSalary: salary.netSalary,
+      firstName: employees.firstName,
+      lastName: employees.lastName,
+    })
+    .from(salary)
+    .innerJoin(employees, eq(employees.id, salary.employeeId))
+    .where(sql`${salary.employeeId} IN ${employeeIds}`);
+
+  const salaryMap = new Map(
+    salaryRows.map((r) => [r.employeeId, r]),
+  );
+
+  const invalidEmployees: string[] = [];
 
   for (const adj of adjustments) {
-    adjustmentMap.set(adj.employeeId, {
-      deductions: Number(adj.deductions ?? 0),
-      bonus: Number(adj.bonus ?? 0),
+    const row = salaryMap.get(adj.employeeId);
+    if (!row) continue;
+
+    const salaryNet = Number(row.netSalary);
+    const deductions = Number(adj.deductions ?? 0);
+    const bonus = Number(adj.bonus ?? 0);
+
+    if (deductions < 0 || bonus < 0) {
+      invalidEmployees.push(
+        `${row.firstName} ${row.lastName}`,
+      );
+      continue;
+    }
+
+    const { leaveDeduction } =
+      await calculateLeaveDeductionForPayroll({
+        employeeId: adj.employeeId,
+        month: monthIndex,
+        year: resolvedYear,
+        salaryNet,
+      });
+
+    const finalNetSalary =
+      salaryNet - leaveDeduction - deductions + bonus;
+
+    if (finalNetSalary < 0) {
+      invalidEmployees.push(
+        `${row.firstName} ${row.lastName}`,
+      );
+    }
+  }
+
+  if (invalidEmployees.length > 0) {
+    return reply.code(422).send({
+      message: "Invalid payroll data for selected employees",
+      employees: invalidEmployees,
     });
   }
 
   await db.transaction(async (tx) => {
-    const salaryRows = await tx.select().from(salary);
-
-    for (const row of salaryRows) {
-      const employeeId = row.employeeId;
-
-      const [existingPayroll] = await tx
-        .select()
-        .from(payrolls)
-        .where(
-          and(
-            eq(payrolls.employeeId, employeeId),
-            eq(payrolls.month, month),
-            eq(payrolls.year, year),
-          ),
-        );
-
-      if (existingPayroll) continue;
+    for (const adj of adjustments) {
+      const row = salaryMap.get(adj.employeeId);
+      if (!row) continue;
 
       const salaryNet = Number(row.netSalary);
 
-      const { leaveDeduction } = await calculateLeaveDeductionForPayroll({
-        employeeId,
-        month: monthIndex,
-        year,
-        salaryNet,
-      });
+      const { leaveDeduction } =
+        await calculateLeaveDeductionForPayroll({
+          employeeId: adj.employeeId,
+          month: monthIndex,
+          year: resolvedYear,
+          salaryNet,
+        });
 
-      const adjustment = adjustmentMap.get(employeeId) ?? {
-        deductions: 0,
-        bonus: 0,
-      };
-
-      if (adjustment.deductions < 0 || adjustment.bonus < 0) continue;
+      const deductions = Number(adj.deductions ?? 0);
+      const bonus = Number(adj.bonus ?? 0);
 
       const finalNetSalary =
-        salaryNet - leaveDeduction - adjustment.deductions + adjustment.bonus;
-
-      if (finalNetSalary < 0) continue;
+        salaryNet - leaveDeduction - deductions + bonus;
 
       await tx.insert(payrolls).values({
-        employeeId,
-        month,
-        year,
+        employeeId: adj.employeeId,
+        month: resolvedMonth,
+        year: resolvedYear,
         processedBy,
-        deductions: adjustment.deductions.toString(),
-        deductionReason: null,
-        bonus: adjustment.bonus.toString(),
-        bonusDescription: null,
+        deductions: deductions.toString(),
+        deductionReason: adj.deductionReason ?? null,
+        bonus: bonus.toString(),
+        bonusDescription: adj.bonusDescription ?? null,
         leaveDeduction: leaveDeduction.toString(),
         netSalary: finalNetSalary.toString(),
       });
     }
   });
 
-  return sendMessage(reply, "Bulk payroll processed  successfully", 201);
+  return sendMessage(
+    reply,
+    "Bulk payroll processed successfully",
+    201,
+  );
 }
+

@@ -1,69 +1,36 @@
 import type { FastifyInstance } from "fastify";
 
 import {
-  processPayrollHandler,
   getPayrollsHandler,
-  getPayrollByIdHandler,
-  updatePayrollHandler,
   deletePayrollHandler,
   getPayrollSummaryHandler,
   processBulkPayrollHandler,
-  previewBulkPayrollHandler,
-  getCurrentPayrollStatusHandler,
+  employeeBulkPayrollHandler,
 } from "./payroll.service";
 
 import {
-  processPayrollSchema,
   getPayrollsSchema,
-  getPayrollByIdSchema,
   payrollSummarySchema,
-  updatePayrollSchema,
   deletePayrollSchema,
-  previewBulkPayrollSchema,
+  employeeBulkPayrollSchema,
   processBulkPayrollSchema,
-  payrollStatusCurrentSchema,
 } from "./payroll.schema";
 
 import { verifyAccessToken } from "../../middlewares/auth.middlewares";
 import { authorize } from "../../middlewares/authorize.middleware";
 import { PERMISSIONS } from "../../db/schema/permissions.enums";
+import { authenticate } from "../../plugins/auth.plugin";
 
 export async function payrollRoutes(app: FastifyInstance) {
-  app.post(
-    "/payrolls/process",
-    {
-      schema: processPayrollSchema,
-      preHandler: [verifyAccessToken, authorize(PERMISSIONS.PAYROLL_PROCESS)],
-    },
-    processPayrollHandler,
-  );
-
   app.get(
     "/payrolls",
     {
       schema: getPayrollsSchema,
-      preHandler: [verifyAccessToken, authorize(PERMISSIONS.PAYROLL_VIEW)],
+      preHandler: [authenticate],
     },
     getPayrollsHandler,
   );
 
-  app.get(
-    "/payrolls/:id",
-    {
-      schema: getPayrollByIdSchema,
-      preHandler: [verifyAccessToken, authorize(PERMISSIONS.PAYROLL_VIEW)],
-    },
-    getPayrollByIdHandler,
-  );
-
-  app.patch(
-    "/payrolls/:id",
-    {
-      schema: updatePayrollSchema,
-      preHandler: [verifyAccessToken, authorize(PERMISSIONS.PAYROLL_UPDATE)],
-    },
-    updatePayrollHandler,
-  );
 
   app.delete(
     "/payrolls/:id",
@@ -87,12 +54,12 @@ export async function payrollRoutes(app: FastifyInstance) {
   );
 
   app.get(
-    "/payrolls/bulk/preview",
+    "/payrolls/bulk/employee",
     {
-      schema: previewBulkPayrollSchema,
+      schema: employeeBulkPayrollSchema,
       preHandler: [verifyAccessToken, authorize(PERMISSIONS.PAYROLL_PROCESS)],
     },
-    previewBulkPayrollHandler,
+    employeeBulkPayrollHandler,
   );
 
   app.post(
@@ -102,14 +69,5 @@ export async function payrollRoutes(app: FastifyInstance) {
       preHandler: [verifyAccessToken, authorize(PERMISSIONS.PAYROLL_PROCESS)],
     },
     processBulkPayrollHandler,
-  );
-
-  app.get(
-    "/payrolls/status/current",
-    {
-      schema: payrollStatusCurrentSchema,
-      preHandler: [verifyAccessToken],
-    },
-    getCurrentPayrollStatusHandler,
   );
 }

@@ -83,14 +83,6 @@ export const getPayrollsSchema = {
   },
 };
 
-export const getPayrollByIdSchema = {
-  tags: ["Payroll"],
-  params: payrollIdParams,
-  response: {
-    404: errorResponse,
-  },
-};
-
 export const payrollSummarySchema = {
   tags: ["Payroll"],
   querystring: {
@@ -106,54 +98,6 @@ export const payrollSummarySchema = {
       },
     },
     additionalProperties: false,
-  },
-};
-
-export const updatePayrollSchema = {
-  tags: ["Payroll"],
-  params: payrollIdParams,
-  body: {
-    type: "object",
-    properties: {
-      employeeId: {
-        type: "string",
-        format: "uuid",
-      },
-      month: {
-        type: "string",
-        enum: PayrollMonth,
-      },
-      year: {
-        type: "number",
-      },
-      deductions: {
-        type: "string",
-      },
-      deductionReason: {
-        type: "string",
-      },
-      bonus: {
-        type: "string",
-      },
-      bonusDescription: {
-        type: "string",
-      },
-      file: {
-        type: "string",
-      },
-    },
-    additionalProperties: false,
-  },
-  response: {
-    200: {
-      type: "object",
-      properties: {
-        message: { type: "string" },
-      },
-      required: ["message"],
-    },
-    404: errorResponse,
-    500: errorResponse,
   },
 };
 
@@ -173,11 +117,10 @@ export const deletePayrollSchema = {
   },
 };
 
-export const previewBulkPayrollSchema = {
+export const employeeBulkPayrollSchema = {
   tags: ["Payroll"],
   querystring: {
     type: "object",
-    required: ["month", "year"],
     properties: {
       month: { type: "string", enum: PayrollMonth },
       year: { type: "number" },
@@ -185,16 +128,18 @@ export const previewBulkPayrollSchema = {
     additionalProperties: false,
   },
 };
+
 export const processBulkPayrollSchema = {
   tags: ["Payroll"],
   body: {
     type: "object",
-    required: ["month", "year", "adjustments"],
+    required: ["adjustments"],
     properties: {
       month: { type: "string", enum: PayrollMonth },
       year: { type: "number" },
       adjustments: {
         type: "array",
+        minItems: 1,
         items: {
           type: "object",
           required: ["employeeId"],
@@ -214,25 +159,37 @@ export const processBulkPayrollSchema = {
   response: {
     201: {
       type: "object",
+      required: ["message"],
       properties: {
         message: { type: "string" },
       },
-      required: ["message"],
     },
-    400: errorResponse,
-    409: errorResponse,
-    500: errorResponse,
-  },
-};
 
-export const payrollStatusCurrentSchema = {
-  tags: ["Payroll"],
-  querystring: {
-    type: "object",
-    required: ["employeeId"],
-    properties: {
-      employeeId: { type: "string", format: "uuid" },
+    409: {
+      type: "object",
+      required: ["message", "employees"],
+      properties: {
+        message: { type: "string" },
+        employees: {
+          type: "array",
+          items: { type: "string" },
+        },
+      },
     },
-    additionalProperties: false,
+
+    422: {
+      type: "object",
+      required: ["message", "employees"],
+      properties: {
+        message: { type: "string" },
+        employees: {
+          type: "array",
+          items: { type: "string" },
+        },
+      },
+    },
+
+    400: errorResponse,
+    500: errorResponse,
   },
 };
