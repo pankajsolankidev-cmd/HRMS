@@ -35,7 +35,7 @@ export const getSystemById = async (id: string) => {
   return res.data;
 };
 
-export const getSalaryStructures = async (params: ListQueryParams) => {
+export const getSalaryStructures = async (params?: ListQueryParams) => {
   const res = await api.get<PaginatedResponse<any>>("/salary", {
     params,
   });
@@ -46,30 +46,21 @@ export const getSalaryStructureById = async (id: string) => {
   const res = await api.get(`/salary/${id}`);
   return res.data;
 };
-export type GetPayrollParams = ListQueryParams & {
+
+export const getPayrollPreview = async (params?: {
   month?: string;
   year?: number;
-};
-
-export const getPayrolls = async (params: GetPayrollParams) => {
-  const res = await api.get<PaginatedResponse<any>>("/payrolls", { params });
-  return res.data;
-};
-
-export const getPayrollById = async (id: string) => {
-  const res = await api.get(`/payrolls/${id}`);
-  return res.data;
-};
-
-export const getPayrollsByMonthYear = async (month: string, year: number) => {
-  const res = await api.get("/payrolls", {
-    params: {
-      month: month,
-      year: String(year),
-    },
+}) => {
+  const res = await api.get("/payrolls/bulk/employee", {
+    params,
   });
-
-  return Array.isArray(res.data) ? res.data : [];
+  return res.data;
+};
+export const getEmployeePayrollHistory = async (params?: {
+  employeeId?: string;
+}) => {
+  const res = await api.get("/payrolls", { params });
+  return res.data;
 };
 
 export const getPayrollSummary = async (month: string, year: number) => {
@@ -94,7 +85,10 @@ export const getLeaveById = async (id: string) => {
   const res = await api.get(`/leave-requests/${id}`);
   return res.data?.data ?? res.data;
 };
-
+export const getManualLeaveById = async (id: string) => {
+  const res = await api.get(`/leave-requests/manual/${id}`);
+  return res.data?.data ?? res.data;
+};
 export const getExpenses = async (params: ListQueryParams) => {
   const res = await api.get<PaginatedResponse<any>>("/expenses", { params });
   return res.data;

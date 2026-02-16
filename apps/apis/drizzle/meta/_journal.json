@@ -12,8 +12,15 @@
     {
       "idx": 1,
       "version": "7",
+      "when": 1771224203802,
+      "tag": "0001_rapid_starjammers",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
       "when": 1771235745766,
-      "tag": "0001_damp_mad_thinker",
+      "tag": "0002_damp_mad_thinker",
       "breakpoints": true
     }
   ]

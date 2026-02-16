@@ -2,15 +2,19 @@ import { CalendarIcon } from "@heroicons/react/24/outline";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.css";
 import type { Instance as FlatpickrInstance } from "flatpickr/dist/types/instance";
-import type { DateOption, Hook } from "flatpickr/dist/types/options";
+import type { DateOption } from "flatpickr/dist/types/options";
 import { useEffect, useRef } from "react";
 import Label from "./Label";
 
 type PropsType = {
   id: string;
   mode?: "single" | "multiple" | "range" | "time";
-  value?: DateOption | null;
-  onChange?: Hook | Hook[];
+  value?: DateOption | DateOption[] | null;
+  onChange?: (
+    selectedDates: Date[],
+    dateStr: string,
+    instance: FlatpickrInstance,
+  ) => void;
   label?: string;
   placeholder?: string;
   required?: boolean;
@@ -37,6 +41,14 @@ export default function DatePicker({
       static: true,
       monthSelectorType: "static",
       dateFormat: "Y-m-d",
+
+      disable: [
+        (date: Date) => {
+          const day = date.getDay();
+          return day === 0 || day === 6;
+        },
+      ],
+
       onChange,
     }) as FlatpickrInstance;
 
@@ -69,7 +81,7 @@ export default function DatePicker({
         <input
           id={id}
           placeholder={placeholder}
-          className={`h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs
+          className={`h-11 w-full rounded-lg border appearance-none px-4 py-2.5 pr-10 text-sm shadow-theme-xs
             placeholder:text-gray-400 focus:outline-hidden focus:ring-3 bg-transparent
             text-gray-800 dark:bg-gray-900 dark:text-white/90
             dark:placeholder:text-white/30

@@ -5,15 +5,7 @@ export const updateSalaryStructure = async (id: string, payload: any) => {
   return res.data;
 };
 
-export const updatePayroll = async (
-  id: string,
-  payload: {
-    employeeId: string;
-    month: string;
-    year: number;
-    totalDeductions: number;
-  },
-) => {
+export const updatePayroll = async (id: string, payload: any) => {
   const res = await api.patch(`/payrolls/${id}`, payload);
   return res.data;
 };
@@ -35,6 +27,26 @@ export const updateLeave = async ({
   };
 }) => {
   const res = await api.patch(`/leave-requests/${id}`, payload);
+  return res.data;
+};
+export const updateEmployeeLeave = async ({
+  id,
+  payload,
+}: {
+  id: string;
+  payload: {
+    employeeId: string;
+    fromDate: string;
+    toDate: string;
+    type: "sick" | "casual" | "marriage" | "wfh";
+    dayType: "full_day" | "first_half" | "second_half" | "multiple_days";
+    reason: string;
+    fromHour: number;
+    toHour: number;
+    file?: string;
+  };
+}) => {
+  const res = await api.patch(`/leave-requests/manual/${id}`, payload);
   return res.data;
 };
 export const approveLeave = async (id: string) => {

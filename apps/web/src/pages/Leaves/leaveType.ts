@@ -12,6 +12,13 @@ export type Employee = {
   id: string;
   firstName: string;
   lastName: string;
+  userId: string;
+};
+export type CreateBy = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  userId: string;
 };
 export type ActionUser = {
   id: string;
@@ -45,4 +52,23 @@ export type LeaveApiResponse<TLeave = LeaveBase> = {
   leave: TLeave;
   approvedByUser?: ActionUser | null;
   rejectedByUser?: ActionUser | null;
+  createdByEmployee?: CreateBy;
 };
+
+export interface LeaveRow {
+  id: string;
+  employee: Employee;
+  fromDate: string;
+  toDate: string;
+  type: LeaveType;
+  dayType: LeaveDayType;
+  status: LeaveStatus;
+  reason: string;
+  totalDays: string;
+  rejectionReason?: string | null;
+  file?: string;
+
+  approvedByUser?: ActionUser | null;
+  rejectedByUser?: ActionUser | null;
+  createdByEmployee?: CreateBy;
+}

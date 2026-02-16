@@ -10,7 +10,7 @@ import {
   PuzzlePieceIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
-import { IconReceiptRupee, IconWallet } from "@tabler/icons-react";
+import { IconHistory, IconReceiptRupee, IconWallet } from "@tabler/icons-react";
 
 import { Link, useLocation } from "react-router";
 import type { RootState } from "../context";
@@ -31,11 +31,14 @@ const ADMIN_MENU: NavItem[] = [
   { icon: <IconReceiptRupee />, name: "Salary", path: "/salary" },
   { icon: <IconReceiptRupee />, name: "Payrolls", path: "/payrolls" },
   { icon: <IconWallet />, name: "Expenses", path: "/expenses" },
+  { icon: <IconHistory />, name: "Payroll History", path: "/payrolls/history" },
 ];
 
 const EMPLOYEE_MENU: NavItem[] = [
+  { icon: <GridIcon />, name: "Dashboard", path: "/dashboard" },
   { icon: <CalendarIcon />, name: "Leaves", path: "/leave-requests" },
   { icon: <IconWallet />, name: "Expenses", path: "/expenses" },
+  { icon: <IconHistory />, name: "Payroll History", path: "/payrolls/history" },
 ];
 
 const AppSidebar: React.FC = () => {
