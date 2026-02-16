@@ -8,7 +8,7 @@ export const createExpenseSchema = {
       amount: { type: "number", minimum: 0.01 },
       expenseDate: { type: "string", format: "date" },
       description: { type: "string" },
-      file: { type: "string" },
+      file: { type: "string", maxLength: 255 },
     },
     additionalProperties: false,
   },
@@ -25,16 +25,13 @@ export const updateExpenseSchema = {
   },
   body: {
     type: "object",
+    minProperties: 1, // ✅ prevent empty update
     properties: {
       expenseType: { type: "string" },
       amount: { type: "number", minimum: 0.01 },
       expenseDate: { type: "string", format: "date" },
       description: { type: "string" },
-      file: { type: "string" },
-      status: {
-        type: "string",
-        enum: ["DRAFT", "SUBMITTED"],
-      },
+      file: { type: "string", maxLength: 255 },
     },
     additionalProperties: false,
   },
@@ -59,7 +56,7 @@ export const getExpensesSchema = {
       search: { type: "string" },
       status: {
         type: "string",
-        enum: ["DRAFT", "SUBMITTED", "APPROVED", "REJECTED"],
+        enum: ["DRAFT", "CREATED", "APPROVED", "REJECTED"],
       },
       page: { type: "number", minimum: 1 },
       limit: { type: "number", minimum: 1, maximum: 100 },
@@ -80,16 +77,15 @@ export const getExpenseSummarySchema = {
   tags: ["Expenses"],
   querystring: {
     type: "object",
-    required: ["month", "year"],
+    required: ["fromDate", "toDate"],
     properties: {
-      month: {
-        type: "number",
-        minimum: 1,
-        maximum: 12,
+      fromDate: {
+        type: "string",
+        format: "date",
       },
-      year: {
-        type: "number",
-        minimum: 2000,
+      toDate: {
+        type: "string",
+        format: "date",
       },
     },
     additionalProperties: false,
@@ -98,12 +94,12 @@ export const getExpenseSummarySchema = {
     200: {
       type: "object",
       properties: {
-        month: { type: "number" },
-        year: { type: "number" },
+        fromDate: { type: "string" },
+        toDate: { type: "string" },
         totalAmount: { type: "string" },
         totalExpenses: { type: "number" },
       },
-      required: ["month", "year", "totalAmount", "totalExpenses"],
+      required: ["fromDate", "toDate", "totalAmount", "totalExpenses"],
     },
   },
 };

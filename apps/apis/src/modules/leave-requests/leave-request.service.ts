@@ -1,6 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { eq, desc, asc, and, ilike, sql } from "drizzle-orm";
-
 import { db } from "../../db";
 import { employees } from "../../db/schema/employees.schema";
 import { leaveRequests } from "../../db/schema/leave-requests.schema";
@@ -8,89 +7,22 @@ import { positions } from "../../db/schema/positions.schema";
 import { LeaveStatus } from "../../db/schema/leave.enums";
 import { userRoles } from "../../db/schema/user-roles.schema";
 import { roles } from "../../db/schema/roles.schema";
-import { users } from "../../db/schema/users.schema";
 import { alias } from "drizzle-orm/pg-core";
 const approverEmployee = alias(employees, "approverEmployee");
 const rejecterEmployee = alias(employees, "rejecterEmployee");
+const createdByEmployee = alias(employees, "createdByEmployee");
 
 import {
   CreateLeaveRequestDto,
   UpdateLeaveRequestDto,
+  CreateManualLeaveRequestDto,
 } from "@shared/types/src/leave-request/leave-request.types";
 
 import { sendMessage } from "../../utils/api-response";
-
-function isWeekend(date: Date) {
-  const day = date.getDay();
-  return day === 0 || day === 6;
-}
-
-function countWeekendDays(start: Date, end: Date) {
-  let count = 0;
-  const current = new Date(start);
-
-  while (current <= end) {
-    if (isWeekend(current)) {
-      count++;
-    }
-    current.setDate(current.getDate() + 1);
-  }
-
-  return count;
-}
-
-function calculateLeaveTotalsSimple(params: {
-  fromDate: string;
-  toDate: string;
-  dayType: string;
-  fromHour: number;
-  toHour: number;
-}) {
-  const { fromDate, toDate, dayType, fromHour, toHour } = params;
-
-  let totalHours = 0;
-
-  const start = new Date(fromDate);
-  const end = new Date(toDate);
-
-  if (isWeekend(start)) {
-    throw new Error("Leave cannot start on weekend");
-  }
-  if (isWeekend(end)) {
-    throw new Error("Leave cannot end on weekend");
-  }
-
-  if (fromDate === toDate) {
-    if (dayType === "full_day") totalHours = 8;
-    else if (dayType === "first_half") totalHours = 4;
-    else if (dayType === "second_half") totalHours = 4;
-    else if (dayType === "multiple_days") {
-      totalHours = fromHour + toHour;
-    }
-  } else {
-    const diffDays =
-      Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-
-    const weekendCount = countWeekendDays(start, end);
-    const workingDays = diffDays - weekendCount;
-
-    if (dayType === "multiple_days") {
-      totalHours += fromHour;
-
-      if (workingDays > 2) {
-        totalHours += (workingDays - 2) * 8;
-      }
-
-      totalHours += toHour;
-    } else if (dayType === "full_day") {
-      totalHours = workingDays * 8;
-    }
-  }
-
-  const totalDays = totalHours / 8;
-
-  return { totalHours, totalDays };
-}
+import { getPagination } from "../../utils/pagination";
+import { hasAnyRole, hasRole } from "../../utils/role.utils";
+import { calculateLeaveTotalsSimple } from "./utils/leave-calculation";
+import { validatePastDatesOnly } from "./utils/past-date-validation";
 
 function validateFutureDates(fromDate: string, toDate: string) {
   const today = new Date();
@@ -136,6 +68,7 @@ export async function createLeaveRequestHandler(
 
   await db.insert(leaveRequests).values({
     employeeId: employee.id,
+    createdBy: userId,
     fromDate: body.fromDate,
     toDate: body.toDate,
     type: body.type,
@@ -162,28 +95,37 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
     search?: string;
     status?: (typeof LeaveStatus)[keyof typeof LeaveStatus];
     type?: string;
+    employeeId?: string;
+    fromDate?: string;
+    toDate?: string;
     page?: number;
     limit?: number;
     sortBy?: "createdAt" | "fromDate";
     sortOrder?: "asc" | "desc";
+    createdByType?: "all" | "manual" | "self";
   };
-
   const conditions = [];
 
   const userRolesRows = await db
-    .select({
-      roleName: roles.name,
-    })
+    .select({ roleName: roles.name })
     .from(userRoles)
     .leftJoin(roles, eq(userRoles.roleId, roles.id))
     .where(eq(userRoles.userId, userId));
 
-  const roleNames = userRolesRows.map((r) => r.roleName);
+  const roleNames = userRolesRows
+    .map((r) => r.roleName)
+    .filter((role): role is string => role !== null);
 
-  const isHRorAdmin = roleNames.includes("HR") || roleNames.includes("ADMIN");
+  const isHRorAdmin = hasAnyRole(roleNames, ["HR", "ADMIN"]);
+
+  if (!isHRorAdmin && query.employeeId) {
+    throw new Error("Employee cannot filter other employees");
+  }
+
+  let resolvedEmployeeId: string | undefined;
 
   const [employee] = await db
-    .select({ id: employees.id })
+    .select({ id: employees.id, userId: employees.userId })
     .from(employees)
     .where(eq(employees.userId, userId));
 
@@ -191,11 +133,34 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
     if (!employee) {
       return {
         data: [],
-        meta: { page: 1, limit: 10, total: 0 },
+        meta: { page: 1, limit: null, total: 0 },
       };
     }
 
-    conditions.push(eq(leaveRequests.employeeId, employee.id));
+    resolvedEmployeeId = employee.id;
+  } else {
+    if (query.employeeId) {
+      resolvedEmployeeId = query.employeeId;
+    }
+  }
+
+  if (resolvedEmployeeId) {
+    conditions.push(eq(leaveRequests.employeeId, resolvedEmployeeId));
+  }
+
+  if (isHRorAdmin && query.createdByType) {
+    if (query.createdByType === "manual") {
+      conditions.push(eq(leaveRequests.createdBy, userId));
+    }
+
+    if (query.createdByType === "self" && employee) {
+      conditions.push(
+        and(
+          eq(leaveRequests.createdBy, userId),
+          eq(leaveRequests.employeeId, employee.id),
+        ),
+      );
+    }
   }
 
   if (query?.search) {
@@ -210,16 +175,27 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
     conditions.push(eq(leaveRequests.type, query.type as any));
   }
 
-  const page = Math.max(1, Number(query?.page) || 1);
-  const limit = Math.min(50, Number(query?.limit) || 10);
-  const offset = (page - 1) * limit;
+  if (query.fromDate) {
+    conditions.push(sql`${leaveRequests.fromDate} >= ${query.fromDate}`);
+  }
 
-  const sortColumn =
-    query?.sortBy === "fromDate"
-      ? leaveRequests.fromDate
-      : leaveRequests.createdAt;
+  if (query.toDate) {
+    conditions.push(sql`${leaveRequests.toDate} <= ${query.toDate}`);
+  }
 
-  const order = query?.sortOrder === "asc" ? asc(sortColumn) : desc(sortColumn);
+  const { page, limit, offset } = getPagination(query);
+
+  const orderByClauses = [];
+
+  if (!query?.sortBy) {
+    orderByClauses.push(desc(leaveRequests.updatedAt));
+  } else {
+    orderByClauses.push(
+      query.sortOrder === "asc"
+        ? asc(leaveRequests[query.sortBy])
+        : desc(leaveRequests[query.sortBy]),
+    );
+  }
 
   const [countResult] = await db
     .select({ count: sql<number>`cast(count(*) as integer)` })
@@ -227,21 +203,26 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
     .leftJoin(employees, eq(leaveRequests.employeeId, employees.id))
     .where(conditions.length ? and(...conditions) : undefined);
 
-  const data = await db
+  let queryBuilder = db
     .select({
       leave: leaveRequests,
       employee: {
         id: employees.id,
+        userId: employees.userId,
         firstName: employees.firstName,
         lastName: employees.lastName,
       },
-
+      createdByEmployee: {
+        id: createdByEmployee.id,
+        userId: createdByEmployee.userId,
+        firstName: createdByEmployee.firstName,
+        lastName: createdByEmployee.lastName,
+      },
       approvedByUser: {
         id: approverEmployee.id,
         firstName: approverEmployee.firstName,
         lastName: approverEmployee.lastName,
       },
-
       rejectedByUser: {
         id: rejecterEmployee.id,
         firstName: rejecterEmployee.firstName,
@@ -258,21 +239,31 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
       rejecterEmployee,
       eq(leaveRequests.rejectedBy, rejecterEmployee.userId),
     )
+    .leftJoin(
+      createdByEmployee,
+      eq(leaveRequests.createdBy, createdByEmployee.userId),
+    )
 
     .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(order)
-    .limit(limit)
-    .offset(offset);
+    .orderBy(...orderByClauses)
+    .$dynamic();
+
+  if (limit !== undefined && offset !== undefined) {
+    queryBuilder = queryBuilder.limit(limit).offset(offset);
+  }
+
+  const data = await queryBuilder;
 
   return {
     data,
     meta: {
       page,
-      limit,
+      limit: limit ?? null,
       total: countResult?.count ?? 0,
     },
   };
 }
+
 export async function getLeaveRequestByIdHandler(
   request: FastifyRequest,
   reply: FastifyReply,
@@ -288,9 +279,11 @@ export async function getLeaveRequestByIdHandler(
     .leftJoin(roles, eq(userRoles.roleId, roles.id))
     .where(eq(userRoles.userId, userId));
 
-  const roleNames = userRolesRows.map((r) => r.roleName);
+  const roleNames = userRolesRows
+    .map((r) => r.roleName)
+    .filter((role): role is string => role !== null);
 
-  const isHRorAdmin = roleNames.includes("HR") || roleNames.includes("ADMIN");
+  const isHRorAdmin = hasAnyRole(roleNames, ["HR", "ADMIN"]);
 
   const conditions = [eq(leaveRequests.id, id)];
 
@@ -315,8 +308,15 @@ export async function getLeaveRequestByIdHandler(
       leave: leaveRequests,
       employee: {
         id: employees.id,
+        userId: employees.userId,
         firstName: employees.firstName,
         lastName: employees.lastName,
+      },
+      createdByEmployee: {
+        id: createdByEmployee.id,
+        userId: createdByEmployee.userId,
+        firstName: createdByEmployee.firstName,
+        lastName: createdByEmployee.lastName,
       },
 
       approvedByUser: {
@@ -340,6 +340,10 @@ export async function getLeaveRequestByIdHandler(
     .leftJoin(
       rejecterEmployee,
       eq(leaveRequests.rejectedBy, rejecterEmployee.userId),
+    )
+    .leftJoin(
+      createdByEmployee,
+      eq(leaveRequests.createdBy, createdByEmployee.userId),
     )
 
     .where(and(...conditions));
@@ -374,9 +378,17 @@ export async function updateLeaveRequestHandler(
     return reply.code(403).send({ message: "Employee not found" });
   }
 
-  const isHRorAdmin =
-    employeeWithPosition.positionName === "HR" ||
-    employeeWithPosition.positionName === "Admin";
+  const userRolesRows = await db
+    .select({ roleName: roles.name })
+    .from(userRoles)
+    .leftJoin(roles, eq(userRoles.roleId, roles.id))
+    .where(eq(userRoles.userId, userId));
+
+  const roleNames = userRolesRows
+    .map((r) => r.roleName)
+    .filter((role): role is string => role !== null);
+
+  const isHRorAdmin = hasAnyRole(roleNames, ["HR", "ADMIN"]);
 
   const conditions = [
     eq(leaveRequests.id, id),
@@ -431,8 +443,6 @@ export async function updateLeaveRequestHandler(
 
       totalHours,
       totalDays: totalDays.toString(),
-
-      updatedAt: new Date(),
     })
     .where(and(...conditions))
     .returning();
@@ -462,9 +472,17 @@ export async function deleteLeaveRequestHandler(
     .leftJoin(positions, eq(employees.positionId, positions.id))
     .where(eq(employees.userId, userId));
 
-  const isHRorAdmin =
-    employeeWithPosition?.positionName === "HR" ||
-    employeeWithPosition?.positionName === "Admin";
+  const userRolesRows = await db
+    .select({ roleName: roles.name })
+    .from(userRoles)
+    .leftJoin(roles, eq(userRoles.roleId, roles.id))
+    .where(eq(userRoles.userId, userId));
+
+  const roleNames = userRolesRows
+    .map((r) => r.roleName)
+    .filter((role): role is string => role !== null);
+
+  const isHRorAdmin = hasAnyRole(roleNames, ["HR", "ADMIN"]);
 
   const conditions = [
     eq(leaveRequests.id, id),
@@ -514,8 +532,12 @@ export async function approveLeaveRequestHandler(
 
   const approverRoleNames = approverRolesRows.map((r) => r.roleName);
 
-  const isApproverAdmin = approverRoleNames.includes("ADMIN");
-  const isApproverHR = approverRoleNames.includes("HR");
+  const cleanedApproverRoles = approverRoleNames.filter(
+    (role): role is string => role !== null,
+  );
+
+  const isApproverAdmin = hasRole(cleanedApproverRoles, "ADMIN");
+  const isApproverHR = hasRole(cleanedApproverRoles, "HR");
 
   const leaveRows = await db
     .select({
@@ -610,13 +632,16 @@ export async function rejectLeaveRequestHandler(
     .leftJoin(roles, eq(userRoles.roleId, roles.id))
     .where(eq(userRoles.userId, userId));
 
-  // ✅ NORMALIZE ROLE NAMES
   const approverRoleNames = approverRolesRows.map((r) =>
     r.roleName?.toUpperCase(),
   );
 
-  const isApproverAdmin = approverRoleNames.includes("ADMIN");
-  const isApproverHR = approverRoleNames.includes("HR");
+  const cleanedApproverRoles = approverRoleNames.filter(
+    (role): role is string => role !== null,
+  );
+
+  const isApproverAdmin = hasRole(cleanedApproverRoles, "ADMIN");
+  const isApproverHR = hasRole(cleanedApproverRoles, "HR");
 
   const leaveRows = await db
     .select({
@@ -657,7 +682,11 @@ export async function rejectLeaveRequestHandler(
 
   const targetRoleNames = targetRolesRows.map((r) => r.roleName?.toUpperCase());
 
-  const isTargetHR = targetRoleNames.includes("HR");
+  const cleanedTargetRoles = targetRoleNames.filter(
+    (role): role is string => role !== null,
+  );
+
+  const isTargetHR = hasRole(cleanedTargetRoles, "HR");
 
   if (isTargetHR && !isApproverAdmin) {
     return reply.code(403).send({
@@ -678,7 +707,6 @@ export async function rejectLeaveRequestHandler(
       rejectedBy: userId,
       rejectedAt: new Date(),
       rejectionReason: body.rejectionReason ?? null,
-      updatedAt: new Date(),
     })
     .where(
       and(
@@ -695,4 +723,261 @@ export async function rejectLeaveRequestHandler(
   }
 
   return sendMessage(reply, "Leave request rejected successfully");
+}
+
+export async function createManualLeaveRequestHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const userId = request.user!.id;
+  const body = request.body as CreateManualLeaveRequestDto;
+
+  const userRolesRows = await db
+    .select({ roleName: roles.name })
+    .from(userRoles)
+    .leftJoin(roles, eq(userRoles.roleId, roles.id))
+    .where(eq(userRoles.userId, userId));
+
+  const roleNames = userRolesRows
+    .map((r) => r.roleName)
+    .filter((r): r is string => r !== null);
+
+  if (!hasAnyRole(roleNames, ["HR", "ADMIN"])) {
+    return sendMessage(reply, "Only HR or Admin allowed", 403);
+  }
+
+  const validation = validatePastDatesOnly(body.fromDate, body.toDate);
+
+  if (!validation.valid) {
+    return sendMessage(reply, validation.message!, 400);
+  }
+
+  const [employee] = await db
+    .select({ id: employees.id })
+    .from(employees)
+    .where(eq(employees.id, body.employeeId));
+
+  if (!employee) {
+    return sendMessage(reply, "Target employee not found", 404);
+  }
+
+  const { totalHours, totalDays } = calculateLeaveTotalsSimple({
+    fromDate: body.fromDate,
+    toDate: body.toDate,
+    dayType: body.dayType,
+    fromHour: body.fromHour,
+    toHour: body.toHour,
+  });
+
+  await db.insert(leaveRequests).values({
+    employeeId: employee.id,
+    createdBy: userId,
+    fromDate: body.fromDate,
+    toDate: body.toDate,
+    type: body.type,
+    dayType: body.dayType,
+    fromHour: body.fromHour,
+    toHour: body.toHour,
+    totalHours,
+    totalDays: totalDays.toString(),
+    reason: body.reason,
+    file: body.file,
+    status: LeaveStatus.Approved,
+    approvedBy: userId,
+    approvedAt: new Date(),
+    rejectedBy: null,
+    rejectedAt: null,
+    rejectionReason: null,
+  });
+
+  return sendMessage(reply, "Manual leave created successfully", 201);
+}
+
+export async function updateManualLeaveRequestHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const userId = request.user!.id;
+  const { id } = request.params as { id: string };
+  const body = request.body as Partial<CreateManualLeaveRequestDto>;
+
+  const userRolesRows = await db
+    .select({ roleName: roles.name })
+    .from(userRoles)
+    .leftJoin(roles, eq(userRoles.roleId, roles.id))
+    .where(eq(userRoles.userId, userId));
+
+  const roleNames = userRolesRows
+    .map((r) => r.roleName)
+    .filter((r): r is string => r !== null);
+
+  if (!hasAnyRole(roleNames, ["HR", "ADMIN"])) {
+    return sendMessage(reply, "Only HR or Admin allowed", 403);
+  }
+
+  const [row] = await db
+    .select({
+      leave: leaveRequests,
+      employeeUserId: employees.userId,
+    })
+    .from(leaveRequests)
+    .leftJoin(employees, eq(leaveRequests.employeeId, employees.id))
+    .where(eq(leaveRequests.id, id));
+
+  if (
+    !row ||
+    row.leave.createdBy === row.employeeUserId // ❗ not manual
+  ) {
+    return sendMessage(reply, "Manual leave not found", 404);
+  }
+
+  const existingLeave = row.leave;
+
+  let finalEmployeeId = existingLeave.employeeId;
+
+  if (body.employeeId) {
+    const [employee] = await db
+      .select({ id: employees.id })
+      .from(employees)
+      .where(eq(employees.id, body.employeeId));
+
+    if (!employee) {
+      return sendMessage(reply, "Target employee not found", 404);
+    }
+
+    finalEmployeeId = body.employeeId;
+  }
+
+  const finalFromDate = body.fromDate ?? existingLeave.fromDate;
+  const finalToDate = body.toDate ?? existingLeave.toDate;
+
+  const validation = validatePastDatesOnly(finalFromDate, finalToDate);
+
+  if (!validation.valid) {
+    return sendMessage(reply, validation.message!, 400);
+  }
+
+  const { totalHours, totalDays } = calculateLeaveTotalsSimple({
+    fromDate: finalFromDate,
+    toDate: finalToDate,
+    dayType: body.dayType ?? existingLeave.dayType,
+    fromHour: body.fromHour ?? existingLeave.fromHour,
+    toHour: body.toHour ?? existingLeave.toHour,
+  });
+
+  await db
+    .update(leaveRequests)
+    .set({
+      employeeId: finalEmployeeId,
+
+      fromDate: finalFromDate,
+      toDate: finalToDate,
+
+      type: body.type ?? existingLeave.type,
+      dayType: body.dayType ?? existingLeave.dayType,
+      fromHour: body.fromHour ?? existingLeave.fromHour,
+      toHour: body.toHour ?? existingLeave.toHour,
+
+      totalHours,
+      totalDays: totalDays.toString(),
+
+      reason: body.reason ?? existingLeave.reason,
+      file: body.file ?? existingLeave.file,
+
+      updatedAt: new Date(),
+    })
+    .where(eq(leaveRequests.id, id));
+
+  return sendMessage(reply, "Manual leave updated successfully");
+}
+
+export async function deleteManualLeaveRequestHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const userId = request.user!.id;
+  const { id } = request.params as { id: string };
+
+  const userRolesRows = await db
+    .select({ roleName: roles.name })
+    .from(userRoles)
+    .leftJoin(roles, eq(userRoles.roleId, roles.id))
+    .where(eq(userRoles.userId, userId));
+
+  const roleNames = userRolesRows
+    .map((r) => r.roleName)
+    .filter((r): r is string => r !== null);
+
+  if (!hasAnyRole(roleNames, ["HR", "ADMIN"])) {
+    return sendMessage(reply, "Only HR or Admin allowed", 403);
+  }
+
+  const [deleted] = await db
+    .delete(leaveRequests)
+    .where(
+      and(
+        eq(leaveRequests.id, id),
+        sql`${leaveRequests.approvedBy} IS NOT NULL`,
+      ),
+    )
+    .returning({ id: leaveRequests.id });
+
+  if (!deleted) {
+    return sendMessage(reply, "Manual leave not found", 404);
+  }
+
+  return sendMessage(reply, "Manual leave deleted successfully");
+}
+
+export async function getManualLeaveRequestByIdHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const userId = request.user!.id;
+  const { id } = request.params as { id: string };
+
+  
+  const userRolesRows = await db
+    .select({ roleName: roles.name })
+    .from(userRoles)
+    .leftJoin(roles, eq(userRoles.roleId, roles.id))
+    .where(eq(userRoles.userId, userId));
+
+  const roleNames = userRolesRows
+    .map((r) => r.roleName)
+    .filter((r): r is string => r !== null);
+
+  if (!hasAnyRole(roleNames, ["HR", "ADMIN"])) {
+    return sendMessage(reply, "Only HR or Admin allowed", 403);
+  }
+
+  const [row] = await db
+    .select({
+      leave: leaveRequests,
+      employee: {
+        id: employees.id,
+        userId: employees.userId,
+        firstName: employees.firstName,
+        lastName: employees.lastName,
+      },
+      createdByEmployee: {
+        id: createdByEmployee.id,
+        userId: createdByEmployee.userId,
+        firstName: createdByEmployee.firstName,
+        lastName: createdByEmployee.lastName,
+      },
+    })
+    .from(leaveRequests)
+    .leftJoin(employees, eq(leaveRequests.employeeId, employees.id))
+    .leftJoin(
+      createdByEmployee,
+      eq(leaveRequests.createdBy, createdByEmployee.userId),
+    )
+    .where(eq(leaveRequests.id, id));
+
+  if (!row || !row.employee || row.leave.createdBy === row.employee.userId) {
+    return sendMessage(reply, "Manual leave not found", 404);
+  }
+
+  return { data: row };
 }

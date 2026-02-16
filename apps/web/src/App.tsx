@@ -16,8 +16,6 @@ import PublicRoute from "./pages/OtherPage/PublicRoute";
 
 import { ScrollToTop } from "./components/common/ScrollToTop";
 
-import Payroll from "./pages/Payroll/Payroll";
-
 import { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
 import { useDispatch } from "react-redux";
@@ -37,7 +35,8 @@ import LeavePage from "./pages/Leaves/LeavePage";
 import SelfLeavePage from "./pages/Leaves/SelfLeavePage";
 import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
 import RootRedirect from "./pages/OtherPage/RootRedirect";
-import AddEditPayrollPage from "./pages/Payroll/AddEditPayrollPage";
+import PayrollHistory from "./pages/Payroll/PayrollHistory";
+import PayrollTable from "./pages/Payroll/PayrollTable";
 import AddEditSalaryPage from "./pages/Salary/AddEditSalaryPage";
 import SalaryPage from "./pages/Salary/SalaryPage";
 import AddEditSystemPage from "./pages/System/AddEditSystemPage";
@@ -52,6 +51,7 @@ function AppRoutes() {
       dispatch(setAuth(JSON.parse(savedAuth)));
     }
   }, [dispatch]);
+
   return (
     <Routes>
       <Route path="/" element={<RootRedirect />} />
@@ -83,8 +83,8 @@ function AppRoutes() {
           <Route path="/salary" element={<SalaryPage />} />
           <Route path="/salary/:id" element={<AddEditSalaryPage />} />
 
-          <Route path="/payrolls" element={<Payroll />} />
-          <Route path="/payrolls/:id" element={<AddEditPayrollPage />} />
+          <Route path="/payrolls" element={<PayrollTable />} />
+          <Route path="/payrolls/history" element={<PayrollHistory />} />
 
           <Route path="/leave-requests" element={<LeavePage />} />
           <Route path="/leave-requests/:id" element={<SelfLeavePage />} />

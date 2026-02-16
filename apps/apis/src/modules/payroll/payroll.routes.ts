@@ -1,63 +1,36 @@
 import type { FastifyInstance } from "fastify";
 
 import {
-  processPayrollHandler,
   getPayrollsHandler,
-  getPayrollByIdHandler,
-  updatePayrollHandler,
   deletePayrollHandler,
   getPayrollSummaryHandler,
+  processBulkPayrollHandler,
+  employeeBulkPayrollHandler,
 } from "./payroll.service";
 
 import {
-  processPayrollSchema,
   getPayrollsSchema,
-  getPayrollByIdSchema,
   payrollSummarySchema,
-  updatePayrollSchema,
   deletePayrollSchema,
+  employeeBulkPayrollSchema,
+  processBulkPayrollSchema,
 } from "./payroll.schema";
 
 import { verifyAccessToken } from "../../middlewares/auth.middlewares";
 import { authorize } from "../../middlewares/authorize.middleware";
 import { PERMISSIONS } from "../../db/schema/permissions.enums";
+import { authenticate } from "../../plugins/auth.plugin";
 
 export async function payrollRoutes(app: FastifyInstance) {
-  app.post(
-    "/payrolls/process",
-    {
-      schema: processPayrollSchema,
-      preHandler: [verifyAccessToken, authorize(PERMISSIONS.PAYROLL_PROCESS)],
-    },
-    processPayrollHandler,
-  );
-
   app.get(
     "/payrolls",
     {
       schema: getPayrollsSchema,
-      preHandler: [verifyAccessToken, authorize(PERMISSIONS.PAYROLL_VIEW)],
+      preHandler: [authenticate],
     },
     getPayrollsHandler,
   );
 
-  app.get(
-    "/payrolls/:id",
-    {
-      schema: getPayrollByIdSchema,
-      preHandler: [verifyAccessToken, authorize(PERMISSIONS.PAYROLL_VIEW)],
-    },
-    getPayrollByIdHandler,
-  );
-
-  app.patch(
-    "/payrolls/:id",
-    {
-      schema: updatePayrollSchema,
-      preHandler: [verifyAccessToken, authorize(PERMISSIONS.PAYROLL_UPDATE)],
-    },
-    updatePayrollHandler,
-  );
 
   app.delete(
     "/payrolls/:id",
@@ -78,5 +51,23 @@ export async function payrollRoutes(app: FastifyInstance) {
       ],
     },
     getPayrollSummaryHandler,
+  );
+
+  app.get(
+    "/payrolls/bulk/employee",
+    {
+      schema: employeeBulkPayrollSchema,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.PAYROLL_PROCESS)],
+    },
+    employeeBulkPayrollHandler,
+  );
+
+  app.post(
+    "/payrolls/bulk/process",
+    {
+      schema: processBulkPayrollSchema,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.PAYROLL_PROCESS)],
+    },
+    processBulkPayrollHandler,
   );
 }

@@ -39,25 +39,36 @@ async function seed() {
   const allPermissions = await db.select().from(permissions);
 
   const roleMap = Object.fromEntries(allRoles.map((r) => [r.name, r.id]));
-
   const permissionMap = Object.fromEntries(
     allPermissions.map((p) => [p.name, p.id]),
   );
 
   const rolePermissionMap: Record<string, string[]> = {
     [ROLES.EMPLOYEE]: [
-      PERMISSIONS.EXPENSE_CREATE,
-      PERMISSIONS.EXPENSE_VIEW_OWN,
       PERMISSIONS.LEAVE_CREATE,
+
+      PERMISSIONS.EXPENSE_CREATE,
+     
+      PERMISSIONS.EXPENSE_SUBMIT,
     ],
 
     [ROLES.HR]: [
-      PERMISSIONS.EXPENSE_VIEW_ALL,
-      PERMISSIONS.EXPENSE_APPROVE,
       PERMISSIONS.LEAVE_VIEW_ALL,
+      PERMISSIONS.LEAVE_UPDATE_ALL,
+      PERMISSIONS.LEAVE_DELETE_ALL,
       PERMISSIONS.LEAVE_APPROVE,
+
+      PERMISSIONS.EXPENSE_VIEW_ALL,
+      PERMISSIONS.EXPENSE_UPDATE_ALL,
+      PERMISSIONS.EXPENSE_DELETE_ALL,
+      PERMISSIONS.EXPENSE_APPROVE,
+      PERMISSIONS.EXPENSE_VIEW_SUMMARY,
+
       PERMISSIONS.EMPLOYEE_VIEW,
       PERMISSIONS.EMPLOYEE_UPDATE,
+
+      PERMISSIONS.LEAVE_CREATE,
+     
     ],
 
     [ROLES.ADMIN]: Object.values(PERMISSIONS),
@@ -66,15 +77,15 @@ async function seed() {
   for (const roleName in rolePermissionMap) {
     const roleId = roleMap[roleName];
 
+    const existingRolePerms = await db
+      .select()
+      .from(rolePermissions)
+      .where(eq(rolePermissions.roleId, roleId));
+
     for (const permName of rolePermissionMap[roleName]) {
       const permissionId = permissionMap[permName];
 
-      const existing = await db
-        .select()
-        .from(rolePermissions)
-        .where(eq(rolePermissions.roleId, roleId));
-
-      if (!existing.find((rp) => rp.permissionId === permissionId)) {
+      if (!existingRolePerms.find((rp) => rp.permissionId === permissionId)) {
         await db.insert(rolePermissions).values({
           roleId,
           permissionId,
@@ -88,7 +99,6 @@ async function seed() {
   console.log("🌱 Seeding completed successfully");
   process.exit(0);
 }
-
 seed().catch((err) => {
   console.error("❌ Seeding failed", err);
   process.exit(1);

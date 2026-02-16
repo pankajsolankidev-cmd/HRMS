@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
 
+import type { AxiosError } from "axios";
 import { getLeaveById } from "../../api/get";
 import { updateLeave } from "../../api/patch";
 import { addLeave, type AddLeavePayload } from "../../api/post";
@@ -28,6 +29,12 @@ export default function SelfLeavePage() {
       queryClient.invalidateQueries({ queryKey: ["leaves"] });
       navigate("/leave-requests");
     },
+    onError: (error: any) => {
+      toast.error(
+        error?.response?.data?.message ??
+          "Something went wrong. Please try again.",
+      );
+    },
   });
 
   const updateMutation = useMutation({
@@ -36,6 +43,12 @@ export default function SelfLeavePage() {
       toast.success("Leave updated successfully");
       queryClient.invalidateQueries({ queryKey: ["leaves"] });
       navigate("/leave-requests");
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(
+        error?.response?.data?.message ??
+          "Something went wrong. Please try again.",
+      );
     },
   });
 

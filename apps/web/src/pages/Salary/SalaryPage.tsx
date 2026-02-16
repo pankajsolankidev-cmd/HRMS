@@ -24,6 +24,9 @@ export type SalaryStructure = {
   basicSalary: number;
   description?: string;
   appraisalDate?: string;
+  tax: number;
+  pf: number;
+  netSalary: number;
 };
 
 export default function SalaryPage() {
@@ -87,6 +90,9 @@ export default function SalaryPage() {
         id: s.id,
         employeeName: employeeMap.get(s.employeeId) ?? "—",
         basicSalary: Number(s.basicSalary),
+        tax: Number(s.tax),
+        pf: Number(s.pf),
+        netSalary: Number(s.netSalary),
         description: s.description,
         appraisalDate: s.appraisalDate
           ? s.appraisalDate.split("T")[0]
@@ -131,13 +137,35 @@ export default function SalaryPage() {
       ),
     },
     {
+      header: "Tax",
+      accessor: "tax",
+      cell: (row) => (
+        <span className="font-medium text-red-600 dark:text-red-400">
+          ₹ {row.tax}
+        </span>
+      ),
+    },
+    {
+      header: "PF",
+      accessor: "pf",
+      cell: (row) => (
+        <span className="font-medium text-red-600 dark:text-red-400">
+          ₹ {row.pf}
+        </span>
+      ),
+    },
+    {
       header: "Description",
       cell: (row) => row.description || "—",
     },
     {
-      header: "Appraisal Date",
-      accessor: "appraisalDate",
-      cell: (row) => row.appraisalDate || "—",
+      header: "Net Salary",
+      accessor: "netSalary",
+      cell: (row) => (
+        <span className="font-medium text-green-600 dark:text-green-400">
+          ₹ {row.netSalary.toLocaleString("en-IN")}
+        </span>
+      ),
     },
     {
       header: "Action",
@@ -210,7 +238,7 @@ export default function SalaryPage() {
               size="md"
               className="bg-black dark:bg-blue-500 dark:hover:bg-brand-600 whitespace-nowrap"
             >
-              Add Employee
+              Add Salary
             </Button>
           </div>
         }

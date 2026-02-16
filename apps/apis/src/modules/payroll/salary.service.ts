@@ -4,6 +4,7 @@ import { and, eq, ilike, gte, lte, asc, desc, sql } from "drizzle-orm";
 import { db } from "../../db";
 import { salary } from "../../db/schema";
 import { getPagination } from "../../utils/pagination";
+import { calculateNetSalary } from "./utils/salary.utils";
 
 import type {
   CreateSalaryDto,
@@ -14,7 +15,7 @@ import { sendMessage } from "../../utils/api-response";
 
 export async function createSalaryHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const payload = request.body as CreateSalaryDto;
 
@@ -29,9 +30,22 @@ export async function createSalaryHandler(
       .send({ message: "Salary structure already exists for this employee" });
   }
 
+  const basicSalary = Number(payload.basicSalary);
+  const tax = payload.tax !== undefined ? Number(payload.tax) : 0;
+  const pf = payload.pf !== undefined ? Number(payload.pf) : 0;
+
+  const netSalary = calculateNetSalary({
+    basicSalary,
+    tax,
+    pf,
+  });
+
   await db.insert(salary).values({
     employeeId: payload.employeeId,
-    basicSalary: payload.basicSalary.toString(),
+    basicSalary: basicSalary.toString(),
+    tax: tax.toString(),
+    pf: pf.toString(),
+    netSalary: netSalary.toString(),
     description: payload.description,
     appraisalDate: payload.appraisalDate
       ? new Date(payload.appraisalDate)
@@ -71,22 +85,34 @@ export async function getSalariesHandler(request: FastifyRequest) {
     conditions.push(lte(salary.basicSalary, query.maxSalary.toString()));
   }
 
-  const { limit, offset, page } = getPagination(query ?? {});
-
-  const sortColumn =
-    query?.sortBy === "basicSalary" ? salary.basicSalary : salary.createdAt;
-
-  const order = query?.sortOrder === "asc" ? asc(sortColumn) : desc(sortColumn);
+  const { page, limit, offset } = getPagination(query ?? {});
 
   const whereClause = conditions.length ? and(...conditions) : undefined;
 
-  const data = await db
+  const orderByClauses = [];
+
+  if (!query?.sortBy) {
+    orderByClauses.push(desc(salary.updatedAt));
+  } else {
+    orderByClauses.push(
+      query.sortOrder === "asc"
+        ? asc(salary[query.sortBy])
+        : desc(salary[query.sortBy]),
+    );
+  }
+
+  let queryBuilder = db
     .select()
     .from(salary)
     .where(whereClause)
-    .orderBy(order)
-    .limit(limit)
-    .offset(offset);
+    .orderBy(...orderByClauses)
+    .$dynamic();
+
+  if (limit !== undefined && offset !== undefined) {
+    queryBuilder = queryBuilder.limit(limit).offset(offset);
+  }
+
+  const data = await queryBuilder;
 
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)` })
@@ -97,7 +123,7 @@ export async function getSalariesHandler(request: FastifyRequest) {
     data,
     meta: {
       page,
-      limit,
+      limit: limit ?? null,
       total: Number(count),
     },
   };
@@ -105,7 +131,7 @@ export async function getSalariesHandler(request: FastifyRequest) {
 
 export async function getSalaryByIdHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
 
@@ -123,7 +149,7 @@ export async function getSalaryByIdHandler(
 
 export async function getSalaryByEmployeeHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { employeeId } = request.params as { employeeId: string };
 
@@ -143,37 +169,53 @@ export async function getSalaryByEmployeeHandler(
 
 export async function updateSalaryHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
   const payload = request.body as UpdateSalaryDto;
 
+  const [existing] = await db.select().from(salary).where(eq(salary.id, id));
+
+  if (!existing) {
+    return reply.code(404).send({ message: "Salary structure not found" });
+  }
+
+  const basicSalary =
+    payload.basicSalary !== undefined
+      ? Number(payload.basicSalary)
+      : Number(existing.basicSalary);
+
+  const tax = payload.tax !== undefined ? payload.tax : Number(existing.tax);
+
+  const pf = payload.pf !== undefined ? payload.pf : Number(existing.pf);
+
+  const netSalary = calculateNetSalary({
+    basicSalary,
+    tax,
+    pf,
+  });
+
   const [updated] = await db
     .update(salary)
     .set({
-      basicSalary:
-        payload.basicSalary !== undefined
-          ? payload.basicSalary.toString()
-          : undefined,
-      description: payload.description,
+      basicSalary: basicSalary.toString(),
+      tax: tax.toString(),
+      pf: pf.toString(),
+      netSalary: netSalary.toString(),
+      description: payload.description ?? existing.description,
       appraisalDate: payload.appraisalDate
         ? new Date(payload.appraisalDate)
-        : undefined,
-      updatedAt: new Date(),
+        : existing.appraisalDate,
     })
     .where(eq(salary.id, id))
     .returning();
-
-  if (!updated) {
-    return reply.code(404).send({ message: "Salary structure not found" });
-  }
 
   return sendMessage(reply, "Salary structure updated successfully");
 }
 
 export async function deleteSalaryHandler(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
 

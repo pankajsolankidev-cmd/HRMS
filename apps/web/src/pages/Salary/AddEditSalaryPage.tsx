@@ -20,12 +20,21 @@ import { addSalaryStructure } from "../../api/post";
 import type { PaginatedResponse } from "../../api/types";
 
 const MAX_AMOUNT = 1_000_000;
+const TAX_AMOUNT = 1_000;
 const schema = z.object({
   employeeId: z.string().min(1, "Employee is required"),
   basicSalary: z
     .number()
     .min(1, "Basic salary must be greater than 0")
     .max(MAX_AMOUNT, "Amount is too large"),
+  tax: z
+    .number()
+    .min(1, "Tax must be greater than 0")
+    .max(TAX_AMOUNT, "Amount is too large"),
+  pf: z
+    .number()
+    .min(1, "PF must be greater than 0")
+    .max(TAX_AMOUNT, "Amount is too large"),
   description: z.string().optional(),
   appraisalDate: z.string().min(1, "Appraisal date is required"),
 });
@@ -51,6 +60,8 @@ export default function AddEditSalaryPage() {
     defaultValues: {
       employeeId: "",
       basicSalary: 0,
+      tax: 0,
+      pf: 0,
       description: "",
       appraisalDate: "",
     },
@@ -77,6 +88,8 @@ export default function AddEditSalaryPage() {
       reset({
         employeeId: String(salaryData.employeeId),
         basicSalary: Number(salaryData.basicSalary),
+        tax: Number(salaryData.tax),
+        pf: Number(salaryData.pf),
         description: salaryData.description || "",
         appraisalDate: salaryData.appraisalDate ?? "",
       });
@@ -166,6 +179,36 @@ export default function AddEditSalaryPage() {
               error={!!errors.basicSalary}
               hint={errors.basicSalary?.message}
             />
+            <Input
+              required
+              label="Tax"
+              type="number"
+              placeholder="0"
+              value={watch("tax") === 0 ? "" : watch("tax")}
+              onChange={(e) => {
+                const val = e.target.value;
+                setValue("tax", val === "" ? 0 : Number(val), {
+                  shouldValidate: true,
+                });
+              }}
+              error={!!errors.tax}
+              hint={errors.tax?.message}
+            />
+            <Input
+              required
+              label="PF"
+              type="number"
+              placeholder="0"
+              value={watch("pf") === 0 ? "" : watch("pf")}
+              onChange={(e) => {
+                const val = e.target.value;
+                setValue("pf", val === "" ? 0 : Number(val), {
+                  shouldValidate: true,
+                });
+              }}
+              error={!!errors.pf}
+              hint={errors.pf?.message}
+            />
 
             <div className="md:col-span-1">
               <Controller
@@ -204,7 +247,7 @@ export default function AddEditSalaryPage() {
           <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
             <Button
               disabled={saveMutation.isPending}
-              className="bg-blue-500 text-white"
+              className="bg-black dark:bg-blue-500 text-white"
             >
               {saveMutation.isPending
                 ? "Saving..."

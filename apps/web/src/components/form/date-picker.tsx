@@ -41,6 +41,14 @@ export default function DatePicker({
       static: true,
       monthSelectorType: "static",
       dateFormat: "Y-m-d",
+
+      disable: [
+        (date: Date) => {
+          const day = date.getDay();
+          return day === 0 || day === 6;
+        },
+      ],
+
       onChange,
     }) as FlatpickrInstance;
 

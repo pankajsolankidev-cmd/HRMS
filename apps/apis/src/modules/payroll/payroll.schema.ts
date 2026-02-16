@@ -25,26 +25,18 @@ export const processPayrollSchema = {
     type: "object",
     required: ["employeeId", "month", "year"],
     properties: {
-      employeeId: {
-        type: "string",
-        format: "uuid",
-      },
-      month: {
-        type: "string",
-        enum: PayrollMonth,
-      },
-      year: {
-        type: "number",
-      },
-      totalDeductions: {
-        type: "string",
-      },
-      file: {
-        type: "string",
-      },
+      employeeId: { type: "string", format: "uuid" },
+      month: { type: "string", enum: PayrollMonth },
+      year: { type: "number" },
+      deductions: { type: "number", minimum: 0 },
+      deductionReason: { type: "string" },
+      bonus: { type: "number", minimum: 0 },
+      bonusDescription: { type: "string" },
+      file: { type: "string" },
     },
     additionalProperties: false,
   },
+
   response: {
     201: {
       type: "object",
@@ -91,14 +83,6 @@ export const getPayrollsSchema = {
   },
 };
 
-export const getPayrollByIdSchema = {
-  tags: ["Payroll"],
-  params: payrollIdParams,
-  response: {
-    404: errorResponse,
-  },
-};
-
 export const payrollSummarySchema = {
   tags: ["Payroll"],
   querystring: {
@@ -117,35 +101,9 @@ export const payrollSummarySchema = {
   },
 };
 
-export const updatePayrollSchema = {
+export const deletePayrollSchema = {
   tags: ["Payroll"],
   params: payrollIdParams,
-  body: {
-    type: "object",
-    properties: {
-      employeeId: {
-        type: "string",
-        format: "uuid",
-      },
-      month: {
-        type: "string",
-        enum: PayrollMonth,
-      },
-      year: {
-        type: "number",
-      },
-      totalDeductions: {
-        type: "string",
-      },
-      netSalary: {
-        type: "string",
-      },
-      file: {
-        type: "string",
-      },
-    },
-    additionalProperties: false,
-  },
   response: {
     200: {
       type: "object",
@@ -159,18 +117,79 @@ export const updatePayrollSchema = {
   },
 };
 
-export const deletePayrollSchema = {
+export const employeeBulkPayrollSchema = {
   tags: ["Payroll"],
-  params: payrollIdParams,
+  querystring: {
+    type: "object",
+    properties: {
+      month: { type: "string", enum: PayrollMonth },
+      year: { type: "number" },
+    },
+    additionalProperties: false,
+  },
+};
+
+export const processBulkPayrollSchema = {
+  tags: ["Payroll"],
+  body: {
+    type: "object",
+    required: ["adjustments"],
+    properties: {
+      month: { type: "string", enum: PayrollMonth },
+      year: { type: "number" },
+      adjustments: {
+        type: "array",
+        minItems: 1,
+        items: {
+          type: "object",
+          required: ["employeeId"],
+          properties: {
+            employeeId: { type: "string", format: "uuid" },
+            deductions: { type: "number", minimum: 0 },
+            deductionReason: { type: "string" },
+            bonus: { type: "number", minimum: 0 },
+            bonusDescription: { type: "string" },
+          },
+          additionalProperties: false,
+        },
+      },
+    },
+    additionalProperties: false,
+  },
   response: {
-    200: {
+    201: {
       type: "object",
+      required: ["message"],
       properties: {
         message: { type: "string" },
       },
-      required: ["message"],
     },
-    404: errorResponse,
+
+    409: {
+      type: "object",
+      required: ["message", "employees"],
+      properties: {
+        message: { type: "string" },
+        employees: {
+          type: "array",
+          items: { type: "string" },
+        },
+      },
+    },
+
+    422: {
+      type: "object",
+      required: ["message", "employees"],
+      properties: {
+        message: { type: "string" },
+        employees: {
+          type: "array",
+          items: { type: "string" },
+        },
+      },
+    },
+
+    400: errorResponse,
     500: errorResponse,
   },
 };
