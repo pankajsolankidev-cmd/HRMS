@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-
 import { toast } from "react-hot-toast";
 import { getExpenseSummary } from "../../api/get";
 import DatePicker from "../../components/form/date-picker";
@@ -19,39 +18,29 @@ export default function ExpenseSummary() {
   });
 
   useEffect(() => {
-    if (data) {
-      toast.success("Expense summary loaded!");
-    }
+    if (data) toast.success("Expense summary loaded!");
   }, [data]);
 
   useEffect(() => {
-    if (error) {
-      toast.error(`Failed to fetch: ${error.message}`);
-    }
+    if (error) toast.error(`Failed to fetch: ${error.message}`);
   }, [error]);
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-end gap-3">
         <DatePicker
-          id="fromDate"
-          label="From Date"
-          value={fromDate ? new Date(fromDate) : null}
+          id="dateRange"
+          label="Select Date Range"
+          mode="range"
+          value={
+            fromDate && toDate  
+              ? [new Date(fromDate), new Date(toDate)]
+              : undefined
+          }
           onChange={(dates) => {
-            if (dates?.length) {
+            if (dates.length === 2) {
               setFromDate(dates[0].toLocaleDateString("en-CA"));
-              setRun(false);
-            }
-          }}
-        />
-
-        <DatePicker
-          id="toDate"
-          label="To Date"
-          value={toDate ? new Date(toDate) : null}
-          onChange={(dates) => {
-            if (dates?.length) {
-              setToDate(dates[0].toLocaleDateString("en-CA"));
+              setToDate(dates[1].toLocaleDateString("en-CA"));
               setRun(false);
             }
           }}
@@ -69,7 +58,6 @@ export default function ExpenseSummary() {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <SummaryCard label="Total Expenses" value={data?.totalExpenses ?? 0} />
-
         <SummaryCard
           label="Total Amount"
           value={`₹ ${Number(data?.totalAmount ?? 0).toLocaleString("en-IN")}`}

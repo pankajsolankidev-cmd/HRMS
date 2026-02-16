@@ -2,7 +2,6 @@ import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
-import { motion } from "framer-motion";
 import Cookies from "js-cookie";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -45,19 +44,20 @@ export default function SignInForm() {
   const signInMutation = useMutation({
     mutationFn: signInApi,
     onSuccess: (res) => {
-      const token = res.accessToken;
-      const refreshToken = res.refreshToken;
+      const authData = {
+        accessToken: res.accessToken,
+        refreshToken: res.refreshToken,
+        roles: res.roles,
+        permissions: res.permissions,
+        id: res.id,
+      };
 
-      Cookies.set("refresh", refreshToken);
-      Cookies.set("access", token);
-      dispatch(
-        setAuth({
-          accessToken: res.accessToken,
-          refreshToken: res.refreshToken,
-          roles: res.roles,
-          permissions: res.permissions,
-        }),
-      );
+      Cookies.set("refresh", res.refreshToken);
+      Cookies.set("access", res.accessToken);
+
+      dispatch(setAuth(authData));
+
+      localStorage.setItem("auth", JSON.stringify(authData));
 
       toast.success(res?.message ?? "Signed in successfully");
       navigate("/dashboard", { replace: true });
@@ -74,25 +74,12 @@ export default function SignInForm() {
 
   return (
     <>
-      <motion.div
-        initial={{ x: "0%" }}
-        animate={{ x: "0%" }}
-        exit={{ x: "100%" }}
-        transition={{ duration: 0.45, ease: "easeInOut" }}
-        className="absolute left-0 top-0 h-full w-1/2 bg-black dark:bg-gray-800 text-white z-20 hidden md:flex flex-col justify-center items-center p-8"
-      >
-        <h2 className="text-3xl font-semibold mb-4">New Here?</h2>
-        <p className="text-sm text-center mb-6">
-          Create an account to access all features.
+      <div className="absolute left-0 top-0 h-full w-1/2 bg-black dark:bg-gray-800 text-white z-20 hidden md:flex flex-col justify-center items-center p-8">
+        <img src="/images/logo/hrms2.png" width={240} />
+        <p className="-mt-10 mb-10 text-3xl text-center">
+          Human Resource Management System
         </p>
-
-        <Link
-          to="/signup"
-          className="px-6 py-2 rounded-lg text-black bg-white font-medium hover:bg-yellow-300 transition"
-        >
-          Go to Sign Up
-        </Link>
-      </motion.div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 h-full">
         <div className="hidden md:block" />

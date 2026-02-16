@@ -1,4 +1,4 @@
-import { IconChevronDown, IconX } from "@tabler/icons-react";
+import { IconChevronDown, IconChevronUp, IconX } from "@tabler/icons-react";
 import React from "react";
 
 interface Option {
@@ -21,7 +21,7 @@ interface SelectProps {
 const Select: React.FC<SelectProps> = ({
   options,
   value = "",
-  placeholder = "Select an option",
+  placeholder = "Select",
   onChange,
   className = "",
   label,
@@ -29,6 +29,7 @@ const Select: React.FC<SelectProps> = ({
   error,
   hint,
 }) => {
+  const [isOpen, setIsOpen] = React.useState(false);
   return (
     <div className="space-y-1.5">
       {label && (
@@ -58,7 +59,12 @@ const Select: React.FC<SelectProps> = ({
             ${className}
           `}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            onChange(e.target.value);
+            setIsOpen(false);
+          }}
+          onFocus={() => setIsOpen(true)}
+          onBlur={() => setIsOpen(false)}
         >
           <option value="" disabled>
             {placeholder}
@@ -88,11 +94,17 @@ const Select: React.FC<SelectProps> = ({
               <IconX size={16} stroke={2.5} />
             </button>
           )}
-
-          <IconChevronDown
-            size={18}
-            className="pointer-events-none text-gray-400 dark:text-gray-500"
-          />
+          {isOpen ? (
+            <IconChevronUp
+              size={18}
+              className="pointer-events-none text-gray-400 dark:text-gray-500"
+            />
+          ) : (
+            <IconChevronDown
+              size={18}
+              className="pointer-events-none text-gray-400 dark:text-gray-500"
+            />
+          )}
         </div>
       </div>
 

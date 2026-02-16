@@ -1,0 +1,152 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-hot-toast";
+import { useLocation, useNavigate, useParams } from "react-router";
+
+import { getEmployees, getLeaveById, getManualLeaveById } from "../../api/get";
+import { updateEmployeeLeave } from "../../api/patch";
+import { addEmployeeLeave, type AddLeavePayload } from "../../api/post";
+import ComponentCard from "../../components/common/ComponentCard";
+import LeaveForm, { type LeaveFormData } from "./LeaveFormTemplate";
+
+export const mapFormToAddLeavePayload = (
+  data: LeaveFormData,
+  filePath?: string,
+): AddLeavePayload => ({
+  fromDate: data.fromDate,
+  toDate: data.toDate,
+  type: data.type,
+  dayType: data.dayType,
+  reason: data.reason,
+  fromHour: data.fromHour,
+  toHour: data.toHour,
+  file: filePath,
+});
+
+export default function EmployeeLeavePage() {
+  const location = useLocation();
+  const isManualLeave = location.pathname.includes("/leave-requests/manual");
+
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const isEditMode = Boolean(id && id !== "new");
+
+  const { data: employeesData } = useQuery({
+    queryKey: ["employees", "all"],
+    queryFn: () => getEmployees(),
+    enabled: !isEditMode,
+  });
+
+  const employeeOptions =
+    employeesData?.data?.map((emp: any) => ({
+      label: `${emp.firstName} ${emp.lastName}`,
+      value: emp.id,
+    })) ?? [];
+
+  const { data, isLoading } = useQuery({
+    queryKey: [isManualLeave ? "manual-leave" : "leave", id],
+    queryFn: () =>
+      isManualLeave ? getManualLeaveById(id!) : getLeaveById(id!),
+    enabled: isEditMode,
+  });
+
+  const addMutation = useMutation<
+    unknown,
+    unknown,
+    AddLeavePayload & { employeeId: string }
+  >({
+    mutationFn: addEmployeeLeave,
+    onSuccess: () => {
+      toast.success("Employee leave added");
+      queryClient.invalidateQueries({ queryKey: ["leaves"] });
+      navigate("/leave-requests");
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: updateEmployeeLeave,
+    onSuccess: () => {
+      toast.success("Employee leave updated");
+      queryClient.invalidateQueries({ queryKey: ["leaves"] });
+      navigate("/leave-requests");
+    },
+  });
+
+  if (isEditMode && isLoading) {
+    return <div className="p-6 text-gray-500">Loading leave details…</div>;
+  }
+
+  /**
+   * ✅ Normalize ONLY in edit mode
+   */
+  const normalizedLeave =
+    isEditMode && data
+      ? isManualLeave
+        ? {
+            ...data.leave,
+            employeeId: data.employee.id,
+          }
+        : {
+            ...data.leave,
+            employeeId: data.leave.employeeId,
+          }
+      : null;
+
+  const defaultValues: Partial<LeaveFormData> | undefined =
+    isEditMode && normalizedLeave
+      ? {
+          fromDate: normalizedLeave.fromDate,
+          toDate: normalizedLeave.toDate,
+          type: normalizedLeave.type,
+          dayType: normalizedLeave.dayType,
+          reason: normalizedLeave.reason,
+          fromHour: normalizedLeave.fromHour,
+          toHour: normalizedLeave.toHour,
+          fromHourType:
+            normalizedLeave.fromHour === 4 ? "first_half" : "full_day",
+          toHourType: normalizedLeave.toHour === 4 ? "first_half" : "full_day",
+          employeeId: normalizedLeave.employeeId,
+        }
+      : undefined;
+
+  const handleSubmit = (data: LeaveFormData) => {
+    const basePayload = mapFormToAddLeavePayload(data);
+
+    if (isEditMode) {
+      updateMutation.mutate({
+        id: id!,
+        payload: {
+          ...basePayload,
+          employeeId: data.employeeId!,
+        },
+      });
+      return;
+    }
+
+    if (!data.employeeId) {
+      toast.error("Please select an employee");
+      return;
+    }
+
+    addMutation.mutate({
+      ...basePayload,
+      employeeId: data.employeeId,
+    });
+  };
+
+  return (
+    <ComponentCard
+      title={isEditMode ? "Edit Employee Leave" : "Add Employee Leave"}
+    >
+      <LeaveForm
+        defaultValues={defaultValues}
+        showEmployeeSelect={true}
+        employeeOptions={employeeOptions}
+        loading={addMutation.isPending || updateMutation.isPending}
+        onBack={() => navigate("/leave-requests")}
+        onSubmit={handleSubmit}
+      />
+    </ComponentCard>
+  );
+}

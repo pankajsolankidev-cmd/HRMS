@@ -1,5 +1,4 @@
 import Cookies from "js-cookie";
-import type { EmployeePayload } from "../pages/Employee/AddEditEmployeePage";
 import api, { refreshApi } from "./axios";
 
 export const signInApi = async (data: { email: string; password: string }) => {
@@ -7,14 +6,6 @@ export const signInApi = async (data: { email: string; password: string }) => {
   return res.data;
 };
 
-export const signUpApi = async (data: {
-  username: string;
-  email: string;
-  password: string;
-}) => {
-  const res = await api.post("/signup", data);
-  return res.data;
-};
 export const logoutUser = async (refreshToken: string) => {
   const res = await api.post("/auth/logout", {
     refreshToken,
@@ -50,7 +41,7 @@ export const resetPassword = async (params: {
   return res.data;
 };
 
-export const addEmployee = async (payload: EmployeePayload) => {
+export const addEmployee = async (payload: any) => {
   const res = await api.post("/employees", payload);
   return res.data;
 };
@@ -82,19 +73,9 @@ export const addSalaryStructure = async (payload: any) => {
   return res.data;
 };
 
-export const addPayroll = async (payload: {
-  employeeId: string;
-  month: string;
-  year: number;
-  totalDeductions: number;
-}) => {
-  const res = await api.post("/payrolls/process", {
-    employeeId: payload.employeeId,
-    month: payload.month,
-    year: payload.year,
-    totalDeductions: payload.totalDeductions,
-  });
-  return res.data;
+export const processBulkPayroll = async (payload: any) => {
+  const { data } = await api.post("/payrolls/bulk/process", payload);
+  return data;
 };
 
 export const uploadFile = async (file: File) => {
@@ -127,6 +108,12 @@ export type AddLeavePayload = {
 export const addLeave = async (payload: AddLeavePayload) => {
   const res = await api.post("/leave-requests", payload);
   return res.data;
+};
+export const addEmployeeLeave = async (
+  payload: AddLeavePayload & { employeeId: string },
+) => {
+  const res = await api.post("/leave-requests/manual", payload);
+  return res.data.message;
 };
 export type ExpensePayload = {
   expense_type: string;

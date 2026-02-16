@@ -6,6 +6,7 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   withCredentials: true,
 });
+
 export const refreshApi = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   withCredentials: true,
@@ -13,9 +14,11 @@ export const refreshApi = axios.create({
 
 api.interceptors.request.use((config) => {
   const token = Cookies.get("access");
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
   return config;
 });
 
@@ -24,14 +27,20 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    const accessToken = Cookies.get("access");
+
+    if (
+      error.response?.status === 401 &&
+      accessToken &&
+      !originalRequest._retry
+    ) {
       originalRequest._retry = true;
 
       try {
-        const { accessToken } = await refreshToken();
+        const { accessToken: newAccessToken } = await refreshToken();
 
-        Cookies.set("access", accessToken);
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        Cookies.set("access", newAccessToken);
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
         return api(originalRequest);
       } catch (err) {

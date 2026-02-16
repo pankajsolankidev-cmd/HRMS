@@ -16,32 +16,42 @@ import PublicRoute from "./pages/OtherPage/PublicRoute";
 
 import { ScrollToTop } from "./components/common/ScrollToTop";
 
-import AddEditPayroll from "./pages/PayrollTable/AddEditPayroll";
-import Payroll from "./pages/PayrollTable/Payroll";
-
-import AddEditLeave from "./pages/LeaveTable/AddEditLeave";
-import Leave from "./pages/LeaveTable/Leave";
-
+import { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
+import { useDispatch } from "react-redux";
+import { setAuth } from "./context/authSlice";
 import SmallAuthLayout from "./layout/SmallAuthLayout";
 import ForgetPassword from "./pages/auth/ForgetPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import SignInForm from "./pages/auth/SignInForm";
-import SignUpForm from "./pages/auth/SignUpForm";
 import AddEditComponentPage from "./pages/Component/AddEditComponentPage";
 import ComponentPage from "./pages/Component/ComponentPage";
 import AddEditEmployeePage from "./pages/Employee/AddEditEmployeePage";
 import EmployeePage from "./pages/Employee/EmployeePage";
-import AddEditExpense from "./pages/ExpenseTable/AddEditExpense";
-import Expense from "./pages/ExpenseTable/Expense";
+import AddEditExpensePage from "./pages/Expense/AddEditExpensePage";
+import Expense from "./pages/Expense/Expense";
+import EmployeeLeavePage from "./pages/Leaves/EmployeeLeavePage";
+import LeavePage from "./pages/Leaves/LeavePage";
+import SelfLeavePage from "./pages/Leaves/SelfLeavePage";
 import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
 import RootRedirect from "./pages/OtherPage/RootRedirect";
+import PayrollHistory from "./pages/Payroll/PayrollHistory";
+import PayrollTable from "./pages/Payroll/PayrollTable";
 import AddEditSalaryPage from "./pages/Salary/AddEditSalaryPage";
 import SalaryPage from "./pages/Salary/SalaryPage";
 import AddEditSystemPage from "./pages/System/AddEditSystemPage";
 import SystemPage from "./pages/System/SystemPage";
 
 function AppRoutes() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const savedAuth = localStorage.getItem("auth");
+    if (savedAuth) {
+      dispatch(setAuth(JSON.parse(savedAuth)));
+    }
+  }, [dispatch]);
+
   return (
     <Routes>
       <Route path="/" element={<RootRedirect />} />
@@ -50,7 +60,6 @@ function AppRoutes() {
         <Route element={<AuthLayout />}>
           <Route path="/" element={<Navigate to="/signin" replace />} />
           <Route path="/signin" element={<SignInForm />} />
-          <Route path="/signup" element={<SignUpForm />} />
         </Route>
         <Route element={<SmallAuthLayout />}>
           <Route path="/forgot-password" element={<ForgetPassword />} />
@@ -74,14 +83,18 @@ function AppRoutes() {
           <Route path="/salary" element={<SalaryPage />} />
           <Route path="/salary/:id" element={<AddEditSalaryPage />} />
 
-          <Route path="/payrolls" element={<Payroll />} />
-          <Route path="/payrolls/:id" element={<AddEditPayroll />} />
+          <Route path="/payrolls" element={<PayrollTable />} />
+          <Route path="/payrolls/history" element={<PayrollHistory />} />
 
-          <Route path="/leave-requests" element={<Leave />} />
-          <Route path="/leave-requests/:id" element={<AddEditLeave />} />
+          <Route path="/leave-requests" element={<LeavePage />} />
+          <Route path="/leave-requests/:id" element={<SelfLeavePage />} />
+          <Route
+            path="/leave-requests/manual/:id"
+            element={<EmployeeLeavePage />}
+          />
 
           <Route path="/expenses" element={<Expense />} />
-          <Route path="/expenses/:id" element={<AddEditExpense />} />
+          <Route path="/expenses/:id" element={<AddEditExpensePage />} />
         </Route>
       </Route>
 
