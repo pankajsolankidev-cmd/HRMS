@@ -35,7 +35,8 @@ import LeavePage from "./pages/Leaves/LeavePage";
 import SelfLeavePage from "./pages/Leaves/SelfLeavePage";
 import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
 import RootRedirect from "./pages/OtherPage/RootRedirect";
-import BulkPayrollPage from "./pages/Payroll/BulkPayrollPage";
+import History from "./pages/Payroll/History";
+import PayrollTable from "./pages/Payroll/PayrollTable";
 import AddEditSalaryPage from "./pages/Salary/AddEditSalaryPage";
 import SalaryPage from "./pages/Salary/SalaryPage";
 import AddEditSystemPage from "./pages/System/AddEditSystemPage";
@@ -82,7 +83,8 @@ function AppRoutes() {
           <Route path="/salary" element={<SalaryPage />} />
           <Route path="/salary/:id" element={<AddEditSalaryPage />} />
 
-          <Route path="/payrolls" element={<BulkPayrollPage />} />
+          <Route path="/payrolls" element={<PayrollTable />} />
+          <Route path="/payrolls/history" element={<History />} />
 
           <Route path="/leave-requests" element={<LeavePage />} />
           <Route path="/leave-requests/:id" element={<SelfLeavePage />} />

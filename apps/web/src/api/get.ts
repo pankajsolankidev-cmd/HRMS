@@ -62,10 +62,6 @@ export const getEmployeePayrollHistory = async (params?: {
   const res = await api.get("/payrolls", { params });
   return res.data;
 };
-export const getPayrolls = async (params?: ListQueryParams) => {
-  const res = await api.get<PaginatedResponse<any>>("/payrolls", { params });
-  return res.data;
-};
 
 export const getPayrollSummary = async (month: string, year: number) => {
   const res = await api.get("/payrolls/summary", {

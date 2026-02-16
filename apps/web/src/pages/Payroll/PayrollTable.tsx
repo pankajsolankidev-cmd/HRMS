@@ -35,7 +35,7 @@ const MONTHS = [
   { label: "December", value: "DECEMBER" },
 ];
 
-export default function BulkPayrollPage() {
+export default function PayrollTable() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const currentMonth = new Date()
@@ -151,6 +151,16 @@ export default function BulkPayrollPage() {
   const allSelected =
     selectableIds.length > 0 &&
     selectableIds.every((id) => selectedIds.includes(id));
+
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    if (historyEmployee) {
+      setTimeout(() => setIsDrawerOpen(true), 10);
+    } else {
+      setIsDrawerOpen(false);
+    }
+  }, [historyEmployee]);
 
   const columns: Column<any>[] = [
     {
@@ -480,38 +490,45 @@ export default function BulkPayrollPage() {
           </div>
         )}
         {historyEmployee && (
-          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-            <div className="w-[800px] bg-white dark:bg-gray-900 rounded-xl shadow-xl flex flex-col max-h-[80vh]">
+          <div className="fixed inset-0 bg-black/30 z-50 flex justify-end">
+            <div
+              className={`w-[900px] bg-white dark:bg-gray-900 
+  h-full shadow-xl flex flex-col 
+  transform transition-transform duration-300 ease-in-out
+  ${isDrawerOpen ? "translate-x-0" : "translate-x-full"}`}
+            >
               <div className="p-6 border-b flex justify-between items-center">
                 <h2 className="text-lg font-semibold">
-                  Payroll History - {historyEmployee.firstName}
-                  {" " + historyEmployee.lastName}
+                  Payroll History - {historyEmployee.firstName}{" "}
+                  {historyEmployee.lastName}
                 </h2>
+
                 <button
-                  className="text-gray-500"
+                  className="text-gray-500 hover:text-red-500 transition"
                   onClick={() => setHistoryEmployee(null)}
                 >
                   ✕
                 </button>
               </div>
 
-              <div className="p-6 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto p-6">
                 {isHistoryLoading ? (
                   <div className="text-center py-6">Loading...</div>
                 ) : (
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-2">Month</th>
-                        <th className="text-left py-2">Year</th>
-                        <th className="text-left py-2">Leave Deduction</th>
-                        <th className="text-left py-2">Bonus</th>
-                        <th className="text-left py-2">Deduction</th>
-                        <th className="text-left py-2">Deduction Reason</th>
-                        <th className="text-left py-2">Bonus Description</th>
-                        <th className="text-left py-2">Net Salary</th>
+                      <tr className="border-b text-left">
+                        <th className="py-2">Month</th>
+                        <th>Year</th>
+                        <th>Leave Deduction</th>
+                        <th>Bonus</th>
+                        <th>Deduction</th>
+                        <th>Deduction Reason</th>
+                        <th>Bonus Description</th>
+                        <th>Net Salary</th>
                       </tr>
                     </thead>
+
                     <tbody>
                       {historyData?.data?.map((item: any, index: number) => {
                         const payroll = item.payroll;
@@ -541,12 +558,14 @@ export default function BulkPayrollPage() {
                                 "en-IN",
                               )}
                             </td>
-                            <td className="py-2">
+
+                            <td>
                               {payroll?.deductionReason
                                 ? payroll.deductionReason
                                 : "-"}
                             </td>
-                            <td className="py-2">
+
+                            <td>
                               {payroll?.bonusDescription
                                 ? payroll.bonusDescription
                                 : "-"}
@@ -566,12 +585,12 @@ export default function BulkPayrollPage() {
                 )}
               </div>
 
-              <div className="p-4 border-t flex justify-end">
+              <div className="p-6 border-t flex justify-end">
                 <Button
                   className="bg-gray-500"
                   onClick={() => setHistoryEmployee(null)}
                 >
-                  Close
+                  Back
                 </Button>
               </div>
             </div>
