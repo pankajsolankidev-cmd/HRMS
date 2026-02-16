@@ -10,7 +10,7 @@ import DataTable, {
 } from "../../components/tables/BasicTables/DataTable";
 import type { RootState } from "../../context";
 
-export default function History() {
+export default function PayrollHistory() {
   const roles = useSelector((state: RootState) => state.auth.roles);
 
   const isEmployee = roles.includes("EMPLOYEE");
@@ -42,7 +42,7 @@ export default function History() {
 
   const columns: Column<any>[] = [
     ...(!isEmployee
-      ? [   
+      ? [
           {
             header: "Name",
             cell: (row: any) => `${row.firstName} ${row.lastName}`,
