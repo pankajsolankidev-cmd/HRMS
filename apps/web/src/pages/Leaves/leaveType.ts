@@ -42,11 +42,6 @@ export type LeaveList = LeaveBase & {
   totalDays: string;
 };
 
-export type LeaveDetail = LeaveBase & {
-  fromHour?: number;
-  toHour?: number;
-};
-
 export type LeaveApiResponse<TLeave = LeaveBase> = {
   employee: Employee;
   leave: TLeave;

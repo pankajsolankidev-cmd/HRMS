@@ -77,9 +77,6 @@ export default function EmployeeLeavePage() {
     return <div className="p-6 text-gray-500">Loading leave details…</div>;
   }
 
-  /**
-   * ✅ Normalize ONLY in edit mode
-   */
   const normalizedLeave =
     isEditMode && data
       ? isManualLeave
