@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
+import { useSelector } from "react-redux";
 import { getEmployeePayrollHistory } from "../../api/get";
 import Card from "../../components/common/ComponentCard";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
@@ -7,8 +8,12 @@ import PageMeta from "../../components/common/PageMeta";
 import DataTable, {
   type Column,
 } from "../../components/tables/BasicTables/DataTable";
+import type { RootState } from "../../context";
 
 export default function History() {
+  const roles = useSelector((state: RootState) => state.auth.roles);
+
+  const isEmployee = roles.includes("EMPLOYEE");
   const { data, isLoading, isError } = useQuery({
     queryKey: ["employee-payroll-history"],
     queryFn: () => getEmployeePayrollHistory(),
@@ -18,8 +23,10 @@ export default function History() {
     return (
       data?.data?.map((item: any) => {
         const payroll = item.payroll;
-
+        const employee = item.employee;
         return {
+          firstName: employee.firstName,
+          lastName: employee.lastName,
           month: payroll.month,
           year: payroll.year,
           leaveDeduction: Number(payroll.leaveDeduction ?? 0),
@@ -34,6 +41,14 @@ export default function History() {
   }, [data]);
 
   const columns: Column<any>[] = [
+    ...(!isEmployee
+      ? [   
+          {
+            header: "Name",
+            cell: (row: any) => `${row.firstName} ${row.lastName}`,
+          },
+        ]
+      : []),
     {
       header: "Month",
       accessor: "month",
