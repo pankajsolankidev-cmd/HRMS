@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { getEmployeePayrollHistory } from "../../api/get";
 import Card from "../../components/common/ComponentCard";
@@ -8,11 +8,26 @@ import PageMeta from "../../components/common/PageMeta";
 import DataTable, {
   type Column,
 } from "../../components/tables/BasicTables/DataTable";
+import { useTableSort } from "../../components/tables/useTableSort";
 import type { RootState } from "../../context";
 
-export default function PayrollHistory() {
-  const roles = useSelector((state: RootState) => state.auth.roles);
+type PayrollHistoryRow = {
+  month: string;
+  year: number;
+  leaveDeduction: number;
+  bonus: number;
+  deductions: number;
+  deductionReason?: string;
+  bonusDescription?: string;
+  netSalary: number;
+};
 
+export default function PayrollHistory() {
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const { sortBy, sortOrder, handleSort } = useTableSort<PayrollHistoryRow>();
+
+  const roles = useSelector((state: RootState) => state.auth.roles);
   const isEmployee = roles.includes("EMPLOYEE");
   const { data, isLoading, isError } = useQuery({
     queryKey: ["employee-payroll-history"],
@@ -39,8 +54,9 @@ export default function PayrollHistory() {
       }) ?? []
     );
   }, [data]);
+  const total = data?.meta?.total ?? 0;
 
-  const columns: Column<any>[] = [
+  const columns: Column<PayrollHistoryRow>[] = [
     ...(!isEmployee
       ? [
           {
@@ -116,11 +132,17 @@ export default function PayrollHistory() {
           data={historyData}
           isLoading={isLoading}
           isError={isError}
-          page={1}
-          limit={historyData.length}
-          total={data?.meta?.total ?? 0}
-          onPageChange={() => {}}
-          onLimitChange={() => {}}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSort={handleSort}
+          page={page}
+          limit={limit}
+          total={total}
+          onPageChange={setPage}
+          onLimitChange={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1);
+          }}
         />
       </Card>
     </>
