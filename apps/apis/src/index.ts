@@ -21,6 +21,7 @@ import salaryRoutes from "./modules/payroll/salary.routes";
 import { payrollRoutes } from "./modules/payroll/payroll.routes";
 import positionRoutes from "./modules/master/position.routes";
 import expenseRoutes from "./modules/Expense/expense.routes";
+import departmentRoutes from "./modules/Department/department.routes";
 
 const app = Fastify({ logger: true });
 
@@ -78,6 +79,7 @@ app.register(salaryRoutes);
 app.register(payrollRoutes);
 app.register(positionRoutes);
 app.register(expenseRoutes);
+app.register(departmentRoutes);
 
 app.get("/health", async () => {
   return { status: "API is running 🚀" };
