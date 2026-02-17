@@ -3,6 +3,8 @@ CREATE TYPE "public"."payroll_month" AS ENUM('JANUARY', 'FEBRUARY', 'MARCH', 'AP
 CREATE TYPE "public"."leave_day_type" AS ENUM('full_day', 'first_half', 'second_half', 'multiple_days');--> statement-breakpoint
 CREATE TYPE "public"."leave_status" AS ENUM('pending', 'approved', 'rejected');--> statement-breakpoint
 CREATE TYPE "public"."leave_type" AS ENUM('sick', 'casual', 'marriage', 'wfh');--> statement-breakpoint
+CREATE TYPE "public"."project_status" AS ENUM('ACTIVE', 'COMPLETED');--> statement-breakpoint
+CREATE TYPE "public"."week_day_enum" AS ENUM('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY');--> statement-breakpoint
 CREATE TABLE "components" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
@@ -11,6 +13,14 @@ CREATE TABLE "components" (
 	"description" text,
 	"code" varchar(50) NOT NULL,
 	CONSTRAINT "components_code_unique" UNIQUE("code")
+);
+--> statement-breakpoint
+CREATE TABLE "departments" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now(),
+	"name" varchar(100) NOT NULL,
+	CONSTRAINT "departments_name_unique" UNIQUE("name")
 );
 --> statement-breakpoint
 CREATE TABLE "document_generation" (
@@ -30,7 +40,7 @@ CREATE TABLE "employees" (
 	"last_name" varchar(100) NOT NULL,
 	"email" varchar(255) NOT NULL,
 	"position_id" uuid NOT NULL,
-	"department_id" integer,
+	"department_id" uuid,
 	"joining_date" date NOT NULL,
 	"manager_id" uuid,
 	"welcomeWithWhatsapp" boolean DEFAULT false NOT NULL,
@@ -187,6 +197,16 @@ CREATE TABLE "user_roles" (
 	CONSTRAINT "user_roles_user_id_role_id_pk" PRIMARY KEY("user_id","role_id")
 );
 --> statement-breakpoint
+CREATE TABLE "organization" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now(),
+	"name" varchar(255) NOT NULL,
+	"working_start_time" time NOT NULL,
+	"working_end_time" time NOT NULL,
+	"week_off" "week_day_enum"[] NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "positions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
@@ -195,8 +215,20 @@ CREATE TABLE "positions" (
 	CONSTRAINT "positions_name_unique" UNIQUE("name")
 );
 --> statement-breakpoint
+CREATE TABLE "projects" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now(),
+	"name" varchar(150) NOT NULL,
+	"client_name" varchar(150),
+	"start_date" date NOT NULL,
+	"expected_end_date" date,
+	"status" "project_status" DEFAULT 'ACTIVE' NOT NULL
+);
+--> statement-breakpoint
 ALTER TABLE "document_generation" ADD CONSTRAINT "document_generation_employee_id_employees_id_fk" FOREIGN KEY ("employee_id") REFERENCES "public"."employees"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "employees" ADD CONSTRAINT "employees_position_id_positions_id_fk" FOREIGN KEY ("position_id") REFERENCES "public"."positions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "employees" ADD CONSTRAINT "employees_department_id_departments_id_fk" FOREIGN KEY ("department_id") REFERENCES "public"."departments"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "employees" ADD CONSTRAINT "employees_system_id_systems_id_fk" FOREIGN KEY ("system_id") REFERENCES "public"."systems"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "employees" ADD CONSTRAINT "employees_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "expenses" ADD CONSTRAINT "expenses_employee_id_employees_id_fk" FOREIGN KEY ("employee_id") REFERENCES "public"."employees"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
