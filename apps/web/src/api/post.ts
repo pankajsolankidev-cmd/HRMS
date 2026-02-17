@@ -127,3 +127,7 @@ export const addExpense = async (payload: ExpensePayload) => {
   const res = await api.post("/expenses", payload);
   return res.data;
 };
+export const addProject = async (payload: any) => {
+  const res = await api.post("/projects", payload);
+  return res.data;
+};

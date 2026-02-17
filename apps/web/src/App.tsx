@@ -37,6 +37,8 @@ import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
 import RootRedirect from "./pages/OtherPage/RootRedirect";
 import PayrollHistory from "./pages/Payroll/PayrollHistory";
 import PayrollTable from "./pages/Payroll/PayrollTable";
+import ProjectForm from "./pages/Project/ProjectForm";
+import ProjectTable from "./pages/Project/ProjectTable";
 import AddEditSalaryPage from "./pages/Salary/AddEditSalaryPage";
 import SalaryPage from "./pages/Salary/SalaryPage";
 import AddEditSystemPage from "./pages/System/AddEditSystemPage";
@@ -95,6 +97,9 @@ function AppRoutes() {
 
           <Route path="/expenses" element={<Expense />} />
           <Route path="/expenses/:id" element={<AddEditExpensePage />} />
+
+          <Route path="/projects" element={<ProjectTable />} />
+          <Route path="/projects/:id" element={<ProjectForm />} />
         </Route>
       </Route>
 

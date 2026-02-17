@@ -103,3 +103,11 @@ export const getExpenseSummary = async (fromDate: string, toDate: string) => {
   });
   return res.data;
 };
+export const getProjects = async (params?: ListQueryParams) => {
+  const res = await api.get<PaginatedResponse<any>>("/projects", { params });
+  return res.data;
+};
+export const getProjectById = async (id: string) => {
+  const res = await api.get(`/projects/${id}`);
+  return res.data;
+};

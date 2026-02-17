@@ -38,3 +38,7 @@ export const deleteExpense = async (id: number) => {
   const res = await api.delete(`/expenses/${id}`);
   return res.data;
 };
+export const deleteProject = async (id: number) => {
+  const res = await api.delete(`/projects/${id}`);
+  return res.data;
+};
