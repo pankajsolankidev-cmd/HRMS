@@ -51,3 +51,11 @@ export const updateExpense = async (params: {
   const res = await api.put(`/expenses/${id}`, payload);
   return res.data;
 };
+
+export const updateDepartment = async (
+  id: string,
+  payload: { name: string },
+) => {
+  const res = await api.put(`/departments/${id}`, payload);
+  return res.data;
+};

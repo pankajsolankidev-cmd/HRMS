@@ -10,7 +10,12 @@ import {
   PuzzlePieceIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
-import { IconHistory, IconReceiptRupee, IconWallet } from "@tabler/icons-react";
+import {
+  IconBuildingCommunity,
+  IconHistory,
+  IconReceiptRupee,
+  IconWallet,
+} from "@tabler/icons-react";
 
 import { Link, useLocation } from "react-router";
 import type { RootState } from "../context";
@@ -32,6 +37,11 @@ const ADMIN_MENU: NavItem[] = [
   { icon: <IconReceiptRupee />, name: "Payrolls", path: "/payrolls" },
   { icon: <IconWallet />, name: "Expenses", path: "/expenses" },
   { icon: <IconHistory />, name: "Payroll History", path: "/payrolls/history" },
+  {
+    icon: <IconBuildingCommunity />,
+    name: "Departments",
+    path: "/departments",
+  },
 ];
 
 const EMPLOYEE_MENU: NavItem[] = [

@@ -41,6 +41,8 @@ import AddEditSalaryPage from "./pages/Salary/AddEditSalaryPage";
 import SalaryPage from "./pages/Salary/SalaryPage";
 import AddEditSystemPage from "./pages/System/AddEditSystemPage";
 import SystemPage from "./pages/System/SystemPage";
+import DepartmentForm from "./pages/Department/DepartmentForm";
+import DepartmentTable from "./pages/Department/DepartmentTable";
 
 function AppRoutes() {
   const dispatch = useDispatch();
@@ -95,6 +97,10 @@ function AppRoutes() {
 
           <Route path="/expenses" element={<Expense />} />
           <Route path="/expenses/:id" element={<AddEditExpensePage />} />
+
+          <Route path="/departments" element={<DepartmentTable />} />
+          <Route path="/departments/:id" element={<DepartmentForm />} />
+
         </Route>
       </Route>
 
