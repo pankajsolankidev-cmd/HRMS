@@ -54,6 +54,7 @@ export const getPayrollPreview = async (params?: {
   const res = await api.get("/payrolls/bulk/employee", {
     params,
   });
+
   return res.data;
 };
 export const getEmployeePayrollHistory = async (params?: {
@@ -101,5 +102,10 @@ export const getExpenseSummary = async (fromDate: string, toDate: string) => {
   const res = await api.get("/expenses/summary", {
     params: { fromDate, toDate },
   });
+  return res.data;
+};
+
+export const getOrganization = async () => {
+  const res = await api.get("/organization");
   return res.data;
 };
