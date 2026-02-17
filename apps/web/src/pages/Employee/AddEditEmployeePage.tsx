@@ -7,7 +7,12 @@ import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
 
-import { getEmployeeById, getPositions, getSystems } from "../../api/get";
+import {
+  getDepartments,
+  getEmployeeById,
+  getPositions,
+  getSystems,
+} from "../../api/get";
 import { addEmployee } from "../../api/post";
 import { updateEmployee } from "../../api/put";
 
@@ -85,6 +90,10 @@ export default function AddEditEmployeePage() {
     queryKey: ["positions-lookup"],
     queryFn: () => getPositions(),
   });
+  const { data: departments } = useQuery({
+    queryKey: ["departments-lookup"],
+    queryFn: () => getDepartments(),
+  });
 
   const { data: employeeData, isLoading } = useQuery({
     queryKey: ["employee", id],
@@ -104,10 +113,10 @@ export default function AddEditEmployeePage() {
     label: s.name,
   }));
 
-  const departmentOptions = [
-    { value: "1", label: "HR" },
-    { value: "2", label: "Engineering" },
-  ];
+  const departmentOptions = (departments?.data ?? []).map((d: any) => ({
+    value: String(d.id),
+    label: d.name,
+  }));
 
   const managerOptions = [
     { value: "10", label: "John Manager" },
