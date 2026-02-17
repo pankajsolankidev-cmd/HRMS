@@ -7,13 +7,13 @@ import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
 
+import { getDepartmentById } from "../../api/get";
+import { addDepartment } from "../../api/post";
+import { updateDepartment } from "../../api/put";
 import ComponentCard from "../../components/common/ComponentCard";
 import PageMeta from "../../components/common/PageMeta";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
-import { getDepartmentById } from "../../api/get";
-import { updateDepartment } from "../../api/put";
-import { addDepartment } from "../../api/post";
 
 const departmentSchema = z.object({
   name: z.string().min(1, "Department name is required"),
@@ -53,7 +53,7 @@ export default function DepartmentForm() {
     }
   }, [data, isEditMode, reset]);
 
-  const mutation = useMutation({
+  const saveMutation = useMutation({
     mutationFn: (payload: { name: string }) =>
       isEditMode ? updateDepartment(id!, payload) : addDepartment(payload),
 
@@ -76,7 +76,7 @@ export default function DepartmentForm() {
   });
 
   const onSubmit = (formData: DepartmentFormData) => {
-    mutation.mutate(formData);
+    saveMutation.mutate(formData);
   };
 
   if (isEditMode && isLoading) {
@@ -107,18 +107,17 @@ export default function DepartmentForm() {
             hint={errors.name?.message}
           />
 
-          <div className="flex justify-end gap-3 pt-6">
+          <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
             <Button
-              disabled={mutation.isPending}
+              disabled={saveMutation.isPending}
               className="bg-black dark:bg-blue-500 text-white"
             >
-              {mutation.isPending
+              {saveMutation.isPending
                 ? "Saving..."
                 : isEditMode
                   ? "Update"
                   : "Save"}
             </Button>
-
             <Button variant="outline" onClick={() => navigate("/departments")}>
               Back
             </Button>
