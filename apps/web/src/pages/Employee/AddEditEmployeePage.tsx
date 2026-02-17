@@ -10,6 +10,7 @@ import { z } from "zod";
 import {
   getDepartments,
   getEmployeeById,
+  getEmployees,
   getPositions,
   getSystems,
 } from "../../api/get";
@@ -94,6 +95,10 @@ export default function AddEditEmployeePage() {
     queryKey: ["departments-lookup"],
     queryFn: () => getDepartments(),
   });
+  const { data: employees } = useQuery({
+    queryKey: ["employee"],
+    queryFn: () => getEmployees(),
+  });
 
   const { data: employeeData, isLoading } = useQuery({
     queryKey: ["employee", id],
@@ -118,10 +123,10 @@ export default function AddEditEmployeePage() {
     label: d.name,
   }));
 
-  const managerOptions = [
-    { value: "10", label: "John Manager" },
-    { value: "11", label: "Jane Manager" },
-  ];
+  const managerOptions = (employees?.data ?? []).map((e: any) => ({
+    value: String(e.id),
+    label: e.firstName + " " + e.lastName,
+  }));
 
   useEffect(() => {
     if (isEditMode && employeeData) {
@@ -245,6 +250,7 @@ export default function AddEditEmployeePage() {
                   control={control}
                   render={({ field }) => (
                     <Select
+                      required
                       label="Department"
                       placeholder="Select Department"
                       options={departmentOptions}
@@ -280,20 +286,21 @@ export default function AddEditEmployeePage() {
                     />
                   )}
                 />
-
-                <Controller
-                  name="managerId"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      label="Manager"
-                      placeholder="Select Manager"
-                      options={managerOptions}
-                      value={field.value ?? ""}
-                      onChange={field.onChange}
-                    />
-                  )}
-                />
+                {isEditMode && (
+                  <Controller
+                    name="managerId"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        label="Manager"
+                        placeholder="Select Manager"
+                        options={managerOptions}
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                      />
+                    )}
+                  />
+                )}
               </div>
             </div>
 
