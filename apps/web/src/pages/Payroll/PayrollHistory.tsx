@@ -37,8 +37,8 @@ export default function PayrollHistory() {
   const historyData = useMemo(() => {
     return (
       data?.data?.map((item: any) => {
-        const payroll = item.payrolls;
-        const employee = item.employees;
+        const payroll = item.payroll;
+        const employee = item.employee;
         return {
           firstName: employee.firstName,
           lastName: employee.lastName,

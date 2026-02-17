@@ -1,11 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
 
+import { getOrganization } from "../../api/get";
 import { addOrganization } from "../../api/post";
 import ComponentCard from "../../components/common/ComponentCard";
 import PageMeta from "../../components/common/PageMeta";
@@ -37,15 +39,21 @@ const organizationSchema = z.object({
     .min(1, "Select at least one week off"),
 });
 
+type OrganizationFormData = z.infer<typeof organizationSchema>;
+
 export default function OrganizationForm() {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
+  const isEditMode = Boolean(id && id !== "new");
 
   const {
     register,
     handleSubmit,
+    reset,
     control,
     formState: { errors },
-  } = useForm<z.infer<typeof organizationSchema>>({
+  } = useForm<OrganizationFormData>({
     resolver: zodResolver(organizationSchema),
     defaultValues: {
       name: "",
@@ -57,11 +65,35 @@ export default function OrganizationForm() {
     },
   });
 
+  const { data: organizationData, isLoading } = useQuery({
+    queryKey: ["organization"],
+    queryFn: getOrganization,
+    enabled: isEditMode,
+  });
+
+  useEffect(() => {
+    if (organizationData && isEditMode) {
+      reset({
+        name: organizationData.name ?? "",
+        workingHours: {
+          start: organizationData.workingStartTime ?? "",
+          end: organizationData.workingEndTime ?? "",
+        },
+        weekOff: organizationData.weekOff ?? [],
+      });
+    }
+  }, [organizationData, isEditMode, reset]);
+
   const saveMutation = useMutation({
     mutationFn: (payload: CreateOrganizationDto) => addOrganization(payload),
 
     onSuccess: (res) => {
-      toast.success(res?.message ?? "Organization created successfully");
+      toast.success(
+        res?.message ??
+          (isEditMode
+            ? "Organization updated successfully"
+            : "Organization created successfully"),
+      );
       navigate("/organization");
     },
 
@@ -73,7 +105,7 @@ export default function OrganizationForm() {
     },
   });
 
-  const onSubmit = (formData: z.infer<typeof organizationSchema>) => {
+  const onSubmit = (formData: OrganizationFormData) => {
     saveMutation.mutate(formData as CreateOrganizationDto);
   };
 
@@ -82,14 +114,28 @@ export default function OrganizationForm() {
     text: day,
   }));
 
+  if (isEditMode && isLoading) {
+    return (
+      <div className="p-6 text-gray-500 dark:text-gray-400">
+        Loading organization data...
+      </div>
+    );
+  }
+
   return (
     <>
       <PageMeta
-        title="Add Organization"
-        description="Create a new Organization"
+        title={isEditMode ? "Edit Organization" : "Add Organization"}
+        description={
+          isEditMode
+            ? "Update organization details"
+            : "Create a new Organization"
+        }
       />
 
-      <ComponentCard title="Add Organization">
+      <ComponentCard
+        title={isEditMode ? "Edit Organization" : "Add Organization"}
+      >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Input
@@ -159,7 +205,11 @@ export default function OrganizationForm() {
               disabled={saveMutation.isPending}
               className="bg-black dark:bg-blue-500 text-white"
             >
-              {saveMutation.isPending ? "Saving..." : "Save"}
+              {saveMutation.isPending
+                ? "Saving..."
+                : isEditMode
+                  ? "Update"
+                  : "Save"}
             </Button>
 
             <Button variant="outline" onClick={() => navigate("/organization")}>

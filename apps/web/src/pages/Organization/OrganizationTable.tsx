@@ -1,4 +1,5 @@
 import type { CreateOrganizationDto } from "@shared/types";
+import { IconEdit } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { getOrganization } from "../../api/get";
@@ -40,7 +41,7 @@ export default function OrganizationTable() {
       header: "Working Start",
       accessor: "workingStartTime",
       cell: (row) => (
-        <div className="text-gray-600 dark:text-gray-400">
+        <div className="font-medium text-lg text-gray-600 dark:text-gray-400">
           {row.workingStartTime}
         </div>
       ),
@@ -49,7 +50,7 @@ export default function OrganizationTable() {
       header: "Working End",
       accessor: "workingEndTime",
       cell: (row) => (
-        <div className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="font-medium text-lg text-gray-600 dark:text-gray-400">
           {row.workingEndTime}
         </div>
       ),
@@ -57,6 +58,17 @@ export default function OrganizationTable() {
     {
       header: "Week Off",
       cell: (row) => row.weekOff?.join(", ") ?? "-",
+    },
+    {
+      header: "Actions",
+      align: "center",
+      cell: (row) => (
+        <IconEdit
+          size={18}
+          className="cursor-pointer text-blue-600 hover:scale-110 transition"
+          onClick={() => navigate(`/organization/${row.id}`)}
+        />
+      ),
     },
   ];
 
