@@ -140,7 +140,7 @@ export default function OrganizationForm() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Input
               required
-              label="Organization Name"
+              label="Name"
               placeholder="Enter organization name"
               {...register("name")}
               error={!!errors.name}
