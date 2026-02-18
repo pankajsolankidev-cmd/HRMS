@@ -1,7 +1,8 @@
 import { IconEdit } from "@tabler/icons-react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 
+import type { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { getProjects } from "../../api/get";
@@ -32,7 +33,9 @@ export default function ProjectTable() {
   useEffect(() => {
     setPage(1);
   }, [sortBy, sortOrder]);
-  const { data, isLoading, isError } = useQuery<PaginatedResponse<Project>>({
+  const { data, isLoading, refetch, isError } = useQuery<
+    PaginatedResponse<Project>
+  >({
     queryKey: ["projects", page, limit, sortBy, sortOrder],
     queryFn: () =>
       getProjects({
@@ -42,7 +45,6 @@ export default function ProjectTable() {
       }),
     placeholderData: (prev) => prev,
   });
-  const queryClient = useQueryClient();
 
   const { mutate: markCompleted, isPending } = useMutation({
     mutationFn: (id: number) =>
@@ -50,15 +52,14 @@ export default function ProjectTable() {
         id: String(id),
         payload: { status: "COMPLETED" },
       }),
-
-    onSuccess: () => {
-      toast.success("Project marked as completed");
-
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
+    onSuccess: (res) => {
+      toast.success(res?.message ?? "Project marked as completed");
+      refetch();
     },
-
-    onError: () => {
-      toast.error("Failed to update project status");
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(
+        error?.response?.data?.message ?? "An unexpected error occurred",
+      );
     },
   });
 
