@@ -2,6 +2,7 @@ import { IconEdit } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 
+import { useState } from "react";
 import { getProjects } from "../../api/get";
 import type { PaginatedResponse } from "../../api/types";
 import Card from "../../components/common/ComponentCard";
@@ -22,6 +23,8 @@ type Project = {
 
 export default function ProjectTable() {
   const navigate = useNavigate();
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
 
   const { data, isLoading, isError } = useQuery<PaginatedResponse<Project>>({
     queryKey: ["projects"],
@@ -29,6 +32,7 @@ export default function ProjectTable() {
   });
 
   const projectData = data?.data ?? [];
+  const total = data?.meta?.total ?? 0;
 
   const columns: Column<Project>[] = [
     {
@@ -84,15 +88,24 @@ export default function ProjectTable() {
     {
       header: "Action",
       align: "center",
-      cell: (row) => (
-        <div className="flex items-center justify-center gap-3">
-          <IconEdit
-            size={18}
-            onClick={() => navigate(`/projects/${row.id}`)}
-            className="cursor-pointer text-blue-600 dark:text-blue-400"
-          />
-        </div>
-      ),
+      cell: (row) =>
+        row.status === "ACTIVE" && (
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={() => {
+                alert(`Marking project "${row.name}" as completed.`);
+              }}
+              className=" bg-green-600 text-white px-3 py-1 rounded-full"
+            >
+              Completed
+            </button>
+            <IconEdit
+              size={18}
+              onClick={() => navigate(`/projects/${row.id}`)}
+              className="cursor-pointer text-blue-600 dark:text-blue-400"
+            />
+          </div>
+        ),
     },
   ];
 
@@ -121,6 +134,14 @@ export default function ProjectTable() {
             data={projectData}
             isLoading={isLoading}
             isError={isError}
+            page={page}
+            limit={limit}
+            total={total}
+            onPageChange={setPage}
+            onLimitChange={(newLimit) => {
+              setLimit(newLimit);
+              setPage(1);
+            }}
           />
         )}
       </Card>
