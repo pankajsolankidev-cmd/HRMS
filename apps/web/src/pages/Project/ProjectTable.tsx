@@ -1,4 +1,9 @@
-import { IconEdit } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconDotsVertical,
+  IconEdit,
+  IconUser,
+} from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 
@@ -30,13 +35,14 @@ export default function ProjectTable() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const { sortBy, sortOrder, handleSort } = useTableSort<Project>();
+  const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
   useEffect(() => {
     setPage(1);
   }, [sortBy, sortOrder]);
   const { data, isLoading, refetch, isError } = useQuery<
     PaginatedResponse<Project>
   >({
-    queryKey: ["projects", page, limit, sortBy, sortOrder],
+    queryKey: ["projects", page, limit, sortBy, sortOrder ?? "all"],
     queryFn: () =>
       getProjects({
         page,
@@ -46,7 +52,7 @@ export default function ProjectTable() {
     placeholderData: (prev) => prev,
   });
 
-  const { mutate: markCompleted, isPending } = useMutation({
+  const { mutate: markCompleted } = useMutation({
     mutationFn: (id: number) =>
       updateProject({
         id: String(id),
@@ -69,8 +75,8 @@ export default function ProjectTable() {
   const columns: Column<Project>[] = [
     {
       header: "Project Name",
-      sortable: true,
       accessor: "name",
+      sortable: true,
       cell: (row) => (
         <div className="font-medium text-gray-800 dark:text-white/90">
           {row.name ?? "-"}
@@ -88,8 +94,8 @@ export default function ProjectTable() {
     },
     {
       header: "Start Date",
-      sortable: true,
       accessor: "startDate",
+      sortable: true,
       cell: (row) => (
         <div className="font-medium text-gray-800 dark:text-white/90">
           {row.startDate ?? "-"}
@@ -122,23 +128,62 @@ export default function ProjectTable() {
     {
       header: "Action",
       align: "center",
-      cell: (row) =>
-        row.status === "ACTIVE" && (
-          <div className="flex items-center justify-center gap-3">
-            <button
-              onClick={() => markCompleted(row.id)}
-              disabled={isPending}
-              className="bg-green-600 text-white px-3 py-1 rounded-full disabled:opacity-50"
-            >
-              Completed
-            </button>
-            <IconEdit
-              size={18}
-              onClick={() => navigate(`/projects/${row.id}`)}
-              className="cursor-pointer text-blue-600 dark:text-blue-400"
-            />
-          </div>
-        ),
+      cell: (row) => (
+        <div
+          className="relative flex justify-center"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Button
+            onClick={() =>
+              setActiveDropdown(activeDropdown === row.id ? null : row.id)
+            }
+            className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            <IconDotsVertical size={20} className="text-gray-500" />
+          </Button>
+
+          {activeDropdown === row.id && (
+            <div className="absolute right-0 top-8 z-[100] w-44 rounded-lg border border-gray-200 bg-white py-2 shadow-xl dark:border-gray-700 dark:bg-gray-800">
+              {row.status === "ACTIVE" && (
+                <>
+                  <Button
+                    onClick={() => {
+                      markCompleted(row.id);
+                      setActiveDropdown(null);
+                    }}
+                    className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
+                  >
+                    <IconCheck size={16} />
+                    Mark Completed
+                  </Button>
+
+                  <Button
+                    onClick={() => {
+                      navigate(`/projects/${row.id}`);
+                      setActiveDropdown(null);
+                    }}
+                    className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
+                  >
+                    <IconEdit size={16} />
+                    Edit
+                  </Button>
+                </>
+              )}
+
+              <Button
+                onClick={() => {
+                  navigate(`/projects/${row.id}/employees`);
+                  setActiveDropdown(null);
+                }}
+                className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
+              >
+                <IconUser size={16} />
+                {row.status === "ACTIVE" ? "Assign Team" : "View Team"}
+              </Button>
+            </div>
+          )}
+        </div>
+      ),
     },
   ];
 

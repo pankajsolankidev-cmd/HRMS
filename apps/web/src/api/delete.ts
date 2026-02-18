@@ -42,3 +42,8 @@ export const deleteProject = async (id: number) => {
   const res = await api.delete(`/projects/${id}`);
   return res.data;
 };
+
+export const removeEmployeeFromProject = async (params: { projectId: string; employeeId: string }) => {
+  const res = await api.delete(`/projects/${params.projectId}/employees/${params.employeeId}`);
+  return res.data;
+};

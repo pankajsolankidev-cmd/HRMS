@@ -111,3 +111,7 @@ export const getProjectById = async (id: string) => {
   const res = await api.get(`/projects/${id}`);
   return res.data;
 };
+export const getProjectEmployees = async (projectId: string) => {
+  const res = await api.get(`/projects/${projectId}/employees`);
+  return res.data;
+};

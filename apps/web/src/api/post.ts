@@ -131,3 +131,14 @@ export const addProject = async (payload: any) => {
   const res = await api.post("/projects", payload);
   return res.data;
 };
+export const assignEmployeeToProject = async (params: {
+  projectId: string;
+  employeeIds: string[];
+}) => {
+  const { projectId, employeeIds } = params;
+  const res = await api.post(`/projects/${projectId}/employees`, {
+    employeeIds,
+  });
+
+  return res.data;
+};
