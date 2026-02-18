@@ -1,15 +1,18 @@
 import { IconEdit } from "@tabler/icons-react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { getProjects } from "../../api/get";
+import { updateProject } from "../../api/put";
 import type { PaginatedResponse } from "../../api/types";
 import Card from "../../components/common/ComponentCard";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import DataTable, {
   type Column,
 } from "../../components/tables/BasicTables/DataTable";
+import { useTableSort } from "../../components/tables/useTableSort";
 import Button from "../../components/ui/button/Button";
 
 type Project = {
@@ -25,10 +28,38 @@ export default function ProjectTable() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-
+  const { sortBy, sortOrder, handleSort } = useTableSort<Project>();
+  useEffect(() => {
+    setPage(1);
+  }, [sortBy, sortOrder]);
   const { data, isLoading, isError } = useQuery<PaginatedResponse<Project>>({
-    queryKey: ["projects"],
-    queryFn: () => getProjects(),
+    queryKey: ["projects", page, limit, sortBy, sortOrder],
+    queryFn: () =>
+      getProjects({
+        page,
+        limit,
+        ...(sortBy && sortOrder ? { sortBy: sortBy as string, sortOrder } : {}),
+      }),
+    placeholderData: (prev) => prev,
+  });
+  const queryClient = useQueryClient();
+
+  const { mutate: markCompleted, isPending } = useMutation({
+    mutationFn: (id: number) =>
+      updateProject({
+        id: String(id),
+        payload: { status: "COMPLETED" },
+      }),
+
+    onSuccess: () => {
+      toast.success("Project marked as completed");
+
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+    },
+
+    onError: () => {
+      toast.error("Failed to update project status");
+    },
   });
 
   const projectData = data?.data ?? [];
@@ -37,10 +68,11 @@ export default function ProjectTable() {
   const columns: Column<Project>[] = [
     {
       header: "Project Name",
+      sortable: true,
       accessor: "name",
       cell: (row) => (
         <div className="font-medium text-gray-800 dark:text-white/90">
-          {row.name}
+          {row.name ?? "-"}
         </div>
       ),
     },
@@ -49,16 +81,17 @@ export default function ProjectTable() {
       accessor: "clientName",
       cell: (row) => (
         <div className="font-medium text-gray-800 dark:text-white/90">
-          {row.clientName}
+          {row.clientName ?? "-"}
         </div>
       ),
     },
     {
       header: "Start Date",
+      sortable: true,
       accessor: "startDate",
       cell: (row) => (
         <div className="font-medium text-gray-800 dark:text-white/90">
-          {row.startDate}
+          {row.startDate ?? "-"}
         </div>
       ),
     },
@@ -67,7 +100,7 @@ export default function ProjectTable() {
       accessor: "expectedEndDate",
       cell: (row) => (
         <div className="font-medium text-gray-800 dark:text-white/90">
-          {row.expectedEndDate}
+          {row.expectedEndDate ?? "-"}
         </div>
       ),
     },
@@ -92,10 +125,9 @@ export default function ProjectTable() {
         row.status === "ACTIVE" && (
           <div className="flex items-center justify-center gap-3">
             <button
-              onClick={() => {
-                alert(`Marking project "${row.name}" as completed.`);
-              }}
-              className=" bg-green-600 text-white px-3 py-1 rounded-full"
+              onClick={() => markCompleted(row.id)}
+              disabled={isPending}
+              className="bg-green-600 text-white px-3 py-1 rounded-full disabled:opacity-50"
             >
               Completed
             </button>
@@ -134,6 +166,9 @@ export default function ProjectTable() {
             data={projectData}
             isLoading={isLoading}
             isError={isError}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSort={handleSort}
             page={page}
             limit={limit}
             total={total}
