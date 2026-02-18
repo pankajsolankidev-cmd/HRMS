@@ -5,12 +5,50 @@ import { db } from "../../db";
 import { projects } from "../../db/schema/projects.schema";
 import { sendMessage } from "../../utils/api-response";
 import { getPagination } from "../../utils/pagination";
+import {
+  CreateProjectDto,
+  UpdateProjectDto,
+} from "@shared/types/src/project/project.dto";
 
 export async function createProjectHandler(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  await db.insert(projects).values(request.body as any);
+  const body = request.body as CreateProjectDto;
+
+  const startDate = new Date(body.startDate);
+  const expectedEndDate = body.expectedEndDate
+    ? new Date(body.expectedEndDate)
+    : null;
+
+  if (isNaN(startDate.getTime())) {
+    return reply.status(400).send({
+      message: "Invalid startDate",
+    });
+  }
+
+  if (
+    expectedEndDate &&
+    (isNaN(expectedEndDate.getTime()) || expectedEndDate < startDate)
+  ) {
+    return reply.status(400).send({
+      message: "expectedEndDate must be after than or equal to startDate",
+    });
+  }
+
+  const [existing] = await db
+    .select({ id: projects.id })
+    .from(projects)
+    .where(eq(projects.name, body.name));
+
+  if (existing) {
+    return reply.status(409).send({
+      message: "Project with this name already exists",
+    });
+  }
+
+  await db.insert(projects).values(body);
+
   return sendMessage(reply, "Project created successfully", 201);
 }
 
@@ -61,10 +99,48 @@ export async function updateProjectHandler(
   reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
+  const body = request.body as UpdateProjectDto;
+
+  if (body.startDate || body.expectedEndDate) {
+    const startDate = body.startDate ? new Date(body.startDate) : null;
+
+    const expectedEndDate = body.expectedEndDate
+      ? new Date(body.expectedEndDate)
+      : null;
+
+    if (startDate && isNaN(startDate.getTime())) {
+      return reply.status(400).send({
+        message: "Invalid startDate",
+      });
+    }
+
+    if (
+      expectedEndDate &&
+      (isNaN(expectedEndDate.getTime()) ||
+        (startDate && expectedEndDate < startDate))
+    ) {
+      return reply.status(400).send({
+        message: "expectedEndDate must be after than or equal to startDate",
+      });
+    }
+  }
+
+  if (body.name) {
+    const [existing] = await db
+      .select({ id: projects.id })
+      .from(projects)
+      .where(eq(projects.name, body.name));
+
+    if (existing && existing.id !== id) {
+      return reply.status(409).send({
+        message: "Project with this name already exists",
+      });
+    }
+  }
 
   const [updated] = await db
     .update(projects)
-    .set(request.body as any)
+    .set(body)
     .where(eq(projects.id, id))
     .returning();
 
