@@ -1,6 +1,6 @@
 import Cookies from "js-cookie";
 import api, { refreshApi } from "./axios";
-
+import type { CreateOrganizationDto } from "@shared/types";
 export const signInApi = async (data: { email: string; password: string }) => {
   const res = await api.post("/signin", data);
   return res.data;
@@ -125,5 +125,10 @@ export type ExpensePayload = {
 
 export const addExpense = async (payload: ExpensePayload) => {
   const res = await api.post("/expenses", payload);
+  return res.data;
+};
+
+export const addOrganization = async (payload: CreateOrganizationDto) => {
+  const res = await api.post("/organization", payload);
   return res.data;
 };
