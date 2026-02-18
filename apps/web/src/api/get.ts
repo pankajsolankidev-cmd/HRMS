@@ -105,6 +105,16 @@ export const getExpenseSummary = async (fromDate: string, toDate: string) => {
   return res.data;
 };
 
+export const getDepartments = async (params?: ListQueryParams) => {
+  const res = await api.get<PaginatedResponse<any>>("/departments", {
+    params,
+  });
+  return res.data;
+};
+export const getDepartmentById = async (id: string) => {
+  const res = await api.get(`/departments/${id}`);
+  return res.data;
+};
 export const getOrganization = async () => {
   const res = await api.get("/organization");
   return res.data;
