@@ -14,3 +14,6 @@ export * from "./role-permissions.schema";
 export * from "./user-roles.schema";
 export * from "./department.schema";
 export * from "./organization.schema";
+export * from "./projects.schema";
+export * from "./project_employees.schema";
+

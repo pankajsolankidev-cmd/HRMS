@@ -12,6 +12,8 @@ import {
 } from "@heroicons/react/24/outline";
 import {
   IconBriefcase,
+  IconBuilding,
+  IconBuildingCommunity,
   IconHistory,
   IconReceiptRupee,
   IconWallet,
@@ -35,9 +37,15 @@ const ADMIN_MENU: NavItem[] = [
   { icon: <CalendarIcon />, name: "Leaves", path: "/leave-requests" },
   { icon: <IconReceiptRupee />, name: "Salary", path: "/salary" },
   { icon: <IconReceiptRupee />, name: "Payrolls", path: "/payrolls" },
-  { icon: <IconWallet />, name: "Expenses", path: "/expenses" },
   { icon: <IconHistory />, name: "Payroll History", path: "/payrolls/history" },
   { icon: <IconBriefcase />, name: "Projects", path: "/projects" },
+  {
+    icon: <IconBuildingCommunity />,
+    name: "Departments",
+    path: "/departments",
+  },
+  { icon: <IconWallet />, name: "Expenses", path: "/expenses" },
+  { icon: <IconBuilding />, name: "Organization", path: "/organization" },
 ];
 
 const EMPLOYEE_MENU: NavItem[] = [

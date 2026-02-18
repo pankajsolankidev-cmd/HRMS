@@ -1,4 +1,4 @@
-import { CalendarIcon } from "@heroicons/react/24/outline";
+import { CalendarIcon, ClockIcon } from "@heroicons/react/24/outline";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.css";
 import type { Instance as FlatpickrInstance } from "flatpickr/dist/types/instance";
@@ -34,20 +34,28 @@ export default function DatePicker({
   hint,
 }: PropsType) {
   const fpRef = useRef<FlatpickrInstance | null>(null);
+  const isTimeMode = mode === "time";
 
   useEffect(() => {
     fpRef.current = flatpickr(`#${id}`, {
-      mode,
+      mode: isTimeMode ? "single" : mode,
       static: true,
       monthSelectorType: "static",
-      dateFormat: "Y-m-d",
 
-      disable: [
-        (date: Date) => {
-          const day = date.getDay();
-          return day === 0 || day === 6;
-        },
-      ],
+      enableTime: isTimeMode,
+      noCalendar: isTimeMode,
+      time_24hr: true,
+
+      dateFormat: isTimeMode ? "H:i" : "Y-m-d",
+
+      disable: isTimeMode
+        ? []
+        : [
+            (date: Date) => {
+              const day = date.getDay();
+              return day === 0 || day === 6;
+            },
+          ],
 
       onChange,
     }) as FlatpickrInstance;
@@ -81,20 +89,25 @@ export default function DatePicker({
         <input
           id={id}
           placeholder={placeholder}
-          className={`h-11 w-full rounded-lg border appearance-none px-4 py-2.5 pr-10 text-sm shadow-theme-xs
-            placeholder:text-gray-400 focus:outline-hidden focus:ring-3 bg-transparent
-            text-gray-800 dark:bg-gray-900 dark:text-white/90
-            dark:placeholder:text-white/30
-            ${
-              error
-                ? "border-red-500 focus:ring-red-500/20"
-                : "border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700 dark:focus:border-brand-800"
-            }
-          `}
+          className={`h-12 w-full rounded-2xl border px-4 pr-11 text-sm
+          transition-all duration-200
+          bg-white/70 backdrop-blur-md
+          dark:bg-gray-900/60
+          ${isTimeMode ? "text-center text-base font-medium tracking-wide" : ""}
+          ${
+            error
+              ? "border-red-400 focus:ring-4 focus:ring-red-200"
+              : "border-gray-300 focus:border-brand-400 focus:ring-4 focus:ring-brand-200 dark:border-gray-700"
+          }
+          focus:outline-none`}
         />
 
         <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500 dark:text-gray-400">
-          <CalendarIcon className="h-5 w-5" />
+          {isTimeMode ? (
+            <ClockIcon className="h-5 w-5" />
+          ) : (
+            <CalendarIcon className="h-5 w-5" />
+          )}
         </span>
       </div>
 
