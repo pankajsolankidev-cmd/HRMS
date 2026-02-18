@@ -4,7 +4,7 @@ export interface CreateEmployeeDto {
   email: string;
   positionId: string;
 
-  departmentId?: number;
+  departmentId?: string;
   joiningDate: string;
   managerId?: string | null;
   systemId?: string | null;

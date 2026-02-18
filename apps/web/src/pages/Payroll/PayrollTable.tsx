@@ -38,11 +38,17 @@ const MONTHS = [
 export default function PayrollTable() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const currentMonth = new Date()
+  const today = new Date();
+
+  const previousDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+
+  const previousMonth = previousDate
     .toLocaleString("en-US", { month: "long" })
     .toUpperCase();
 
-  const CURRENT_YEAR = new Date().getFullYear();
+  const previousYear = previousDate.getFullYear();
+
+  const CURRENT_YEAR = today.getFullYear();
   const START_YEAR = 2020;
 
   const YEAR_OPTIONS = Array.from(
@@ -53,14 +59,14 @@ export default function PayrollTable() {
     },
   );
 
-  const [summaryMonth, setSummaryMonth] = useState(currentMonth);
-  const [summaryYear, setSummaryYear] = useState<number | null>(CURRENT_YEAR);
+  const [summaryMonth, setSummaryMonth] = useState(previousMonth);
+  const [summaryYear, setSummaryYear] = useState<number | null>(previousYear);
 
   const [appliedMonth, setAppliedMonth] = useState<string | null>(null);
   const [appliedYear, setAppliedYear] = useState<number | null>(null);
   const [employees, setEmployees] = useState<any[]>([]);
-  const [selectedMonth, setSelectedMonth] = useState<string>();
-  const [selectedYear, setSelectedYear] = useState<number>();
+  const [selectedMonth, setSelectedMonth] = useState<string>(previousMonth);
+  const [selectedYear, setSelectedYear] = useState<number>(previousYear);
   const [editingEmployee, setEditingEmployee] = useState<any | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [historyEmployee, setHistoryEmployee] = useState<any | null>(null);
@@ -344,7 +350,7 @@ export default function PayrollTable() {
               <Select
                 options={MONTHS}
                 value={selectedMonth ?? ""}
-                onChange={(v) => setSelectedMonth(v || undefined)}
+                onChange={(v) => setSelectedMonth(v)}
                 placeholder="Month"
               />
             </div>
@@ -353,7 +359,7 @@ export default function PayrollTable() {
               <Select
                 options={YEAR_OPTIONS}
                 value={selectedYear?.toString() ?? ""}
-                onChange={(v) => setSelectedYear(v ? Number(v) : undefined)}
+                onChange={(v) => setSelectedYear(Number(v))}
                 placeholder="Year"
               />
             </div>

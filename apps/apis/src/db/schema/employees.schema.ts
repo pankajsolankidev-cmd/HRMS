@@ -12,6 +12,7 @@ import { systems } from "./systems.schema";
 import { users } from "./users.schema";
 import { baseColumns } from "../base-columns";
 import { positions } from "./positions.schema";
+import { departments } from "./department.schema";
 
 export const employees = pgTable("employees", {
   ...baseColumns,
@@ -20,7 +21,7 @@ export const employees = pgTable("employees", {
   email: varchar("email", { length: 255 }).notNull(),
 
   positionId: uuid("position_id").notNull().references(() => positions.id),
-  departmentId: integer("department_id"),
+  departmentId: uuid("department_id").references(() => departments.id),
   joiningDate: date("joining_date").notNull(),
 
   managerId: uuid("manager_id"),

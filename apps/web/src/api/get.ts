@@ -54,6 +54,7 @@ export const getPayrollPreview = async (params?: {
   const res = await api.get("/payrolls/bulk/employee", {
     params,
   });
+
   return res.data;
 };
 export const getEmployeePayrollHistory = async (params?: {
@@ -112,5 +113,9 @@ export const getDepartments = async (params?: ListQueryParams) => {
 };
 export const getDepartmentById = async (id: string) => {
   const res = await api.get(`/departments/${id}`);
+  return res.data;
+};
+export const getOrganization = async () => {
+  const res = await api.get("/organization");
   return res.data;
 };

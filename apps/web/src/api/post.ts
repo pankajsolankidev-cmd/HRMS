@@ -1,6 +1,6 @@
+import type { CreateOrganizationDto } from "@shared/types";
 import Cookies from "js-cookie";
 import api, { refreshApi } from "./axios";
-
 export const signInApi = async (data: { email: string; password: string }) => {
   const res = await api.post("/signin", data);
   return res.data;
@@ -130,5 +130,9 @@ export const addExpense = async (payload: ExpensePayload) => {
 
 export const addDepartment = async (payload: { name: string }) => {
   const res = await api.post("/departments", payload);
+  return res.data;
+};
+export const addOrganization = async (payload: CreateOrganizationDto) => {
+  const res = await api.post("/organization", payload);
   return res.data;
 };

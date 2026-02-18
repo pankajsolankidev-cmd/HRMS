@@ -33,6 +33,8 @@ import Expense from "./pages/Expense/Expense";
 import EmployeeLeavePage from "./pages/Leaves/EmployeeLeavePage";
 import LeavePage from "./pages/Leaves/LeavePage";
 import SelfLeavePage from "./pages/Leaves/SelfLeavePage";
+import OrganizationForm from "./pages/Organization/OrganizationForm";
+import OrganizationTable from "./pages/Organization/OrganizationTable";
 import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
 import RootRedirect from "./pages/OtherPage/RootRedirect";
 import PayrollHistory from "./pages/Payroll/PayrollHistory";
@@ -94,6 +96,9 @@ function AppRoutes() {
             path="/leave-requests/manual/:id"
             element={<EmployeeLeavePage />}
           />
+
+          <Route path="/organization" element={<OrganizationTable />} />
+          <Route path="/organization/:id" element={<OrganizationForm />} />
 
           <Route path="/expenses" element={<Expense />} />
           <Route path="/expenses/:id" element={<AddEditExpensePage />} />
