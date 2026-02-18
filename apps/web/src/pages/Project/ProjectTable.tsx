@@ -19,6 +19,7 @@ import DataTable, {
   type Column,
 } from "../../components/tables/BasicTables/DataTable";
 import { useTableSort } from "../../components/tables/useTableSort";
+import Button from "../../components/ui/button/Button";
 
 type Project = {
   id: number;
@@ -193,12 +194,13 @@ export default function ProjectTable() {
       <Card
         action={
           <div className="flex justify-end">
-            <button
+            <Button
               onClick={() => navigate("/projects/new")}
-              className="bg-black dark:bg-blue-500 whitespace-nowrap"
+              size="md"
+              className="bg-black dark:bg-blue-500 dark:hover:bg-brand-600 whitespace-nowrap"
             >
-              Add Project
-            </button>
+              Add Projects
+            </Button>
           </div>
         }
       >
