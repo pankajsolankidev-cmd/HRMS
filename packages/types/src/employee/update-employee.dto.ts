@@ -2,7 +2,7 @@ export interface UpdateEmployeeDto {
   firstName?: string;
   lastName?: string;
   positionId: string;
-  departmentId?: number;
+  departmentId?: string;
   managerId?: string | null;
   systemId?: string | null;
   joiningDate?: string;

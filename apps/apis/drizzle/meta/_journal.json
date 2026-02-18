@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1770810412550,
-      "tag": "0000_dear_darwin",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1771224203802,
-      "tag": "0001_rapid_starjammers",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1771235745766,
-      "tag": "0002_damp_mad_thinker",
+      "when": 1771326374985,
+      "tag": "0000_faulty_abomination",
       "breakpoints": true
     }
   ]
