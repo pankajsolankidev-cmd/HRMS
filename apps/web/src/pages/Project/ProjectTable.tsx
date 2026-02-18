@@ -19,7 +19,6 @@ import DataTable, {
   type Column,
 } from "../../components/tables/BasicTables/DataTable";
 import { useTableSort } from "../../components/tables/useTableSort";
-import Button from "../../components/ui/button/Button";
 
 type Project = {
   id: number;
@@ -133,31 +132,31 @@ export default function ProjectTable() {
           className="relative flex justify-center"
           onClick={(e) => e.stopPropagation()}
         >
-          <Button
+          <button
             onClick={() =>
               setActiveDropdown(activeDropdown === row.id ? null : row.id)
             }
             className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
           >
             <IconDotsVertical size={20} className="text-gray-500" />
-          </Button>
+          </button>
 
           {activeDropdown === row.id && (
             <div className="absolute right-0 top-8 z-[100] w-44 rounded-lg border border-gray-200 bg-white py-2 shadow-xl dark:border-gray-700 dark:bg-gray-800">
               {row.status === "ACTIVE" && (
                 <>
-                  <Button
+                  <button
                     onClick={() => {
                       markCompleted(row.id);
                       setActiveDropdown(null);
                     }}
-                    className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
+                    className=" flex w-full items-center gap-2 px-4 py-2 text-sm  hover:bg-gray-100 dark:hover:bg-gray-900/60"
                   >
                     <IconCheck size={16} />
                     Mark Completed
-                  </Button>
+                  </button>
 
-                  <Button
+                  <button
                     onClick={() => {
                       navigate(`/projects/${row.id}`);
                       setActiveDropdown(null);
@@ -166,11 +165,11 @@ export default function ProjectTable() {
                   >
                     <IconEdit size={16} />
                     Edit
-                  </Button>
+                  </button>
                 </>
               )}
 
-              <Button
+              <button
                 onClick={() => {
                   navigate(`/projects/${row.id}/employees`);
                   setActiveDropdown(null);
@@ -179,7 +178,7 @@ export default function ProjectTable() {
               >
                 <IconUser size={16} />
                 {row.status === "ACTIVE" ? "Assign Team" : "View Team"}
-              </Button>
+              </button>
             </div>
           )}
         </div>
@@ -194,13 +193,12 @@ export default function ProjectTable() {
       <Card
         action={
           <div className="flex justify-end">
-            <Button
+            <button
               onClick={() => navigate("/projects/new")}
-              size="md"
               className="bg-black dark:bg-blue-500 whitespace-nowrap"
             >
               Add Project
-            </Button>
+            </button>
           </div>
         }
       >
