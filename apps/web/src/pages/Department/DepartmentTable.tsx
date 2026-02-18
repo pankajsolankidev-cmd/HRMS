@@ -1,6 +1,7 @@
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
+import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router";
 import { deleteDepartment } from "../../api/delete";
@@ -23,7 +24,8 @@ type Department = {
 
 export default function DepartmentTable() {
   const navigate = useNavigate();
-
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const { data, isLoading, isError, refetch } = useQuery<
     PaginatedResponse<Department>
   >({
@@ -43,6 +45,7 @@ export default function DepartmentTable() {
     },
   });
   const departmentData = data?.data ?? [];
+  const total = data?.meta?.total ?? 0;
 
   const columns: Column<Department>[] = [
     {
@@ -111,6 +114,14 @@ export default function DepartmentTable() {
             data={departmentData}
             isLoading={isLoading}
             isError={isError}
+            page={page}
+            limit={limit}
+            total={total}
+            onPageChange={setPage}
+            onLimitChange={(newLimit) => {
+              setLimit(newLimit);
+              setPage(1);
+            }}
           />
         )}
       </Card>
