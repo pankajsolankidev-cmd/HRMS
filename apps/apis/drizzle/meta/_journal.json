@@ -8,6 +8,13 @@
       "when": 1771326374985,
       "tag": "0000_faulty_abomination",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1771405916570,
+      "tag": "0001_groovy_wrecker",
+      "breakpoints": true
     }
   ]
 }
