@@ -19,6 +19,15 @@ export async function createSystemHandler(
 ) {
   const body = request.body as CreateSystemDto;
 
+  request.log.info(
+    {
+      action: "CREATE_SYSTEM",
+      name: body.name,
+      componentCount: body.componentIds?.length ?? 0,
+    },
+    "Create system request received",
+  );
+
   await db.transaction(async (tx) => {
     const [system] = await tx
       .insert(systems)
@@ -36,6 +45,14 @@ export async function createSystemHandler(
         })),
       );
     }
+
+    request.log.info(
+      {
+        action: "CREATE_SYSTEM",
+        systemId: system.id,
+      },
+      "System created successfully",
+    );
   });
 
   return sendMessage(reply, "System created successfully", 201);
@@ -49,6 +66,18 @@ export async function getSystemsHandler(request: FastifyRequest) {
     sortBy?: "createdAt" | "name";
     sortOrder?: "asc" | "desc";
   };
+
+  request.log.info(
+    {
+      action: "GET_SYSTEMS",
+      search: query.search,
+      page: query.page,
+      limit: query.limit,
+      sortBy: query.sortBy,
+      sortOrder: query.sortOrder,
+    },
+    "Get systems request received",
+  );
 
   const { limit, offset, page } = getPagination(query ?? {});
 
@@ -91,6 +120,15 @@ export async function getSystemsHandler(request: FastifyRequest) {
   const systemsList = await systemsQuery;
 
   if (!systemsList.length) {
+    request.log.info(
+      {
+        action: "GET_SYSTEMS",
+        resultCount: 0,
+        total: Number(count),
+      },
+      "No systems found",
+    );
+
     return {
       data: [],
       meta: {
@@ -111,6 +149,15 @@ export async function getSystemsHandler(request: FastifyRequest) {
     .from(systemComponents)
     .innerJoin(components, eq(systemComponents.componentId, components.id))
     .where(inArray(systemComponents.systemId, systemIds));
+
+  request.log.info(
+    {
+      action: "GET_SYSTEMS",
+      resultCount: systemsList.length,
+      total: Number(count),
+    },
+    "Systems fetched successfully",
+  );
 
   return {
     data: systemsList.map((system) => ({
@@ -133,9 +180,25 @@ export async function getSystemByIdHandler(
 ) {
   const { id } = request.params as { id: string };
 
+  request.log.info(
+    {
+      action: "GET_SYSTEM_BY_ID",
+      systemId: id,
+    },
+    "Get system by id request received",
+  );
+
   const [system] = await db.select().from(systems).where(eq(systems.id, id));
 
   if (!system) {
+    request.log.warn(
+      {
+        action: "GET_SYSTEM_BY_ID",
+        systemId: id,
+      },
+      "System not found",
+    );
+
     return reply.code(404).send({ message: "System not found" });
   }
 
@@ -144,6 +207,15 @@ export async function getSystemByIdHandler(
     .from(systemComponents)
     .innerJoin(components, eq(systemComponents.componentId, components.id))
     .where(eq(systemComponents.systemId, id));
+
+  request.log.info(
+    {
+      action: "GET_SYSTEM_BY_ID",
+      systemId: id,
+      componentCount: rows.length,
+    },
+    "System fetched successfully",
+  );
 
   return {
     ...system,
@@ -157,6 +229,18 @@ export async function updateSystemHandler(
 ) {
   const { id } = request.params as { id: string };
   const body = request.body as UpdateSystemDto;
+
+  request.log.info(
+    {
+      action: "UPDATE_SYSTEM",
+      systemId: id,
+      fields: Object.keys(body),
+      componentCount: Array.isArray(body.componentIds)
+        ? body.componentIds.length
+        : undefined,
+    },
+    "Update system request received",
+  );
 
   const updated = await db.transaction(async (tx) => {
     const [system] = await tx
@@ -192,8 +276,24 @@ export async function updateSystemHandler(
   });
 
   if (!updated) {
+    request.log.warn(
+      {
+        action: "UPDATE_SYSTEM",
+        systemId: id,
+      },
+      "System not found for update",
+    );
+
     return reply.code(404).send({ message: "System not found" });
   }
+
+  request.log.info(
+    {
+      action: "UPDATE_SYSTEM",
+      systemId: id,
+    },
+    "System updated successfully",
+  );
 
   return sendMessage(reply, "System updated successfully");
 }
@@ -204,14 +304,38 @@ export async function deleteSystemHandler(
 ) {
   const { id } = request.params as { id: string };
 
+  request.log.info(
+    {
+      action: "DELETE_SYSTEM",
+      systemId: id,
+    },
+    "Delete system request received",
+  );
+
   const [deleted] = await db
     .delete(systems)
     .where(eq(systems.id, id))
-    .returning();
+    .returning({ id: systems.id });
 
   if (!deleted) {
+    request.log.warn(
+      {
+        action: "DELETE_SYSTEM",
+        systemId: id,
+      },
+      "System not found for delete",
+    );
+
     return reply.code(404).send({ message: "System not found" });
   }
+
+  request.log.info(
+    {
+      action: "DELETE_SYSTEM",
+      systemId: id,
+    },
+    "System deleted successfully",
+  );
 
   return sendMessage(reply, "System deleted successfully");
 }
