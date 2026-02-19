@@ -48,15 +48,6 @@ export default function DatePicker({
 
       dateFormat: isTimeMode ? "H:i" : "Y-m-d",
 
-      disable: isTimeMode
-        ? []
-        : [
-            (date: Date) => {
-              const day = date.getDay();
-              return day === 0 || day === 6;
-            },
-          ],
-
       onChange,
     }) as FlatpickrInstance;
 

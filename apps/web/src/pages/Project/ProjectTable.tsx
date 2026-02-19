@@ -172,7 +172,9 @@ export default function ProjectTable() {
 
               <button
                 onClick={() => {
-                  navigate(`/projects/${row.id}/employees`);
+                  navigate(`/projects/${row.id}/employees`, {
+                    state: { status: row.status },
+                  });
                   setActiveDropdown(null);
                 }}
                 className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"

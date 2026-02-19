@@ -36,6 +36,7 @@ const ADMIN_MENU: NavItem[] = [
   { icon: <FolderIcon />, name: "System", path: "/systems" },
   { icon: <CalendarIcon />, name: "Leaves", path: "/leave-requests" },
   { icon: <IconReceiptRupee />, name: "Salary", path: "/salary" },
+  { icon: <IconWallet />, name: "Expenses", path: "/expenses" },
   { icon: <IconReceiptRupee />, name: "Payrolls", path: "/payrolls" },
   { icon: <IconHistory />, name: "Payroll History", path: "/payrolls/history" },
   { icon: <IconBriefcase />, name: "Projects", path: "/projects" },

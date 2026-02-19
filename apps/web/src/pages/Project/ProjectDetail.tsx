@@ -2,7 +2,7 @@ import { IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { useNavigate, useParams } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 
 import Card from "../../components/common/ComponentCard";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
@@ -28,10 +28,13 @@ type Employee = {
 export default function ProjectDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [open, setOpen] = useState(false);
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
+  const projectStatus = location.state?.status;
+  const isCompleted = projectStatus === "COMPLETED";
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["project-employees", id],
@@ -110,22 +113,23 @@ export default function ProjectDetail() {
     {
       header: "Action",
       align: "center",
-      cell: (row) => (
-        <DeleteConfirm<string>
-          title="Remove Team Member"
-          description="Are you sure you want to remove this employee from the project?"
-          loading={isPending}
-          onConfirm={(id) => removeEmployee(id)}
-        >
-          {(askDelete) => (
-            <IconTrash
-              size={18}
-              onClick={() => askDelete(row.id)}
-              className="cursor-pointer text-red-600 dark:text-red-400"
-            />
-          )}
-        </DeleteConfirm>
-      ),
+      cell: (row) =>
+        !isCompleted ? (
+          <DeleteConfirm<string>
+            title="Remove Team Member"
+            description="Are you sure you want to remove this employee from the project?"
+            loading={isPending}
+            onConfirm={(id) => removeEmployee(id)}
+          >
+            {(askDelete) => (
+              <IconTrash
+                size={18}
+                onClick={() => askDelete(row.id)}
+                className="cursor-pointer text-red-600 dark:text-red-400"
+              />
+            )}
+          </DeleteConfirm>
+        ) : null,
     },
   ];
 
@@ -136,16 +140,19 @@ export default function ProjectDetail() {
       <Card
         action={
           <div className="flex items-center gap-3">
-            <Button
-              onClick={() => {
-                setSelectedEmployees(assignedEmployeeIds);
-                setOpen(true);
-              }}
-              size="md"
-              className="bg-black dark:bg-blue-500"
-            >
-              Add Team Member
-            </Button>
+            {!isCompleted && (
+              <Button
+                onClick={() => {
+                  setSelectedEmployees(assignedEmployeeIds);
+                  setOpen(true);
+                }}
+                size="md"
+                className="bg-black dark:bg-blue-500"
+              >
+                Add Team Member
+              </Button>
+            )}
+
             <Button variant="outline" onClick={() => navigate("/projects")}>
               Back
             </Button>
