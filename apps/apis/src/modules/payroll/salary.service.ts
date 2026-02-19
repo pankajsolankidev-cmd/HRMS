@@ -19,12 +19,28 @@ export async function createSalaryHandler(
 ) {
   const payload = request.body as CreateSalaryDto;
 
+  request.log.info(
+    {
+      action: "CREATE_SALARY",
+      employeeId: payload.employeeId,
+    },
+    "Create salary request received",
+  );
+
   const [existing] = await db
     .select()
     .from(salary)
     .where(eq(salary.employeeId, payload.employeeId));
 
   if (existing) {
+    request.log.warn(
+      {
+        action: "CREATE_SALARY",
+        employeeId: payload.employeeId,
+      },
+      "Salary structure already exists for employee",
+    );
+
     return reply
       .code(409)
       .send({ message: "Salary structure already exists for this employee" });
@@ -52,6 +68,15 @@ export async function createSalaryHandler(
       : undefined,
   });
 
+  request.log.info(
+    {
+      action: "CREATE_SALARY",
+      employeeId: payload.employeeId,
+      netSalary,
+    },
+    "Salary structure created successfully",
+  );
+
   return sendMessage(reply, "Salary structure created successfully", 201);
 }
 
@@ -66,6 +91,18 @@ export async function getSalariesHandler(request: FastifyRequest) {
     sortBy?: "createdAt" | "basicSalary";
     sortOrder?: "asc" | "desc";
   };
+
+  request.log.info(
+    {
+      action: "GET_SALARIES",
+      employeeId: query.employeeId,
+      page: query.page,
+      limit: query.limit,
+      sortBy: query.sortBy,
+      sortOrder: query.sortOrder,
+    },
+    "Get salaries request received",
+  );
 
   const conditions = [];
 
@@ -86,7 +123,6 @@ export async function getSalariesHandler(request: FastifyRequest) {
   }
 
   const { page, limit, offset } = getPagination(query ?? {});
-
   const whereClause = conditions.length ? and(...conditions) : undefined;
 
   const orderByClauses = [];
@@ -119,6 +155,17 @@ export async function getSalariesHandler(request: FastifyRequest) {
     .from(salary)
     .where(whereClause);
 
+  request.log.info(
+    {
+      action: "GET_SALARIES",
+      resultCount: data.length,
+      total: Number(count),
+      page,
+      limit,
+    },
+    "Salaries fetched successfully",
+  );
+
   return {
     data,
     meta: {
@@ -135,17 +182,42 @@ export async function getSalaryByIdHandler(
 ) {
   const { id } = request.params as { id: string };
 
+  request.log.info(
+    {
+      action: "GET_SALARY_BY_ID",
+      salaryId: id,
+    },
+    "Get salary by id request received",
+  );
+
   const [salaryStructure] = await db
     .select()
     .from(salary)
     .where(eq(salary.id, id));
 
   if (!salaryStructure) {
+    request.log.warn(
+      {
+        action: "GET_SALARY_BY_ID",
+        salaryId: id,
+      },
+      "Salary structure not found",
+    );
+
     return reply.code(404).send({ message: "Salary structure not found" });
   }
 
+  request.log.info(
+    {
+      action: "GET_SALARY_BY_ID",
+      salaryId: id,
+    },
+    "Salary structure fetched successfully",
+  );
+
   return salaryStructure;
 }
+
 
 export async function getSalaryByEmployeeHandler(
   request: FastifyRequest,
@@ -153,16 +225,40 @@ export async function getSalaryByEmployeeHandler(
 ) {
   const { employeeId } = request.params as { employeeId: string };
 
+  request.log.info(
+    {
+      action: "GET_SALARY_BY_EMPLOYEE",
+      employeeId,
+    },
+    "Get salary by employee request received",
+  );
+
   const [salaryStructure] = await db
     .select()
     .from(salary)
     .where(eq(salary.employeeId, employeeId));
 
   if (!salaryStructure) {
+    request.log.warn(
+      {
+        action: "GET_SALARY_BY_EMPLOYEE",
+        employeeId,
+      },
+      "Salary structure not found for employee",
+    );
+
     return reply
       .code(404)
       .send({ message: "Salary structure not found for this employee" });
   }
+
+  request.log.info(
+    {
+      action: "GET_SALARY_BY_EMPLOYEE",
+      employeeId,
+    },
+    "Salary structure fetched successfully",
+  );
 
   return salaryStructure;
 }
@@ -174,9 +270,29 @@ export async function updateSalaryHandler(
   const { id } = request.params as { id: string };
   const payload = request.body as UpdateSalaryDto;
 
-  const [existing] = await db.select().from(salary).where(eq(salary.id, id));
+  request.log.info(
+    {
+      action: "UPDATE_SALARY",
+      salaryId: id,
+      fields: Object.keys(payload),
+    },
+    "Update salary request received",
+  );
+
+  const [existing] = await db
+    .select()
+    .from(salary)
+    .where(eq(salary.id, id));
 
   if (!existing) {
+    request.log.warn(
+      {
+        action: "UPDATE_SALARY",
+        salaryId: id,
+      },
+      "Salary structure not found for update",
+    );
+
     return reply.code(404).send({ message: "Salary structure not found" });
   }
 
@@ -186,7 +302,6 @@ export async function updateSalaryHandler(
       : Number(existing.basicSalary);
 
   const tax = payload.tax !== undefined ? payload.tax : Number(existing.tax);
-
   const pf = payload.pf !== undefined ? payload.pf : Number(existing.pf);
 
   const netSalary = calculateNetSalary({
@@ -195,7 +310,7 @@ export async function updateSalaryHandler(
     pf,
   });
 
-  const [updated] = await db
+  await db
     .update(salary)
     .set({
       basicSalary: basicSalary.toString(),
@@ -210,8 +325,18 @@ export async function updateSalaryHandler(
     .where(eq(salary.id, id))
     .returning();
 
+  request.log.info(
+    {
+      action: "UPDATE_SALARY",
+      salaryId: id,
+      netSalary,
+    },
+    "Salary structure updated successfully",
+  );
+
   return sendMessage(reply, "Salary structure updated successfully");
 }
+
 
 export async function deleteSalaryHandler(
   request: FastifyRequest,
@@ -219,14 +344,38 @@ export async function deleteSalaryHandler(
 ) {
   const { id } = request.params as { id: string };
 
+  request.log.info(
+    {
+      action: "DELETE_SALARY",
+      salaryId: id,
+    },
+    "Delete salary request received",
+  );
+
   const [deleted] = await db
     .delete(salary)
     .where(eq(salary.id, id))
     .returning();
 
   if (!deleted) {
+    request.log.warn(
+      {
+        action: "DELETE_SALARY",
+        salaryId: id,
+      },
+      "Salary structure not found for delete",
+    );
+
     return reply.code(404).send({ message: "Salary structure not found" });
   }
+
+  request.log.info(
+    {
+      action: "DELETE_SALARY",
+      salaryId: id,
+    },
+    "Salary structure deleted successfully",
+  );
 
   return sendMessage(reply, "Salary structure deleted successfully");
 }
