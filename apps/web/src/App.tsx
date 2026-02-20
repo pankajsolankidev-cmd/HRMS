@@ -48,6 +48,7 @@ import AddEditSalaryPage from "./pages/Salary/AddEditSalaryPage";
 import SalaryPage from "./pages/Salary/SalaryPage";
 import AddEditSystemPage from "./pages/System/AddEditSystemPage";
 import SystemPage from "./pages/System/SystemPage";
+import UserProfile from "./pages/UserProfile/UserProfile";
 
 function AppRoutes() {
   const dispatch = useDispatch();
@@ -112,6 +113,9 @@ function AppRoutes() {
           <Route path="/projects" element={<ProjectTable />} />
           <Route path="/projects/:id" element={<ProjectForm />} />
           <Route path="/projects/:id/employees" element={<ProjectDetail />} />
+
+          <Route path="/profile" element={<UserProfile />} />
+          <Route path="/" element={<NotFound />} />
         </Route>
       </Route>
 
