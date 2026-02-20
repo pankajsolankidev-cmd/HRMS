@@ -10,7 +10,12 @@ import {
   userRoles,
   roles,
   refreshTokens,
+  departments,
+  systems,
+  components,
+  systemComponents,
 } from "../../db/schema";
+import { alias } from "drizzle-orm/pg-core";
 
 import type { CreateEmployeeDto } from "@shared/types/src/employee/employee.dto";
 import type { UpdateEmployeeDto } from "@shared/types/src/employee/update-employee.dto";
@@ -19,6 +24,7 @@ import { positions } from "../../db/schema/positions.schema";
 
 import { sendMessage } from "../../utils/api-response";
 import { getPagination } from "../../utils/pagination";
+
 
 const DEFAULT_EMPLOYEE_PASSWORD: string = (() => {
   const pwd = process.env.DEFAULT_EMPLOYEE_PASSWORD;
@@ -230,33 +236,72 @@ export async function getEmployeesHandler(request: FastifyRequest) {
       );
     }
 
+    const manager = alias(employees, "manager");
+
     let queryBuilder = db
       .select({
         id: employees.id,
         firstName: employees.firstName,
         lastName: employees.lastName,
         email: employees.email,
-        positionId: employees.positionId,
-        departmentId: employees.departmentId,
         joiningDate: employees.joiningDate,
-        managerId: employees.managerId,
-        systemId: employees.systemId,
         userId: employees.userId,
+
         welcome: {
           welcomewithWhatsapp: employees.welcomeWithWhatsapp,
           welcomewithGmail: employees.welcomeWithGmail,
           welcomewithSlack: employees.welcomeWithSlack,
         },
+
         documents: {
           generateOfferLetter: documentGeneration.generateOfferLetter,
           generateAppointmentLetter:
             documentGeneration.generateAppointmentLetter,
+        },
+
+        position: {
+          id: positions.id,
+          name: positions.name,
+        },
+
+        department: {
+          id: departments.id,
+          name: departments.name,
+        },
+
+        manager: {
+          id: manager.id,
+          firstName: manager.firstName,
+          lastName: manager.lastName,
+          email: manager.email,
+        },
+
+        system: {
+          id: systems.id,
+          name: systems.name,
+          description: systems.description,
+          componentId: components.id,
+          componentName: components.name,
+          componentDescription: components.description,
+          componentCode: components.code,
         },
       })
       .from(employees)
       .leftJoin(
         documentGeneration,
         eq(documentGeneration.employeeId, employees.id),
+      )
+      .leftJoin(positions, eq(positions.id, employees.positionId))
+      .leftJoin(departments, eq(departments.id, employees.departmentId))
+      .leftJoin(manager, eq(manager.id, employees.managerId))
+      .leftJoin(systems, eq(systems.id, employees.systemId))
+      .leftJoin(
+        systemComponents,
+        eq(systemComponents.systemId, systems.id),
+      )
+      .leftJoin(
+        components,
+        eq(components.id, systemComponents.componentId),
       )
       .where(conditions.length ? and(...conditions) : undefined)
       .orderBy(...orderByClauses)
@@ -266,7 +311,49 @@ export async function getEmployeesHandler(request: FastifyRequest) {
       queryBuilder = queryBuilder.limit(limit).offset(offset);
     }
 
-    const data = await queryBuilder;
+    const rows = await queryBuilder;
+
+    
+    const employeeMap = new Map<string, any>();
+
+    for (const row of rows) {
+      if (!employeeMap.has(row.id)) {
+        employeeMap.set(row.id, {
+          id: row.id,
+          firstName: row.firstName,
+          lastName: row.lastName,
+          email: row.email,
+          joiningDate: row.joiningDate,
+          userId: row.userId,
+          welcome: row.welcome,
+          documents: row.documents,
+          position: row.position?.id ? row.position : null,
+          department: row.department?.id ? row.department : null,
+          manager: row.manager?.id ? row.manager : null,
+          system: row.system?.id
+            ? {
+                id: row.system.id,
+                name: row.system.name,
+                description: row.system.description,
+                components: [],
+              }
+            : null,
+        });
+      }
+
+      const employee = employeeMap.get(row.id);
+
+      if (row.system?.componentId) {
+        employee.system.components.push({
+          id: row.system.componentId,
+          name: row.system.componentName,
+          description: row.system.componentDescription,
+          code: row.system.componentCode,
+        });
+      }
+    }
+
+    const data = Array.from(employeeMap.values());
 
     const [{ count }] = await db
       .select({ count: sql<number>`count(*)` })
@@ -328,33 +415,72 @@ export async function getEmployeeByIdHandler(
   );
 
   try {
+    const manager = alias(employees, "manager");
+
     const rows = await db
       .select({
         id: employees.id,
         firstName: employees.firstName,
         lastName: employees.lastName,
         email: employees.email,
-        positionId: employees.positionId,
-        departmentId: employees.departmentId,
         joiningDate: employees.joiningDate,
-        managerId: employees.managerId,
-        systemId: employees.systemId,
         userId: employees.userId,
+
         welcome: {
           welcomewithWhatsapp: employees.welcomeWithWhatsapp,
           welcomewithGmail: employees.welcomeWithGmail,
           welcomewithSlack: employees.welcomeWithSlack,
         },
+
         documents: {
           generateOfferLetter: documentGeneration.generateOfferLetter,
           generateAppointmentLetter:
             documentGeneration.generateAppointmentLetter,
+        },
+
+        position: {
+          id: positions.id,
+          name: positions.name,
+        },
+
+        department: {
+          id: departments.id,
+          name: departments.name,
+        },
+
+        manager: {
+          id: manager.id,
+          firstName: manager.firstName,
+          lastName: manager.lastName,
+          email: manager.email,
+        },
+
+        system: {
+          id: systems.id,
+          name: systems.name,
+          description: systems.description,
+          componentId: components.id,
+          componentName: components.name,
+          componentDescription: components.description,
+          componentCode: components.code,
         },
       })
       .from(employees)
       .leftJoin(
         documentGeneration,
         eq(documentGeneration.employeeId, employees.id),
+      )
+      .leftJoin(positions, eq(positions.id, employees.positionId))
+      .leftJoin(departments, eq(departments.id, employees.departmentId))
+      .leftJoin(manager, eq(manager.id, employees.managerId))
+      .leftJoin(systems, eq(systems.id, employees.systemId))
+      .leftJoin(
+        systemComponents,
+        eq(systemComponents.systemId, systems.id),
+      )
+      .leftJoin(
+        components,
+        eq(components.id, systemComponents.componentId),
       )
       .where(eq(employees.id, id));
 
@@ -370,6 +496,48 @@ export async function getEmployeeByIdHandler(
       return reply.code(404).send({ message: "Employee not found" });
     }
 
+    // Group system components (avoid duplicates)
+    const employeeMap = new Map<string, any>();
+
+    for (const row of rows) {
+      if (!employeeMap.has(row.id)) {
+        employeeMap.set(row.id, {
+          id: row.id,
+          firstName: row.firstName,
+          lastName: row.lastName,
+          email: row.email,
+          joiningDate: row.joiningDate,
+          userId: row.userId,
+          welcome: row.welcome,
+          documents: row.documents,
+          position: row.position?.id ? row.position : null,
+          department: row.department?.id ? row.department : null,
+          manager: row.manager?.id ? row.manager : null,
+          system: row.system?.id
+            ? {
+                id: row.system.id,
+                name: row.system.name,
+                description: row.system.description,
+                components: [],
+              }
+            : null,
+        });
+      }
+
+      const employee = employeeMap.get(row.id);
+
+      if (row.system?.componentId) {
+        employee.system.components.push({
+          id: row.system.componentId,
+          name: row.system.componentName,
+          description: row.system.componentDescription,
+          code: row.system.componentCode,
+        });
+      }
+    }
+
+    const result = Array.from(employeeMap.values())[0];
+
     request.log.info(
       {
         action: "GET_EMPLOYEE_BY_ID",
@@ -378,7 +546,7 @@ export async function getEmployeeByIdHandler(
       "Employee fetched successfully",
     );
 
-    return rows[0];
+    return result;
   } catch (err: any) {
     request.log.error(
       {
