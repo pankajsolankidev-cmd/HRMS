@@ -135,3 +135,7 @@ export const getProfile = async () => {
   const res = await api.get("/profile");
   return res.data;
 };
+export const getDashboard = async () => {
+  const res = await api.get("/dashboard/summary");
+  return res.data;
+};
