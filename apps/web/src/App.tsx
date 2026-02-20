@@ -10,7 +10,6 @@ import {
 import AppLayout from "./layout/AppLayout";
 import AuthLayout from "./layout/AuthPageLayout";
 
-import Home from "./pages/Dashboard/Home";
 import NotFound from "./pages/OtherPage/NotFound";
 import PublicRoute from "./pages/OtherPage/PublicRoute";
 
@@ -26,6 +25,7 @@ import ResetPassword from "./pages/auth/ResetPassword";
 import SignInForm from "./pages/auth/SignInForm";
 import AddEditComponentPage from "./pages/Component/AddEditComponentPage";
 import ComponentPage from "./pages/Component/ComponentPage";
+import Dashboard from "./pages/Dashboard/Dashboard";
 import DepartmentForm from "./pages/Department/DepartmentForm";
 import DepartmentTable from "./pages/Department/DepartmentTable";
 import AddEditEmployeePage from "./pages/Employee/AddEditEmployeePage";
@@ -77,7 +77,7 @@ function AppRoutes() {
 
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
-          <Route path="/dashboard" element={<Home />} />
+          <Route path="/dashboard" element={<Dashboard />} />
 
           <Route path="/employees" element={<EmployeePage />} />
           <Route path="/employees/:id" element={<AddEditEmployeePage />} />
