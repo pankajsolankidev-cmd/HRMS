@@ -26,6 +26,7 @@ import organizationRoutes from "./modules/organization/organization.routes";
 import projectRoutes from "./modules/project/project.routes";
 import projectEmployeeRoutes from "./modules/project-emp/project-employee.routes";
 import profileRoutes from "./modules/profile/profile.route";
+import dashboardRoutes from "./modules/dashboard/dashboard.routes";
 
 const app = Fastify({ logger: true });
 
@@ -88,6 +89,7 @@ app.register(organizationRoutes);
 app.register(projectRoutes);
 app.register(projectEmployeeRoutes);
 app.register(profileRoutes);
+app.register(dashboardRoutes);
 
 app.get("/health", async () => {
   return { status: "API is running 🚀" };
