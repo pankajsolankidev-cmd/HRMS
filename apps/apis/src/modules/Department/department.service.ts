@@ -15,9 +15,36 @@ export async function createDepartmentHandler(
 ) {
   const body = request.body as CreateDepartmentDto;
 
-  await db.insert(departments).values(body);
+  request.log.info(
+    {
+      action: "CREATE_DEPARTMENT",
+      name: body.name,
+    },
+    "Create department request received",
+  );
 
-  return sendMessage(reply, "Department created successfully", 201);
+  try {
+    await db.insert(departments).values(body);
+
+    request.log.info(
+      {
+        action: "CREATE_DEPARTMENT",
+        name: body.name,
+      },
+      "Department created successfully",
+    );
+
+    return sendMessage(reply, "Department created successfully", 201);
+  } catch (err) {
+    request.log.error(
+      {
+        action: "CREATE_DEPARTMENT",
+        err,
+      },
+      "Failed to create department",
+    );
+    throw err;
+  }
 }
 
 export async function getDepartmentsHandler(request: FastifyRequest) {
@@ -29,52 +56,82 @@ export async function getDepartmentsHandler(request: FastifyRequest) {
     sortOrder?: "asc" | "desc";
   };
 
-  const conditions = [];
-
-  if (query?.search) {
-    conditions.push(ilike(departments.name, `%${query.search}%`));
-  }
-
-  const { page, limit, offset } = getPagination(query);
-
-  const orderByClauses = [];
-
-  if (!query?.sortBy) {
-    orderByClauses.push(desc(departments.updatedAt));
-  } else {
-    orderByClauses.push(
-      query.sortOrder === "asc"
-        ? asc(departments[query.sortBy])
-        : desc(departments[query.sortBy]),
-    );
-  }
-
-  let queryBuilder = db
-    .select()
-    .from(departments)
-    .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(...orderByClauses)
-    .$dynamic();
-
-  if (limit !== undefined && offset !== undefined) {
-    queryBuilder = queryBuilder.limit(limit).offset(offset);
-  }
-
-  const data = await queryBuilder;
-
-  const [{ count }] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(departments)
-    .where(conditions.length ? and(...conditions) : undefined);
-
-  return {
-    data,
-    meta: {
-      page,
-      limit: limit ?? null,
-      total: Number(count),
+  request.log.info(
+    {
+      action: "GET_DEPARTMENTS",
+      search: query.search,
+      page: query.page,
+      limit: query.limit,
     },
-  };
+    "Get departments request received",
+  );
+
+  try {
+    const conditions = [];
+
+    if (query?.search) {
+      conditions.push(ilike(departments.name, `%${query.search}%`));
+    }
+
+    const { page, limit, offset } = getPagination(query);
+
+    const orderByClauses = [];
+
+    if (!query?.sortBy) {
+      orderByClauses.push(desc(departments.updatedAt));
+    } else {
+      orderByClauses.push(
+        query.sortOrder === "asc"
+          ? asc(departments[query.sortBy])
+          : desc(departments[query.sortBy]),
+      );
+    }
+
+    let queryBuilder = db
+      .select()
+      .from(departments)
+      .where(conditions.length ? and(...conditions) : undefined)
+      .orderBy(...orderByClauses)
+      .$dynamic();
+
+    if (limit !== undefined && offset !== undefined) {
+      queryBuilder = queryBuilder.limit(limit).offset(offset);
+    }
+
+    const data = await queryBuilder;
+
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(departments)
+      .where(conditions.length ? and(...conditions) : undefined);
+
+    request.log.info(
+      {
+        action: "GET_DEPARTMENTS",
+        resultCount: data.length,
+        total: Number(count),
+      },
+      "Departments fetched successfully",
+    );
+
+    return {
+      data,
+      meta: {
+        page,
+        limit: limit ?? null,
+        total: Number(count),
+      },
+    };
+  } catch (err) {
+    request.log.error(
+      {
+        action: "GET_DEPARTMENTS",
+        err,
+      },
+      "Failed to fetch departments",
+    );
+    throw err;
+  }
 }
 
 export async function getDepartmentByIdHandler(
@@ -83,17 +140,54 @@ export async function getDepartmentByIdHandler(
 ) {
   const { id } = request.params as { id: string };
 
-  const [department] = await db
-    .select()
-    .from(departments)
-    .where(eq(departments.id, id));
+  request.log.info(
+    {
+      action: "GET_DEPARTMENT_BY_ID",
+      departmentId: id,
+    },
+    "Get department by id request received",
+  );
 
-  if (!department) {
-    return reply.status(404).send({ message: "Department not found" });
+  try {
+    const [department] = await db
+      .select()
+      .from(departments)
+      .where(eq(departments.id, id));
+
+    if (!department) {
+      request.log.warn(
+        {
+          action: "GET_DEPARTMENT_BY_ID",
+          departmentId: id,
+        },
+        "Department not found",
+      );
+
+      return reply.status(404).send({ message: "Department not found" });
+    }
+
+    request.log.info(
+      {
+        action: "GET_DEPARTMENT_BY_ID",
+        departmentId: id,
+      },
+      "Department fetched successfully",
+    );
+
+    return department;
+  } catch (err) {
+    request.log.error(
+      {
+        action: "GET_DEPARTMENT_BY_ID",
+        departmentId: id,
+        err,
+      },
+      "Failed to fetch department",
+    );
+    throw err;
   }
-
-  return department;
 }
+
 export async function updateDepartmentHandler(
   request: FastifyRequest,
   reply: FastifyReply,
@@ -101,27 +195,106 @@ export async function updateDepartmentHandler(
   const { id } = request.params as { id: string };
   const body = request.body as UpdateDepartmentDto;
 
-  const [updated] = await db
-    .update(departments)
-    .set({
-      ...body,
-    })
-    .where(eq(departments.id, id))
-    .returning();
+  request.log.info(
+    {
+      action: "UPDATE_DEPARTMENT",
+      departmentId: id,
+      fields: Object.keys(body),
+    },
+    "Update department request received",
+  );
 
-  if (!updated) {
-    return reply.status(404).send({ message: "Department not found" });
+  try {
+    const [updated] = await db
+      .update(departments)
+      .set({ ...body })
+      .where(eq(departments.id, id))
+      .returning();
+
+    if (!updated) {
+      request.log.warn(
+        {
+          action: "UPDATE_DEPARTMENT",
+          departmentId: id,
+        },
+        "Department not found for update",
+      );
+
+      return reply.status(404).send({ message: "Department not found" });
+    }
+
+    request.log.info(
+      {
+        action: "UPDATE_DEPARTMENT",
+        departmentId: id,
+      },
+      "Department updated successfully",
+    );
+
+    return sendMessage(reply, "Department updated successfully");
+  } catch (err) {
+    request.log.error(
+      {
+        action: "UPDATE_DEPARTMENT",
+        departmentId: id,
+        err,
+      },
+      "Failed to update department",
+    );
+    throw err;
   }
-
-  return sendMessage(reply, "Department updated successfully");
 }
+
 export async function deleteDepartmentHandler(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
   const { id } = request.params as { id: string };
 
-  await db.delete(departments).where(eq(departments.id, id));
+  request.log.info(
+    {
+      action: "DELETE_DEPARTMENT",
+      departmentId: id,
+    },
+    "Delete department request received",
+  );
 
-  return sendMessage(reply, "Department deleted successfully");
+  try {
+    const deleted = await db
+      .delete(departments)
+      .where(eq(departments.id, id))
+      .returning({ id: departments.id });
+
+    if (!deleted.length) {
+      request.log.warn(
+        {
+          action: "DELETE_DEPARTMENT",
+          departmentId: id,
+        },
+        "Department not found for delete",
+      );
+
+      return reply.status(404).send({ message: "Department not found" });
+    }
+
+    request.log.info(
+      {
+        action: "DELETE_DEPARTMENT",
+        departmentId: id,
+      },
+      "Department deleted successfully",
+    );
+
+    return sendMessage(reply, "Department deleted successfully");
+  } catch (err) {
+    request.log.error(
+      {
+        action: "DELETE_DEPARTMENT",
+        departmentId: id,
+        err,
+      },
+      "Failed to delete department",
+    );
+    throw err;
+  }
 }

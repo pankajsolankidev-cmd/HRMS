@@ -16,12 +16,28 @@ export async function createProjectHandler(
 ) {
   const body = request.body as CreateProjectDto;
 
+  request.log.info(
+    {
+      action: "CREATE_PROJECT",
+      projectName: body.name,
+    },
+    "Create project request received",
+  );
+
   const startDate = new Date(body.startDate);
   const expectedEndDate = body.expectedEndDate
     ? new Date(body.expectedEndDate)
     : null;
 
   if (isNaN(startDate.getTime())) {
+    request.log.warn(
+      {
+        action: "CREATE_PROJECT",
+        projectName: body.name,
+      },
+      "Invalid startDate provided",
+    );
+
     return reply.status(400).send({
       message: "Invalid startDate",
     });
@@ -31,6 +47,14 @@ export async function createProjectHandler(
     expectedEndDate &&
     (isNaN(expectedEndDate.getTime()) || expectedEndDate < startDate)
   ) {
+    request.log.warn(
+      {
+        action: "CREATE_PROJECT",
+        projectName: body.name,
+      },
+      "Invalid expectedEndDate provided",
+    );
+
     return reply.status(400).send({
       message: "expectedEndDate must be after than or equal to startDate",
     });
@@ -42,6 +66,14 @@ export async function createProjectHandler(
     .where(eq(projects.name, body.name));
 
   if (existing) {
+    request.log.warn(
+      {
+        action: "CREATE_PROJECT",
+        projectName: body.name,
+      },
+      "Project with same name already exists",
+    );
+
     return reply.status(409).send({
       message: "Project with this name already exists",
     });
@@ -49,12 +81,31 @@ export async function createProjectHandler(
 
   await db.insert(projects).values(body);
 
+  request.log.info(
+    {
+      action: "CREATE_PROJECT",
+      projectName: body.name,
+    },
+    "Project created successfully",
+  );
+
   return sendMessage(reply, "Project created successfully", 201);
 }
 
 export async function getProjectsHandler(request: FastifyRequest) {
   const query = request.query as any;
   const conditions = [];
+
+  request.log.info(
+    {
+      action: "GET_PROJECTS",
+      search: query.search,
+      status: query.status,
+      page: query.page,
+      limit: query.limit,
+    },
+    "Get projects request received",
+  );
 
   if (query.search) {
     conditions.push(ilike(projects.name, `%${query.search}%`));
@@ -84,6 +135,17 @@ export async function getProjectsHandler(request: FastifyRequest) {
     .from(projects)
     .where(conditions.length ? and(...conditions) : undefined);
 
+  request.log.info(
+    {
+      action: "GET_PROJECTS",
+      resultCount: data.length,
+      total: Number(count),
+      page,
+      limit,
+    },
+    "Projects fetched successfully",
+  );
+
   return {
     data,
     meta: {
@@ -101,14 +163,30 @@ export async function updateProjectHandler(
   const { id } = request.params as { id: string };
   const body = request.body as UpdateProjectDto;
 
+  request.log.info(
+    {
+      action: "UPDATE_PROJECT",
+      projectId: id,
+      fields: Object.keys(body),
+    },
+    "Update project request received",
+  );
+
   if (body.startDate || body.expectedEndDate) {
     const startDate = body.startDate ? new Date(body.startDate) : null;
-
     const expectedEndDate = body.expectedEndDate
       ? new Date(body.expectedEndDate)
       : null;
 
     if (startDate && isNaN(startDate.getTime())) {
+      request.log.warn(
+        {
+          action: "UPDATE_PROJECT",
+          projectId: id,
+        },
+        "Invalid startDate provided",
+      );
+
       return reply.status(400).send({
         message: "Invalid startDate",
       });
@@ -119,6 +197,14 @@ export async function updateProjectHandler(
       (isNaN(expectedEndDate.getTime()) ||
         (startDate && expectedEndDate < startDate))
     ) {
+      request.log.warn(
+        {
+          action: "UPDATE_PROJECT",
+          projectId: id,
+        },
+        "Invalid expectedEndDate provided",
+      );
+
       return reply.status(400).send({
         message: "expectedEndDate must be after than or equal to startDate",
       });
@@ -132,6 +218,15 @@ export async function updateProjectHandler(
       .where(eq(projects.name, body.name));
 
     if (existing && existing.id !== id) {
+      request.log.warn(
+        {
+          action: "UPDATE_PROJECT",
+          projectId: id,
+          projectName: body.name,
+        },
+        "Project with same name already exists",
+      );
+
       return reply.status(409).send({
         message: "Project with this name already exists",
       });
@@ -145,8 +240,24 @@ export async function updateProjectHandler(
     .returning();
 
   if (!updated) {
+    request.log.warn(
+      {
+        action: "UPDATE_PROJECT",
+        projectId: id,
+      },
+      "Project not found for update",
+    );
+
     return reply.status(404).send({ message: "Project not found" });
   }
+
+  request.log.info(
+    {
+      action: "UPDATE_PROJECT",
+      projectId: id,
+    },
+    "Project updated successfully",
+  );
 
   return sendMessage(reply, "Project updated successfully");
 }
@@ -157,11 +268,35 @@ export async function getProjectByIdHandler(
 ) {
   const { id } = request.params as { id: string };
 
+  request.log.info(
+    {
+      action: "GET_PROJECT_BY_ID",
+      projectId: id,
+    },
+    "Get project by id request received",
+  );
+
   const [project] = await db.select().from(projects).where(eq(projects.id, id));
 
   if (!project) {
+    request.log.warn(
+      {
+        action: "GET_PROJECT_BY_ID",
+        projectId: id,
+      },
+      "Project not found",
+    );
+
     return reply.status(404).send({ message: "Project not found" });
   }
+
+  request.log.info(
+    {
+      action: "GET_PROJECT_BY_ID",
+      projectId: id,
+    },
+    "Project fetched successfully",
+  );
 
   return project;
 }

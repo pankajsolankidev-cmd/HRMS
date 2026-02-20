@@ -47,6 +47,17 @@ export async function createLeaveRequestHandler(
   const userId = request.user!.id;
   const body = request.body as CreateLeaveRequestDto;
 
+  request.log.info(
+    {
+      action: "CREATE_LEAVE_REQUEST",
+      userId,
+      fromDate: body.fromDate,
+      toDate: body.toDate,
+      type: body.type,
+    },
+    "Create leave request received",
+  );
+
   validateFutureDates(body.fromDate, body.toDate);
 
   const [employee] = await db
@@ -55,6 +66,14 @@ export async function createLeaveRequestHandler(
     .where(eq(employees.userId, userId));
 
   if (!employee) {
+    request.log.warn(
+      {
+        action: "CREATE_LEAVE_REQUEST",
+        userId,
+      },
+      "Employee not found for leave request",
+    );
+
     return reply.code(404).send({ message: "Employee not found" });
   }
 
@@ -73,17 +92,25 @@ export async function createLeaveRequestHandler(
     toDate: body.toDate,
     type: body.type,
     dayType: body.dayType,
-
     fromHour: body.fromHour,
     toHour: body.toHour,
-
     totalHours,
     totalDays: totalDays.toString(),
-
     reason: body.reason,
     file: body.file,
     status: LeaveStatus.Pending,
   });
+
+  request.log.info(
+    {
+      action: "CREATE_LEAVE_REQUEST",
+      userId,
+      employeeId: employee.id,
+      totalDays,
+      totalHours,
+    },
+    "Leave request created successfully",
+  );
 
   return sendMessage(reply, "Leave request created successfully", 201);
 }
@@ -104,6 +131,16 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
     sortOrder?: "asc" | "desc";
     createdByType?: "all" | "manual" | "self";
   };
+
+  request.log.info(
+    {
+      action: "GET_ALL_LEAVE_REQUESTS",
+      userId,
+      query,
+    },
+    "Get leave requests received",
+  );
+
   const conditions = [];
 
   const userRolesRows = await db
@@ -119,7 +156,19 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
   const isHRorAdmin = hasAnyRole(roleNames, ["HR", "ADMIN"]);
 
   if (!isHRorAdmin && query.employeeId) {
-    throw new Error("Employee cannot filter other employees");
+    request.log.warn(
+      {
+        action: "GET_ALL_LEAVE_REQUESTS",
+        userId,
+        employeeId: query.employeeId,
+      },
+      "Non HR/Admin attempted to filter other employee leave requests",
+    );
+
+    return {
+      data: [],
+      meta: { page: 1, limit: null, total: 0 },
+    };
   }
 
   let resolvedEmployeeId: string | undefined;
@@ -131,6 +180,14 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
 
   if (!isHRorAdmin) {
     if (!employee) {
+      request.log.warn(
+        {
+          action: "GET_ALL_LEAVE_REQUESTS",
+          userId,
+        },
+        "Employee not found for leave list",
+      );
+
       return {
         data: [],
         meta: { page: 1, limit: null, total: 0 },
@@ -138,10 +195,8 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
     }
 
     resolvedEmployeeId = employee.id;
-  } else {
-    if (query.employeeId) {
-      resolvedEmployeeId = query.employeeId;
-    }
+  } else if (query.employeeId) {
+    resolvedEmployeeId = query.employeeId;
   }
 
   if (resolvedEmployeeId) {
@@ -163,15 +218,15 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
     }
   }
 
-  if (query?.search) {
+  if (query.search) {
     conditions.push(ilike(leaveRequests.reason, `%${query.search}%`));
   }
 
-  if (query?.status) {
+  if (query.status) {
     conditions.push(eq(leaveRequests.status, query.status));
   }
 
-  if (query?.type) {
+  if (query.type) {
     conditions.push(eq(leaveRequests.type, query.type as any));
   }
 
@@ -187,7 +242,7 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
 
   const orderByClauses = [];
 
-  if (!query?.sortBy) {
+  if (!query.sortBy) {
     orderByClauses.push(desc(leaveRequests.updatedAt));
   } else {
     orderByClauses.push(
@@ -243,7 +298,6 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
       createdByEmployee,
       eq(leaveRequests.createdBy, createdByEmployee.userId),
     )
-
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(...orderByClauses)
     .$dynamic();
@@ -253,6 +307,18 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
   }
 
   const data = await queryBuilder;
+
+  request.log.info(
+    {
+      action: "GET_ALL_LEAVE_REQUESTS",
+      userId,
+      page,
+      limit,
+      resultCount: data.length,
+      total: countResult?.count ?? 0,
+    },
+    "Leave requests fetched successfully",
+  );
 
   return {
     data,
@@ -271,10 +337,17 @@ export async function getLeaveRequestByIdHandler(
   const userId = request.user!.id;
   const { id } = request.params as { id: string };
 
+  request.log.info(
+    {
+      action: "GET_LEAVE_REQUEST_BY_ID",
+      userId,
+      leaveRequestId: id,
+    },
+    "Get leave request by id received",
+  );
+
   const userRolesRows = await db
-    .select({
-      roleName: roles.name,
-    })
+    .select({ roleName: roles.name })
     .from(userRoles)
     .leftJoin(roles, eq(userRoles.roleId, roles.id))
     .where(eq(userRoles.userId, userId));
@@ -294,6 +367,15 @@ export async function getLeaveRequestByIdHandler(
       .where(eq(employees.userId, userId));
 
     if (!employee) {
+      request.log.warn(
+        {
+          action: "GET_LEAVE_REQUEST_BY_ID",
+          userId,
+          leaveRequestId: id,
+        },
+        "Employee not found for leave request access",
+      );
+
       return {
         data: [],
         meta: { page: 1, limit: 10, total: 0 },
@@ -318,13 +400,11 @@ export async function getLeaveRequestByIdHandler(
         firstName: createdByEmployee.firstName,
         lastName: createdByEmployee.lastName,
       },
-
       approvedByUser: {
         id: approverEmployee.id,
         firstName: approverEmployee.firstName,
         lastName: approverEmployee.lastName,
       },
-
       rejectedByUser: {
         id: rejecterEmployee.id,
         firstName: rejecterEmployee.firstName,
@@ -345,18 +425,34 @@ export async function getLeaveRequestByIdHandler(
       createdByEmployee,
       eq(leaveRequests.createdBy, createdByEmployee.userId),
     )
-
     .where(and(...conditions));
 
   if (!row) {
+    request.log.warn(
+      {
+        action: "GET_LEAVE_REQUEST_BY_ID",
+        userId,
+        leaveRequestId: id,
+      },
+      "Leave request not found",
+    );
+
     return reply.code(404).send({ message: "Leave request not found" });
   }
+
+  request.log.info(
+    {
+      action: "GET_LEAVE_REQUEST_BY_ID",
+      userId,
+      leaveRequestId: id,
+    },
+    "Leave request fetched successfully",
+  );
 
   return {
     data: row,
   };
 }
-
 export async function updateLeaveRequestHandler(
   request: FastifyRequest,
   reply: FastifyReply,
@@ -364,6 +460,16 @@ export async function updateLeaveRequestHandler(
   const userId = request.user!.id;
   const { id } = request.params as { id: string };
   const body = request.body as UpdateLeaveRequestDto;
+
+  request.log.info(
+    {
+      action: "UPDATE_LEAVE_REQUEST",
+      userId,
+      leaveRequestId: id,
+      fields: Object.keys(body),
+    },
+    "Update leave request received",
+  );
 
   const [employeeWithPosition] = await db
     .select({
@@ -375,6 +481,15 @@ export async function updateLeaveRequestHandler(
     .where(eq(employees.userId, userId));
 
   if (!employeeWithPosition) {
+    request.log.warn(
+      {
+        action: "UPDATE_LEAVE_REQUEST",
+        userId,
+        leaveRequestId: id,
+      },
+      "Employee not found for leave update",
+    );
+
     return reply.code(403).send({ message: "Employee not found" });
   }
 
@@ -407,6 +522,15 @@ export async function updateLeaveRequestHandler(
     .where(and(...conditions));
 
   if (!existingLeave) {
+    request.log.warn(
+      {
+        action: "UPDATE_LEAVE_REQUEST",
+        userId,
+        leaveRequestId: id,
+      },
+      "Leave not found, unauthorized, or not pending",
+    );
+
     return reply.code(404).send({
       message: "Leave not found, not authorized, or not Pending",
     });
@@ -434,13 +558,11 @@ export async function updateLeaveRequestHandler(
     .update(leaveRequests)
     .set({
       ...body,
-
       fromDate: finalFromDate,
       toDate: finalToDate,
       dayType: finalDayType,
       fromHour: finalFromHour,
       toHour: finalToHour,
-
       totalHours,
       totalDays: totalDays.toString(),
     })
@@ -448,20 +570,48 @@ export async function updateLeaveRequestHandler(
     .returning();
 
   if (!updated) {
+    request.log.warn(
+      {
+        action: "UPDATE_LEAVE_REQUEST",
+        userId,
+        leaveRequestId: id,
+      },
+      "Leave update failed due to invalid state or authorization",
+    );
+
     return reply.code(404).send({
       message: "Leave not found, not authorized, or status is not Pending",
     });
   }
 
+  request.log.info(
+    {
+      action: "UPDATE_LEAVE_REQUEST",
+      userId,
+      leaveRequestId: id,
+      totalDays,
+      totalHours,
+    },
+    "Leave request updated successfully",
+  );
+
   return sendMessage(reply, "Leave request updated successfully");
 }
-
 export async function deleteLeaveRequestHandler(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
   const userId = request.user!.id;
   const { id } = request.params as { id: string };
+
+  request.log.info(
+    {
+      action: "DELETE_LEAVE_REQUEST",
+      userId,
+      leaveRequestId: id,
+    },
+    "Delete leave request received",
+  );
 
   const [employeeWithPosition] = await db
     .select({
@@ -491,6 +641,15 @@ export async function deleteLeaveRequestHandler(
 
   if (!isHRorAdmin) {
     if (!employeeWithPosition?.employeeId) {
+      request.log.warn(
+        {
+          action: "DELETE_LEAVE_REQUEST",
+          userId,
+          leaveRequestId: id,
+        },
+        "Employee record not found for leave delete",
+      );
+
       return reply.code(403).send({
         message: "Employee record not found for this user",
       });
@@ -507,10 +666,28 @@ export async function deleteLeaveRequestHandler(
     .returning({ id: leaveRequests.id });
 
   if (!deleted) {
+    request.log.warn(
+      {
+        action: "DELETE_LEAVE_REQUEST",
+        userId,
+        leaveRequestId: id,
+      },
+      "Leave not found, unauthorized, or not pending",
+    );
+
     return reply.code(404).send({
       message: "Leave not found, not authorized, or status is not Pending",
     });
   }
+
+  request.log.info(
+    {
+      action: "DELETE_LEAVE_REQUEST",
+      userId,
+      leaveRequestId: id,
+    },
+    "Leave request deleted successfully",
+  );
 
   return sendMessage(reply, "Leave request deleted successfully");
 }
@@ -522,22 +699,27 @@ export async function approveLeaveRequestHandler(
   const userId = request.user!.id;
   const { id } = request.params as { id: string };
 
+  request.log.info(
+    {
+      action: "APPROVE_LEAVE_REQUEST",
+      userId,
+      leaveRequestId: id,
+    },
+    "Approve leave request received",
+  );
+
   const approverRolesRows = await db
-    .select({
-      roleName: roles.name,
-    })
+    .select({ roleName: roles.name })
     .from(userRoles)
     .leftJoin(roles, eq(userRoles.roleId, roles.id))
     .where(eq(userRoles.userId, userId));
 
-  const approverRoleNames = approverRolesRows.map((r) => r.roleName);
+  const approverRoleNames = approverRolesRows
+    .map((r) => r.roleName)
+    .filter((role): role is string => role !== null);
 
-  const cleanedApproverRoles = approverRoleNames.filter(
-    (role): role is string => role !== null,
-  );
-
-  const isApproverAdmin = hasRole(cleanedApproverRoles, "ADMIN");
-  const isApproverHR = hasRole(cleanedApproverRoles, "HR");
+  const isApproverAdmin = hasRole(approverRoleNames, "ADMIN");
+  const isApproverHR = hasRole(approverRoleNames, "HR");
 
   const leaveRows = await db
     .select({
@@ -551,41 +733,87 @@ export async function approveLeaveRequestHandler(
     .where(eq(leaveRequests.id, id));
 
   const leaveRow = leaveRows[0];
+
+  if (!leaveRow) {
+    request.log.warn(
+      {
+        action: "APPROVE_LEAVE_REQUEST",
+        userId,
+        leaveRequestId: id,
+      },
+      "Leave request not found",
+    );
+
+    return reply.code(404).send({ message: "Leave request not found" });
+  }
+
   if (leaveRow.targetUserId === userId) {
+    request.log.warn(
+      {
+        action: "APPROVE_LEAVE_REQUEST",
+        userId,
+        leaveRequestId: id,
+      },
+      "Self approval attempt blocked",
+    );
+
     return reply.code(403).send({
       message: "You cannot approve your own leave request",
     });
   }
 
-  if (!leaveRow) {
-    return reply.code(404).send({ message: "Leave request not found" });
-  }
-
   if (!leaveRow.targetUserId) {
+    request.log.error(
+      {
+        action: "APPROVE_LEAVE_REQUEST",
+        userId,
+        leaveRequestId: id,
+      },
+      "Invalid leave request target user",
+    );
+
     return reply.code(500).send({
       message: "Invalid leave request: target user not found",
     });
   }
 
   const targetRolesRows = await db
-    .select({
-      roleName: roles.name,
-    })
+    .select({ roleName: roles.name })
     .from(userRoles)
     .leftJoin(roles, eq(userRoles.roleId, roles.id))
     .where(eq(userRoles.userId, leaveRow.targetUserId));
 
-  const targetRoleNames = targetRolesRows.map((r) => r.roleName);
+  const targetRoleNames = targetRolesRows
+    .map((r) => r.roleName)
+    .filter((role): role is string => role !== null);
 
   const isTargetHR = targetRoleNames.includes("HR");
 
   if (isTargetHR && !isApproverAdmin) {
+    request.log.warn(
+      {
+        action: "APPROVE_LEAVE_REQUEST",
+        userId,
+        leaveRequestId: id,
+      },
+      "Non-admin attempted to approve HR leave",
+    );
+
     return reply.code(403).send({
       message: "HR leave can only be approved by Admin",
     });
   }
 
   if (!isApproverAdmin && !isApproverHR) {
+    request.log.warn(
+      {
+        action: "APPROVE_LEAVE_REQUEST",
+        userId,
+        leaveRequestId: id,
+      },
+      "Unauthorized leave approval attempt",
+    );
+
     return reply.code(403).send({
       message: "Only HR or Admin can approve leave requests",
     });
@@ -608,14 +836,31 @@ export async function approveLeaveRequestHandler(
     .returning();
 
   if (!updated) {
+    request.log.warn(
+      {
+        action: "APPROVE_LEAVE_REQUEST",
+        userId,
+        leaveRequestId: id,
+      },
+      "Leave not found or already processed",
+    );
+
     return reply.code(404).send({
       message: "Leave not found or already processed",
     });
   }
 
+  request.log.info(
+    {
+      action: "APPROVE_LEAVE_REQUEST",
+      userId,
+      leaveRequestId: id,
+    },
+    "Leave request approved successfully",
+  );
+
   return sendMessage(reply, "Leave request approved successfully");
 }
-
 export async function rejectLeaveRequestHandler(
   request: FastifyRequest,
   reply: FastifyReply,
@@ -624,24 +869,27 @@ export async function rejectLeaveRequestHandler(
   const { id } = request.params as { id: string };
   const body = request.body as { rejectionReason?: string };
 
+  request.log.info(
+    {
+      action: "REJECT_LEAVE_REQUEST",
+      userId,
+      leaveRequestId: id,
+    },
+    "Reject leave request received",
+  );
+
   const approverRolesRows = await db
-    .select({
-      roleName: roles.name,
-    })
+    .select({ roleName: roles.name })
     .from(userRoles)
     .leftJoin(roles, eq(userRoles.roleId, roles.id))
     .where(eq(userRoles.userId, userId));
 
-  const approverRoleNames = approverRolesRows.map((r) =>
-    r.roleName?.toUpperCase(),
-  );
+  const approverRoleNames = approverRolesRows
+    .map((r) => r.roleName?.toUpperCase())
+    .filter((role): role is string => role !== null);
 
-  const cleanedApproverRoles = approverRoleNames.filter(
-    (role): role is string => role !== null,
-  );
-
-  const isApproverAdmin = hasRole(cleanedApproverRoles, "ADMIN");
-  const isApproverHR = hasRole(cleanedApproverRoles, "HR");
+  const isApproverAdmin = hasRole(approverRoleNames, "ADMIN");
+  const isApproverHR = hasRole(approverRoleNames, "HR");
 
   const leaveRows = await db
     .select({
@@ -657,44 +905,85 @@ export async function rejectLeaveRequestHandler(
   const leaveRow = leaveRows[0];
 
   if (!leaveRow) {
+    request.log.warn(
+      {
+        action: "REJECT_LEAVE_REQUEST",
+        userId,
+        leaveRequestId: id,
+      },
+      "Leave request not found",
+    );
+
     return reply.code(404).send({ message: "Leave request not found" });
   }
 
   if (!leaveRow.targetUserId) {
+    request.log.error(
+      {
+        action: "REJECT_LEAVE_REQUEST",
+        userId,
+        leaveRequestId: id,
+      },
+      "Invalid leave request target user",
+    );
+
     return reply.code(500).send({
       message: "Invalid leave request: target user not found",
     });
   }
 
   if (leaveRow.targetUserId === userId) {
+    request.log.warn(
+      {
+        action: "REJECT_LEAVE_REQUEST",
+        userId,
+        leaveRequestId: id,
+      },
+      "Self rejection attempt blocked",
+    );
+
     return reply.code(403).send({
       message: "You cannot reject your own leave request",
     });
   }
 
   const targetRolesRows = await db
-    .select({
-      roleName: roles.name,
-    })
+    .select({ roleName: roles.name })
     .from(userRoles)
     .leftJoin(roles, eq(userRoles.roleId, roles.id))
     .where(eq(userRoles.userId, leaveRow.targetUserId));
 
-  const targetRoleNames = targetRolesRows.map((r) => r.roleName?.toUpperCase());
+  const targetRoleNames = targetRolesRows
+    .map((r) => r.roleName?.toUpperCase())
+    .filter((role): role is string => role !== null);
 
-  const cleanedTargetRoles = targetRoleNames.filter(
-    (role): role is string => role !== null,
-  );
-
-  const isTargetHR = hasRole(cleanedTargetRoles, "HR");
+  const isTargetHR = hasRole(targetRoleNames, "HR");
 
   if (isTargetHR && !isApproverAdmin) {
+    request.log.warn(
+      {
+        action: "REJECT_LEAVE_REQUEST",
+        userId,
+        leaveRequestId: id,
+      },
+      "Non-admin attempted to reject HR leave",
+    );
+
     return reply.code(403).send({
       message: "HR leave can only be rejected by Admin",
     });
   }
 
   if (!isApproverAdmin && !isApproverHR) {
+    request.log.warn(
+      {
+        action: "REJECT_LEAVE_REQUEST",
+        userId,
+        leaveRequestId: id,
+      },
+      "Unauthorized leave rejection attempt",
+    );
+
     return reply.code(403).send({
       message: "Only HR or Admin can reject leave requests",
     });
@@ -717,20 +1006,49 @@ export async function rejectLeaveRequestHandler(
     .returning();
 
   if (!updated) {
+    request.log.warn(
+      {
+        action: "REJECT_LEAVE_REQUEST",
+        userId,
+        leaveRequestId: id,
+      },
+      "Leave not found or already processed",
+    );
+
     return reply.code(404).send({
       message: "Leave not found or already processed",
     });
   }
 
+  request.log.info(
+    {
+      action: "REJECT_LEAVE_REQUEST",
+      userId,
+      leaveRequestId: id,
+    },
+    "Leave request rejected successfully",
+  );
+
   return sendMessage(reply, "Leave request rejected successfully");
 }
-
 export async function createManualLeaveRequestHandler(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
   const userId = request.user!.id;
   const body = request.body as CreateManualLeaveRequestDto;
+
+  request.log.info(
+    {
+      action: "CREATE_MANUAL_LEAVE_REQUEST",
+      userId,
+      employeeId: body.employeeId,
+      fromDate: body.fromDate,
+      toDate: body.toDate,
+      type: body.type,
+    },
+    "Create manual leave request received",
+  );
 
   const userRolesRows = await db
     .select({ roleName: roles.name })
@@ -743,12 +1061,30 @@ export async function createManualLeaveRequestHandler(
     .filter((r): r is string => r !== null);
 
   if (!hasAnyRole(roleNames, ["HR", "ADMIN"])) {
+    request.log.warn(
+      {
+        action: "CREATE_MANUAL_LEAVE_REQUEST",
+        userId,
+      },
+      "Unauthorized manual leave creation attempt",
+    );
+
     return sendMessage(reply, "Only HR or Admin allowed", 403);
   }
 
   const validation = validatePastDatesOnly(body.fromDate, body.toDate);
 
   if (!validation.valid) {
+    request.log.warn(
+      {
+        action: "CREATE_MANUAL_LEAVE_REQUEST",
+        userId,
+        fromDate: body.fromDate,
+        toDate: body.toDate,
+      },
+      "Invalid leave date range for manual leave",
+    );
+
     return sendMessage(reply, validation.message!, 400);
   }
 
@@ -758,6 +1094,15 @@ export async function createManualLeaveRequestHandler(
     .where(eq(employees.id, body.employeeId));
 
   if (!employee) {
+    request.log.warn(
+      {
+        action: "CREATE_MANUAL_LEAVE_REQUEST",
+        userId,
+        employeeId: body.employeeId,
+      },
+      "Target employee not found for manual leave",
+    );
+
     return sendMessage(reply, "Target employee not found", 404);
   }
 
@@ -790,9 +1135,19 @@ export async function createManualLeaveRequestHandler(
     rejectionReason: null,
   });
 
+  request.log.info(
+    {
+      action: "CREATE_MANUAL_LEAVE_REQUEST",
+      userId,
+      employeeId: employee.id,
+      totalDays,
+      totalHours,
+    },
+    "Manual leave created successfully",
+  );
+
   return sendMessage(reply, "Manual leave created successfully", 201);
 }
-
 export async function updateManualLeaveRequestHandler(
   request: FastifyRequest,
   reply: FastifyReply,
@@ -800,6 +1155,16 @@ export async function updateManualLeaveRequestHandler(
   const userId = request.user!.id;
   const { id } = request.params as { id: string };
   const body = request.body as Partial<CreateManualLeaveRequestDto>;
+
+  request.log.info(
+    {
+      action: "UPDATE_MANUAL_LEAVE_REQUEST",
+      userId,
+      leaveRequestId: id,
+      fields: Object.keys(body),
+    },
+    "Update manual leave request received",
+  );
 
   const userRolesRows = await db
     .select({ roleName: roles.name })
@@ -812,6 +1177,15 @@ export async function updateManualLeaveRequestHandler(
     .filter((r): r is string => r !== null);
 
   if (!hasAnyRole(roleNames, ["HR", "ADMIN"])) {
+    request.log.warn(
+      {
+        action: "UPDATE_MANUAL_LEAVE_REQUEST",
+        userId,
+        leaveRequestId: id,
+      },
+      "Unauthorized manual leave update attempt",
+    );
+
     return sendMessage(reply, "Only HR or Admin allowed", 403);
   }
 
@@ -824,15 +1198,20 @@ export async function updateManualLeaveRequestHandler(
     .leftJoin(employees, eq(leaveRequests.employeeId, employees.id))
     .where(eq(leaveRequests.id, id));
 
-  if (
-    !row ||
-    row.leave.createdBy === row.employeeUserId // ❗ not manual
-  ) {
+  if (!row || row.leave.createdBy === row.employeeUserId) {
+    request.log.warn(
+      {
+        action: "UPDATE_MANUAL_LEAVE_REQUEST",
+        userId,
+        leaveRequestId: id,
+      },
+      "Manual leave not found",
+    );
+
     return sendMessage(reply, "Manual leave not found", 404);
   }
 
   const existingLeave = row.leave;
-
   let finalEmployeeId = existingLeave.employeeId;
 
   if (body.employeeId) {
@@ -842,6 +1221,16 @@ export async function updateManualLeaveRequestHandler(
       .where(eq(employees.id, body.employeeId));
 
     if (!employee) {
+      request.log.warn(
+        {
+          action: "UPDATE_MANUAL_LEAVE_REQUEST",
+          userId,
+          leaveRequestId: id,
+          employeeId: body.employeeId,
+        },
+        "Target employee not found for manual leave update",
+      );
+
       return sendMessage(reply, "Target employee not found", 404);
     }
 
@@ -854,6 +1243,17 @@ export async function updateManualLeaveRequestHandler(
   const validation = validatePastDatesOnly(finalFromDate, finalToDate);
 
   if (!validation.valid) {
+    request.log.warn(
+      {
+        action: "UPDATE_MANUAL_LEAVE_REQUEST",
+        userId,
+        leaveRequestId: id,
+        fromDate: finalFromDate,
+        toDate: finalToDate,
+      },
+      "Invalid date range for manual leave update",
+    );
+
     return sendMessage(reply, validation.message!, 400);
   }
 
@@ -869,24 +1269,30 @@ export async function updateManualLeaveRequestHandler(
     .update(leaveRequests)
     .set({
       employeeId: finalEmployeeId,
-
       fromDate: finalFromDate,
       toDate: finalToDate,
-
       type: body.type ?? existingLeave.type,
       dayType: body.dayType ?? existingLeave.dayType,
       fromHour: body.fromHour ?? existingLeave.fromHour,
       toHour: body.toHour ?? existingLeave.toHour,
-
       totalHours,
       totalDays: totalDays.toString(),
-
       reason: body.reason ?? existingLeave.reason,
       file: body.file ?? existingLeave.file,
-
       updatedAt: new Date(),
     })
     .where(eq(leaveRequests.id, id));
+
+  request.log.info(
+    {
+      action: "UPDATE_MANUAL_LEAVE_REQUEST",
+      userId,
+      leaveRequestId: id,
+      totalDays,
+      totalHours,
+    },
+    "Manual leave updated successfully",
+  );
 
   return sendMessage(reply, "Manual leave updated successfully");
 }
@@ -897,6 +1303,15 @@ export async function deleteManualLeaveRequestHandler(
 ) {
   const userId = request.user!.id;
   const { id } = request.params as { id: string };
+
+  request.log.info(
+    {
+      action: "DELETE_MANUAL_LEAVE_REQUEST",
+      userId,
+      leaveRequestId: id,
+    },
+    "Delete manual leave request received",
+  );
 
   const userRolesRows = await db
     .select({ roleName: roles.name })
@@ -909,6 +1324,15 @@ export async function deleteManualLeaveRequestHandler(
     .filter((r): r is string => r !== null);
 
   if (!hasAnyRole(roleNames, ["HR", "ADMIN"])) {
+    request.log.warn(
+      {
+        action: "DELETE_MANUAL_LEAVE_REQUEST",
+        userId,
+        leaveRequestId: id,
+      },
+      "Unauthorized manual leave delete attempt",
+    );
+
     return sendMessage(reply, "Only HR or Admin allowed", 403);
   }
 
@@ -923,8 +1347,26 @@ export async function deleteManualLeaveRequestHandler(
     .returning({ id: leaveRequests.id });
 
   if (!deleted) {
+    request.log.warn(
+      {
+        action: "DELETE_MANUAL_LEAVE_REQUEST",
+        userId,
+        leaveRequestId: id,
+      },
+      "Manual leave not found for delete",
+    );
+
     return sendMessage(reply, "Manual leave not found", 404);
   }
+
+  request.log.info(
+    {
+      action: "DELETE_MANUAL_LEAVE_REQUEST",
+      userId,
+      leaveRequestId: id,
+    },
+    "Manual leave deleted successfully",
+  );
 
   return sendMessage(reply, "Manual leave deleted successfully");
 }
@@ -936,7 +1378,15 @@ export async function getManualLeaveRequestByIdHandler(
   const userId = request.user!.id;
   const { id } = request.params as { id: string };
 
-  
+  request.log.info(
+    {
+      action: "GET_MANUAL_LEAVE_REQUEST_BY_ID",
+      userId,
+      leaveRequestId: id,
+    },
+    "Get manual leave request by id received",
+  );
+
   const userRolesRows = await db
     .select({ roleName: roles.name })
     .from(userRoles)
@@ -948,6 +1398,15 @@ export async function getManualLeaveRequestByIdHandler(
     .filter((r): r is string => r !== null);
 
   if (!hasAnyRole(roleNames, ["HR", "ADMIN"])) {
+    request.log.warn(
+      {
+        action: "GET_MANUAL_LEAVE_REQUEST_BY_ID",
+        userId,
+        leaveRequestId: id,
+      },
+      "Unauthorized manual leave access attempt",
+    );
+
     return sendMessage(reply, "Only HR or Admin allowed", 403);
   }
 
@@ -976,8 +1435,26 @@ export async function getManualLeaveRequestByIdHandler(
     .where(eq(leaveRequests.id, id));
 
   if (!row || !row.employee || row.leave.createdBy === row.employee.userId) {
+    request.log.warn(
+      {
+        action: "GET_MANUAL_LEAVE_REQUEST_BY_ID",
+        userId,
+        leaveRequestId: id,
+      },
+      "Manual leave not found",
+    );
+
     return sendMessage(reply, "Manual leave not found", 404);
   }
+
+  request.log.info(
+    {
+      action: "GET_MANUAL_LEAVE_REQUEST_BY_ID",
+      userId,
+      leaveRequestId: id,
+    },
+    "Manual leave fetched successfully",
+  );
 
   return { data: row };
 }
