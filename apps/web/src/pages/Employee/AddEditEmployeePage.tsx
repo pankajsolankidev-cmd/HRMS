@@ -134,15 +134,17 @@ export default function AddEditEmployeePage() {
         firstName: employeeData.firstName ?? "",
         lastName: employeeData.lastName ?? "",
         email: employeeData.email ?? "",
-        positionId: String(employeeData.positionId) ?? "",
+        positionId: String(employeeData.position.id) ?? "",
         joiningDate: employeeData.joiningDate ?? "",
-        departmentId: employeeData.departmentId
-          ? String(employeeData.departmentId)
+        departmentId: employeeData.department.id
+          ? String(employeeData.department.id)
           : null,
-        managerId: employeeData.managerId
-          ? String(employeeData.managerId)
+        managerId: employeeData.manager?.id
+          ? String(employeeData.manager.id)
           : null,
-        systemId: employeeData.systemId ? String(employeeData.systemId) : null,
+        systemId: employeeData.system?.id
+          ? String(employeeData.system.id)
+          : null,
         documents: {
           generateOfferLetter:
             employeeData.documents?.generateOfferLetter ?? false,

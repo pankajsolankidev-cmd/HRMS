@@ -16,7 +16,7 @@ import Button from "../../components/ui/button/Button";
 
 import { useSelector } from "react-redux";
 import { deleteEmployee } from "../../api/delete";
-import { getEmployees, getPositions } from "../../api/get";
+import { getEmployees } from "../../api/get";
 import type { PaginatedResponse } from "../../api/types";
 import Card from "../../components/common/ComponentCard";
 import { useTableSort } from "../../components/tables/useTableSort";
@@ -29,7 +29,8 @@ type Employee = {
   email: string;
   position: string;
   joiningDate: string;
-  onboardingBuddy: string;
+  department: string;
+  manager: string;
   userId: string;
 };
 
@@ -56,18 +57,6 @@ export default function EmployeePage() {
 
     return () => clearTimeout(timer);
   }, [rawSearch]);
-
-  const { data: positions } = useQuery({
-    queryKey: ["positions"],
-    queryFn: () => getPositions(),
-  });
-
-  const positionMap: Record<string, string> = {};
-  if (Array.isArray(positions)) {
-    positions.forEach((p: any) => {
-      positionMap[p.id] = p.name;
-    });
-  }
 
   const { data, isLoading, isError, refetch } = useQuery<
     PaginatedResponse<any>
@@ -103,9 +92,10 @@ export default function EmployeePage() {
       firstName: u.firstName,
       lastName: u.lastName,
       email: u.email,
-      position: positionMap[u.positionId] ?? "—",
+      position: u.position?.name ?? "—",
       joiningDate: u.joiningDate,
-      onboardingBuddy: u.onboardingBuddy ?? "HR Team",
+      department: u.department?.name ?? "—",
+      manager: u.manager ? `${u.manager.firstName} ${u.manager.lastName}` : "—",
       userId: u.userId,
     })) ?? [];
 
@@ -143,8 +133,12 @@ export default function EmployeePage() {
       cell: (row) => row.joiningDate,
     },
     {
-      header: "Onboarding Buddy",
-      cell: (row) => row.onboardingBuddy,
+      header: "Department",
+      cell: (row) => row.department,
+    },
+    {
+      header: "Manager",
+      cell: (row) => row.manager,
     },
     {
       header: "Action",
