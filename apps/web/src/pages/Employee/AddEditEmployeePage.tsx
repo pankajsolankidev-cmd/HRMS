@@ -96,7 +96,7 @@ export default function AddEditEmployeePage() {
     queryFn: () => getDepartments(),
   });
   const { data: employees } = useQuery({
-    queryKey: ["employee"],
+    queryKey: ["employees"],
     queryFn: () => getEmployees(),
   });
 
@@ -129,34 +129,32 @@ export default function AddEditEmployeePage() {
   }));
 
   useEffect(() => {
-    if (isEditMode && employeeData) {
-      reset({
-        firstName: employeeData.firstName ?? "",
-        lastName: employeeData.lastName ?? "",
-        email: employeeData.email ?? "",
-        positionId: String(employeeData.positionId) ?? "",
-        joiningDate: employeeData.joiningDate ?? "",
-        departmentId: employeeData.departmentId
-          ? String(employeeData.departmentId)
-          : null,
-        managerId: employeeData.managerId
-          ? String(employeeData.managerId)
-          : null,
-        systemId: employeeData.systemId ? String(employeeData.systemId) : null,
-        documents: {
-          generateOfferLetter:
-            employeeData.documents?.generateOfferLetter ?? false,
-          generateAppointmentLetter:
-            employeeData.documents?.generateAppointmentLetter ?? false,
-        },
-        welcome: {
-          welcomewithGmail: employeeData.welcome?.welcomewithGmail ?? false,
-          welcomewithWhatsapp:
-            employeeData.welcome?.welcomewithWhatsapp ?? false,
-          welcomewithSlack: employeeData.welcome?.welcomewithSlack ?? false,
-        },
-      });
-    }
+    if (!isEditMode || !employeeData) return;
+
+    reset({
+      firstName: employeeData.firstName ?? "",
+      lastName: employeeData.lastName ?? "",
+      email: employeeData.email ?? "",
+      positionId: employeeData.position?.id ?? "",
+      joiningDate: employeeData.joiningDate ?? "",
+
+      departmentId: employeeData.department?.id ?? null,
+      managerId: employeeData.manager?.id ?? null,
+      systemId: employeeData.system?.id ?? null,
+
+      documents: {
+        generateOfferLetter:
+          employeeData.documents?.generateOfferLetter ?? false,
+        generateAppointmentLetter:
+          employeeData.documents?.generateAppointmentLetter ?? false,
+      },
+
+      welcome: {
+        welcomewithGmail: employeeData.welcome?.welcomewithGmail ?? false,
+        welcomewithWhatsapp: employeeData.welcome?.welcomewithWhatsapp ?? false,
+        welcomewithSlack: employeeData.welcome?.welcomewithSlack ?? false,
+      },
+    });
   }, [isEditMode, employeeData, reset]);
 
   const saveMutation = useMutation({
@@ -394,9 +392,8 @@ export default function AddEditEmployeePage() {
 
           <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
             <Button
-              variant="outline"
               disabled={saveMutation.isPending}
-              className="bg-black text-black dark:bg-blue-500 text-white"
+              className="bg-black dark:bg-blue-500 text-white"
             >
               {saveMutation.isPending
                 ? "Saving..."
