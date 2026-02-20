@@ -26,6 +26,8 @@ import ResetPassword from "./pages/auth/ResetPassword";
 import SignInForm from "./pages/auth/SignInForm";
 import AddEditComponentPage from "./pages/Component/AddEditComponentPage";
 import ComponentPage from "./pages/Component/ComponentPage";
+import DepartmentForm from "./pages/Department/DepartmentForm";
+import DepartmentTable from "./pages/Department/DepartmentTable";
 import AddEditEmployeePage from "./pages/Employee/AddEditEmployeePage";
 import EmployeePage from "./pages/Employee/EmployeePage";
 import AddEditExpensePage from "./pages/Expense/AddEditExpensePage";
@@ -39,12 +41,13 @@ import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
 import RootRedirect from "./pages/OtherPage/RootRedirect";
 import PayrollHistory from "./pages/Payroll/PayrollHistory";
 import PayrollTable from "./pages/Payroll/PayrollTable";
+import ProjectDetail from "./pages/Project/ProjectDetail";
+import ProjectForm from "./pages/Project/ProjectForm";
+import ProjectTable from "./pages/Project/ProjectTable";
 import AddEditSalaryPage from "./pages/Salary/AddEditSalaryPage";
 import SalaryPage from "./pages/Salary/SalaryPage";
 import AddEditSystemPage from "./pages/System/AddEditSystemPage";
 import SystemPage from "./pages/System/SystemPage";
-import DepartmentForm from "./pages/Department/DepartmentForm";
-import DepartmentTable from "./pages/Department/DepartmentTable";
 
 function AppRoutes() {
   const dispatch = useDispatch();
@@ -87,9 +90,6 @@ function AppRoutes() {
           <Route path="/salary" element={<SalaryPage />} />
           <Route path="/salary/:id" element={<AddEditSalaryPage />} />
 
-          <Route path="/payrolls" element={<PayrollTable />} />
-          <Route path="/payrolls/history" element={<PayrollHistory />} />
-
           <Route path="/leave-requests" element={<LeavePage />} />
           <Route path="/leave-requests/:id" element={<SelfLeavePage />} />
           <Route
@@ -97,15 +97,21 @@ function AppRoutes() {
             element={<EmployeeLeavePage />}
           />
 
-          <Route path="/organization" element={<OrganizationTable />} />
-          <Route path="/organization/:id" element={<OrganizationForm />} />
+          <Route path="/payrolls" element={<PayrollTable />} />
+          <Route path="/payrolls/history" element={<PayrollHistory />} />
 
           <Route path="/expenses" element={<Expense />} />
           <Route path="/expenses/:id" element={<AddEditExpensePage />} />
 
+          <Route path="/organization" element={<OrganizationTable />} />
+          <Route path="/organization/:id" element={<OrganizationForm />} />
+
           <Route path="/departments" element={<DepartmentTable />} />
           <Route path="/departments/:id" element={<DepartmentForm />} />
 
+          <Route path="/projects" element={<ProjectTable />} />
+          <Route path="/projects/:id" element={<ProjectForm />} />
+          <Route path="/projects/:id/employees" element={<ProjectDetail />} />
         </Route>
       </Route>
 

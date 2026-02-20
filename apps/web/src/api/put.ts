@@ -51,6 +51,12 @@ export const updateExpense = async (params: {
   const res = await api.put(`/expenses/${id}`, payload);
   return res.data;
 };
+export const updateProject = async (params: { id: string; payload: any }) => {
+  const { id, payload } = params;
+
+  const res = await api.put(`/projects/${id}`, payload);
+  return res.data;
+};
 
 export const updateDepartment = async (
   id: string,

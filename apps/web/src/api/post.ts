@@ -127,6 +127,20 @@ export const addExpense = async (payload: ExpensePayload) => {
   const res = await api.post("/expenses", payload);
   return res.data;
 };
+export const addProject = async (payload: any) => {
+  const res = await api.post("/projects", payload);
+  return res.data;
+};
+export const assignEmployeeToProject = async (params: {
+  projectId: string;
+  employeeIds: string[];
+}) => {
+  const { projectId, employeeIds } = params;
+  const res = await api.post(`/projects/${projectId}/employees`, {
+    employeeIds,
+  });
+  return res.data;
+};
 
 export const addDepartment = async (payload: { name: string }) => {
   const res = await api.post("/departments", payload);
