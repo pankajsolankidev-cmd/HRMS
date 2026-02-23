@@ -13,7 +13,6 @@ import fastifySensible from "@fastify/sensible";
 import authRoutes from "../src/auth/auth.routes";
 import employeeRoutes from "./modules/employees/employee.routes";
 import systemRoutes from "./modules/systems/system.routes";
-import authPlugin from "./plugins/auth.plugin";
 import componentRoutes from "./modules/components/component.routes";
 import leaveRequestRoutes from "./modules/leave-requests/leave-request.routes";
 import fileRoutes from "./modules/files/file.routes";
@@ -70,7 +69,6 @@ app.register(swaggerUI, {
   routePrefix: "/docs",
 });
 
-app.register(authPlugin);
 app.register(authRoutes);
 
 app.register(employeeRoutes, {

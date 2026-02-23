@@ -27,15 +27,16 @@ import {
   deleteManualLeaveRequestSchema,
   getManualLeaveRequestByIdSchema,
 } from "./leave-request.schema";
+import { verify } from "crypto";
+import { verifyAccessToken } from "../../middlewares/auth.middlewares";
 
-import { authenticate } from "../../plugins/auth.plugin";
 
 export default async function leaveRequestRoutes(app: FastifyInstance) {
   app.post(
     "/leave-requests",
     {
       schema: createLeaveRequestSchema,
-      preHandler: [authenticate],
+      preHandler: [verifyAccessToken],
     },
     createLeaveRequestHandler,
   );
@@ -44,7 +45,7 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
     "/leave-requests",
     {
       schema: getAllLeaveRequestsSchema,
-      preHandler: [authenticate],
+      preHandler: [verifyAccessToken],
     },
     getAllLeaveRequestsHandler,
   );
@@ -53,7 +54,7 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
     "/leave-requests/:id",
     {
       schema: getLeaveRequestByIdSchema,
-      preHandler: [authenticate],
+      preHandler: [verifyAccessToken],
     },
     getLeaveRequestByIdHandler,
   );
@@ -62,7 +63,7 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
     "/leave-requests/:id",
     {
       schema: updateLeaveRequestSchema,
-      preHandler: [authenticate],
+      preHandler: [verifyAccessToken],
     },
     updateLeaveRequestHandler,
   );
@@ -71,7 +72,7 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
     "/leave-requests/:id",
     {
       schema: deleteLeaveRequestSchema,
-      preHandler: [authenticate],
+      preHandler: [verifyAccessToken],
     },
     deleteLeaveRequestHandler,
   );
@@ -80,7 +81,7 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
     "/leave-requests/:id/approve",
     {
       schema: approveLeaveRequestSchema,
-      preHandler: [authenticate],
+      preHandler: [verifyAccessToken],
     },
     approveLeaveRequestHandler,
   );
@@ -89,7 +90,7 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
     "/leave-requests/:id/reject",
     {
       schema: rejectLeaveRequestSchema,
-      preHandler: [authenticate],
+      preHandler: [verifyAccessToken],
     },
     rejectLeaveRequestHandler,
   );
@@ -98,7 +99,7 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
     "/leave-requests/manual",
     {
       schema: createManualLeaveRequestSchema,
-      preHandler: [authenticate],
+      preHandler: [verifyAccessToken],
     },
     createManualLeaveRequestHandler,
   );
@@ -107,7 +108,7 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
     "/leave-requests/manual/:id",
     {
       schema: updateManualLeaveRequestSchema,
-      preHandler: [authenticate],
+      preHandler: [verifyAccessToken],
     },
     updateManualLeaveRequestHandler,
   );
@@ -116,7 +117,7 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
     "/leave-requests/manual/:id",
     {
       schema: deleteManualLeaveRequestSchema,
-      preHandler: [authenticate],
+      preHandler: [verifyAccessToken],
     },
     deleteManualLeaveRequestHandler,
   );
@@ -124,7 +125,7 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
     "/leave-requests/manual/:id",
     {
       schema: getManualLeaveRequestByIdSchema,
-      preHandler: [authenticate],
+      preHandler: [verifyAccessToken],
     },
     getManualLeaveRequestByIdHandler,
   );

@@ -21,7 +21,7 @@ export function registerSocket(app: FastifyInstance) {
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
         id: string;
-        role: string;
+        roles: string[];
       };
 
       socket.data.user = decoded;
@@ -36,9 +36,14 @@ export function registerSocket(app: FastifyInstance) {
 
     console.log("✅ Connected:", user.id);
 
+    // Personal room
     socket.join(`user_${user.id}`);
 
-    if (user.role === "ADMIN" || user.role === "HR") {
+    // Admin room
+    if (
+      user.roles.includes("ADMIN") ||
+      user.roles.includes("HR")
+    ) {
       socket.join("admin_room");
     }
 
@@ -47,6 +52,7 @@ export function registerSocket(app: FastifyInstance) {
     });
   });
 }
+
 
 export function getIO(): Server {
   if (!io) {
