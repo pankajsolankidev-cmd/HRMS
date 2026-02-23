@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { and, eq, ilike, asc, desc, sql } from "drizzle-orm";
+import { and, eq, ilike, asc, desc, sql, or } from "drizzle-orm";
 import { db } from "../../db";
 import { sendMessage } from "../../utils/api-response";
 import { expenses } from "../../db/schema/expenses";
@@ -9,6 +9,8 @@ import { ExpenseStatus } from "../../db/schema/expense.enums";
 import { getPagination } from "../../utils/pagination";
 import { employees, roles, userRoles } from "../../db/schema";
 import { PERMISSIONS } from "../../db/schema/permissions.enums";
+import { notifications } from "../../db/schema/notifications.schema";
+import { getIO } from "../../utils/socket";
 
 interface AuthUser {
   id: string;
@@ -23,6 +25,7 @@ export async function createExpenseHandler(
   reply: FastifyReply,
 ) {
   const body = request.body as CreateExpenseDto;
+  const userId = request.user!.id;
 
   request.log.info(
     {
@@ -70,15 +73,19 @@ export async function createExpenseHandler(
     }
 
     const [employee] = await db
-      .select()
+      .select({
+        id: employees.id,
+        firstName: employees.firstName,
+        lastName: employees.lastName,
+      })
       .from(employees)
-      .where(eq(employees.userId, request.user!.id));
+      .where(eq(employees.userId, userId));
 
     if (!employee) {
       request.log.warn(
         {
           action: "CREATE_EXPENSE",
-          userId: request.user!.id,
+          userId,
         },
         "Employee profile not found",
       );
@@ -93,6 +100,30 @@ export async function createExpenseHandler(
       expenseDate: body.expenseDate,
       description: body.description ?? null,
       file: body.file ?? null,
+    });
+
+    const fullName = `${employee.firstName} ${employee.lastName}`;
+    const message = `New expense submitted by ${fullName}`;
+
+    const adminUsers = await db
+      .select({
+        userId: userRoles.userId,
+      })
+      .from(userRoles)
+      .innerJoin(roles, eq(userRoles.roleId, roles.id))
+      .where(or(eq(roles.name, "ADMIN"), eq(roles.name, "HR")));
+
+    for (const admin of adminUsers) {
+      await db.insert(notifications).values({
+        userId: admin.userId,
+        message,
+      });
+    }
+
+    const io = getIO();
+
+    io.to("admin_room").emit("new_notification", {
+      message,
     });
 
     request.log.info(
@@ -110,7 +141,7 @@ export async function createExpenseHandler(
       {
         action: "CREATE_EXPENSE",
         err,
-        userId: request.user?.id,
+        userId,
       },
       "Failed to create expense",
     );
@@ -670,8 +701,7 @@ export async function getExpenseSummaryHandler(
       .map((r) => r.roleName?.toUpperCase())
       .filter(Boolean);
 
-    const isHRorAdmin =
-      roleNames.includes("HR") || roleNames.includes("ADMIN");
+    const isHRorAdmin = roleNames.includes("HR") || roleNames.includes("ADMIN");
 
     let whereCondition;
 
@@ -831,7 +861,6 @@ export async function createExpenseRequestHandler(
     });
   }
 }
-
 export async function approveExpenseHandler(
   request: FastifyRequest,
   reply: FastifyReply,
@@ -850,7 +879,11 @@ export async function approveExpenseHandler(
 
   try {
     const [existing] = await db
-      .select()
+      .select({
+        id: expenses.id,
+        status: expenses.status,
+        employeeId: expenses.employeeId,
+      })
       .from(expenses)
       .where(eq(expenses.id, id));
 
@@ -894,6 +927,40 @@ export async function approveExpenseHandler(
         updatedAt: new Date(),
       })
       .where(eq(expenses.id, id));
+
+    const [employee] = await db
+      .select({
+        userId: employees.userId,
+      })
+      .from(employees)
+      .where(eq(employees.id, existing.employeeId));
+
+    if (employee?.userId) {
+      const [approver] = await db
+        .select({
+          firstName: employees.firstName,
+          lastName: employees.lastName,
+        })
+        .from(employees)
+        .where(eq(employees.userId, userId));
+
+      const approverName = approver
+        ? `${approver.firstName} ${approver.lastName}`
+        : "HR/Admin";
+
+      const message = `Your expense has been approved by ${approverName}`;
+
+      await db.insert(notifications).values({
+        userId: employee.userId,
+        message,
+      });
+
+      const io = getIO();
+
+      io.to(`user_${employee.userId}`).emit("new_notification", {
+        message,
+      });
+    }
 
     request.log.info(
       {
@@ -941,7 +1008,11 @@ export async function rejectExpenseHandler(
 
   try {
     const [existing] = await db
-      .select()
+      .select({
+        id: expenses.id,
+        status: expenses.status,
+        employeeId: expenses.employeeId,
+      })
       .from(expenses)
       .where(eq(expenses.id, id));
 
@@ -999,6 +1070,40 @@ export async function rejectExpenseHandler(
         updatedAt: new Date(),
       })
       .where(eq(expenses.id, id));
+
+    const [employee] = await db
+      .select({
+        userId: employees.userId,
+      })
+      .from(employees)
+      .where(eq(employees.id, existing.employeeId));
+
+    if (employee?.userId) {
+      const [approver] = await db
+        .select({
+          firstName: employees.firstName,
+          lastName: employees.lastName,
+        })
+        .from(employees)
+        .where(eq(employees.userId, userId));
+
+      const approverName = approver
+        ? `${approver.firstName} ${approver.lastName}`
+        : "HR/Admin";
+
+      const message = `Your expense was rejected by ${approverName}. Reason: ${reason}`;
+
+      await db.insert(notifications).values({
+        userId: employee.userId,
+        message,
+      });
+
+      const io = getIO();
+
+      io.to(`user_${employee.userId}`).emit("new_notification", {
+        message,
+      });
+    }
 
     request.log.info(
       {
