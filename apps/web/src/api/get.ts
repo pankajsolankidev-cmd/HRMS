@@ -139,3 +139,14 @@ export const getDashboard = async () => {
   const res = await api.get("/dashboard/summary");
   return res.data;
 };
+export const getNotifications = async () => {
+  const res = await api.get("/notifications");
+  return res.data.data;
+};
+
+export const getUnreadCount = async () => {
+  const res = await api.get("/notifications/unread-count");
+  return res.data.count;
+};
+
+

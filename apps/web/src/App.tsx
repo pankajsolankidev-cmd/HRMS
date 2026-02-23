@@ -19,6 +19,7 @@ import { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { setAuth } from "./context/authSlice";
+import { useSocket } from "./context/useSocket";
 import SmallAuthLayout from "./layout/SmallAuthLayout";
 import ForgetPassword from "./pages/auth/ForgetPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
@@ -51,6 +52,7 @@ import SystemPage from "./pages/System/SystemPage";
 import UserProfile from "./pages/UserProfile/UserProfile";
 
 function AppRoutes() {
+  useSocket();
   const dispatch = useDispatch();
 
   useEffect(() => {

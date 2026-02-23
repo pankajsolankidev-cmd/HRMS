@@ -6,6 +6,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
 import { logoutUser } from "../../api/post";
+import { disconnectSocket } from "../../context/socket";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 export default function UserDropdown() {
@@ -40,6 +41,7 @@ export default function UserDropdown() {
   const { mutate: logout } = useMutation({
     mutationFn: logoutUser,
     onSuccess: (data) => {
+      disconnectSocket();
       toast.success(data?.message ?? "Logged out successfully");
       Cookies.remove("access");
       Cookies.remove("refresh");
@@ -47,6 +49,7 @@ export default function UserDropdown() {
     },
 
     onError: (error: AxiosError<{ message?: string }>) => {
+      disconnectSocket();
       toast.error(error?.response?.data?.message ?? "Invalid credentials");
       Cookies.remove("access");
       Cookies.remove("refresh");
@@ -57,9 +60,12 @@ export default function UserDropdown() {
   const handleLogout = () => {
     const refreshToken = Cookies.get("refresh");
 
+    disconnectSocket();
+
     if (!refreshToken) {
       toast.success("Logged out");
       Cookies.remove("access");
+      Cookies.remove("refresh");
       navigate("/signin");
       return;
     }
