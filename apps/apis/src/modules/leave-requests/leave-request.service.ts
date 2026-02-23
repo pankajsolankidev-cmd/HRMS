@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { eq, desc, asc, and, ilike, sql } from "drizzle-orm";
+import { eq, desc, asc, and, ilike, sql, or } from "drizzle-orm";
 import { db } from "../../db";
 import { employees } from "../../db/schema/employees.schema";
 import { leaveRequests } from "../../db/schema/leave-requests.schema";
@@ -23,6 +23,9 @@ import { getPagination } from "../../utils/pagination";
 import { hasAnyRole, hasRole } from "../../utils/role.utils";
 import { calculateLeaveTotalsSimple } from "./utils/leave-calculation";
 import { validatePastDatesOnly } from "./utils/past-date-validation";
+import { notifications } from "../../db/schema/notifications.schema";
+import { getIO } from "../../utils/socket";
+import { users } from "../../db/schema";
 
 function validateFutureDates(fromDate: string, toDate: string) {
   const today = new Date();
@@ -61,7 +64,11 @@ export async function createLeaveRequestHandler(
   validateFutureDates(body.fromDate, body.toDate);
 
   const [employee] = await db
-    .select({ id: employees.id })
+    .select({
+      id: employees.id,
+      firstName: employees.firstName,
+      lastName: employees.lastName,
+    })
     .from(employees)
     .where(eq(employees.userId, userId));
 
@@ -99,6 +106,31 @@ export async function createLeaveRequestHandler(
     reason: body.reason,
     file: body.file,
     status: LeaveStatus.Pending,
+  });
+
+  const fullName = `${employee.firstName} ${employee.lastName}`;
+
+  const message = `New leave request submitted by ${fullName}`;
+
+  const adminUsers = await db
+    .select({
+      userId: userRoles.userId,
+    })
+    .from(userRoles)
+    .innerJoin(roles, eq(userRoles.roleId, roles.id))
+    .where(or(eq(roles.name, "ADMIN"), eq(roles.name, "HR")));
+
+  for (const admin of adminUsers) {
+    await db.insert(notifications).values({
+      userId: admin.userId,
+      message,
+    });
+  }
+
+  const io = getIO();
+
+  io.to("admin_room").emit("new_notification", {
+    message,
   });
 
   request.log.info(
@@ -850,6 +882,31 @@ export async function approveLeaveRequestHandler(
     });
   }
 
+  const [approver] = await db
+    .select({
+      firstName: employees.firstName,
+      lastName: employees.lastName,
+    })
+    .from(employees)
+    .where(eq(employees.userId, userId));
+
+  const approverName = approver
+    ? `${approver.firstName} ${approver.lastName}`
+    : "HR/Admin";
+
+  const message = `Your leave request has been approved by ${approverName}`;
+
+  await db.insert(notifications).values({
+    userId: leaveRow.targetUserId,
+    message,
+  });
+
+  const io = getIO();
+
+  io.to(`user_${leaveRow.targetUserId}`).emit("new_notification", {
+    message,
+  });
+
   request.log.info(
     {
       action: "APPROVE_LEAVE_REQUEST",
@@ -1020,6 +1077,35 @@ export async function rejectLeaveRequestHandler(
     });
   }
 
+  // 🔔 NOTIFICATION LOGIC
+
+  const [approver] = await db
+    .select({
+      firstName: employees.firstName,
+      lastName: employees.lastName,
+    })
+    .from(employees)
+    .where(eq(employees.userId, userId));
+
+  const approverName = approver
+    ? `${approver.firstName} ${approver.lastName}`
+    : "HR/Admin";
+
+  const message = body.rejectionReason
+    ? `Your leave request was rejected by ${approverName}. Reason: ${body.rejectionReason}`
+    : `Your leave request was rejected by ${approverName}`;
+
+  await db.insert(notifications).values({
+    userId: leaveRow.targetUserId,
+    message,
+  });
+
+  const io = getIO();
+
+  io.to(`user_${leaveRow.targetUserId}`).emit("new_notification", {
+    message,
+  });
+
   request.log.info(
     {
       action: "REJECT_LEAVE_REQUEST",
@@ -1031,6 +1117,7 @@ export async function rejectLeaveRequestHandler(
 
   return sendMessage(reply, "Leave request rejected successfully");
 }
+
 export async function createManualLeaveRequestHandler(
   request: FastifyRequest,
   reply: FastifyReply,
