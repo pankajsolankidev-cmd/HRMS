@@ -22,7 +22,7 @@ export default function Dashboard() {
   return (
     <div className="p-6 space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-white dark:bg-slate-900">
+        <Card className="bg-blue-50 dark:bg-slate-900">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -41,7 +41,7 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        <Card className="bg-white dark:bg-slate-900">
+        <Card className="bg-emerald-50 dark:bg-slate-900">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -60,7 +60,7 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        <Card className="bg-white dark:bg-slate-900">
+        <Card className="bg-red-50 dark:bg-slate-900">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">
