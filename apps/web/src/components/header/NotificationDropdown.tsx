@@ -1,5 +1,5 @@
 import { IconBell, IconCheck } from "@tabler/icons-react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 
@@ -21,8 +21,9 @@ type Notification = {
 
 export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { data, refetch } = useQuery({
+  const { data } = useQuery({
     queryKey: ["all-notifications"],
     queryFn: () => getNotifications(),
   });
@@ -31,7 +32,7 @@ export default function NotificationDropdown() {
 
   const unreadItems = allNotifications.filter((n) => !n.isRead);
 
-  const { data: unreadCount = 0, refetch: refetchUnreadCount } = useQuery({
+  const { data: unreadCount = 0 } = useQuery({
     queryKey: ["unread-count"],
     queryFn: getUnreadCount,
   });
@@ -39,8 +40,9 @@ export default function NotificationDropdown() {
   const markOneMutation = useMutation({
     mutationFn: (id: string) => markNotificationRead(id),
     onSuccess: () => {
-      refetch();
-      refetchUnreadCount();
+      queryClient.invalidateQueries({ queryKey: ["all-notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["unread-count"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error?.response?.data?.message ?? "Something went wrong");
@@ -50,8 +52,9 @@ export default function NotificationDropdown() {
   const markAllMutation = useMutation({
     mutationFn: markAllNotificationsRead,
     onSuccess: () => {
-      refetch();
-      refetchUnreadCount();
+      queryClient.invalidateQueries({ queryKey: ["all-notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["unread-count"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error?.response?.data?.message ?? "Something went wrong");

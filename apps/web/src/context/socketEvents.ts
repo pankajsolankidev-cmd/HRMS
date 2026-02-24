@@ -1,3 +1,4 @@
+import toast from "react-hot-toast";
 import { store } from ".";
 import { addNotification } from "../context/notificationSlice";
 
@@ -12,6 +13,7 @@ export const registerSocketEvents = (socket: any) => {
 
   socket.on("new_notification", (data: any) => {
     console.log("🔔 Notification received:", data);
+    toast.success(data.message);
 
     store.dispatch(
       addNotification({
