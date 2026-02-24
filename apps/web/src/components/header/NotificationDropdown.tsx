@@ -62,12 +62,19 @@ export default function NotificationDropdown() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative flex items-center justify-center h-11 w-11 rounded-full border border-gray-200 bg-white dark:bg-gray-900"
+        className="relative flex items-center justify-center h-11 w-11 rounded-full 
+             border border-gray-200 bg-white 
+             dark:border-gray-700 dark:bg-gray-800
+             hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
       >
-        <IconBell size={20} />
+        <IconBell size={20} className="text-gray-700 dark:text-gray-200" />
 
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 text-[10px] flex items-center justify-center rounded-full bg-blue-600 text-white font-semibold">
+          <span
+            className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 text-[10px] 
+                     flex items-center justify-center rounded-full 
+                     bg-blue-600 text-white font-semibold"
+          >
             {unreadCount}
           </span>
         )}
@@ -76,10 +83,16 @@ export default function NotificationDropdown() {
       <Dropdown
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
-        className="absolute right-0 mt-4 flex h-[420px] w-[360px] flex-col rounded-2xl border bg-white shadow-xl dark:bg-gray-900"
+        className="absolute right-0 mt-4 flex h-[420px] w-[360px] 
+             flex-col rounded-2xl border 
+             border-gray-200 bg-white 
+             shadow-xl
+             dark:border-gray-700 dark:bg-gray-800"
       >
         <div className="flex items-center justify-between px-4 py-3 border-b dark:border-gray-800">
-          <h5 className="text-lg font-semibold">Unread Notifications</h5>
+          <h5 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+            Unread Notifications
+          </h5>
 
           {unreadItems.length > 0 && (
             <button
@@ -93,7 +106,7 @@ export default function NotificationDropdown() {
 
         <ul className="flex-1 overflow-y-auto divide-y dark:divide-gray-800">
           {unreadItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400 text-sm">
+            <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 text-sm">
               No unread notifications
             </div>
           ) : (
@@ -103,8 +116,11 @@ export default function NotificationDropdown() {
                 className="px-4 py-3 flex justify-between hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 <div>
-                  <p className="text-sm font-medium">{notification.message}</p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-sm font-medium text-gray-800 dark:text-gray-100">
+                    {notification.message}
+                  </p>
+
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     {new Date(notification.createdAt).toLocaleString()}
                   </p>
                 </div>
@@ -126,7 +142,10 @@ export default function NotificationDropdown() {
             navigate("/notifications");
             setIsOpen(false);
           }}
-          className="px-4 py-2 text-sm text-blue-600 border-t hover:bg-gray-50 dark:hover:bg-gray-800"
+          className="px-4 py-2 text-sm 
+           text-blue-600 dark:text-blue-400
+           border-t border-gray-200 dark:border-gray-700
+           hover:bg-gray-50 dark:hover:bg-gray-700"
         >
           View All Notifications
         </button>

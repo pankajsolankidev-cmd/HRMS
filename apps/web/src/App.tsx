@@ -81,45 +81,46 @@ function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
-
-          <Route path="/employees" element={<EmployeePage />} />
-          <Route path="/employees/:id" element={<AddEditEmployeePage />} />
-
-          <Route path="/components" element={<ComponentPage />} />
-          <Route path="/components/:id" element={<AddEditComponentPage />} />
-
-          <Route path="/systems" element={<SystemPage />} />
-          <Route path="/systems/:id" element={<AddEditSystemPage />} />
-
-          <Route path="/salary" element={<SalaryPage />} />
-          <Route path="/salary/:id" element={<AddEditSalaryPage />} />
-
           <Route path="/leave-requests" element={<LeavePage />} />
           <Route path="/leave-requests/:id" element={<SelfLeavePage />} />
-          <Route
-            path="/leave-requests/manual/:id"
-            element={<EmployeeLeavePage />}
-          />
-
-          <Route path="/payrolls" element={<PayrollTable />} />
-          <Route path="/payrolls/history" element={<PayrollHistory />} />
-
           <Route path="/expenses" element={<Expense />} />
           <Route path="/expenses/:id" element={<AddEditExpensePage />} />
-
-          <Route path="/organization" element={<OrganizationTable />} />
-          <Route path="/organization/:id" element={<OrganizationForm />} />
-
-          <Route path="/departments" element={<DepartmentTable />} />
-          <Route path="/departments/:id" element={<DepartmentForm />} />
-
-          <Route path="/projects" element={<ProjectTable />} />
-          <Route path="/projects/:id" element={<ProjectForm />} />
-          <Route path="/projects/:id/employees" element={<ProjectDetail />} />
-
+          <Route path="/payrolls/history" element={<PayrollHistory />} />
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/notifications" element={<NotificationsPage />} />
-          <Route path="/" element={<NotFound />} />
+
+          <Route element={<ProtectedRoute allowedRoles={["ADMIN", "HR"]} />}>
+            <Route path="/employees" element={<EmployeePage />} />
+            <Route path="/employees/:id" element={<AddEditEmployeePage />} />
+
+            <Route path="/components" element={<ComponentPage />} />
+            <Route path="/components/:id" element={<AddEditComponentPage />} />
+
+            <Route path="/systems" element={<SystemPage />} />
+            <Route path="/systems/:id" element={<AddEditSystemPage />} />
+
+            <Route path="/salary" element={<SalaryPage />} />
+            <Route path="/salary/:id" element={<AddEditSalaryPage />} />
+
+            <Route
+              path="/leave-requests/manual/:id"
+              element={<EmployeeLeavePage />}
+            />
+
+            <Route path="/payrolls" element={<PayrollTable />} />
+
+            <Route path="/organization" element={<OrganizationTable />} />
+            <Route path="/organization/:id" element={<OrganizationForm />} />
+
+            <Route path="/departments" element={<DepartmentTable />} />
+            <Route path="/departments/:id" element={<DepartmentForm />} />
+
+            <Route path="/projects" element={<ProjectTable />} />
+            <Route path="/projects/:id" element={<ProjectForm />} />
+            <Route path="/projects/:id/employees" element={<ProjectDetail />} />
+          </Route>
+
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Route>
 
