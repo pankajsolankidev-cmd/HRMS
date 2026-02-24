@@ -45,7 +45,6 @@ const ADMIN_MENU: NavItem[] = [
     name: "Departments",
     path: "/departments",
   },
-  { icon: <IconWallet />, name: "Expenses", path: "/expenses" },
   { icon: <IconBuilding />, name: "Organization", path: "/organization" },
 ];
 
