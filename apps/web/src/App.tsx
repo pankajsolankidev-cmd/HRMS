@@ -38,6 +38,7 @@ import LeavePage from "./pages/Leaves/LeavePage";
 import SelfLeavePage from "./pages/Leaves/SelfLeavePage";
 import OrganizationForm from "./pages/Organization/OrganizationForm";
 import OrganizationTable from "./pages/Organization/OrganizationTable";
+import NotificationsPage from "./pages/OtherPage/NotificationsPage";
 import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
 import RootRedirect from "./pages/OtherPage/RootRedirect";
 import PayrollHistory from "./pages/Payroll/PayrollHistory";
@@ -117,6 +118,7 @@ function AppRoutes() {
           <Route path="/projects/:id/employees" element={<ProjectDetail />} />
 
           <Route path="/profile" element={<UserProfile />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/" element={<NotFound />} />
         </Route>
       </Route>

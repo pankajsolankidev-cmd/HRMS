@@ -1,6 +1,10 @@
-import { IconBell, IconCheck, IconX } from "@tabler/icons-react";
-import { useQuery } from "@tanstack/react-query";
+import { IconBell, IconCheck } from "@tabler/icons-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { useNavigate } from "react-router";
+
+import type { AxiosError } from "axios";
+import { toast } from "react-hot-toast";
 import { getNotifications, getUnreadCount } from "../../api/get";
 import {
   markAllNotificationsRead,
@@ -8,49 +12,56 @@ import {
 } from "../../api/patch";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 
+type Notification = {
+  id: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+};
+
 export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-
-  const {
-    data: allNotifications = [],
-    refetch: refetchAll,
-    isLoading,
-    error,
-  } = useQuery({
+  const navigate = useNavigate();
+  const { data, refetch } = useQuery({
     queryKey: ["all-notifications"],
-    queryFn: getNotifications,
+    queryFn: () => getNotifications(),
   });
 
-  const unreadItems = allNotifications.filter((n: any) => !n.isRead);
+  const allNotifications: Notification[] = data?.data ?? [];
 
-  const { data: unreadCount = 0, refetch: refetchCount } = useQuery({
+  const unreadItems = allNotifications.filter((n) => !n.isRead);
+
+  const { data: unreadCount = 0, refetch: refetchUnreadCount } = useQuery({
     queryKey: ["unread-count"],
     queryFn: getUnreadCount,
   });
 
-  const handleMarkRead = async (id: string) => {
-    await markNotificationRead(id);
-    refetchAll();
-    refetchCount();
-  };
+  const markOneMutation = useMutation({
+    mutationFn: (id: string) => markNotificationRead(id),
+    onSuccess: () => {
+      refetch();
+      refetchUnreadCount();
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error?.response?.data?.message ?? "Something went wrong");
+    },
+  });
 
-  const handleMarkAll = async () => {
-    await markAllNotificationsRead();
-    refetchAll();
-    refetchCount();
-  };
-
-  const toggleDropdown = () => {
-    setIsOpen(!isOpen);
-  };
-
-  const closeDropdown = () => setIsOpen(false);
+  const markAllMutation = useMutation({
+    mutationFn: markAllNotificationsRead,
+    onSuccess: () => {
+      refetch();
+      refetchUnreadCount();
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error?.response?.data?.message ?? "Something went wrong");
+    },
+  });
 
   return (
     <div className="relative">
       <button
-        onClick={toggleDropdown}
+        onClick={() => setIsOpen(!isOpen)}
         className="relative flex items-center justify-center h-11 w-11 rounded-full border border-gray-200 bg-white dark:bg-gray-900"
       >
         <IconBell size={20} />
@@ -64,7 +75,7 @@ export default function NotificationDropdown() {
 
       <Dropdown
         isOpen={isOpen}
-        onClose={closeDropdown}
+        onClose={() => setIsOpen(false)}
         className="absolute right-0 mt-4 flex h-[420px] w-[360px] flex-col rounded-2xl border bg-white shadow-xl dark:bg-gray-900"
       >
         <div className="flex items-center justify-between px-4 py-3 border-b dark:border-gray-800">
@@ -72,7 +83,7 @@ export default function NotificationDropdown() {
 
           {unreadItems.length > 0 && (
             <button
-              onClick={handleMarkAll}
+              onClick={() => markAllMutation.mutate()}
               className="text-xs text-blue-600 hover:underline"
             >
               Mark All
@@ -86,7 +97,7 @@ export default function NotificationDropdown() {
               No unread notifications
             </div>
           ) : (
-            unreadItems.map((notification: any) => (
+            unreadItems.map((notification) => (
               <li
                 key={notification.id}
                 className="px-4 py-3 flex justify-between hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -99,7 +110,7 @@ export default function NotificationDropdown() {
                 </div>
 
                 <button
-                  onClick={() => handleMarkRead(notification.id)}
+                  onClick={() => markOneMutation.mutate(notification.id)}
                   className="text-blue-500 hover:text-blue-700"
                   title="Mark as Read"
                 >
@@ -112,52 +123,14 @@ export default function NotificationDropdown() {
 
         <button
           onClick={() => {
-            closeDropdown();
-            setShowModal(true);
+            navigate("/notifications");
+            setIsOpen(false);
           }}
           className="px-4 py-2 text-sm text-blue-600 border-t hover:bg-gray-50 dark:hover:bg-gray-800"
         >
           View All Notifications
         </button>
       </Dropdown>
-
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white dark:bg-gray-900 w-[600px] max-h-[80vh] overflow-y-auto rounded-2xl shadow-xl p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">All Notifications</h2>
-              <button onClick={() => setShowModal(false)}>
-                <IconX size={20} />
-              </button>
-            </div>
-
-            {isLoading ? (
-              <p>Loading...</p>
-            ) : error ? (
-              <p className="text-red-500">Failed to load notifications</p>
-            ) : allNotifications.length === 0 ? (
-              <p>No notifications found</p>
-            ) : (
-              <div className="space-y-3">
-                {allNotifications.map((notification: any) => (
-                  <div
-                    key={notification.id}
-                    className="p-4 rounded-lg border dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
-                  >
-                    <p className="font-medium">{notification.message}</p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {new Date(notification.createdAt).toLocaleString()}
-                    </p>
-                    <p className="text-xs mt-1">
-                      Status: {notification.isRead ? "Read" : "Unread"}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
