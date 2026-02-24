@@ -34,7 +34,7 @@ export const getNotificationsSchema = {
             ],
           },
         },
-        pagination: {
+        meta: {
           type: "object",
           properties: {
             total: { type: "number" },
@@ -44,7 +44,7 @@ export const getNotificationsSchema = {
           required: ["total", "page", "limit"],
         },
       },
-      required: ["data", "pagination"],
+      required: ["data", "meta"],
     },
     500: {
       type: "object",

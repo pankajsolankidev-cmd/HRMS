@@ -32,7 +32,7 @@ export async function getMyNotificationsHandler(
 
     return reply.send({
       data,
-      pagination: {
+      meta: {
         total: Number(countResult.count),
         page: Number(page),
         limit: Number(limit),
