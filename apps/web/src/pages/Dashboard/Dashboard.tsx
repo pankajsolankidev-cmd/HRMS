@@ -117,63 +117,84 @@ export default function Dashboard() {
           title="Recent Leave Requests"
           className="bg-white dark:bg-slate-900"
         >
-          <div className="space-y-4">
-            {data.recentLeaves.map((leave: any) => (
-              <div key={leave.id} className="flex justify-between items-center">
-                <div>
-                  <p className="font-medium text-gray-900 dark:text-white">
-                    {leave.employeeName}
-                  </p>
-                  <p className="text-sm text-gray-500">{leave.type}</p>
-                </div>
-
-                <span
-                  className={`text-xs px-3 py-1 rounded-full ${
-                    leave.status === "approved"
-                      ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40"
-                      : "bg-amber-100 text-amber-600 dark:bg-amber-900/40"
-                  }`}
+          {data.recentLeaves.length === 0 ? (
+            <p className="text-gray-500 dark:text-gray-400">
+              No recent leave requests
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {data.recentLeaves.map((leave: any) => (
+                <div
+                  key={leave.id}
+                  className="flex justify-between items-center border-b border-gray-200 dark:border-slate-700 pb-3"
                 >
-                  {leave.status}
-                </span>
-              </div>
-            ))}
-          </div>
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {leave.employeeName}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {leave.type}
+                    </p>
+                  </div>
+
+                  <span
+                    className={`text-xs px-3 py-1 rounded-full font-medium ${
+                      leave.status === "approved"
+                        ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40"
+                        : leave.status === "pending"
+                          ? "bg-amber-100 text-amber-600 dark:bg-amber-900/40"
+                          : "bg-rose-100 text-rose-600 dark:bg-rose-900/40"
+                    }`}
+                  >
+                    {leave.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
 
         <Card title="Recent Expenses" className="bg-white dark:bg-slate-900">
-          <div className="space-y-4">
-            {data.recentExpenses.map((expense: any) => (
-              <div
-                key={expense.id}
-                className="flex justify-between items-center"
-              >
-                <div>
-                  <p className="font-medium text-gray-900 dark:text-white">
-                    {expense.employeeName}
-                  </p>
-                  <p className="text-sm text-gray-500">{expense.expenseType}</p>
-                </div>
+          {data.recentExpenses.length === 0 ? (
+            <p className="text-gray-500 dark:text-gray-400">
+              No recent expenses
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {data.recentExpenses.map((expense: any) => (
+                <div
+                  key={expense.id}
+                  className="flex justify-between items-center"
+                >
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {expense.employeeName}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {expense.expenseType}
+                    </p>
+                  </div>
 
-                <div className="text-right">
-                  <p className="font-semibold text-blue-600 dark:text-blue-400">
-                    ₹{expense.amount}
-                  </p>
-                  <span
-                    className={`text-xs px-2 py-1 rounded-full ${
-                      expense.status === "APPROVED"
-                        ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40"
-                        : expense.status === "REJECTED"
-                          ? "bg-red-100 text-red-600 dark:bg-red-900/40"
-                          : "bg-blue-100 text-blue-600 dark:bg-blue-900/40"
-                    }`}
-                  >
-                    {expense.status}
-                  </span>
+                  <div className="text-right">
+                    <p className="font-semibold text-blue-600 dark:text-blue-400">
+                      ₹{expense.amount}
+                    </p>
+                    <span
+                      className={`text-xs px-2 py-1 rounded-full ${
+                        expense.status === "APPROVED"
+                          ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40"
+                          : expense.status === "REJECTED"
+                            ? "bg-red-100 text-red-600 dark:bg-red-900/40"
+                            : "bg-blue-100 text-blue-600 dark:bg-blue-900/40"
+                      }`}
+                    >
+                      {expense.status}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </Card>
       </div>
     </div>

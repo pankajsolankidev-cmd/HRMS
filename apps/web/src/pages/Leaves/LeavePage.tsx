@@ -651,6 +651,16 @@ export default function LeavePage() {
                   {viewLeave.reason}
                 </span>
               </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  CreatedBy
+                </span>
+                <span className="mt-1 font-medium text-gray-900 dark:text-gray-100">
+                  {viewLeave.createdByEmployee
+                    ? `${viewLeave.createdByEmployee.firstName} ${viewLeave.createdByEmployee.lastName}`
+                    : "—"}
+                </span>
+              </div>
               {viewLeave.rejectionReason && (
                 <div className="flex flex-col col-span-2 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
                   <span className="text-red-500 uppercase text-xs font-semibold">
