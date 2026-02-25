@@ -56,3 +56,7 @@ export const deleteDepartment = async (id: number) => {
   const res = await api.delete(`/departments/${id}`);
   return res.data;
 };
+export const deletePublicHoliday = async (id: number) => {
+  const res = await api.delete(`/holidays/${id}`);
+  return res.data;
+};

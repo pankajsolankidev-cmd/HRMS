@@ -150,3 +150,7 @@ export const addOrganization = async (payload: CreateOrganizationDto) => {
   const res = await api.post("/organization", payload);
   return res.data;
 };
+export const addPublicHoliday = async (payload: any) => {
+  const res = await api.post("/holidays", payload);
+  return res.data;
+};

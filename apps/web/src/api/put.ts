@@ -65,3 +65,7 @@ export const updateDepartment = async (
   const res = await api.put(`/departments/${id}`, payload);
   return res.data;
 };
+export const updatePublicHoliday = async (id: string, payload: any) => {
+  const res = await api.put(`/holidays/${id}`, payload);
+  return res.data;
+};

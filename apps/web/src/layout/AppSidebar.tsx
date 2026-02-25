@@ -34,6 +34,7 @@ const ADMIN_MENU: NavItem[] = [
   { icon: <UserCircleIcon />, name: "Employees", path: "/employees" },
   { icon: <PuzzlePieceIcon />, name: "Component", path: "/components" },
   { icon: <FolderIcon />, name: "System", path: "/systems" },
+  { icon: <IconBriefcase />, name: "Public Holidays", path: "/holidays" },
   { icon: <CalendarIcon />, name: "Leaves", path: "/leave-requests" },
   { icon: <IconReceiptRupee />, name: "Salary", path: "/salary" },
   { icon: <IconWallet />, name: "Expenses", path: "/expenses" },
