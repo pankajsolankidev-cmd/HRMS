@@ -13,7 +13,6 @@ import fastifySensible from "@fastify/sensible";
 import authRoutes from "../src/auth/auth.routes";
 import employeeRoutes from "./modules/employees/employee.routes";
 import systemRoutes from "./modules/systems/system.routes";
-import authPlugin from "./plugins/auth.plugin";
 import componentRoutes from "./modules/components/component.routes";
 import leaveRequestRoutes from "./modules/leave-requests/leave-request.routes";
 import fileRoutes from "./modules/files/file.routes";
@@ -27,6 +26,8 @@ import projectRoutes from "./modules/project/project.routes";
 import projectEmployeeRoutes from "./modules/project-emp/project-employee.routes";
 import profileRoutes from "./modules/profile/profile.route";
 import dashboardRoutes from "./modules/dashboard/dashboard.routes";
+import { registerSocket } from "./utils/socket";
+import notificationRoutes from "./modules/notifications/notifications.routes";
 
 const app = Fastify({ logger: true });
 
@@ -68,7 +69,6 @@ app.register(swaggerUI, {
   routePrefix: "/docs",
 });
 
-app.register(authPlugin);
 app.register(authRoutes);
 
 app.register(employeeRoutes, {
@@ -90,21 +90,26 @@ app.register(projectRoutes);
 app.register(projectEmployeeRoutes);
 app.register(profileRoutes);
 app.register(dashboardRoutes);
+app.register(notificationRoutes);
 
 app.get("/health", async () => {
   return { status: "API is running 🚀" };
 });
 
-app.listen(
-  {
-    port: Number(process.env.PORT) || 4000,
-    host: "0.0.0.0",
-  },
-  (err, address) => {
-    if (err) {
-      app.log.error(err);
-      process.exit(1);
-    }
-    app.log.info(`API running on ${address}`);
-  },
-);
+async function start() {
+  try {
+    await app.listen({
+      port: Number(process.env.PORT) || 4000,
+      host: "0.0.0.0",
+    });
+
+    registerSocket(app);
+
+    app.log.info("Server started successfully 🚀");
+  } catch (err) {
+    app.log.error(err);
+    process.exit(1);
+  }
+}
+
+start();

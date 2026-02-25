@@ -116,10 +116,7 @@ export default async function authRoutes(app: FastifyInstance) {
     "/auth/session",
     { preHandler: [verifyAccessToken] },
     async (request, reply) => {
-      const authUser = request.user as {
-        id: string;
-        email: string;
-      };
+      const authUser = request.user;
 
       if (!authUser?.id) {
         return reply.status(401).send({ error: "Unauthorized" });

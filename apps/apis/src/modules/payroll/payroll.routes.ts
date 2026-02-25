@@ -19,14 +19,13 @@ import {
 import { verifyAccessToken } from "../../middlewares/auth.middlewares";
 import { authorize } from "../../middlewares/authorize.middleware";
 import { PERMISSIONS } from "../../db/schema/permissions.enums";
-import { authenticate } from "../../plugins/auth.plugin";
 
 export async function payrollRoutes(app: FastifyInstance) {
   app.get(
     "/payrolls",
     {
       schema: getPayrollsSchema,
-      preHandler: [authenticate],
+      preHandler: [verifyAccessToken],
     },
     getPayrollsHandler,
   );

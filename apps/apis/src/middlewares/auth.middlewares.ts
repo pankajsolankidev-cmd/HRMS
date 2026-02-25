@@ -6,6 +6,8 @@ declare module "fastify" {
     user?: {
       id: string;
       email: string;
+      roles: string[];
+      permissions: string[];
       iat: number;
       exp: number;
     };
@@ -21,19 +23,26 @@ function getJwtSecret(): string {
 }
 
 function isValidJwtPayload(
-  payload: string | JwtPayload
-): payload is JwtPayload & { id: string; email: string } {
+  payload: string | JwtPayload,
+): payload is JwtPayload & {
+  id: string;
+  email: string;
+  roles: string[];
+  permissions: string[];
+} {
   return (
     typeof payload === "object" &&
     payload !== null &&
     typeof payload.id === "string" &&
-    typeof payload.email === "string"
+    typeof payload.email === "string" &&
+    Array.isArray(payload.roles) &&
+    Array.isArray(payload.permissions)
   );
 }
 
 export async function verifyAccessToken(
   request: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const authHeader = request.headers.authorization;
 
@@ -63,6 +72,8 @@ export async function verifyAccessToken(
     request.user = {
       id: decoded.id,
       email: decoded.email,
+      roles: decoded.roles,
+      permissions: decoded.permissions,
       iat: decoded.iat ?? 0,
       exp: decoded.exp ?? 0,
     };
