@@ -135,3 +135,18 @@ export const getProfile = async () => {
   const res = await api.get("/profile");
   return res.data;
 };
+export const getDashboard = async () => {
+  const res = await api.get("/dashboard/summary");
+  return res.data;
+};
+export const getNotifications = async (params?: ListQueryParams) => {
+  const res = await api.get<PaginatedResponse<any>>("/notifications", {
+    params,
+  });
+  return res.data;
+};
+
+export const getUnreadCount = async () => {
+  const res = await api.get("/notifications/unread-count");
+  return res.data.count;
+};

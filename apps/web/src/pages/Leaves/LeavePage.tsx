@@ -288,102 +288,115 @@ export default function LeavePage() {
     {
       header: "Action",
       align: "center",
-      cell: (row) => (
-        <div
-          className="relative flex justify-center"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <button
-            onClick={() =>
-              setActiveDropdown(activeDropdown === row.id ? null : row.id)
-            }
-            className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+      cell: (row) => {
+        const isCreator = row.createdByEmployee?.userId === id;
+        const isPending = row.status === "pending";
+
+        const canApprove = !isEmployee && isPending;
+        const canHrEdit = !isEmployee && isCreator;
+        const canEmployeeEdit = isEmployee && isCreator && isPending;
+
+        return (
+          <div
+            className="relative flex justify-center"
+            onClick={(e) => e.stopPropagation()}
           >
-            <IconDotsVertical size={20} className="text-gray-500" />
-          </button>
+            <button
+              onClick={() =>
+                setActiveDropdown(activeDropdown === row.id ? null : row.id)
+              }
+              className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              <IconDotsVertical size={20} className="text-gray-500" />
+            </button>
 
-          {activeDropdown === row.id && (
-            <div className="absolute right-0 top-8 z-[100] w-44 rounded-lg border border-gray-200 bg-white py-2 shadow-xl dark:border-gray-700 dark:bg-gray-800">
-              <button
-                onClick={() => setViewLeave(row)}
-                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-900/60"
-              >
-                <IconEye size={16} /> View Details
-              </button>
+            {activeDropdown === row.id && (
+              <div className="absolute right-0 top-8 z-[100] w-44 rounded-lg border border-gray-200 bg-white py-2 shadow-xl dark:border-gray-700 dark:bg-gray-800">
+                <button
+                  onClick={() => setViewLeave(row)}
+                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-900/60"
+                >
+                  <IconEye size={16} /> View Details
+                </button>
 
-              {row.status == "pending" && (
-                <Can permission="leave.approve">
-                  <button
-                    onClick={() => approve(row.id)}
-                    className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
-                  >
-                    <IconCheck size={16} /> Approve
-                  </button>
+                {canApprove && (
+                  <Can permission="leave.approve">
+                    <button
+                      onClick={() => approve(row.id)}
+                      className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
+                    >
+                      <IconCheck size={16} /> Approve
+                    </button>
 
-                  <button
-                    onClick={() => setRejectId(row.id)}
-                    className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
-                  >
-                    <IconX size={16} /> Reject
-                  </button>
-                </Can>
-              )}
-              
-              {row.createdByEmployee?.userId === id && (
-                <>
-                  <button
-                    onClick={() => navigate(`/leave-requests/manual/${row.id}`)}
-                    className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
-                  >
-                    <IconEdit size={16} /> Edit Request
-                  </button>
-                  <DeleteConfirm<string>
-                    title="Delete Leave Request"
-                    description="Are you sure you want to delete this leave request?"
-                    loading={isDeletePending}
-                    onConfirm={(id) => removeManualLeave(id)}
-                  >
-                    {(askDelete) => (
-                      <button
-                        onClick={() => askDelete(row.id)}
-                        className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
-                      >
-                        <IconTrash size={16} /> Delete
-                      </button>
-                    )}
-                  </DeleteConfirm>
-                </>
-              )}
+                    <button
+                      onClick={() => setRejectId(row.id)}
+                      className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
+                    >
+                      <IconX size={16} /> Reject
+                    </button>
+                  </Can>
+                )}
 
-              {isEmployee && (
-                <>
-                  <button
-                    onClick={() => navigate(`/leave-requests/${row.id}`)}
-                    className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
-                  >
-                    <IconEdit size={16} /> Edit Request
-                  </button>
-                  <DeleteConfirm<string>
-                    title="Delete Leave Request"
-                    description="Are you sure you want to delete this leave request?"
-                    loading={isDeletePending}
-                    onConfirm={(id) => removeLeave(id)}
-                  >
-                    {(askDelete) => (
-                      <button
-                        onClick={() => askDelete(row.id)}
-                        className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
-                      >
-                        <IconTrash size={16} /> Delete
-                      </button>
-                    )}
-                  </DeleteConfirm>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-      ),
+                {canHrEdit && (
+                  <>
+                    <button
+                      onClick={() =>
+                        navigate(`/leave-requests/manual/${row.id}`)
+                      }
+                      className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
+                    >
+                      <IconEdit size={16} /> Edit
+                    </button>
+
+                    <DeleteConfirm<string>
+                      title="Delete Leave Request"
+                      description="Are you sure you want to delete this leave request?"
+                      loading={isDeletePending}
+                      onConfirm={() => removeManualLeave(row.id)}
+                    >
+                      {(askDelete) => (
+                        <button
+                          onClick={() => askDelete(row.id)}
+                          className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
+                        >
+                          <IconTrash size={16} /> Delete
+                        </button>
+                      )}
+                    </DeleteConfirm>
+                  </>
+                )}
+
+                {canEmployeeEdit && (
+                  <>
+                    <button
+                      onClick={() => navigate(`/leave-requests/${row.id}`)}
+                      className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
+                    >
+                      <IconEdit size={16} /> Edit
+                    </button>
+
+                    <DeleteConfirm<string>
+                      title="Delete Leave Request"
+                      description="Are you sure you want to delete this leave request?"
+                      loading={isDeletePending}
+                      onConfirm={() => removeLeave(row.id)}
+                    >
+                      {(askDelete) => (
+                        <button
+                          onClick={() => askDelete(row.id)}
+                          className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
+                        >
+                          <IconTrash size={16} /> Delete
+                        </button>
+                      )}
+                    </DeleteConfirm>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      },
     },
   ];
 
@@ -391,104 +404,107 @@ export default function LeavePage() {
     <>
       <PageMeta title="Leaves" description="Manage leave requests" />
       <PageBreadcrumb pageTitle="Leaves" />
-      <FilterCard className="mb-5">
-        <div className="grid grid-cols-6 gap-4 w-full">
-          <div className="col-span-6 md:col-span-2">
-            <Select
-              options={LEAVE_TYPES}
-              placeholder="Select Type"
-              value={type ?? ""}
-              onChange={(val) => {
-                setType(val || undefined);
-                setPage(1);
-              }}
-              className="w-full"
-            />
-          </div>
-
-          <div className="col-span-6 md:col-span-2">
-            <Select
-              options={LEAVE_STATUS}
-              placeholder="Select Status"
-              value={status ?? ""}
-              onChange={(val) => {
-                setStatus(val || undefined);
-                setPage(1);
-              }}
-              className="w-full"
-            />
-          </div>
-
-          <div className="col-span-6 md:col-span-2">
-            <Select
-              options={employeeOptions}
-              placeholder="Select Employee"
-              value={employeeId ?? ""}
-              onChange={(val) => {
-                setEmployeeId(val || undefined);
-                setPage(1);
-              }}
-              className="w-full"
-            />
-          </div>
-
-          <div className="col-span-6 md:col-span-2">
-            <Select
-              options={LEAVE_SOURCE_OPTIONS}
-              placeholder="Leave Source"
-              value={createdByType ?? ""}
-              onChange={(val) => {
-                setCreatedByType(val || undefined);
-                setPage(1);
-              }}
-              className="w-full"
-            />
-          </div>
-
-          <div className="col-span-6 md:col-span-2">
-            <DatePicker
-              id="dateRange"
-              mode="range"
-              placeholder="Select Date Range"
-              value={
-                fromDate && toDate
-                  ? [new Date(fromDate), new Date(toDate)]
-                  : undefined
-              }
-              onChange={(dates) => {
-                if (dates?.length === 2) {
-                  setFromDate(dates[0].toLocaleDateString("en-CA"));
-                  setToDate(dates[1].toLocaleDateString("en-CA"));
+      {!isEmployee && (
+        <FilterCard className="mb-5">
+          <div className="grid grid-cols-6 gap-4 w-full">
+            <div className="col-span-6 md:col-span-2">
+              <Select
+                options={LEAVE_TYPES}
+                placeholder="Select Type"
+                value={type ?? ""}
+                onChange={(val) => {
+                  setType(val || undefined);
                   setPage(1);
-                } else {
+                }}
+                className="w-full"
+              />
+            </div>
+
+            <div className="col-span-6 md:col-span-2">
+              <Select
+                options={LEAVE_STATUS}
+                placeholder="Select Status"
+                value={status ?? ""}
+                onChange={(val) => {
+                  setStatus(val || undefined);
+                  setPage(1);
+                }}
+                className="w-full"
+              />
+            </div>
+
+            <div className="col-span-6 md:col-span-2">
+              <Select
+                options={employeeOptions}
+                placeholder="Select Employee"
+                value={employeeId ?? ""}
+                onChange={(val) => {
+                  setEmployeeId(val || undefined);
+                  setPage(1);
+                }}
+                className="w-full"
+              />
+            </div>
+
+            <div className="col-span-6 md:col-span-2">
+              <Select
+                options={LEAVE_SOURCE_OPTIONS}
+                placeholder="Leave Source"
+                value={createdByType ?? ""}
+                onChange={(val) => {
+                  setCreatedByType(val || undefined);
+                  setPage(1);
+                }}
+                className="w-full"
+              />
+            </div>
+
+            <div className="col-span-6 md:col-span-2">
+              <DatePicker
+                id="dateRange"
+                mode="range"
+                placeholder="Select Date Range"
+                value={
+                  fromDate && toDate
+                    ? [new Date(fromDate), new Date(toDate)]
+                    : undefined
+                }
+                onChange={(dates) => {
+                  if (dates?.length === 2) {
+                    setFromDate(dates[0].toLocaleDateString("en-CA"));
+                    setToDate(dates[1].toLocaleDateString("en-CA"));
+                    setPage(1);
+                  } else {
+                    setFromDate(undefined);
+                    setToDate(undefined);
+                  }
+                }}
+              />
+            </div>
+
+            <div className="col-span-6 md:col-span-2 flex items-end">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setType(undefined);
+                  setStatus(undefined);
+                  setEmployeeId(undefined);
+                  setCreatedByType(undefined);
                   setFromDate(undefined);
                   setToDate(undefined);
-                }
-              }}
-            />
+                  setSearch(undefined);
+                  setRawSearch("");
+                  setPage(1);
+                }}
+              >
+                Clear
+              </Button>
+            </div>
           </div>
+        </FilterCard>
+      )}
 
-          <div className="col-span-6 md:col-span-2 flex items-end">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => {
-                setType(undefined);
-                setStatus(undefined);
-                setEmployeeId(undefined);
-                setCreatedByType(undefined);
-                setFromDate(undefined);
-                setToDate(undefined);
-                setSearch(undefined);
-                setRawSearch("");
-                setPage(1);
-              }}
-            >
-              Clear
-            </Button>
-          </div>
-        </div>
-      </FilterCard>
       <Card
         action={
           <div className="flex items-center gap-3">
@@ -635,6 +651,26 @@ export default function LeavePage() {
                   {viewLeave.reason}
                 </span>
               </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  CreatedBy
+                </span>
+                <span className="mt-1 font-medium text-gray-900 dark:text-gray-100">
+                  {viewLeave.createdByEmployee
+                    ? `${viewLeave.createdByEmployee.firstName} ${viewLeave.createdByEmployee.lastName}`
+                    : "—"}
+                </span>
+              </div>
+              {viewLeave.rejectionReason && (
+                <div className="flex flex-col col-span-2 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+                  <span className="text-red-500 uppercase text-xs font-semibold">
+                    Rejection Reason
+                  </span>
+                  <p className="text-red-700 dark:text-red-300 mt-1">
+                    {viewLeave.rejectionReason}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

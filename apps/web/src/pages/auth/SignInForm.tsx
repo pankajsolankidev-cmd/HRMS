@@ -50,6 +50,7 @@ export default function SignInForm() {
         roles: res.roles,
         permissions: res.permissions,
         id: res.id,
+        email: res.email,
       };
 
       Cookies.set("refresh", res.refreshToken);

@@ -6,6 +6,7 @@ type AuthState = {
   roles: string[];
   permissions: string[];
   id: string | null;
+  email: string | null;
 };
 
 const initialState: AuthState = {
@@ -14,6 +15,7 @@ const initialState: AuthState = {
   id: null,
   roles: [],
   permissions: [],
+  email: null,
 };
 
 const authSlice = createSlice({
@@ -26,6 +28,7 @@ const authSlice = createSlice({
       state.roles = action.payload.roles;
       state.permissions = action.payload.permissions;
       state.id = action.payload.id;
+      state.email = action.payload.email;
     },
     clearAuth: () => initialState,
   },

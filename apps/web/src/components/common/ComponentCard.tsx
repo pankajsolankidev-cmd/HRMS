@@ -19,7 +19,7 @@ const Card: React.FC<ComponentCardProps> = ({
 
   return (
     <div
-      className={`rounded-2xl border bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 ${className}`}
+      className={`rounded-2xl border  dark:bg-gray-900 border-gray-200 dark:border-gray-800 ${className}`}
     >
       {showHeader && (
         <div className="px-4 py-4 sm:px-6">

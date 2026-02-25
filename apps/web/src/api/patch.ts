@@ -86,3 +86,10 @@ export const createExpense = async (id: number) => {
   const res = await api.patch(`/expenses/${id}/create`);
   return res.data;
 };
+export const markNotificationRead = async (id: string) => {
+  await api.patch(`/notifications/${id}/read`);
+};
+
+export const markAllNotificationsRead = async () => {
+  await api.patch("/notifications/read-all");
+};
