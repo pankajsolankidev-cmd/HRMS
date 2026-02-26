@@ -31,12 +31,7 @@ type PublicHoliday = {
   toDate: string;
 };
 
-type PreviewValidRow = {
-  title: string;
-  fromDate: string;
-  toDate: string;
-  description?: string;
-};
+type PreviewValidRow = Omit<PublicHoliday, "id">;
 
 type PreviewErrorRow = {
   row: number;
