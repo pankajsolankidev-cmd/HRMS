@@ -168,6 +168,7 @@ export default function PublicHolidayTable() {
     {
       header: "Title",
       accessor: "title",
+      sortable: true,
       cell: (row: PublicHoliday) => (
         <div className="font-medium text-gray-800 dark:text-white/90">
           {row.title}
