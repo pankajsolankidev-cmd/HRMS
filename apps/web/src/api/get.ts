@@ -162,7 +162,7 @@ export const getPublicHolidayById = async (id: string) => {
 };
 export const exportPublicHolidayPDF = async () => {
   const response = await api.get("/holidays/export/pdf", {
-    responseType: "arraybuffer",
+    responseType: "blob",
   });
   return response.data;
 };

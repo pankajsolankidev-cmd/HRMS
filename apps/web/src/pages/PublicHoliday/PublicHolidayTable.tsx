@@ -76,8 +76,7 @@ export default function PublicHolidayTable() {
 
   const { mutate: downloadPDF, isPending: isDownloading } = useMutation({
     mutationFn: exportPublicHolidayPDF,
-    onSuccess: (data) => {
-      const blob = new Blob([data], { type: "application/pdf" });
+    onSuccess: (blob) => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
