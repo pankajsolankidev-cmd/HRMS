@@ -5,6 +5,10 @@ import {
   getHolidayByIdHandler,
   updateHolidayHandler,
   deleteHolidayHandler,
+  checkHolidayExcelHandler,
+  confirmHolidayUploadHandler,
+  downloadHolidayTemplateHandler,
+  exportHolidaysPdfHandler,
 } from "./holiday.service";
 
 import {
@@ -49,4 +53,18 @@ export default async function holidayRoutes(app: FastifyInstance) {
   );
 
   app.delete("/holidays/:id", { ...secured }, deleteHolidayHandler);
+
+  app.post("/holidays/upload/check", { ...secured }, checkHolidayExcelHandler);
+
+  app.post(
+    "/holidays/upload/confirm",
+    { ...secured },
+    confirmHolidayUploadHandler,
+  );
+  app.get(
+    "/holidays/upload/template",
+    { ...secured },
+    downloadHolidayTemplateHandler,
+  );
+  app.get("/holidays/export/pdf", { ...secured }, exportHolidaysPdfHandler);
 }
