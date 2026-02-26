@@ -90,6 +90,7 @@ function AppRoutes() {
           <Route path="/payrolls/history" element={<PayrollHistory />} />
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/holidays" element={<PublicHolidayTable />} />
 
           <Route element={<ProtectedRoute allowedRoles={["ADMIN", "HR"]} />}>
             <Route path="/employees" element={<EmployeePage />} />
@@ -121,7 +122,6 @@ function AppRoutes() {
             <Route path="/projects/:id" element={<ProjectForm />} />
             <Route path="/projects/:id/employees" element={<ProjectDetail />} />
 
-            <Route path="/holidays" element={<PublicHolidayTable />} />
             <Route path="/holidays/:id" element={<PublicHolidayForm />} />
           </Route>
 

@@ -55,6 +55,7 @@ const EMPLOYEE_MENU: NavItem[] = [
   { icon: <CalendarIcon />, name: "Leaves", path: "/leave-requests" },
   { icon: <IconWallet />, name: "Expenses", path: "/expenses" },
   { icon: <IconHistory />, name: "Payroll History", path: "/payrolls/history" },
+  { icon: <IconCalendarStar />, name: "Public Holidays", path: "/holidays" },
 ];
 
 const AppSidebar: React.FC = () => {

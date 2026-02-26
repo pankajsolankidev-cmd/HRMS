@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 import { deletePublicHoliday } from "../../api/delete";
 import {
@@ -20,6 +21,7 @@ import DataTable, {
 } from "../../components/tables/BasicTables/DataTable";
 import { useTableSort } from "../../components/tables/useTableSort";
 import Button from "../../components/ui/button/Button";
+import type { RootState } from "../../context";
 
 type PublicHoliday = {
   id: number;
@@ -55,6 +57,8 @@ export default function PublicHolidayTable() {
   const [limit, setLimit] = useState(10);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewData, setPreviewData] = useState<PreviewResponse | null>(null);
+  const roles = useSelector((state: RootState) => state.auth.roles);
+  const isEmployee = roles.includes("EMPLOYEE");
 
   const { sortBy, sortOrder, handleSort } = useTableSort<PublicHoliday>();
 
@@ -170,7 +174,7 @@ export default function PublicHolidayTable() {
     {
       header: "Title",
       accessor: "title",
-      cell: (row) => (
+      cell: (row: PublicHoliday) => (
         <div className="font-medium text-gray-800 dark:text-white/90">
           {row.title}
         </div>
@@ -179,7 +183,7 @@ export default function PublicHolidayTable() {
     {
       header: "From Date",
       accessor: "fromDate",
-      cell: (row) => (
+      cell: (row: PublicHoliday) => (
         <div className="text-gray-600 dark:text-gray-400">
           {new Date(row.fromDate).toLocaleDateString()}
         </div>
@@ -188,7 +192,7 @@ export default function PublicHolidayTable() {
     {
       header: "To Date",
       accessor: "toDate",
-      cell: (row) => (
+      cell: (row: PublicHoliday) => (
         <div className="text-gray-600 dark:text-gray-400">
           {new Date(row.toDate).toLocaleDateString()}
         </div>
@@ -197,40 +201,42 @@ export default function PublicHolidayTable() {
     {
       header: "Description",
       accessor: "description",
-      cell: (row) => (
+      cell: (row: PublicHoliday) => (
         <div className="text-gray-600 dark:text-gray-400">
           {row.description ?? "-"}
         </div>
       ),
     },
-    {
-      header: "Action",
-      align: "center",
-      cell: (row) => (
-        <div className="flex items-center justify-center gap-3">
-          <IconEdit
-            size={18}
-            onClick={() => navigate(`/holidays/${row.id}`)}
-            className="cursor-pointer text-blue-600 dark:text-blue-400"
-          />
-          <DeleteConfirm<number>
-            title="Delete Holiday"
-            description="Are you sure you want to delete this holiday?"
-            loading={isPending}
-            onConfirm={(id) => removeHoliday(id)}
-          >
-            {(askDelete) => (
-              <IconTrash
+    !isEmployee
+      ? {
+          header: "Action",
+          align: "center",
+          cell: (row: PublicHoliday) => (
+            <div className="flex items-center justify-center gap-3">
+              <IconEdit
                 size={18}
-                onClick={() => askDelete(row.id)}
-                className="cursor-pointer text-red-600 dark:text-red-400"
+                onClick={() => navigate(`/holidays/${row.id}`)}
+                className="cursor-pointer text-blue-600 dark:text-blue-400"
               />
-            )}
-          </DeleteConfirm>
-        </div>
-      ),
-    },
-  ];
+              <DeleteConfirm<number>
+                title="Delete Holiday"
+                description="Are you sure you want to delete this holiday?"
+                loading={isPending}
+                onConfirm={(id) => removeHoliday(id)}
+              >
+                {(askDelete) => (
+                  <IconTrash
+                    size={18}
+                    onClick={() => askDelete(row.id)}
+                    className="cursor-pointer text-red-600 dark:text-red-400"
+                  />
+                )}
+              </DeleteConfirm>
+            </div>
+          ),
+        }
+      : null,
+  ].filter(Boolean) as Column<PublicHoliday>[];
 
   const previewValidColumns: Column<PreviewValidRow>[] = [
     {
@@ -293,13 +299,44 @@ export default function PublicHolidayTable() {
       <Card
         action={
           <div className="flex justify-end gap-3">
-            <Button
-              onClick={() => navigate("/holidays/new")}
-              size="md"
-              className="bg-black text-white"
-            >
-              Add Holiday
-            </Button>
+            {!isEmployee && (
+              <>
+                <Button
+                  onClick={() => navigate("/holidays/new")}
+                  size="md"
+                  className="bg-black text-white"
+                >
+                  Add Holiday
+                </Button>
+
+                <Button
+                  onClick={() => downloadTemplate()}
+                  size="md"
+                  variant="outline"
+                  disabled={isDownloadingTemplate}
+                >
+                  {isDownloadingTemplate
+                    ? "Downloading..."
+                    : "Download Template"}
+                </Button>
+
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  size="md"
+                  variant="outline"
+                >
+                  Import Excel
+                </Button>
+
+                <input
+                  type="file"
+                  accept=".xlsx"
+                  ref={fileInputRef}
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+              </>
+            )}
 
             <Button
               onClick={() => downloadPDF()}
@@ -309,31 +346,6 @@ export default function PublicHolidayTable() {
             >
               {isDownloading ? "Downloading..." : "Download PDF"}
             </Button>
-
-            <Button
-              onClick={() => downloadTemplate()}
-              size="md"
-              variant="outline"
-              disabled={isDownloadingTemplate}
-            >
-              {isDownloadingTemplate ? "Downloading..." : "Download Template"}
-            </Button>
-
-            <Button
-              onClick={() => fileInputRef.current?.click()}
-              size="md"
-              variant="outline"
-            >
-              Import Excel
-            </Button>
-
-            <input
-              type="file"
-              accept=".xlsx"
-              ref={fileInputRef}
-              className="hidden"
-              onChange={handleFileChange}
-            />
           </div>
         }
       >
