@@ -19,6 +19,7 @@ import Button from "../../components/ui/button/Button";
 const holidaySchema = z
   .object({
     title: z.string().min(1, "Holiday title is required"),
+    description: z.string().optional(),
     fromDate: z.string().min(1, "From date is required"),
     toDate: z.string().min(1, "To date is required"),
   })
@@ -47,6 +48,7 @@ export default function PublicHolidayForm() {
       title: "",
       fromDate: "",
       toDate: "",
+      description: "",
     },
   });
 
@@ -62,6 +64,7 @@ export default function PublicHolidayForm() {
         title: data.title ?? "",
         fromDate: data.fromDate ?? "",
         toDate: data.toDate ?? "",
+        description: data.description ?? "",
       });
     }
   }, [data, isEditMode, reset]);
@@ -79,7 +82,7 @@ export default function PublicHolidayForm() {
             ? "Holiday updated successfully"
             : "Holiday created successfully"),
       );
-      navigate("/public-holidays");
+      navigate("/holidays");
     },
 
     onError: (error: AxiosError<{ message?: string }>) => {
@@ -163,6 +166,13 @@ export default function PublicHolidayForm() {
               />
             )}
           />
+          <Input
+            label="Description"
+            placeholder="Enter holiday description"
+            {...register("description")}
+            error={!!errors.description}
+            hint={errors.description?.message}
+          />
 
           <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
             <Button
@@ -176,10 +186,7 @@ export default function PublicHolidayForm() {
                   : "Save"}
             </Button>
 
-            <Button
-              variant="outline"
-              onClick={() => navigate("/public-holidays")}
-            >
+            <Button variant="outline" onClick={() => navigate("/holidays")}>
               Back
             </Button>
           </div>
