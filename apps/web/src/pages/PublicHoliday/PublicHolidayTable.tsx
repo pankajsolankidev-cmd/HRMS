@@ -298,12 +298,13 @@ export default function PublicHolidayTable() {
                 <Button
                   onClick={() => navigate("/holidays/new")}
                   size="md"
-                  className="bg-black text-white"
+                  className="bg-black text-white dark:bg-blue-500"
                 >
                   Add Holiday
                 </Button>
 
                 <Button
+                  className="hover:bg-gray-200 dark:hover:bg-gray-700"
                   onClick={() => downloadTemplate()}
                   size="md"
                   variant="outline"
@@ -315,6 +316,7 @@ export default function PublicHolidayTable() {
                 </Button>
 
                 <Button
+                  className="hover:bg-gray-200 dark:hover:bg-gray-700"
                   onClick={() => fileInputRef.current?.click()}
                   size="md"
                   variant="outline"
@@ -333,6 +335,7 @@ export default function PublicHolidayTable() {
             )}
 
             <Button
+              className="hover:bg-gray-200 dark:hover:bg-gray-700"
               onClick={() => downloadPDF()}
               size="md"
               variant="outline"
