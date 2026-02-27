@@ -46,6 +46,8 @@ import PayrollTable from "./pages/Payroll/PayrollTable";
 import ProjectDetail from "./pages/Project/ProjectDetail";
 import ProjectForm from "./pages/Project/ProjectForm";
 import ProjectTable from "./pages/Project/ProjectTable";
+import PublicHolidayForm from "./pages/PublicHoliday/PublicHolidayForm";
+import PublicHolidayTable from "./pages/PublicHoliday/PublicHolidayTable";
 import AddEditSalaryPage from "./pages/Salary/AddEditSalaryPage";
 import SalaryPage from "./pages/Salary/SalaryPage";
 import AddEditSystemPage from "./pages/System/AddEditSystemPage";
@@ -88,6 +90,7 @@ function AppRoutes() {
           <Route path="/payrolls/history" element={<PayrollHistory />} />
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/holidays" element={<PublicHolidayTable />} />
 
           <Route element={<ProtectedRoute allowedRoles={["ADMIN", "HR"]} />}>
             <Route path="/employees" element={<EmployeePage />} />
@@ -118,6 +121,8 @@ function AppRoutes() {
             <Route path="/projects" element={<ProjectTable />} />
             <Route path="/projects/:id" element={<ProjectForm />} />
             <Route path="/projects/:id/employees" element={<ProjectDetail />} />
+
+            <Route path="/holidays/:id" element={<PublicHolidayForm />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

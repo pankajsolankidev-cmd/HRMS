@@ -14,6 +14,7 @@ import {
   IconBriefcase,
   IconBuilding,
   IconBuildingCommunity,
+  IconCalendarStar,
   IconHistory,
   IconReceiptRupee,
   IconWallet,
@@ -34,6 +35,7 @@ const ADMIN_MENU: NavItem[] = [
   { icon: <UserCircleIcon />, name: "Employees", path: "/employees" },
   { icon: <PuzzlePieceIcon />, name: "Component", path: "/components" },
   { icon: <FolderIcon />, name: "System", path: "/systems" },
+  { icon: <IconCalendarStar />, name: "Holidays", path: "/holidays" },
   { icon: <CalendarIcon />, name: "Leaves", path: "/leave-requests" },
   { icon: <IconReceiptRupee />, name: "Salary", path: "/salary" },
   { icon: <IconWallet />, name: "Expenses", path: "/expenses" },
@@ -53,6 +55,7 @@ const EMPLOYEE_MENU: NavItem[] = [
   { icon: <CalendarIcon />, name: "Leaves", path: "/leave-requests" },
   { icon: <IconWallet />, name: "Expenses", path: "/expenses" },
   { icon: <IconHistory />, name: "Payroll History", path: "/payrolls/history" },
+  { icon: <IconCalendarStar />, name: "Holidays", path: "/holidays" },
 ];
 
 const AppSidebar: React.FC = () => {

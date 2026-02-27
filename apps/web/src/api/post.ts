@@ -150,3 +150,22 @@ export const addOrganization = async (payload: CreateOrganizationDto) => {
   const res = await api.post("/organization", payload);
   return res.data;
 };
+export const addPublicHoliday = async (payload: any) => {
+  const res = await api.post("/holidays", payload);
+  return res.data;
+};
+export const previewHolidayImport = async (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await api.post("/holidays/upload/check", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response.data;
+};
+export const confirmHolidayImport = async (holidays: any[]) => {
+  const response = await api.post("/holidays/upload/confirm", { holidays });
+  return response.data;
+};

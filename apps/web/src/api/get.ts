@@ -150,3 +150,25 @@ export const getUnreadCount = async () => {
   const res = await api.get("/notifications/unread-count");
   return res.data.count;
 };
+export const getPublicHolidays = async (params?: ListQueryParams) => {
+  const res = await api.get<PaginatedResponse<any>>("/holidays", {
+    params,
+  });
+  return res.data;
+};
+export const getPublicHolidayById = async (id: string) => {
+  const res = await api.get(`/holidays/${id}`);
+  return res.data;
+};
+export const exportPublicHolidayPDF = async () => {
+  const response = await api.get("/holidays/export/pdf", {
+    responseType: "blob",
+  });
+  return response.data;
+};
+export const downloadHolidayTemplate = async () => {
+  const response = await api.get("/holidays/upload/template", {
+    responseType: "blob",
+  });
+  return response.data;
+};
