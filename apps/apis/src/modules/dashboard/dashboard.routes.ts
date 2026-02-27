@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
-import { getDashboardSummaryHandler } from "./dashboard.service";
+import { getDashboardSummaryHandler, getEmployeeDashboardHandler } from "./dashboard.service";
 import { verifyAccessToken } from "../../middlewares/auth.middlewares";
-import { getDashboardSummarySchema } from "./dashboard.schema";
+import { getDashboardSummarySchema, getEmployeeDashboardSchema } from "./dashboard.schema";
 
 export default async function dashboardRoutes(app: FastifyInstance) {
   const secured = {
@@ -22,4 +22,15 @@ export default async function dashboardRoutes(app: FastifyInstance) {
     },
     getDashboardSummaryHandler,
   );
+  app.get(
+  "/employee/dashboard/summary",
+  {
+    ...secured,
+    schema: {
+      ...secured.schema,
+      ...getEmployeeDashboardSchema,
+    },
+  },
+  getEmployeeDashboardHandler,
+);
 }
