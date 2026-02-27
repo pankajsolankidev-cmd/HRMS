@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getDashboard } from "../../api/get";
 import Card from "../../components/common/ComponentCard";
 
-export default function Dashboard() {
+export default function AdminDashboard() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["dashboard"],
     queryFn: getDashboard,
