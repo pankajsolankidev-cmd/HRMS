@@ -96,7 +96,7 @@ export async function createExpenseHandler(
     await db.insert(expenses).values({
       employeeId: employee.id,
       expenseType: body.expenseType,
-      amount: String(body.amount),
+      amount: body.amount.toFixed(2),
       expenseDate: body.expenseDate,
       description: body.description ?? null,
       file: body.file ?? null,
