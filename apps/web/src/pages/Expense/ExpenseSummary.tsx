@@ -11,7 +11,7 @@ export default function ExpenseSummary() {
   const [toDate, setToDate] = useState<string>(today);
   const [run, setRun] = useState(false);
 
-  const { data, error, isFetching } = useQuery({
+  const { data, error, isFetching, refetch } = useQuery({
     queryKey: ["expense-summary", fromDate, toDate],
     queryFn: () => getExpenseSummary(fromDate, toDate),
     enabled: run,
@@ -24,6 +24,12 @@ export default function ExpenseSummary() {
   useEffect(() => {
     if (error) toast.error(`Failed to fetch: ${error.message}`);
   }, [error]);
+  const handleClear = () => {
+    setFromDate(today);
+    setToDate(today);
+    setRun(false);
+    refetch();
+  };
 
   return (
     <div className="space-y-4">
@@ -33,7 +39,7 @@ export default function ExpenseSummary() {
           label="Select Date Range"
           mode="range"
           value={
-            fromDate && toDate  
+            fromDate && toDate
               ? [new Date(fromDate), new Date(toDate)]
               : undefined
           }
@@ -53,6 +59,13 @@ export default function ExpenseSummary() {
                      disabled:opacity-50 dark:bg-white dark:text-black"
         >
           {isFetching ? "Fetching..." : "View Summary"}
+        </button>
+        <button
+          onClick={handleClear}
+          className="h-[45px] rounded-lg border px-6 text-sm
+               hover:bg-gray-200 dark:hover:bg-gray-700"
+        >
+          Clear
         </button>
       </div>
 
