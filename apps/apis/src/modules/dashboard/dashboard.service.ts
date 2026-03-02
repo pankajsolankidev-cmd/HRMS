@@ -252,6 +252,22 @@ export async function getEmployeeDashboardHandler(
           eq(projects.status, "ACTIVE"),
         ),
       );
+    const completedProjectCountResult = await db
+      .select({
+        count: sql<number>`count(*)::int`,
+      })
+      .from(projectEmployees)
+      .innerJoin(projects, eq(projects.id, projectEmployees.projectId))
+      .where(
+        and(
+          eq(projectEmployees.employeeId, employee.id),
+          eq(projects.status, "COMPLETED"),
+        ),
+      );
+
+    const completedProjectCount = Number(
+      completedProjectCountResult[0]?.count ?? 0,
+    );
 
     return {
       leaveBalance: {
@@ -263,6 +279,7 @@ export async function getEmployeeDashboardHandler(
       },
       upcomingHoliday,
       currentProjects,
+      completedProjectCount,
     };
   } catch (error) {
     request.log.error(

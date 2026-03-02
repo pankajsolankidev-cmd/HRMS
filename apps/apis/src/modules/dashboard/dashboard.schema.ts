@@ -129,6 +129,7 @@ export const getEmployeeDashboardSchema = {
             totalEarned: { type: "number" },
             totalUsed: { type: "number" },
             remaining: { type: "number" },
+            
           },
           required: [
             "monthsWorked",
@@ -136,8 +137,10 @@ export const getEmployeeDashboardSchema = {
             "totalEarned",
             "totalUsed",
             "remaining",
+            
           ],
         },
+        completedProjectCount: { type: "number" },
 
         upcomingHoliday: {
           anyOf: [
@@ -175,7 +178,7 @@ export const getEmployeeDashboardSchema = {
         },
       },
 
-      required: ["leaveBalance", "upcomingHoliday", "currentProjects"],
+      required: ["leaveBalance", "completedProjectCount", "upcomingHoliday", "currentProjects"],
     },
 
     401: {
