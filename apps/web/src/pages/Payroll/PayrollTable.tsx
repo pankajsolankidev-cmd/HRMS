@@ -386,7 +386,7 @@ export default function PayrollTable() {
         />
 
         <div className="flex justify-end gap-3 mt-6">
-          <Button className="bg-gray-500" onClick={() => navigate("/payrolls")}>
+          <Button className="bg-gray-500" onClick={() => setSelectedIds([])}>
             Cancel
           </Button>
 
