@@ -222,7 +222,11 @@ export default function AddEditExpensePage() {
                   ? "Update"
                   : "Save"}
             </Button>
-            <Button variant="outline" onClick={() => navigate("/expenses")}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/expenses")}
+            >
               Back
             </Button>
           </div>

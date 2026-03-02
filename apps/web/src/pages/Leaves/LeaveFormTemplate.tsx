@@ -273,7 +273,12 @@ export default function LeaveForm({
         <Button className="bg-black dark:bg-blue-500" disabled={loading}>
           {loading ? "Processing..." : "Save"}
         </Button>
-        <Button variant="outline" onClick={onBack} disabled={loading}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onBack}
+          disabled={loading}
+        >
           Back
         </Button>
       </div>

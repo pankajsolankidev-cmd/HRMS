@@ -168,7 +168,11 @@ export default function ProjectForm() {
                   ? "Update"
                   : "Save"}
             </Button>
-            <Button variant="outline" onClick={() => navigate("/projects")}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/projects")}
+            >
               Back
             </Button>
           </div>

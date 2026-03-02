@@ -255,7 +255,11 @@ export default function AddEditSalaryPage() {
                   ? "Update"
                   : "Save"}
             </Button>
-            <Button variant="outline" onClick={() => navigate("/salary")}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/salary")}
+            >
               Back
             </Button>
           </div>

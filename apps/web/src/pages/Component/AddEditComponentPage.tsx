@@ -153,7 +153,11 @@ export default function AddEditComponentPage() {
                   ? "Update"
                   : "Save"}
             </Button>
-            <Button variant="outline" onClick={() => navigate("/components")}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/components")}
+            >
               Back
             </Button>
           </div>

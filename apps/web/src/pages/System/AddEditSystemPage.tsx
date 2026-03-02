@@ -25,7 +25,7 @@ const systemSchema = z.object({
 type SystemFormData = z.infer<typeof systemSchema>;
 
 export default function AddEditSystemPage() {
-  const { id } = useParams<{ id: string }>(); 
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -169,7 +169,11 @@ export default function AddEditSystemPage() {
                   ? "Update"
                   : "Save"}
             </Button>
-            <Button variant="outline" onClick={() => navigate("/systems")}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/systems")}
+            >
               Back
             </Button>
           </div>

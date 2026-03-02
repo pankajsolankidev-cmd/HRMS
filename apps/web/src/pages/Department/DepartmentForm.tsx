@@ -118,7 +118,11 @@ export default function DepartmentForm() {
                   ? "Update"
                   : "Save"}
             </Button>
-            <Button variant="outline" onClick={() => navigate("/departments")}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/departments")}
+            >
               Back
             </Button>
           </div>

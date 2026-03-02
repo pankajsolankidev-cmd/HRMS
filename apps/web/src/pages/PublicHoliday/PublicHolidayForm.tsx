@@ -186,7 +186,11 @@ export default function PublicHolidayForm() {
                   : "Save"}
             </Button>
 
-            <Button variant="outline" onClick={() => navigate("/holidays")}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/holidays")}
+            >
               Back
             </Button>
           </div>

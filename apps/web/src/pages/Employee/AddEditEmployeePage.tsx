@@ -401,7 +401,11 @@ export default function AddEditEmployeePage() {
                   ? "Update"
                   : "Save"}
             </Button>
-            <Button variant="outline" onClick={() => navigate("/employees")}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/employees")}
+            >
               Back
             </Button>
           </div>

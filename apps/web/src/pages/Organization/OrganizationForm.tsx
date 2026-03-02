@@ -212,7 +212,11 @@ export default function OrganizationForm() {
                   : "Save"}
             </Button>
 
-            <Button variant="outline" onClick={() => navigate("/organization")}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/organization")}
+            >
               Back
             </Button>
           </div>
