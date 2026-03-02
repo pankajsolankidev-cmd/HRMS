@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router";
 
 import {
   getEmployeePayrollHistory,
@@ -36,7 +35,6 @@ const MONTHS = [
 ];
 
 export default function PayrollTable() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const today = new Date();
 

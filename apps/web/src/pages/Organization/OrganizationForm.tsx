@@ -152,6 +152,7 @@ export default function OrganizationForm() {
               control={control}
               render={({ field }) => (
                 <DatePicker
+                  placeholder="Start time"
                   id="start-time"
                   mode="time"
                   label="Start Time"
@@ -169,6 +170,7 @@ export default function OrganizationForm() {
               control={control}
               render={({ field }) => (
                 <DatePicker
+                  placeholder="End time"
                   id="end-time"
                   mode="time"
                   label="End Time"

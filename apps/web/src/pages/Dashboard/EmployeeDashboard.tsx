@@ -24,7 +24,12 @@ export default function EmployeeDashboard() {
 
   if (!data) return <div className="p-6 text-gray-500">No dashboard data</div>;
 
-  const { leaveBalance, upcomingHoliday, currentProjects } = data;
+  const {
+    leaveBalance,
+    upcomingHoliday,
+    currentProjects,
+    completedProjectCount,
+  } = data;
 
   return (
     <div className="p-6 space-y-8">
@@ -94,7 +99,7 @@ export default function EmployeeDashboard() {
             <div>
               <p className="text-sm text-gray-500">Total Projects</p>
               <h2 className="text-4xl font-bold text-amber-600 mt-2">
-                +{leaveBalance.monthlyAccrual}
+                {completedProjectCount}
               </h2>
             </div>
             <IconChartLine size={26} className="text-amber-600" />

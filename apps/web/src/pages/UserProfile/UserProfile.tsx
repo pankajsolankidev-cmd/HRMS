@@ -21,7 +21,8 @@ const UserProfile = () => {
       </div>
     );
 
-  const employee = data?.employee;
+  const employee = data?.profile?.employee;
+  const organization = data?.organization;
 
   const initials =
     employee?.firstName?.charAt(0) + employee?.lastName?.charAt(0);
@@ -88,69 +89,38 @@ const UserProfile = () => {
 
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow p-6">
             <h2 className="text-lg font-semibold mb-5 text-gray-800 dark:text-white">
-              System Details
+              Organization Details
             </h2>
 
-            {employee?.system ? (
-              <div className="space-y-6 text-sm">
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">System Name</span>
-                    <span className="font-medium text-gray-800 dark:text-white">
-                      {employee.system.name}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Description</span>
-                    <span className="font-medium text-gray-800 dark:text-white text-right max-w-[60%]">
-                      {employee.system.description}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="border-t dark:border-gray-700 pt-4">
-                  <h3 className="text-sm font-semibold mb-3 text-gray-700 dark:text-gray-300">
-                    Assigned Components
-                  </h3>
-
-                  {employee.system.components?.length > 0 ? (
-                    <div className="space-y-3">
-                      {employee.system.components.map((component: any) => (
-                        <div
-                          key={component.id}
-                          className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800"
-                        >
-                          <div className="flex justify-between">
-                            <span className="font-medium text-gray-800 dark:text-white">
-                              {component.name}
-                            </span>
-
-                            <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300">
-                              {component.code}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-400 text-xs">
-                      No components assigned
-                    </p>
-                  )}
-                </div>
+            <div className="space-y-4 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Organization</span>
+                <span className="font-medium">{organization?.name}</span>
               </div>
-            ) : (
-              <p className="text-gray-400 text-sm">No system assigned</p>
-            )}
+
+              <div className="flex justify-between">
+                <span className="text-gray-500">Working Hours</span>
+                <span className="font-medium">
+                  {organization?.workingStartTime} -{" "}
+                  {organization?.workingEndTime}
+                </span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-gray-500">Week Off</span>
+                <span className="font-medium">
+                  {organization?.weekOff?.join(", ")}
+                </span>
+              </div>
+            </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow p-6 md:col-span-2">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow p-6">
             <h2 className="text-lg font-semibold mb-5 text-gray-800 dark:text-white">
               Documents
             </h2>
 
-            <div className="grid md:grid-cols-2 gap-6 text-sm">
+            <div className="space-y-4 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-500">Generate Offer Letter</span>
                 <span
@@ -181,6 +151,56 @@ const UserProfile = () => {
                 </span>
               </div>
             </div>
+          </div>
+
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow p-6">
+            <h2 className="text-lg font-semibold mb-5 text-gray-800 dark:text-white">
+              System Details
+            </h2>
+
+            {employee?.system ? (
+              <div className="space-y-4 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">System Name</span>
+                  <span className="font-medium">{employee.system.name}</span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Description</span>
+                  <span className="font-medium text-right max-w-[60%]">
+                    {employee.system.description}
+                  </span>
+                </div>
+
+                <div className="pt-4 border-t dark:border-gray-700">
+                  <h3 className="text-sm font-semibold mb-3">
+                    Assigned Components
+                  </h3>
+
+                  {employee.system.components?.length > 0 ? (
+                    <div className="space-y-2">
+                      {employee.system.components.map((component: any) => (
+                        <div
+                          key={component.id}
+                          className="flex justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded-md"
+                        >
+                          <span>{component.name}</span>
+                          <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
+                            {component.code}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-400 text-xs">
+                      No components assigned
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-400 text-sm">No system assigned</p>
+            )}
           </div>
         </div>
       </div>

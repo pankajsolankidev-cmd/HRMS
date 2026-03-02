@@ -26,13 +26,7 @@ export default function DepartmentTable() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const { data, isLoading, isError, refetch } = useQuery<
-    PaginatedResponse<Department>
-  >({
-    queryKey: ["departments", page, limit],
-    queryFn: () => getDepartments({ page, limit }),
-    placeholderData: (prev) => prev,
-  });
+  C
   const { mutate: removeDepartment, isPending } = useMutation({
     mutationFn: deleteDepartment,
     onSuccess: (res) => {
