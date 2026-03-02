@@ -1,6 +1,7 @@
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
+import { saveAs } from "file-saver";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useSelector } from "react-redux";
@@ -22,7 +23,6 @@ import DataTable, {
 import { useTableSort } from "../../components/tables/useTableSort";
 import Button from "../../components/ui/button/Button";
 import type { RootState } from "../../context";
-
 type PublicHoliday = {
   id: number;
   title: string;
@@ -76,15 +76,8 @@ export default function PublicHolidayTable() {
 
   const { mutate: downloadPDF, isPending: isDownloading } = useMutation({
     mutationFn: exportPublicHolidayPDF,
-    onSuccess: (blob) => {
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "public-holidays.pdf";
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+    onSuccess: (blob: Blob) => {
+      saveAs(blob, "public-holidays.pdf");
       toast.success("PDF downloaded successfully");
     },
     onError: (error: AxiosError<{ message?: string }>) => {
@@ -98,15 +91,8 @@ export default function PublicHolidayTable() {
   const { mutate: downloadTemplate, isPending: isDownloadingTemplate } =
     useMutation({
       mutationFn: downloadHolidayTemplate,
-      onSuccess: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "holiday-template.xlsx";
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.URL.revokeObjectURL(url);
+      onSuccess: (blob: Blob) => {
+        saveAs(blob, "holiday-template.xlsx");
         toast.success("Template downloaded successfully");
       },
       onError: (error: AxiosError<{ message?: string }>) => {
