@@ -102,9 +102,9 @@ const AppSidebar: React.FC = () => {
               />
               <img
                 className="hidden dark:block"
-                src="/images/logo/logo-dark.svg"
+                src="/images/logo/hrms-dark.svg"
                 alt="Logo"
-                width={150}
+                width={200}
               />
             </>
           ) : (
