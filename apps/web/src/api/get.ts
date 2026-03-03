@@ -139,6 +139,10 @@ export const getDashboard = async () => {
   const res = await api.get("/dashboard/summary");
   return res.data;
 };
+export const getEmployeeDashboard = async () => {
+  const res = await api.get("/employee/dashboard/summary");
+  return res.data;
+};
 export const getNotifications = async (params?: ListQueryParams) => {
   const res = await api.get<PaginatedResponse<any>>("/notifications", {
     params,

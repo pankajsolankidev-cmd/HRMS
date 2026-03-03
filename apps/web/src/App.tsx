@@ -26,7 +26,7 @@ import ResetPassword from "./pages/auth/ResetPassword";
 import SignInForm from "./pages/auth/SignInForm";
 import AddEditComponentPage from "./pages/Component/AddEditComponentPage";
 import ComponentPage from "./pages/Component/ComponentPage";
-import Dashboard from "./pages/Dashboard/Dashboard";
+import RoleDashboard from "./pages/Dashboard/RoleDashboard";
 import DepartmentForm from "./pages/Department/DepartmentForm";
 import DepartmentTable from "./pages/Department/DepartmentTable";
 import AddEditEmployeePage from "./pages/Employee/AddEditEmployeePage";
@@ -82,7 +82,7 @@ function AppRoutes() {
 
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<RoleDashboard />} />
           <Route path="/leave-requests" element={<LeavePage />} />
           <Route path="/leave-requests/:id" element={<SelfLeavePage />} />
           <Route path="/expenses" element={<Expense />} />
