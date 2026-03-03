@@ -178,6 +178,8 @@ export default function LeaveForm({
           render={({ field }) => (
             <DatePicker
               id="fromDate"
+              disableFuture={showEmployeeSelect}
+              disablePast={!showEmployeeSelect}
               placeholder="Select from date"
               required
               label="From Date"
@@ -196,6 +198,8 @@ export default function LeaveForm({
             render={({ field }) => (
               <DatePicker
                 id="toDate"
+                disableFuture={showEmployeeSelect}
+                disablePast={!showEmployeeSelect}
                 placeholder="Select to date"
                 required
                 label="To Date"

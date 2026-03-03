@@ -21,10 +21,12 @@ import DataTable, {
 import { useTableSort } from "../../components/tables/useTableSort";
 import Button from "../../components/ui/button/Button";
 
+import type { AxiosError } from "axios";
 import { deleteExpense } from "../../api/delete";
 import { getExpenses } from "../../api/get";
 import { approveExpense, createExpense, rejectExpense } from "../../api/patch";
 import type { PaginatedResponse } from "../../api/types";
+import DeleteConfirm from "../../components/common/DeleteConfirmModal";
 
 type Expense = {
   id: number;
@@ -79,37 +81,49 @@ export default function ExpensePage() {
     placeholderData: (prev) => prev,
   });
 
-  const { mutate: remove } = useMutation({
+  const { mutate: remove, isPending } = useMutation({
     mutationFn: deleteExpense,
-    onSuccess: () => {
-      toast.success("Expense deleted successfully");
+    onSuccess: (res) => {
+      toast.success(res.message ?? "Expense deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error?.response?.data?.message ?? "Something went wrong");
     },
   });
 
   const { mutate: approve } = useMutation({
     mutationFn: approveExpense,
-    onSuccess: () => {
-      toast.success("Expense Approved");
+    onSuccess: (res) => {
+      toast.success(res.message ?? "Expense Approved");
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error?.response?.data?.message ?? "Something went wrong");
     },
   });
 
   const { mutate: reject } = useMutation({
     mutationFn: rejectExpense,
-    onSuccess: () => {
-      toast.success("Expense Rejected");
+    onSuccess: (res) => {
+      toast.success(res.message ?? "Expense Rejected");
       setRejectId(null);
       setRejectionReason("");
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error?.response?.data?.message ?? "Something went wrong");
     },
   });
 
   const { mutate: submitForApproval } = useMutation({
     mutationFn: createExpense,
-    onSuccess: () => {
-      toast.success("Expense submitted for approval");
+    onSuccess: (res) => {
+      toast.success(res.message ?? "Expense submitted for approval");
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error?.response?.data?.message ?? "Something went wrong");
     },
   });
 
@@ -202,12 +216,21 @@ export default function ExpensePage() {
                   >
                     <IconEdit size={16} /> Edit
                   </button>
-                  <button
-                    onClick={() => confirm("Delete?") && remove(row.id)}
-                    className="flex w-full items-center gap-2 px-4 py-2 text-sm"
+                  <DeleteConfirm<Number>
+                    title="Delete Expense"
+                    description="Are you sure you want to delete this expense?"
+                    loading={isPending}
+                    onConfirm={() => remove(row.id)}
                   >
-                    <IconTrash size={16} /> Delete
-                  </button>
+                    {(askDelete) => (
+                      <button
+                        onClick={() => askDelete(row.id)}
+                        className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
+                      >
+                        <IconTrash size={16} /> Delete
+                      </button>
+                    )}
+                  </DeleteConfirm>
                 </>
               )}
 
@@ -249,12 +272,17 @@ export default function ExpensePage() {
               className="pl-10 pr-12 h-[42px]"
             />
             {rawSearch && (
-              <button
-                onClick={() => setRawSearch("")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600"
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setRawSearch("");
+                  setSearch(undefined);
+                }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0 rounded-full"
               >
                 ✕
-              </button>
+              </Button>
             )}
           </div>
 

@@ -164,6 +164,7 @@ export default function AddEditExpensePage() {
               render={({ field }) => (
                 <DatePicker
                   required
+                  disableFuture
                   id="expenseDate"
                   label="Expense Date"
                   placeholder="Select expense date"

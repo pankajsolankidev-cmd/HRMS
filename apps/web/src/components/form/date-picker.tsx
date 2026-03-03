@@ -20,6 +20,10 @@ type PropsType = {
   required?: boolean;
   error?: boolean;
   hint?: string;
+  minDate?: string | Date;
+  maxDate?: string | Date;
+  disableFuture?: boolean;
+  disablePast?: boolean;
 };
 
 export default function DatePicker({
@@ -32,11 +36,17 @@ export default function DatePicker({
   required,
   error,
   hint,
+  minDate,
+  maxDate,
+  disableFuture,
+  disablePast,
 }: PropsType) {
   const fpRef = useRef<FlatpickrInstance | null>(null);
   const isTimeMode = mode === "time";
 
   useEffect(() => {
+    const today = new Date();
+
     fpRef.current = flatpickr(`#${id}`, {
       mode: isTimeMode ? "single" : mode,
       static: true,
@@ -48,6 +58,9 @@ export default function DatePicker({
 
       dateFormat: isTimeMode ? "H:i" : "Y-m-d",
 
+      minDate: disablePast ? today : minDate,
+      maxDate: disableFuture ? today : maxDate,
+
       onChange,
     }) as FlatpickrInstance;
 
@@ -55,7 +68,7 @@ export default function DatePicker({
       fpRef.current?.destroy();
       fpRef.current = null;
     };
-  }, [id, mode, onChange]);
+  }, [id, mode, onChange, minDate, maxDate, disableFuture, disablePast]);
 
   useEffect(() => {
     if (fpRef.current) {
@@ -80,7 +93,7 @@ export default function DatePicker({
         <input
           id={id}
           placeholder={placeholder}
-          className={`h-12 w-full rounded-2xl border px-4 pr-11 text-sm
+          className={`h-12 w-full rounded-lg border px-4 pr-11 text-sm
           transition-all duration-200
           bg-white/70 backdrop-blur-md
           dark:bg-gray-900/60

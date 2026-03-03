@@ -155,6 +155,9 @@ export default function LeavePage() {
       toast.success(res?.message ?? "Leave Approved");
       refetch();
     },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error?.response?.data?.message ?? "Something went wrong");
+    },
   });
 
   const { data: employeesData } = useQuery({
@@ -175,6 +178,9 @@ export default function LeavePage() {
       setRejectId(null);
       setRejectionReason("");
       refetch();
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error?.response?.data?.message ?? "Something went wrong");
     },
   });
 
@@ -210,6 +216,12 @@ export default function LeavePage() {
   const total = data?.meta?.total ?? 0;
   const isEmployee = roles.includes("EMPLOYEE");
 
+  const formatDayType = (value: string) =>
+    value
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+
   const columns: Column<LeaveRow>[] = [
     ...(!isEmployee
       ? [
@@ -244,7 +256,9 @@ export default function LeavePage() {
     {
       header: "Day Type",
       accessor: "dayType",
-      cell: (row) => row.dayType,
+      cell: (row) => (
+        <span className="capitalize">{formatDayType(row.dayType)}</span>
+      ),
     },
     {
       header: "Status",
@@ -265,9 +279,7 @@ export default function LeavePage() {
     },
     {
       header: "Total Days",
-      cell: (row) => (
-        <span className="text-red-600 dark:text-red-400">{row.totalDays}</span>
-      ),
+      cell: (row) => <span>{row.totalDays}</span>,
     },
     {
       header: "Action By",
@@ -410,7 +422,7 @@ export default function LeavePage() {
             <div className="col-span-6 md:col-span-2">
               <Select
                 options={LEAVE_TYPES}
-                placeholder="Select Type"
+                placeholder="Select type"
                 value={type ?? ""}
                 onChange={(val) => {
                   setType(val || undefined);
@@ -423,7 +435,7 @@ export default function LeavePage() {
             <div className="col-span-6 md:col-span-2">
               <Select
                 options={LEAVE_STATUS}
-                placeholder="Select Status"
+                placeholder="Select status"
                 value={status ?? ""}
                 onChange={(val) => {
                   setStatus(val || undefined);
@@ -436,7 +448,7 @@ export default function LeavePage() {
             <div className="col-span-6 md:col-span-2">
               <Select
                 options={employeeOptions}
-                placeholder="Select Employee"
+                placeholder="Select employee"
                 value={employeeId ?? ""}
                 onChange={(val) => {
                   setEmployeeId(val || undefined);
@@ -449,7 +461,7 @@ export default function LeavePage() {
             <div className="col-span-6 md:col-span-2">
               <Select
                 options={LEAVE_SOURCE_OPTIONS}
-                placeholder="Leave Source"
+                placeholder="Leave source"
                 value={createdByType ?? ""}
                 onChange={(val) => {
                   setCreatedByType(val || undefined);
@@ -463,7 +475,7 @@ export default function LeavePage() {
               <DatePicker
                 id="dateRange"
                 mode="range"
-                placeholder="Select Date Range"
+                placeholder="Select date range"
                 value={
                   fromDate && toDate
                     ? [new Date(fromDate), new Date(toDate)]
@@ -482,7 +494,7 @@ export default function LeavePage() {
               />
             </div>
 
-            <div className="col-span-6 md:col-span-2 flex items-end">
+            <div className="col-span-6 md:col-span-1 flex items-end">
               <Button
                 variant="outline"
                 className="w-full"
@@ -507,19 +519,17 @@ export default function LeavePage() {
 
       <Card
         action={
-          <div className="flex items-center gap-3">
-            <div className="relative w-64">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                <IconSearch size={18} />
+          <div className="flex items-center justify-between gap-3">
+            <div className="relative w-full max-w-xs">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                <IconSearch size={18} stroke={2} />
               </div>
-
               <Input
                 placeholder="Search here..."
                 value={rawSearch}
                 onChange={(e) => setRawSearch(e.target.value)}
                 className="pl-10 pr-10 h-[42px]"
               />
-
               {rawSearch && (
                 <Button
                   size="sm"

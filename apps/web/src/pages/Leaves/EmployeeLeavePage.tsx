@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { useLocation, useNavigate, useParams } from "react-router";
 
+import type { AxiosError } from "axios";
 import { getEmployees, getLeaveById, getManualLeaveById } from "../../api/get";
 import { updateEmployeeLeave } from "../../api/patch";
 import { addEmployeeLeave, type AddLeavePayload } from "../../api/post";
@@ -53,7 +54,7 @@ export default function EmployeeLeavePage() {
 
   const addMutation = useMutation<
     unknown,
-    unknown,
+    AxiosError<{ message?: string }>,
     AddLeavePayload & { employeeId: string }
   >({
     mutationFn: addEmployeeLeave,
@@ -61,6 +62,9 @@ export default function EmployeeLeavePage() {
       toast.success("Employee leave added");
       queryClient.invalidateQueries({ queryKey: ["leaves"] });
       navigate("/leave-requests");
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message ?? "Something went wrong");
     },
   });
 
@@ -70,6 +74,9 @@ export default function EmployeeLeavePage() {
       toast.success("Employee leave updated");
       queryClient.invalidateQueries({ queryKey: ["leaves"] });
       navigate("/leave-requests");
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error?.response?.data?.message ?? "Something went wrong");
     },
   });
 
