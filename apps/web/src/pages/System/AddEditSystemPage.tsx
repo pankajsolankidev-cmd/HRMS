@@ -17,8 +17,8 @@ import MultiSelect from "../../components/form/MultiSelect";
 import Button from "../../components/ui/button/Button";
 
 const systemSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  description: z.string().min(1, "Description is required"),
+  name: z.string().trim().min(1, "Name is required"),
+  description: z.string().trim().min(1, "Description is required"),
   components: z.array(z.string()).min(1, "Select at least one component"),
 });
 

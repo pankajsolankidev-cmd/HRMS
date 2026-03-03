@@ -1,5 +1,5 @@
 import type React from "react";
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface Option {
   value: string;
@@ -151,8 +151,8 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
               }
               ${
                 disabled
-                  ? "opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-800"
-                  : "cursor-pointer"
+                  ? "opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-900"
+                  : "cursor-pointer bg-white dark:bg-gray-900"
               }
             `}
             >

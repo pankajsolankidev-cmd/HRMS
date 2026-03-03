@@ -80,17 +80,16 @@ export default function DatePicker({
         <input
           id={id}
           placeholder={placeholder}
-          className={`h-12 w-full rounded-2xl border px-4 pr-11 text-sm
-          transition-all duration-200
-          bg-white/70 backdrop-blur-md
-          dark:bg-gray-900/60
-          ${isTimeMode ? "text-center text-base font-medium tracking-wide" : ""}
-          ${
-            error
-              ? "border-red-400 focus:ring-4 focus:ring-red-200"
-              : "border-gray-300 focus:border-brand-400 focus:ring-4 focus:ring-brand-200 dark:border-gray-700"
-          }
-          focus:outline-none`}
+          className={`h-11 w-full rounded-lg border px-4 pr-11 py-2.5 text-sm
+            bg-white dark:bg-gray-900
+            text-gray-900 dark:text-gray-100
+            placeholder-gray-400 dark:placeholder-gray-500
+              focus:outline-none focus:ring-2
+            ${
+              error
+                ? "border-red-500 focus:ring-red-200"
+                : "border-gray-300 dark:border-gray-700 focus:ring-black/20"
+            }`}
         />
 
         <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500 dark:text-gray-400">

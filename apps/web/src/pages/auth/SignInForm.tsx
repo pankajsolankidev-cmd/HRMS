@@ -16,9 +16,11 @@ import { setAuth } from "../../context/authSlice";
 const signInSchema = z.object({
   email: z
     .email({ message: "Invalid email address" })
-    .min(1, "Email is required"),
+    .min(1, "Email is required")
+    .trim(),
   password: z
     .string()
+    .trim()
     .min(1, "Password is required")
     .min(6, "Password must be at least 6 characters"),
 });
@@ -90,7 +92,11 @@ export default function SignInForm() {
             Sign In
           </h1>
 
-          <form className="space-y-5 mt-8" onSubmit={handleSubmit(onSubmit)}>
+          <form
+            noValidate
+            className="space-y-5 mt-8"
+            onSubmit={handleSubmit(onSubmit)}
+          >
             <Input
               required
               label="Email"

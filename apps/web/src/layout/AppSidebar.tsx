@@ -90,7 +90,13 @@ const AppSidebar: React.FC = () => {
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="py-8 px-5 flex justify-center lg:justify-start shrink-0">
+      <div
+        className={`py-8 shrink-0 flex items-center ${
+          isExpanded || isHovered || isMobileOpen
+            ? "px-5 justify-start"
+            : "justify-center"
+        }`}
+      >
         <Link to="/dashboard">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
