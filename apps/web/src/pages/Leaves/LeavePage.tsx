@@ -301,12 +301,14 @@ export default function LeavePage() {
       header: "Action",
       align: "center",
       cell: (row) => {
-        const isCreator = row.createdByEmployee?.userId === id;
+        const isSelfLeave = row.employee?.userId === id;
+        const isCreatedByMe = row.createdByEmployee?.userId === id;
+        const isManualLeave = !isSelfLeave && isCreatedByMe;
+        const isHr = !isEmployee;
         const isPending = row.status === "pending";
-
-        const canApprove = !isEmployee && isPending;
-        const canHrEdit = !isEmployee && isCreator;
-        const canEmployeeEdit = isEmployee && isCreator && isPending;
+        const canApprove = isHr && !isSelfLeave && !isManualLeave && isPending;
+        const canHrManage = isHr && (isSelfLeave || isManualLeave);
+        const canEmployeeManage = isEmployee && isSelfLeave && isPending;
 
         return (
           <div
@@ -349,11 +351,13 @@ export default function LeavePage() {
                   </Can>
                 )}
 
-                {canHrEdit && (
+                {canHrManage && (
                   <>
                     <button
                       onClick={() =>
-                        navigate(`/leave-requests/manual/${row.id}`)
+                        isSelfLeave
+                          ? navigate(`/leave-requests/${row.id}`)
+                          : navigate(`/leave-requests/manual/${row.id}`)
                       }
                       className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
                     >
@@ -364,7 +368,11 @@ export default function LeavePage() {
                       title="Delete Leave Request"
                       description="Are you sure you want to delete this leave request?"
                       loading={isDeletePending}
-                      onConfirm={() => removeManualLeave(row.id)}
+                      onConfirm={() =>
+                        isSelfLeave
+                          ? removeLeave(row.id)
+                          : removeManualLeave(row.id)
+                      }
                     >
                       {(askDelete) => (
                         <button
@@ -378,7 +386,7 @@ export default function LeavePage() {
                   </>
                 )}
 
-                {canEmployeeEdit && (
+                {canEmployeeManage && (
                   <>
                     <button
                       onClick={() => navigate(`/leave-requests/${row.id}`)}

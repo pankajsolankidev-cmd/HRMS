@@ -298,7 +298,7 @@ export default function ExpensePage() {
     >
       <DataTable
         columns={columns}
-        data={data?.data ?? []}
+        data={data?.data.map((item: any) => item.expenses) ?? []}
         isLoading={isLoading}
         isError={isError}
         sortBy={sortBy}

@@ -64,7 +64,7 @@ export default function DataTable<T>({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+    <div className="overflow-visible rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
       {onLimitChange && (
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20">
           <div className="flex items-center gap-3">
@@ -106,7 +106,7 @@ export default function DataTable<T>({
         </div>
       )}
 
-      <div className="max-w-full overflow-x-auto">
+      <div className="max-w-full">
         <Table>
           <TableHeader className="border-b border-gray-100 dark:border-gray-800">
             <TableRow className="bg-gray-50 dark:bg-gray-800/50">
@@ -177,31 +177,48 @@ export default function DataTable<T>({
           </TableHeader>
 
           <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
-            {data.map((row, rowIndex) => (
-              <TableRow
-                key={rowIndex}
-                className="hover:bg-gray-50 dark:hover:bg-gray-800/40"
-              >
-                {columns.map((col, colIndex) => (
-                  <TableCell
-                    key={colIndex}
-                    className={`px-6 py-5 align-middle`}
-                  >
-                    <div
-                      className={`flex w-full ${
-                        col.align === "center"
-                          ? "justify-center"
-                          : col.align === "right"
-                            ? "justify-end"
-                            : "justify-start"
-                      }`}
-                    >
-                      {col.cell(row)}
+            {data.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="p-0">
+                  <div className="flex items-center justify-center min-h-[300px] w-full">
+                    <div className="text-center space-y-2">
+                      <p className=" font-medium text-gray-600 dark:text-gray-300">
+                        No data available
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        Try adjusting your search or filters
+                      </p>
                     </div>
-                  </TableCell>
-                ))}
+                  </div>
+                </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              data.map((row, rowIndex) => (
+                <TableRow
+                  key={rowIndex}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-800/40"
+                >
+                  {columns.map((col, colIndex) => (
+                    <TableCell
+                      key={colIndex}
+                      className="px-6 py-5 align-middle"
+                    >
+                      <div
+                        className={`flex w-full ${
+                          col.align === "center"
+                            ? "justify-center"
+                            : col.align === "right"
+                              ? "justify-end"
+                              : "justify-start"
+                        }`}
+                      >
+                        {col.cell(row)}
+                      </div>
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>

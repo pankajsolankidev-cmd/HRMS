@@ -63,10 +63,15 @@ export const leaveSchema = z
       .optional(),
   })
   .superRefine((data, ctx) => {
-    if (data.dayType === "multiple_days" && (!data.fromDate || !data.toDate)) {
+    if (
+      data.dayType === "multiple_days" &&
+      data.fromDate &&
+      data.toDate &&
+      new Date(data.toDate) <= new Date(data.fromDate)
+    ) {
       ctx.addIssue({
         path: ["toDate"],
-        message: "Date range is required",
+        message: "To date must be after From date",
         code: z.ZodIssueCode.custom,
       });
     }
@@ -191,34 +196,26 @@ export default function LeaveForm({
           )}
         />
 
-        {dayType === "multiple_days" ? (
-          <Controller
-            name="toDate"
-            control={control}
-            render={({ field }) => (
-              <DatePicker
-                id="toDate"
-                disableFuture={showEmployeeSelect}
-                disablePast={!showEmployeeSelect}
-                placeholder="Select to date"
-                required
-                label="To Date"
-                value={field.value ? new Date(field.value) : null}
-                onChange={(d) =>
-                  d?.[0] && field.onChange(d[0].toLocaleDateString("en-CA"))
-                }
-              />
-            )}
-          />
-        ) : (
-          <Input
-            label="To Date"
-            required
-            placeholder="Select to date"
-            value={fromDate || ""}
-            disabled
-          />
-        )}
+        <Controller
+          name="toDate"
+          control={control}
+          render={({ field }) => (
+            <DatePicker
+              id="toDate"
+              disableFuture={showEmployeeSelect}
+              disablePast={!showEmployeeSelect}
+              placeholder="Select to date"
+              required
+              label="To Date"
+              value={field.value ? new Date(field.value) : null}
+              error={!!errors.toDate}
+              hint={errors.toDate?.message}
+              onChange={(d) =>
+                d?.[0] && field.onChange(d[0].toLocaleDateString("en-CA"))
+              }
+            />
+          )}
+        />
 
         {dayType === "multiple_days" && (
           <>
@@ -273,7 +270,7 @@ export default function LeaveForm({
         />
       </div>
 
-      <div className="flex justify-end gap-3 pt-6 border-t dark:border-gray-700">
+      <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
         <Button className="bg-black dark:bg-blue-500" disabled={loading}>
           {loading ? "Processing..." : "Save"}
         </Button>
