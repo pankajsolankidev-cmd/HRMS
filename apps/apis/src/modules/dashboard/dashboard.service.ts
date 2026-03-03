@@ -235,7 +235,7 @@ export async function getEmployeeDashboardHandler(
     const upcomingHoliday =
       upcomingHolidayResult.length > 0 ? upcomingHolidayResult[0] : null;
 
-    const currentProjectResult = await db
+    const currentProjects = await db
       .select({
         id: projects.id,
         name: projects.name,
@@ -251,11 +251,23 @@ export async function getEmployeeDashboardHandler(
           eq(projectEmployees.employeeId, employee.id),
           eq(projects.status, "ACTIVE"),
         ),
-      )
-      .limit(1);
+      );
+    const completedProjectCountResult = await db
+      .select({
+        count: sql<number>`count(*)::int`,
+      })
+      .from(projectEmployees)
+      .innerJoin(projects, eq(projects.id, projectEmployees.projectId))
+      .where(
+        and(
+          eq(projectEmployees.employeeId, employee.id),
+          eq(projects.status, "COMPLETED"),
+        ),
+      );
 
-    const currentProject =
-      currentProjectResult.length > 0 ? currentProjectResult[0] : null;
+    const completedProjectCount = Number(
+      completedProjectCountResult[0]?.count ?? 0,
+    );
 
     return {
       leaveBalance: {
@@ -266,7 +278,8 @@ export async function getEmployeeDashboardHandler(
         remaining,
       },
       upcomingHoliday,
-      currentProject,
+      currentProjects,
+      completedProjectCount,
     };
   } catch (error) {
     request.log.error(

@@ -129,6 +129,7 @@ export const getEmployeeDashboardSchema = {
             totalEarned: { type: "number" },
             totalUsed: { type: "number" },
             remaining: { type: "number" },
+            
           },
           required: [
             "monthsWorked",
@@ -136,8 +137,10 @@ export const getEmployeeDashboardSchema = {
             "totalEarned",
             "totalUsed",
             "remaining",
+            
           ],
         },
+        completedProjectCount: { type: "number" },
 
         upcomingHoliday: {
           anyOf: [
@@ -156,28 +159,26 @@ export const getEmployeeDashboardSchema = {
           ],
         },
 
-        currentProject: {
-          anyOf: [
-            {
-              type: "object",
-              properties: {
-                id: { type: "string" },
-                name: { type: "string" },
-                clientName: { type: ["string", "null"] },
-                startDate: { type: "string", format: "date" },
-                expectedEndDate: {
-                  anyOf: [{ type: "string", format: "date" }, { type: "null" }],
-                },
-                status: { type: "string" },
+        currentProjects: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              name: { type: "string" },
+              clientName: { type: ["string", "null"] },
+              startDate: { type: "string", format: "date" },
+              expectedEndDate: {
+                anyOf: [{ type: "string", format: "date" }, { type: "null" }],
               },
-              required: ["id", "name", "startDate", "status"],
+              status: { type: "string" },
             },
-            { type: "null" },
-          ],
+            required: ["id", "name", "startDate", "status"],
+          },
         },
       },
 
-      required: ["leaveBalance", "upcomingHoliday", "currentProject"],
+      required: ["leaveBalance", "completedProjectCount", "upcomingHoliday", "currentProjects"],
     },
 
     401: {

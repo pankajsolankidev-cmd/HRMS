@@ -11,6 +11,7 @@ import {
   systemComponents,
   systems,
   users,
+  organization,
 } from "../../db/schema";
 import { positions } from "../../db/schema/positions.schema";
 
@@ -90,6 +91,8 @@ export async function getProfileHandler(
       .leftJoin(components, eq(components.id, systemComponents.componentId))
       .where(eq(users.id, userId));
 
+    const org = await db.query.organization.findFirst();
+
     if (!rows.length) {
       return reply.code(404).send({ message: "Profile not found" });
     }
@@ -137,7 +140,10 @@ export async function getProfileHandler(
       }
     }
 
-    return Array.from(employeeMap.values())[0];
+    return {
+      organization: org ?? null,
+      profile: Array.from(employeeMap.values())[0],
+    };
   } catch (err) {
     request.log.error(
       { action: "GET_PROFILE", userId, err },

@@ -58,10 +58,10 @@ export async function createSalaryHandler(
 
   await db.insert(salary).values({
     employeeId: payload.employeeId,
-    basicSalary: basicSalary.toString(),
-    tax: tax.toString(),
-    pf: pf.toString(),
-    netSalary: netSalary.toString(),
+    basicSalary: basicSalary.toFixed(2),
+    tax: tax.toFixed(2),
+    pf: pf.toFixed(2),
+    netSalary: netSalary.toFixed(2),
     description: payload.description,
     appraisalDate: payload.appraisalDate
       ? new Date(payload.appraisalDate)
@@ -313,10 +313,10 @@ export async function updateSalaryHandler(
   await db
     .update(salary)
     .set({
-      basicSalary: basicSalary.toString(),
-      tax: tax.toString(),
-      pf: pf.toString(),
-      netSalary: netSalary.toString(),
+      basicSalary: basicSalary.toFixed(2),
+      tax: tax.toFixed(2),
+      pf: pf.toFixed(2),
+      netSalary: netSalary.toFixed(2),
       description: payload.description ?? existing.description,
       appraisalDate: payload.appraisalDate
         ? new Date(payload.appraisalDate)

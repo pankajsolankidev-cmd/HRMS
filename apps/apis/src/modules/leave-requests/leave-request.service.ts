@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { eq, desc, asc, and, ilike, sql, or } from "drizzle-orm";
+import { eq, desc, asc, and, ilike, sql, or, lte, gte, not } from "drizzle-orm";
 import { db } from "../../db";
 import { employees } from "../../db/schema/employees.schema";
 import { leaveRequests } from "../../db/schema/leave-requests.schema";
@@ -91,6 +91,40 @@ export async function createLeaveRequestHandler(
     fromHour: body.fromHour,
     toHour: body.toHour,
   });
+
+  const overlappingLeave = await db
+    .select({
+      id: leaveRequests.id,
+    })
+    .from(leaveRequests)
+    .where(
+      and(
+        eq(leaveRequests.employeeId, employee.id),
+
+        not(eq(leaveRequests.status, LeaveStatus.Rejected)),
+
+        lte(leaveRequests.fromDate, body.toDate),
+        gte(leaveRequests.toDate, body.fromDate),
+      ),
+    )
+    .limit(1);
+
+  if (overlappingLeave.length > 0) {
+    request.log.warn(
+      {
+        action: "CREATE_LEAVE_REQUEST",
+        userId,
+        employeeId: employee.id,
+        fromDate: body.fromDate,
+        toDate: body.toDate,
+      },
+      "Overlapping leave request detected",
+    );
+
+    return reply.code(400).send({
+      message: "Leave request overlaps with existing leave",
+    });
+  }
 
   await db.insert(leaveRequests).values({
     employeeId: employee.id,
@@ -585,6 +619,29 @@ export async function updateLeaveRequestHandler(
     fromHour: finalFromHour,
     toHour: finalToHour,
   });
+
+  const overlappingLeave = await db
+    .select({ id: leaveRequests.id })
+    .from(leaveRequests)
+    .where(
+      and(
+        eq(leaveRequests.employeeId, existingLeave.employeeId),
+
+        not(eq(leaveRequests.id, id)),
+
+        not(eq(leaveRequests.status, LeaveStatus.Rejected)),
+
+        lte(leaveRequests.fromDate, finalToDate),
+        gte(leaveRequests.toDate, finalFromDate),
+      ),
+    )
+    .limit(1);
+
+  if (overlappingLeave.length > 0) {
+    return reply.code(400).send({
+      message: "Updated dates overlap with existing leave",
+    });
+  }
 
   const [updated] = await db
     .update(leaveRequests)
@@ -1201,6 +1258,36 @@ export async function createManualLeaveRequestHandler(
     toHour: body.toHour,
   });
 
+  const overlappingLeave = await db
+    .select({ id: leaveRequests.id })
+    .from(leaveRequests)
+    .where(
+      and(
+        eq(leaveRequests.employeeId, employee.id),
+
+        not(eq(leaveRequests.status, LeaveStatus.Rejected)),
+
+        lte(leaveRequests.fromDate, body.toDate),
+        gte(leaveRequests.toDate, body.fromDate),
+      ),
+    )
+    .limit(1);
+
+  if (overlappingLeave.length > 0) {
+    request.log.warn(
+      {
+        action: "CREATE_MANUAL_LEAVE_REQUEST",
+        userId,
+        employeeId: employee.id,
+        fromDate: body.fromDate,
+        toDate: body.toDate,
+      },
+      "Overlapping manual leave detected",
+    );
+
+    return sendMessage(reply, "Leave dates overlap with existing leave", 400);
+  }
+
   await db.insert(leaveRequests).values({
     employeeId: employee.id,
     createdBy: userId,
@@ -1351,6 +1438,39 @@ export async function updateManualLeaveRequestHandler(
     fromHour: body.fromHour ?? existingLeave.fromHour,
     toHour: body.toHour ?? existingLeave.toHour,
   });
+
+  const overlappingLeave = await db
+    .select({ id: leaveRequests.id })
+    .from(leaveRequests)
+    .where(
+      and(
+        eq(leaveRequests.employeeId, finalEmployeeId),
+
+        not(eq(leaveRequests.id, id)),
+
+        not(eq(leaveRequests.status, LeaveStatus.Rejected)),
+
+        lte(leaveRequests.fromDate, finalToDate),
+        gte(leaveRequests.toDate, finalFromDate),
+      ),
+    )
+    .limit(1);
+
+  if (overlappingLeave.length > 0) {
+    request.log.warn(
+      {
+        action: "UPDATE_MANUAL_LEAVE_REQUEST",
+        userId,
+        leaveRequestId: id,
+        employeeId: finalEmployeeId,
+        fromDate: finalFromDate,
+        toDate: finalToDate,
+      },
+      "Overlapping manual leave detected",
+    );
+
+    return sendMessage(reply, "Updated dates overlap with existing leave", 400);
+  }
 
   await db
     .update(leaveRequests)
