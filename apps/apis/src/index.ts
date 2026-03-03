@@ -28,6 +28,7 @@ import profileRoutes from "./modules/profile/profile.route";
 import dashboardRoutes from "./modules/dashboard/dashboard.routes";
 import { registerSocket } from "./utils/socket";
 import notificationRoutes from "./modules/notifications/notifications.routes";
+import holidayRoutes from "./modules/holiday/holiday.routes";
 
 const app = Fastify({ logger: true });
 
@@ -91,6 +92,7 @@ app.register(projectEmployeeRoutes);
 app.register(profileRoutes);
 app.register(dashboardRoutes);
 app.register(notificationRoutes);
+app.register(holidayRoutes);
 
 app.get("/health", async () => {
   return { status: "API is running 🚀" };

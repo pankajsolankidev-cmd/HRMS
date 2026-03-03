@@ -1,10 +1,18 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { db } from "../../db";
-import { employees, leaveRequests, roles, userRoles } from "../../db/schema";
+import {
+  employees,
+  leaveRequests,
+  projectEmployees,
+  projects,
+  roles,
+  userRoles,
+} from "../../db/schema";
 import { expenses } from "../../db/schema/expenses";
 import { LeaveStatus } from "../../db/schema/leave.enums";
 import { hasAnyRole } from "../../utils/role.utils";
+import { holidays } from "../../db/schema/holidays.schema";
 
 export async function getDashboardSummaryHandler(
   request: FastifyRequest,
@@ -145,6 +153,138 @@ export async function getDashboardSummaryHandler(
     request.log.error(
       { action: "GET_DASHBOARD_SUMMARY", err },
       "Failed to fetch dashboard summary",
+    );
+
+    return reply.code(500).send({
+      message: "Internal server error",
+    });
+  }
+}
+
+export async function getEmployeeDashboardHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const userId = request.user?.id;
+
+    if (!userId) {
+      return reply.code(401).send({ message: "Unauthorized" });
+    }
+
+    const employee = await db.query.employees.findFirst({
+      where: eq(employees.userId, userId),
+    });
+
+    if (!employee) {
+      return reply.code(404).send({ message: "Employee not found" });
+    }
+
+    const today = sql`CURRENT_DATE`;
+
+    const monthsWorkedResult = await db
+      .select({
+        months: sql<number>`
+          (
+            date_part('year', age(CURRENT_DATE, ${employees.joiningDate})) * 12
+            +
+            date_part('month', age(CURRENT_DATE, ${employees.joiningDate}))
+          )
+        `,
+      })
+      .from(employees)
+      .where(eq(employees.id, employee.id));
+
+    const monthsWorked = Number(monthsWorkedResult[0]?.months ?? 0);
+
+    const MONTHLY_ACCRUAL = 1.25;
+
+    const totalEarned = monthsWorked * MONTHLY_ACCRUAL;
+
+    const usedLeavesResult = await db
+      .select({
+        total: sql<number>`
+          coalesce(sum(${leaveRequests.totalDays}), 0)::float
+        `,
+      })
+      .from(leaveRequests)
+      .where(
+        and(
+          eq(leaveRequests.employeeId, employee.id),
+          eq(leaveRequests.status, LeaveStatus.Approved),
+        ),
+      );
+
+    const totalUsed = Number(usedLeavesResult[0]?.total ?? 0);
+
+    const remaining = totalEarned - totalUsed;
+
+    const upcomingHolidayResult = await db
+      .select({
+        id: holidays.id,
+        title: holidays.title,
+        fromDate: holidays.fromDate,
+        toDate: holidays.toDate,
+        description: holidays.description,
+      })
+      .from(holidays)
+      .where(gte(holidays.toDate, today))
+      .orderBy(holidays.fromDate)
+      .limit(1);
+
+    const upcomingHoliday =
+      upcomingHolidayResult.length > 0 ? upcomingHolidayResult[0] : null;
+
+    const currentProjects = await db
+      .select({
+        id: projects.id,
+        name: projects.name,
+        clientName: projects.clientName,
+        startDate: projects.startDate,
+        expectedEndDate: projects.expectedEndDate,
+        status: projects.status,
+      })
+      .from(projectEmployees)
+      .innerJoin(projects, eq(projects.id, projectEmployees.projectId))
+      .where(
+        and(
+          eq(projectEmployees.employeeId, employee.id),
+          eq(projects.status, "ACTIVE"),
+        ),
+      );
+    const completedProjectCountResult = await db
+      .select({
+        count: sql<number>`count(*)::int`,
+      })
+      .from(projectEmployees)
+      .innerJoin(projects, eq(projects.id, projectEmployees.projectId))
+      .where(
+        and(
+          eq(projectEmployees.employeeId, employee.id),
+          eq(projects.status, "COMPLETED"),
+        ),
+      );
+
+    const completedProjectCount = Number(
+      completedProjectCountResult[0]?.count ?? 0,
+    );
+
+    return {
+      leaveBalance: {
+        monthsWorked,
+        monthlyAccrual: MONTHLY_ACCRUAL,
+        totalEarned,
+        totalUsed,
+        remaining,
+      },
+      upcomingHoliday,
+      currentProjects,
+      completedProjectCount,
+    };
+  } catch (error) {
+    request.log.error(
+      { action: "GET_EMPLOYEE_DASHBOARD_SUMMARY", error },
+      "Failed to fetch employee dashboard summary",
     );
 
     return reply.code(500).send({

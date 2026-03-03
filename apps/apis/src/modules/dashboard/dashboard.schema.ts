@@ -25,10 +25,10 @@ export const getDashboardSummarySchema = {
                   id: { type: "string" },
                   firstName: { type: "string" },
                   lastName: { type: "string" },
-                  type: { type: "string" }, 
+                  type: { type: "string" },
                   fromDate: { type: "string", format: "date" },
                   toDate: { type: "string", format: "date" },
-                  totalDays: { type: "string" }, 
+                  totalDays: { type: "string" },
                 },
                 required: [
                   "id",
@@ -56,13 +56,7 @@ export const getDashboardSummarySchema = {
               status: { type: "string" },
               createdAt: { type: "string", format: "date-time" },
             },
-            required: [
-              "id",
-              "employeeName",
-              "type",
-              "status",
-              "createdAt",
-            ],
+            required: ["id", "employeeName", "type", "status", "createdAt"],
           },
         },
 
@@ -74,7 +68,7 @@ export const getDashboardSummarySchema = {
               id: { type: "string" },
               employeeName: { type: "string" },
               expenseType: { type: "string" },
-              amount: { type: "number" }, 
+              amount: { type: "number" },
               status: { type: "string" },
               createdAt: { type: "string", format: "date-time" },
             },
@@ -100,6 +94,102 @@ export const getDashboardSummarySchema = {
     },
 
     403: {
+      type: "object",
+      properties: {
+        message: { type: "string" },
+      },
+      required: ["message"],
+    },
+
+    500: {
+      type: "object",
+      properties: {
+        message: { type: "string" },
+      },
+      required: ["message"],
+    },
+  },
+};
+
+export const getEmployeeDashboardSchema = {
+  tags: ["Employee Dashboard"],
+  summary: "Get employee dashboard summary",
+  description:
+    "Returns leave balance, upcoming holiday and current active project for logged-in employee",
+
+  response: {
+    200: {
+      type: "object",
+      properties: {
+        leaveBalance: {
+          type: "object",
+          properties: {
+            monthsWorked: { type: "number" },
+            monthlyAccrual: { type: "number" },
+            totalEarned: { type: "number" },
+            totalUsed: { type: "number" },
+            remaining: { type: "number" },
+            
+          },
+          required: [
+            "monthsWorked",
+            "monthlyAccrual",
+            "totalEarned",
+            "totalUsed",
+            "remaining",
+            
+          ],
+        },
+        completedProjectCount: { type: "number" },
+
+        upcomingHoliday: {
+          anyOf: [
+            {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                title: { type: "string" },
+                fromDate: { type: "string", format: "date" },
+                toDate: { type: "string", format: "date" },
+                description: { type: ["string", "null"] },
+              },
+              required: ["id", "title", "fromDate", "toDate"],
+            },
+            { type: "null" },
+          ],
+        },
+
+        currentProjects: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              name: { type: "string" },
+              clientName: { type: ["string", "null"] },
+              startDate: { type: "string", format: "date" },
+              expectedEndDate: {
+                anyOf: [{ type: "string", format: "date" }, { type: "null" }],
+              },
+              status: { type: "string" },
+            },
+            required: ["id", "name", "startDate", "status"],
+          },
+        },
+      },
+
+      required: ["leaveBalance", "completedProjectCount", "upcomingHoliday", "currentProjects"],
+    },
+
+    401: {
+      type: "object",
+      properties: {
+        message: { type: "string" },
+      },
+      required: ["message"],
+    },
+
+    404: {
       type: "object",
       properties: {
         message: { type: "string" },
