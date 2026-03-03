@@ -209,7 +209,7 @@ export async function getEmployeesHandler(request: FastifyRequest) {
   );
 
   try {
-    const conditions = [];
+    const conditions = [eq(employees.isActive, true)];
 
     if (query?.search) {
       conditions.push(
@@ -350,8 +350,7 @@ export async function getEmployeesHandler(request: FastifyRequest) {
     const [{ count }] = await db
       .select({ count: sql<number>`count(*)` })
       .from(employees)
-      .where(conditions.length ? and(...conditions) : undefined);
-
+      .where(and(...conditions));
     request.log.info(
       {
         action: "GET_EMPLOYEES",

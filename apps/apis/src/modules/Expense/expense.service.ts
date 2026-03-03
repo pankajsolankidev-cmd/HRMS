@@ -206,7 +206,7 @@ export async function getExpensesHandler(request: FastifyRequest) {
       const [employee] = await db
         .select()
         .from(employees)
-        .where(eq(employees.userId, userId));
+        .where(and(eq(employees.userId, userId), eq(employees.isActive, true)));
 
       if (!employee) {
         request.log.warn(
@@ -251,7 +251,13 @@ export async function getExpensesHandler(request: FastifyRequest) {
     let queryBuilder = db
       .select()
       .from(expenses)
-      .where(conditions.length ? and(...conditions) : undefined)
+      .innerJoin(employees, eq(expenses.employeeId, employees.id))
+      .where(
+        and(
+          eq(employees.isActive, true),
+          ...(conditions.length ? conditions : []),
+        ),
+      )
       .orderBy(...orderByClauses)
       .$dynamic();
 

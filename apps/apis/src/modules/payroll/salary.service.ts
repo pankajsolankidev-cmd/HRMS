@@ -1,8 +1,8 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { and, eq, ilike, gte, lte, asc, desc, sql } from "drizzle-orm";
+import { and, eq, ilike, gte, lte, asc, desc, sql, SQL } from "drizzle-orm";
 
 import { db } from "../../db";
-import { salary } from "../../db/schema";
+import { employees, salary } from "../../db/schema";
 import { getPagination } from "../../utils/pagination";
 import { calculateNetSalary } from "./utils/salary.utils";
 
@@ -104,7 +104,7 @@ export async function getSalariesHandler(request: FastifyRequest) {
     "Get salaries request received",
   );
 
-  const conditions = [];
+  const conditions: SQL[] = [eq(employees.isActive, true)];
 
   if (query?.search) {
     conditions.push(ilike(salary.description, `%${query.search}%`));
@@ -140,7 +140,8 @@ export async function getSalariesHandler(request: FastifyRequest) {
   let queryBuilder = db
     .select()
     .from(salary)
-    .where(whereClause)
+    .innerJoin(employees, eq(salary.employeeId, employees.id))
+    .where(and(...conditions))
     .orderBy(...orderByClauses)
     .$dynamic();
 
@@ -153,7 +154,8 @@ export async function getSalariesHandler(request: FastifyRequest) {
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)` })
     .from(salary)
-    .where(whereClause);
+    .innerJoin(employees, eq(salary.employeeId, employees.id))
+    .where(and(...conditions));
 
   request.log.info(
     {
@@ -218,7 +220,6 @@ export async function getSalaryByIdHandler(
   return salaryStructure;
 }
 
-
 export async function getSalaryByEmployeeHandler(
   request: FastifyRequest,
   reply: FastifyReply,
@@ -279,10 +280,7 @@ export async function updateSalaryHandler(
     "Update salary request received",
   );
 
-  const [existing] = await db
-    .select()
-    .from(salary)
-    .where(eq(salary.id, id));
+  const [existing] = await db.select().from(salary).where(eq(salary.id, id));
 
   if (!existing) {
     request.log.warn(
@@ -336,7 +334,6 @@ export async function updateSalaryHandler(
 
   return sendMessage(reply, "Salary structure updated successfully");
 }
-
 
 export async function deleteSalaryHandler(
   request: FastifyRequest,

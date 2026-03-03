@@ -1,5 +1,17 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { eq, desc, asc, and, ilike, sql, or, lte, gte, not } from "drizzle-orm";
+import {
+  eq,
+  desc,
+  asc,
+  and,
+  ilike,
+  sql,
+  or,
+  lte,
+  gte,
+  not,
+  SQL,
+} from "drizzle-orm";
 import { db } from "../../db";
 import { employees } from "../../db/schema/employees.schema";
 import { leaveRequests } from "../../db/schema/leave-requests.schema";
@@ -208,7 +220,7 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
     "Get leave requests received",
   );
 
-  const conditions = [];
+  const conditions: SQL[] = [eq(employees.isActive, true)];
 
   const userRolesRows = await db
     .select({ roleName: roles.name })
@@ -243,7 +255,7 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
   const [employee] = await db
     .select({ id: employees.id, userId: employees.userId })
     .from(employees)
-    .where(eq(employees.userId, userId));
+    .where(and(eq(employees.userId, userId), eq(employees.isActive, true)));
 
   if (!isHRorAdmin) {
     if (!employee) {
@@ -276,12 +288,8 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
     }
 
     if (query.createdByType === "self" && employee) {
-      conditions.push(
-        and(
-          eq(leaveRequests.createdBy, userId),
-          eq(leaveRequests.employeeId, employee.id),
-        ),
-      );
+      conditions.push(eq(leaveRequests.createdBy, userId));
+      conditions.push(eq(leaveRequests.employeeId, employee.id));
     }
   }
 
@@ -1642,7 +1650,7 @@ export async function getManualLeaveRequestByIdHandler(
       createdByEmployee,
       eq(leaveRequests.createdBy, createdByEmployee.userId),
     )
-    .where(eq(leaveRequests.id, id));
+    .where(and(eq(leaveRequests.id, id), eq(employees.isActive, true)));
 
   if (!row || !row.employee || row.leave.createdBy === row.employee.userId) {
     request.log.warn(
