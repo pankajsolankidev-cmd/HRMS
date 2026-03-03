@@ -157,6 +157,7 @@ export async function createLeaveRequestHandler(
   for (const admin of adminUsers) {
     await db.insert(notifications).values({
       userId: admin.userId,
+      type: "leave",
       message,
     });
   }
@@ -955,6 +956,7 @@ export async function approveLeaveRequestHandler(
 
   await db.insert(notifications).values({
     userId: leaveRow.targetUserId,
+    type: "leave",
     message,
   });
 
@@ -1154,6 +1156,7 @@ export async function rejectLeaveRequestHandler(
 
   await db.insert(notifications).values({
     userId: leaveRow.targetUserId,
+    type: "leave",
     message,
   });
 

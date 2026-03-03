@@ -13,6 +13,8 @@ import { employees } from "./employees.schema";
 import { users } from "./users.schema";
 import { baseColumns } from "../base-columns";
 import { PayrollMonth } from "./payroll.enums";
+import { sql } from "drizzle-orm";
+import { check } from "drizzle-orm/gel-core";
 
 export const salary = pgTable(
   "salary",
@@ -37,6 +39,16 @@ export const salary = pgTable(
   (table) => ({
     uniqueEmployeeSalary: uniqueIndex("uniq_salary_employee").on(
       table.employeeId,
+    ),
+    basicSalaryNonNegative: check(
+      "salary_basic_non_negative",
+      sql`${table.basicSalary} >= 0`,
+    ),
+    taxNonNegative: check("salary_tax_non_negative", sql`${table.tax} >= 0`),
+    pfNonNegative: check("salary_pf_non_negative", sql`${table.pf} >= 0`),
+    netSalaryNonNegative: check(
+      "salary_net_non_negative",
+      sql`${table.netSalary} >= 0`,
     ),
   }),
 );
@@ -87,11 +99,29 @@ export const payrolls = pgTable(
     file: text("file"),
     processedAt: timestamp("processed_at").defaultNow().notNull(),
   },
+
   (table) => ({
     uniquePayroll: uniqueIndex("uniq_employee_month_year").on(
       table.employeeId,
       table.month,
       table.year,
+    ),
+    deductionsNonNegative: check(
+      "payroll_deductions_non_negative",
+      sql`${table.deductions} >= 0`,
+    ),
+
+    leaveDeductionNonNegative: check(
+      "payroll_leave_deduction_non_negative",
+      sql`${table.leaveDeduction} >= 0`,
+    ),
+    bonusNonNegative: check(
+      "payroll_bonus_non_negative",
+      sql`${table.bonus} >= 0`,
+    ),
+    netSalaryNonNegative: check(
+      "payroll_net_salary_non_negative",
+      sql`${table.netSalary} >= 0`,
     ),
   }),
 );

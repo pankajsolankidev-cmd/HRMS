@@ -116,6 +116,7 @@ export async function createExpenseHandler(
     for (const admin of adminUsers) {
       await db.insert(notifications).values({
         userId: admin.userId,
+        type: "expenses",
         message,
       });
     }
@@ -952,6 +953,7 @@ export async function approveExpenseHandler(
 
       await db.insert(notifications).values({
         userId: employee.userId,
+        type: "expenses",
         message,
       });
 
@@ -1095,6 +1097,7 @@ export async function rejectExpenseHandler(
 
       await db.insert(notifications).values({
         userId: employee.userId,
+        type: "expenses",
         message,
       });
 

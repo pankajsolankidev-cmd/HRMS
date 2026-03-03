@@ -12,35 +12,46 @@ import {
 import { employees, users } from "./index";
 import { baseColumns } from "../base-columns";
 import { expenseStatusEnum } from "./expense.enums";
+import { check } from "drizzle-orm/gel-core";
+import { sql } from "drizzle-orm";
 
 export const expenseStatusPgEnum = pgEnum("expense_status", expenseStatusEnum);
 
-export const expenses = pgTable("expenses", {
-  ...baseColumns,
+export const expenses = pgTable(
+  "expenses",
+  {
+    ...baseColumns,
 
-  employeeId: uuid("employee_id")
-    .notNull()
-    .references(() => employees.id, { onDelete: "cascade" }),
+    employeeId: uuid("employee_id")
+      .notNull()
+      .references(() => employees.id, { onDelete: "cascade" }),
 
-  expenseType: varchar("expense_type", { length: 50 }).notNull(),
+    expenseType: varchar("expense_type", { length: 50 }).notNull(),
 
-  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+    amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
 
-  expenseDate: date("expense_date").notNull(),
+    expenseDate: date("expense_date").notNull(),
 
-  file: varchar("file", { length: 255 }),
+    file: varchar("file", { length: 255 }),
 
-  description: text("description"),
+    description: text("description"),
 
-  status: expenseStatusPgEnum("status").notNull().default("DRAFT"),
+    status: expenseStatusPgEnum("status").notNull().default("DRAFT"),
 
-  approvedBy: uuid("approved_by").references(() => users.id),
+    approvedBy: uuid("approved_by").references(() => users.id),
 
-  approvedAt: timestamp("approved_at"),
+    approvedAt: timestamp("approved_at"),
 
-  rejectedBy: uuid("rejected_by").references(() => users.id),
+    rejectedBy: uuid("rejected_by").references(() => users.id),
 
-  rejectedAt: timestamp("rejected_at"),
+    rejectedAt: timestamp("rejected_at"),
 
-  rejectionReason: text("rejection_reason"),
-});
+    rejectionReason: text("rejection_reason"),
+  },
+  (table) => ({
+    amountNonNegative: check(
+      "expenses_amount_non_negative",
+      sql`${table.amount} >= 0`,
+    ),
+  }),
+);

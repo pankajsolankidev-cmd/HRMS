@@ -35,4 +35,5 @@ export const employees = pgTable("employees", {
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
+  isActive: boolean("is_active").default(true).notNull(),
 });
