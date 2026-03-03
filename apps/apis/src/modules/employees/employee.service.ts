@@ -25,7 +25,6 @@ import { positions } from "../../db/schema/positions.schema";
 import { sendMessage } from "../../utils/api-response";
 import { getPagination } from "../../utils/pagination";
 
-
 const DEFAULT_EMPLOYEE_PASSWORD: string = (() => {
   const pwd = process.env.DEFAULT_EMPLOYEE_PASSWORD;
   if (!pwd) {
@@ -295,14 +294,8 @@ export async function getEmployeesHandler(request: FastifyRequest) {
       .leftJoin(departments, eq(departments.id, employees.departmentId))
       .leftJoin(manager, eq(manager.id, employees.managerId))
       .leftJoin(systems, eq(systems.id, employees.systemId))
-      .leftJoin(
-        systemComponents,
-        eq(systemComponents.systemId, systems.id),
-      )
-      .leftJoin(
-        components,
-        eq(components.id, systemComponents.componentId),
-      )
+      .leftJoin(systemComponents, eq(systemComponents.systemId, systems.id))
+      .leftJoin(components, eq(components.id, systemComponents.componentId))
       .where(conditions.length ? and(...conditions) : undefined)
       .orderBy(...orderByClauses)
       .$dynamic();
@@ -313,7 +306,6 @@ export async function getEmployeesHandler(request: FastifyRequest) {
 
     const rows = await queryBuilder;
 
-    
     const employeeMap = new Map<string, any>();
 
     for (const row of rows) {
@@ -474,14 +466,8 @@ export async function getEmployeeByIdHandler(
       .leftJoin(departments, eq(departments.id, employees.departmentId))
       .leftJoin(manager, eq(manager.id, employees.managerId))
       .leftJoin(systems, eq(systems.id, employees.systemId))
-      .leftJoin(
-        systemComponents,
-        eq(systemComponents.systemId, systems.id),
-      )
-      .leftJoin(
-        components,
-        eq(components.id, systemComponents.componentId),
-      )
+      .leftJoin(systemComponents, eq(systemComponents.systemId, systems.id))
+      .leftJoin(components, eq(components.id, systemComponents.componentId))
       .where(eq(employees.id, id));
 
     if (!rows.length) {
@@ -698,86 +684,68 @@ export async function deleteEmployeeHandler(
   );
 
   try {
-    const deleted = await db.transaction(async (tx) => {
+    const result = await db.transaction(async (tx) => {
       const [employee] = await tx
-        .select({ id: employees.id, userId: employees.userId })
+        .select({
+          id: employees.id,
+          userId: employees.userId,
+          isActive: employees.isActive,
+        })
         .from(employees)
         .where(eq(employees.id, id));
 
-      if (!employee) return null;
+      if (!employee) return "NOT_FOUND";
 
-      if (employee.userId === loggedInUserId) {
-        request.log.warn(
-          {
-            action: "DELETE_EMPLOYEE",
-            employeeId: id,
-            userId: loggedInUserId,
-          },
-          "Self delete attempt blocked",
-        );
+      if (!employee.isActive) return "ALREADY_DELETED";
 
-        return reply.code(404).send({
-          message: "self delete not allowed",
-        });
-      }
+      if (employee.userId === loggedInUserId) return "SELF_DELETE_NOT_ALLOWED";
 
       await tx
-        .delete(documentGeneration)
-        .where(eq(documentGeneration.employeeId, id));
-
-      await tx.delete(userRoles).where(eq(userRoles.userId, employee.userId));
+        .update(employees)
+        .set({ isActive: false })
+        .where(eq(employees.id, id));
 
       await tx
-        .delete(refreshTokens)
-        .where(eq(refreshTokens.userId, employee.userId));
+        .update(users)
+        .set({ isActive: false })
+        .where(eq(users.id, employee.userId));
 
-      await tx.delete(employees).where(eq(employees.id, id));
-      await tx.delete(users).where(eq(users.id, employee.userId));
-
-      return { employeeId: id };
+      return "SUCCESS";
     });
 
-    if (!deleted) {
-      request.log.warn(
-        {
-          action: "DELETE_EMPLOYEE",
-          employeeId: id,
-        },
-        "Employee not found for delete",
-      );
-
+    if (result === "NOT_FOUND") {
       return reply.code(404).send({
         message: "Employee not found",
       });
     }
 
-    request.log.info(
-      {
-        action: "DELETE_EMPLOYEE",
-        employeeId: id,
-      },
-      "Employee deleted successfully",
-    );
+    if (result === "ALREADY_DELETED") {
+      return reply.code(409).send({
+        message: "Employee already deleted",
+      });
+    }
 
-    return sendMessage(reply, "Employee deleted successfully");
-  } catch (err: any) {
-    if (err.message === "SELF_DELETE_NOT_ALLOWED") {
+    if (result === "SELF_DELETE_NOT_ALLOWED") {
       return reply.code(403).send({
         message: "You cannot delete your own record",
       });
     }
 
+    return reply.code(200).send({
+      message: "Employee deleted successfully",
+    });
+  } catch (error) {
     request.log.error(
       {
         action: "DELETE_EMPLOYEE",
         employeeId: id,
-        err,
+        error,
       },
-      "Failed to delete employee",
+      "Unexpected error during employee deletion",
     );
 
-    return reply.code(500).send({
-      message: "Internal server error",
+    return reply.code(400).send({
+      message: "Unable to process delete request",
     });
   }
 }

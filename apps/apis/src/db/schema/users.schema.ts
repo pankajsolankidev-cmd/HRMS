@@ -1,4 +1,11 @@
-import { pgTable, uuid, varchar, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  varchar,
+  text,
+  timestamp,
+  boolean,
+} from "drizzle-orm/pg-core";
 import { baseColumns } from "../base-columns";
 
 export const users = pgTable("users", {
@@ -8,4 +15,5 @@ export const users = pgTable("users", {
   email: varchar("email", { length: 255 }).notNull(),
 
   password: text("password").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
 });
