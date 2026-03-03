@@ -6,7 +6,6 @@ import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router";
 import { deleteDepartment } from "../../api/delete";
 import { getDepartments } from "../../api/get";
-import type { PaginatedResponse } from "../../api/types";
 import Card from "../../components/common/ComponentCard";
 import DeleteConfirm from "../../components/common/DeleteConfirmModal";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
@@ -26,7 +25,13 @@ export default function DepartmentTable() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  C
+
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["departments", page, limit],
+    queryFn: () => getDepartments({ page, limit }),
+    placeholderData: (prev) => prev,
+  });
+
   const { mutate: removeDepartment, isPending } = useMutation({
     mutationFn: deleteDepartment,
     onSuccess: (res) => {
