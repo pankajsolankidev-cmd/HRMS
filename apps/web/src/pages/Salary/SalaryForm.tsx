@@ -41,7 +41,7 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-export default function AddEditSalaryPage() {
+export default function SalaryForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();

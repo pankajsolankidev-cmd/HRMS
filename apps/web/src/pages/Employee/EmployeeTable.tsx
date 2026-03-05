@@ -34,7 +34,7 @@ type Employee = {
   userId: string;
 };
 
-export default function EmployeePage() {
+export default function EmployeeTable() {
   const { id } = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
 

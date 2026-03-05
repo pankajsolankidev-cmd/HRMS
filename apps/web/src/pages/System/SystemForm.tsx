@@ -24,7 +24,7 @@ const systemSchema = z.object({
 
 type SystemFormData = z.infer<typeof systemSchema>;
 
-export default function AddEditSystemPage() {
+export default function SystemForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();

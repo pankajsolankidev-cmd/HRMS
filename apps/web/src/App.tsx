@@ -24,13 +24,13 @@ import SmallAuthLayout from "./layout/SmallAuthLayout";
 import ForgetPassword from "./pages/auth/ForgetPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import SignInForm from "./pages/auth/SignInForm";
-import AddEditComponentPage from "./pages/Component/AddEditComponentPage";
-import ComponentPage from "./pages/Component/ComponentPage";
+import ComponentForm from "./pages/Component/ComponentForm";
+import ComponentTable from "./pages/Component/ComponentTable";
 import RoleDashboard from "./pages/Dashboard/RoleDashboard";
 import DepartmentForm from "./pages/Department/DepartmentForm";
 import DepartmentTable from "./pages/Department/DepartmentTable";
-import AddEditEmployeePage from "./pages/Employee/AddEditEmployeePage";
-import EmployeePage from "./pages/Employee/EmployeePage";
+import EmployeeForm from "./pages/Employee/EmployeeForm";
+import EmployeeTable from "./pages/Employee/EmployeeTable";
 import AddEditExpensePage from "./pages/Expense/AddEditExpensePage";
 import Expense from "./pages/Expense/Expense";
 import EmployeeLeavePage from "./pages/Leaves/EmployeeLeavePage";
@@ -48,10 +48,10 @@ import ProjectForm from "./pages/Project/ProjectForm";
 import ProjectTable from "./pages/Project/ProjectTable";
 import PublicHolidayForm from "./pages/PublicHoliday/PublicHolidayForm";
 import PublicHolidayTable from "./pages/PublicHoliday/PublicHolidayTable";
-import AddEditSalaryPage from "./pages/Salary/AddEditSalaryPage";
-import SalaryPage from "./pages/Salary/SalaryPage";
-import AddEditSystemPage from "./pages/System/AddEditSystemPage";
-import SystemPage from "./pages/System/SystemPage";
+import SalaryForm from "./pages/Salary/SalaryForm";
+import SalaryTable from "./pages/Salary/SalaryTable";
+import SystemForm from "./pages/System/SystemForm";
+import SystemTable from "./pages/System/SystemTable";
 import UserProfile from "./pages/UserProfile/UserProfile";
 
 function AppRoutes() {
@@ -93,17 +93,17 @@ function AppRoutes() {
           <Route path="/holidays" element={<PublicHolidayTable />} />
 
           <Route element={<ProtectedRoute allowedRoles={["ADMIN", "HR"]} />}>
-            <Route path="/employees" element={<EmployeePage />} />
-            <Route path="/employees/:id" element={<AddEditEmployeePage />} />
+            <Route path="/employees" element={<EmployeeTable />} />
+            <Route path="/employees/:id" element={<EmployeeForm />} />
 
-            <Route path="/components" element={<ComponentPage />} />
-            <Route path="/components/:id" element={<AddEditComponentPage />} />
+            <Route path="/components" element={<ComponentTable />} />
+            <Route path="/components/:id" element={<ComponentForm />} />
 
-            <Route path="/systems" element={<SystemPage />} />
-            <Route path="/systems/:id" element={<AddEditSystemPage />} />
+            <Route path="/systems" element={<SystemTable />} />
+            <Route path="/systems/:id" element={<SystemForm />} />
 
-            <Route path="/salary" element={<SalaryPage />} />
-            <Route path="/salary/:id" element={<AddEditSalaryPage />} />
+            <Route path="/salary" element={<SalaryTable />} />
+            <Route path="/salary/:id" element={<SalaryForm />} />
 
             <Route
               path="/leave-requests/manual/:id"

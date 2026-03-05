@@ -4,59 +4,59 @@ import type { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
-import { deleteSystem } from "../../api/delete";
-import { getSystems } from "../../api/get";
-import type { PaginatedResponse } from "../../api/types";
-import Chip from "../../components/common/Chip";
-import Card from "../../components/common/ComponentCard";
-import DeleteConfirm from "../../components/common/DeleteConfirmModal";
+
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import PageMeta from "../../components/common/PageMeta";
 import Input from "../../components/form/input/InputField";
+
 import DataTable, {
   type Column,
 } from "../../components/tables/BasicTables/DataTable";
+
+import { deleteComponent } from "../../api/delete";
+import { getComponents } from "../../api/get";
+import type { PaginatedResponse } from "../../api/types";
+
+import Card from "../../components/common/ComponentCard";
+import DeleteConfirm from "../../components/common/DeleteConfirmModal";
 import { useTableSort } from "../../components/tables/useTableSort";
 import Button from "../../components/ui/button/Button";
 
-type SystemComponent = {
-  id: string;
-  name: string;
-};
-
-type System = {
+type Component = {
   id: number;
   name: string;
   description: string;
-  components: SystemComponent[];
+  code: string;
 };
 
-export default function SystemPage() {
+export default function ComponentTable() {
   const navigate = useNavigate();
-  const [rawSearch, setRawSearch] = useState("");
+
   const [search, setSearch] = useState<string | undefined>();
+  const [rawSearch, setRawSearch] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const { sortBy, sortOrder, handleSort } = useTableSort<System>();
+
+  const { sortBy, sortOrder, handleSort } = useTableSort<Component>();
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, sortBy, sortOrder]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearch(rawSearch.trim() || undefined);
       setPage(1);
     }, 1000);
+
     return () => clearTimeout(timer);
   }, [rawSearch]);
 
-  useEffect(() => {
-    setPage(1);
-  }, [sortBy, sortOrder]);
-
   const { data, isLoading, isError, refetch } = useQuery<
-    PaginatedResponse<System>
+    PaginatedResponse<Component>
   >({
-    queryKey: ["systems", page, limit, sortBy, sortOrder, search ?? "all"],
+    queryKey: ["components", page, limit, sortBy, sortOrder, search ?? "all"],
     queryFn: () =>
-      getSystems({
+      getComponents({
         page,
         limit,
         ...(sortBy && sortOrder ? { sortBy: sortBy as string, sortOrder } : {}),
@@ -65,23 +65,24 @@ export default function SystemPage() {
     placeholderData: (prev) => prev,
   });
 
-  const { mutate: removeSystem, isPending } = useMutation({
-    mutationFn: deleteSystem,
+  const { mutate: removeComponent, isPending } = useMutation({
+    mutationFn: deleteComponent,
     onSuccess: (res) => {
-      toast.success(res?.message ?? "System Deleted Successfully");
+      toast.success(res?.message ?? "Component Deleted Successfully");
       refetch();
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(
-        error?.response?.data?.message ?? "An unexpected error occurred",
+        error?.response?.data?.message ??
+          "Something went wrong. Please try again.",
       );
     },
   });
 
-  const systems = data?.data ?? [];
+  const components = data?.data ?? [];
   const total = data?.meta?.total ?? 0;
 
-  const columns: Column<System>[] = [
+  const columns: Column<Component>[] = [
     {
       header: "Name",
       accessor: "name",
@@ -93,22 +94,17 @@ export default function SystemPage() {
       ),
     },
     {
+      header: "Code",
+      accessor: "code",
+      cell: (row) => (
+        <div className="text-gray-600 dark:text-gray-400">{row.code}</div>
+      ),
+    },
+    {
       header: "Description",
       cell: (row) => (
         <div className="text-sm text-gray-500 dark:text-gray-400">
           {row.description}
-        </div>
-      ),
-    },
-    {
-      header: "Components",
-      cell: (row) => (
-        <div className="flex flex-wrap gap-2">
-          {row.components?.length ? (
-            row.components.map((c) => <Chip key={c.id} label={c.name} />)
-          ) : (
-            <span className="text-sm text-gray-400">—</span>
-          )}
         </div>
       ),
     },
@@ -119,15 +115,15 @@ export default function SystemPage() {
         <div className="flex items-center justify-center gap-3">
           <IconEdit
             size={18}
-            onClick={() => navigate(`/systems/${row.id}`)}
+            onClick={() => navigate(`/components/${row.id}`)}
             className="cursor-pointer text-blue-600 dark:text-blue-400"
           />
 
           <DeleteConfirm<number>
-            title="Delete System"
-            description="Are you sure you want to delete this system? This action cannot be undone."
+            title="Delete Component"
+            description="Are you sure you want to delete this component?"
             loading={isPending}
-            onConfirm={(id) => removeSystem(id)}
+            onConfirm={(id) => removeComponent(id)}
           >
             {(askDelete) => (
               <IconTrash
@@ -144,8 +140,7 @@ export default function SystemPage() {
 
   return (
     <>
-      <PageMeta title="Systems" description="Manage your systems" />
-      <PageBreadcrumb pageTitle="Systems" />
+      <PageBreadcrumb pageTitle="Components" />
 
       <Card
         action={
@@ -176,18 +171,18 @@ export default function SystemPage() {
             </div>
 
             <Button
-              onClick={() => navigate("/systems/new")}
+              onClick={() => navigate("/components/new")}
               size="md"
-              className="h-[42px] bg-black dark:bg-blue-500  whitespace-nowrap"
+              className="h-[42px] bg-black dark:bg-blue-500 whitespace-nowrap"
             >
-              Add System
+              Add Component
             </Button>
           </div>
         }
       >
         <DataTable
           columns={columns}
-          data={systems}
+          data={components}
           isLoading={isLoading}
           isError={isError}
           sortBy={sortBy}
