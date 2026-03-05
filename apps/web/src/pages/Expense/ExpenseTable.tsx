@@ -23,10 +23,13 @@ import Button from "../../components/ui/button/Button";
 
 import type { AxiosError } from "axios";
 import { deleteExpense } from "../../api/delete";
-import { getExpenses } from "../../api/get";
+import { getExpenses, getExpenseSummary } from "../../api/get";
 import { approveExpense, createExpense, rejectExpense } from "../../api/patch";
 import type { PaginatedResponse } from "../../api/types";
 import DeleteConfirm from "../../components/common/DeleteConfirmModal";
+import PageBreadcrumb from "../../components/common/PageBreadCrumb";
+import PageMeta from "../../components/common/PageMeta";
+import DatePicker from "../../components/form/date-picker";
 
 type Expense = {
   id: number;
@@ -39,7 +42,7 @@ type Expense = {
   employeeName: string;
 };
 
-export default function ExpensePage() {
+export default function ExpenseTable() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -68,6 +71,35 @@ export default function ExpensePage() {
     }, 1000);
     return () => clearTimeout(timer);
   }, [rawSearch]);
+  const today = new Date().toISOString().split("T")[0];
+
+  const [fromDate, setFromDate] = useState<string>(today);
+  const [toDate, setToDate] = useState<string>(today);
+  const [run, setRun] = useState(false);
+
+  const {
+    data: summaryData,
+    isFetching: isSummaryFetching,
+    error,
+  } = useQuery({
+    queryKey: ["expense-summary", fromDate, toDate],
+    queryFn: () => getExpenseSummary(fromDate, toDate),
+    enabled: run,
+  });
+
+  useEffect(() => {
+    if (summaryData) toast.success("Expense summary loaded!");
+  }, [summaryData]);
+
+  useEffect(() => {
+    if (error) toast.error(`Failed to fetch: ${error.message}`);
+  }, [error]);
+  const handleClear = () => {
+    setFromDate(today);
+    setToDate(today);
+    setRun(false);
+    queryClient.removeQueries({ queryKey: ["expense-summary"] });
+  };
 
   const { data, isLoading, isError } = useQuery<PaginatedResponse<Expense>>({
     queryKey: ["expenses", page, limit, sortBy, sortOrder, search ?? "all"],
@@ -272,61 +304,125 @@ export default function ExpensePage() {
   ];
 
   return (
-    <Card
-      action={
-        <div className="flex items-center justify-between gap-3">
-          <div className="relative w-full max-w-xs">
-            <div className="absolute left-3 top-3 text-gray-400">
-              <IconSearch size={18} stroke={2} />
-            </div>
-            <Input
-              placeholder="Search by name"
-              value={rawSearch}
-              onChange={(e) => setRawSearch(e.target.value)}
-              className="pl-10 pr-10 h-[42px] focus-visible:ring-0"
-            />
-            {rawSearch && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setRawSearch("");
-                  setSearch(undefined);
-                }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0 rounded-full"
-              >
-                ✕
-              </Button>
-            )}
-          </div>
+    <>
+      <PageMeta title="Expenses" description="Manage your expenses" />
+      <PageBreadcrumb pageTitle="Expenses" />
 
-          <Button
-            onClick={() => navigate("/expenses/new")}
-            size="md"
-            className="h-[42px] bg-black dark:bg-blue-500 whitespace-nowrap"
-          >
-            Add Expense
-          </Button>
-        </div>
-      }
-    >
-      <DataTable
-        columns={columns}
-        data={tableData}
-        isLoading={isLoading}
-        isError={isError}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        onSort={handleSort}
-        page={page}
-        limit={limit}
-        total={data?.meta?.total ?? 0}
-        onPageChange={setPage}
-        onLimitChange={(l) => {
-          setLimit(l);
-          setPage(1);
-        }}
-      />
+      <div className="space-y-6">
+        <Can permission="expense.view_summary">
+          <Card>
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-end justify-end gap-3">
+                <DatePicker
+                  id="dateRange"
+                  label="Select Date Range"
+                  mode="range"
+                  value={
+                    fromDate && toDate
+                      ? [new Date(fromDate), new Date(toDate)]
+                      : undefined
+                  }
+                  onChange={(dates) => {
+                    if (dates.length === 2) {
+                      setFromDate(dates[0].toLocaleDateString("en-CA"));
+                      setToDate(dates[1].toLocaleDateString("en-CA"));
+                      setRun(false);
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => setRun(true)}
+                  disabled={isSummaryFetching || !fromDate || !toDate}
+                  className="h-[45px] rounded-lg bg-black px-6 text-sm text-white
+                     disabled:opacity-50 dark:bg-white dark:text-black"
+                >
+                  {isSummaryFetching ? "Fetching..." : "View Summary"}
+                </button>
+                <button
+                  onClick={handleClear}
+                  className="h-[45px] rounded-lg border px-6 text-sm
+               hover:bg-gray-200 dark:hover:bg-gray-700"
+                >
+                  Clear
+                </button>
+              </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="rounded-xl border bg-gray-50 p-4 dark:bg-gray-900 dark:border-gray-800">
+                  <p className="text-sm text-gray-500">Total Count</p>
+                  <p className="text-2xl font-bold">
+                    {summaryData?.totalExpenses ?? 0}
+                  </p>
+                </div>
+                <div className="rounded-xl border bg-gray-50 p-4 dark:bg-gray-900 dark:border-gray-800">
+                  <p className="text-sm text-gray-500">Total Amount</p>
+                  <p className="text-2xl font-bold ">
+                    ₹{" "}
+                    {Number(summaryData?.totalAmount ?? 0).toLocaleString(
+                      "en-IN",
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </Can>
+        <Card
+          action={
+            <div className="flex items-center justify-between gap-3">
+              <div className="relative w-full max-w-xs">
+                <div className="absolute left-3 top-3 text-gray-400">
+                  <IconSearch size={18} stroke={2} />
+                </div>
+                <Input
+                  placeholder="Search by name"
+                  value={rawSearch}
+                  onChange={(e) => setRawSearch(e.target.value)}
+                  className="pl-10 pr-10 h-[42px] focus-visible:ring-0"
+                />
+                {rawSearch && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setRawSearch("");
+                      setSearch(undefined);
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0 rounded-full"
+                  >
+                    ✕
+                  </Button>
+                )}
+              </div>
+
+              <Button
+                onClick={() => navigate("/expenses/new")}
+                size="md"
+                className="h-[42px] bg-black dark:bg-blue-500 whitespace-nowrap"
+              >
+                Add Expense
+              </Button>
+            </div>
+          }
+        >
+          <DataTable
+            columns={columns}
+            data={tableData}
+            isLoading={isLoading}
+            isError={isError}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSort={handleSort}
+            page={page}
+            limit={limit}
+            total={data?.meta?.total ?? 0}
+            onPageChange={setPage}
+            onLimitChange={(l) => {
+              setLimit(l);
+              setPage(1);
+            }}
+          />
+        </Card>
+      </div>
 
       {viewExpense && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -415,6 +511,6 @@ export default function ExpensePage() {
           </div>
         </div>
       )}
-    </Card>
+    </>
   );
 }

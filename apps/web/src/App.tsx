@@ -31,8 +31,8 @@ import DepartmentForm from "./pages/Department/DepartmentForm";
 import DepartmentTable from "./pages/Department/DepartmentTable";
 import EmployeeForm from "./pages/Employee/EmployeeForm";
 import EmployeeTable from "./pages/Employee/EmployeeTable";
-import AddEditExpensePage from "./pages/Expense/AddEditExpensePage";
-import Expense from "./pages/Expense/Expense";
+import ExpenseForm from "./pages/Expense/ExpenseForm";
+import ExpenseTable from "./pages/Expense/ExpenseTable";
 import EmployeeLeavePage from "./pages/Leaves/EmployeeLeavePage";
 import LeavePage from "./pages/Leaves/LeavePage";
 import SelfLeavePage from "./pages/Leaves/SelfLeavePage";
@@ -85,8 +85,8 @@ function AppRoutes() {
           <Route path="/dashboard" element={<RoleDashboard />} />
           <Route path="/leave-requests" element={<LeavePage />} />
           <Route path="/leave-requests/:id" element={<SelfLeavePage />} />
-          <Route path="/expenses" element={<Expense />} />
-          <Route path="/expenses/:id" element={<AddEditExpensePage />} />
+          <Route path="/expenses" element={<ExpenseTable />} />
+          <Route path="/expenses/:id" element={<ExpenseForm />} />
           <Route path="/payrolls/history" element={<PayrollHistory />} />
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/notifications" element={<NotificationsPage />} />
