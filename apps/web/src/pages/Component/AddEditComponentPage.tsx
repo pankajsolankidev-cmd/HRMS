@@ -17,9 +17,9 @@ import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import Button from "../../components/ui/button/Button";
 
 const componentSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  description: z.string().optional(),
-  code: z.string().trim().min(1, "Code is required"),
+  name: z.string().trim().min(1, "Name is required"),
+  description: z.string().trim().optional(),
+  code: z.string().trim().trim().min(1, "Code is required"),
 });
 
 type ComponentFormData = z.infer<typeof componentSchema>;

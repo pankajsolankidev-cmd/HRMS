@@ -41,7 +41,7 @@ export const leaveSchema = z
     type: z.enum(["sick", "casual", "marriage", "wfh"]),
     dayType: z.enum(["full_day", "first_half", "second_half", "multiple_days"]),
 
-    reason: z.string().min(1, "Reason is required"),
+    reason: z.string().trim().min(1, "Reason is required"),
 
     fromHourType: z.enum(["first_half", "second_half", "full_day"]),
     toHourType: z.enum(["first_half", "second_half", "full_day"]),

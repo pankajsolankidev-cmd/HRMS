@@ -29,7 +29,7 @@ const WEEK_DAYS: CreateOrganizationDto["weekOff"][number][] = [
 ];
 
 const organizationSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().trim().min(1, "Name is required"),
   workingHours: z.object({
     start: z.string().min(1, "Start time is required"),
     end: z.string().min(1, "End time is required"),
