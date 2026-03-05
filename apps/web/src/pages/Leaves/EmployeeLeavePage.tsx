@@ -7,6 +7,7 @@ import { getEmployees, getLeaveById, getManualLeaveById } from "../../api/get";
 import { updateEmployeeLeave } from "../../api/patch";
 import { addEmployeeLeave, type AddLeavePayload } from "../../api/post";
 import ComponentCard from "../../components/common/ComponentCard";
+import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import LeaveForm, { type LeaveFormData } from "./LeaveFormTemplate";
 
 export const mapFormToAddLeavePayload = (
@@ -140,17 +141,20 @@ export default function EmployeeLeavePage() {
   };
 
   return (
-    <ComponentCard
-      title={isEditMode ? "Edit Employee Leave" : "Add Employee Leave"}
-    >
-      <LeaveForm
-        defaultValues={defaultValues}
-        showEmployeeSelect={true}
-        employeeOptions={employeeOptions}
-        loading={addMutation.isPending || updateMutation.isPending}
-        onBack={() => navigate("/leave-requests")}
-        onSubmit={handleSubmit}
+    <>
+      <PageBreadcrumb
+        pageTitle={isEditMode ? "Edit Employee Leave" : "Add Employee Leave"}
       />
-    </ComponentCard>
+      <ComponentCard>
+        <LeaveForm
+          defaultValues={defaultValues}
+          showEmployeeSelect={true}
+          employeeOptions={employeeOptions}
+          loading={addMutation.isPending || updateMutation.isPending}
+          onBack={() => navigate("/leave-requests")}
+          onSubmit={handleSubmit}
+        />
+      </ComponentCard>
+    </>
   );
 }

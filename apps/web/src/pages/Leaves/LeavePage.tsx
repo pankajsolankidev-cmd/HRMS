@@ -529,14 +529,14 @@ export default function LeavePage() {
         action={
           <div className="flex items-center justify-between gap-3">
             <div className="relative w-full max-w-xs">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+              <div className="absolute left-3 top-3 text-gray-400">
                 <IconSearch size={18} stroke={2} />
               </div>
               <Input
-                placeholder="Search here..."
+                placeholder="Search by name"
                 value={rawSearch}
                 onChange={(e) => setRawSearch(e.target.value)}
-                className="pl-10 pr-10 h-[42px]"
+                className="pl-10 pr-10 h-[42px] focus-visible:ring-0"
               />
               {rawSearch && (
                 <Button
@@ -574,31 +574,23 @@ export default function LeavePage() {
           </div>
         }
       >
-        {!isLoading && leaves.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
-              No records found
-            </p>
-          </div>
-        ) : (
-          <DataTable
-            columns={columns}
-            data={leaves}
-            isLoading={isLoading}
-            isError={isError}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            onSort={handleSort}
-            page={page}
-            limit={limit}
-            total={total}
-            onPageChange={setPage}
-            onLimitChange={(newLimit) => {
-              setLimit(newLimit);
-              setPage(1);
-            }}
-          />
-        )}
+        <DataTable
+          columns={columns}
+          data={leaves}
+          isLoading={isLoading}
+          isError={isError}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSort={handleSort}
+          page={page}
+          limit={limit}
+          total={total}
+          onPageChange={setPage}
+          onLimitChange={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1);
+          }}
+        />
       </Card>
 
       {viewLeave && (

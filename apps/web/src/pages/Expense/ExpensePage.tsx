@@ -262,14 +262,14 @@ export default function ExpensePage() {
       action={
         <div className="flex items-center justify-between gap-3">
           <div className="relative w-full max-w-xs">
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+            <div className="absolute left-3 top-3 text-gray-400">
               <IconSearch size={18} stroke={2} />
             </div>
             <Input
-              placeholder="Search here..."
+              placeholder="Search by name"
               value={rawSearch}
               onChange={(e) => setRawSearch(e.target.value)}
-              className="pl-10 pr-12 h-[42px]"
+              className="pl-10 pr-10 h-[42px] focus-visible:ring-0"
             />
             {rawSearch && (
               <Button

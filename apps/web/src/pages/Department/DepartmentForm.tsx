@@ -11,7 +11,7 @@ import { getDepartmentById } from "../../api/get";
 import { addDepartment } from "../../api/post";
 import { updateDepartment } from "../../api/put";
 import ComponentCard from "../../components/common/ComponentCard";
-import PageMeta from "../../components/common/PageMeta";
+import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 
@@ -89,15 +89,16 @@ export default function DepartmentForm() {
 
   return (
     <>
-      <PageMeta
-        title={isEditMode ? "Edit Department" : "Add Department"}
-        description={
-          isEditMode ? "Update department details" : "Create a new department"
-        }
+      <PageBreadcrumb
+        pageTitle={isEditMode ? "Edit Department" : "Add Department"}
       />
 
-      <ComponentCard title={isEditMode ? "Edit Department" : "Add Department"}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <ComponentCard>
+        <form
+          noValidate
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-6"
+        >
           <Input
             required
             label="Department Name"

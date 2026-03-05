@@ -18,7 +18,7 @@ import { addEmployee } from "../../api/post";
 import { updateEmployee } from "../../api/put";
 
 import ComponentCard from "../../components/common/ComponentCard";
-import PageMeta from "../../components/common/PageMeta";
+import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import DatePicker from "../../components/form/date-picker";
 import Checkbox from "../../components/form/input/Checkbox";
 import Input from "../../components/form/input/InputField";
@@ -187,15 +187,15 @@ export default function AddEditEmployeePage() {
 
   return (
     <>
-      <PageMeta
-        title={isEditMode ? "Edit Employee" : "Add Employee"}
-        description={
-          isEditMode ? "Edit employee details" : "Add a new employee"
-        }
+      <PageBreadcrumb
+        pageTitle={isEditMode ? "Edit Employee" : "Add Employee"}
       />
-
-      <ComponentCard title={isEditMode ? "Edit Employee" : "Add Employee"}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <ComponentCard>
+        <form
+          noValidate
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-8"
+        >
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
             <div className="rounded-xl border bg-white p-6 dark:bg-gray-900 dark:border-gray-700">
               <div className="grid gap-6 md:grid-cols-2">

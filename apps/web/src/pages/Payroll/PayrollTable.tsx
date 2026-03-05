@@ -389,7 +389,7 @@ export default function PayrollTable() {
           </Button>
 
           <Button
-            className="bg-green-600"
+            className=" dark:bg-blue-500"
             disabled={isPending || selectedIds.length === 0}
             onClick={() => {
               const adjustments = employees

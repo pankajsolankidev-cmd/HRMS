@@ -11,7 +11,7 @@ import { addSystem } from "../../api/post";
 import { updateSystem } from "../../api/put";
 import type { PaginatedResponse } from "../../api/types";
 import ComponentCard from "../../components/common/ComponentCard";
-import PageMeta from "../../components/common/PageMeta";
+import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import Input from "../../components/form/input/InputField";
 import MultiSelect from "../../components/form/MultiSelect";
 import Button from "../../components/ui/button/Button";
@@ -111,13 +111,14 @@ export default function AddEditSystemPage() {
 
   return (
     <>
-      <PageMeta
-        title={isEditMode ? "Edit System" : "Add System"}
-        description={isEditMode ? "Edit System details" : "Add a new System"}
-      />
+      <PageBreadcrumb pageTitle={isEditMode ? "Edit System" : "Add System"} />
 
-      <ComponentCard title={isEditMode ? "Edit System" : "Add System"}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <ComponentCard>
+        <form
+          noValidate
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-6"
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Input
               required

@@ -8,12 +8,12 @@ import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
 
 import ComponentCard from "../../components/common/ComponentCard";
-import PageMeta from "../../components/common/PageMeta";
 import Input from "../../components/form/input/InputField";
 
 import { getComponentById } from "../../api/get";
 import { addComponent } from "../../api/post";
 import { updateComponent } from "../../api/put";
+import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import Button from "../../components/ui/button/Button";
 
 const componentSchema = z.object({
@@ -98,19 +98,16 @@ export default function AddEditComponentPage() {
 
   return (
     <>
-      <PageMeta
-        title={
-          isEditMode
-            ? "Edit Component | TailAdmin - React Dashboard"
-            : "Add Component | TailAdmin - React Dashboard"
-        }
-        description={
-          isEditMode ? "Edit Component details" : "Add a new Component"
-        }
+      <PageBreadcrumb
+        pageTitle={isEditMode ? "Edit Component" : "Add Component"}
       />
 
-      <ComponentCard title={isEditMode ? "Edit Component" : "Add Component"}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <ComponentCard>
+        <form
+          noValidate
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-6"
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Input
               required

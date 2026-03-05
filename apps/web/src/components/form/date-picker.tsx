@@ -93,7 +93,7 @@ export default function DatePicker({
         <input
           id={id}
           placeholder={placeholder}
-          className={`h-12 w-full rounded-lg border px-4 pr-11 text-sm
+          className={`h-11 w-full rounded-lg border px-4 pr-11 text-sm
           transition-all duration-200
           bg-white/70 backdrop-blur-md
           dark:bg-gray-900/60

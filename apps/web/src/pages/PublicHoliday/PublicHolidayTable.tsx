@@ -285,7 +285,7 @@ export default function PublicHolidayTable() {
                 <Button
                   onClick={() => navigate("/holidays/new")}
                   size="md"
-                  className="bg-black text-white dark:bg-blue-500"
+                  className=" bg-black text-white dark:bg-blue-500"
                 >
                   Add Holiday
                 </Button>
@@ -333,31 +333,23 @@ export default function PublicHolidayTable() {
           </div>
         }
       >
-        {!isLoading && holidays.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <p className="text-lg font-medium text-gray-700">
-              No records found
-            </p>
-          </div>
-        ) : (
-          <DataTable
-            columns={columns}
-            data={holidays}
-            isLoading={isLoading}
-            isError={isError}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            onSort={handleSort}
-            page={page}
-            limit={limit}
-            total={total}
-            onPageChange={setPage}
-            onLimitChange={(newLimit) => {
-              setLimit(newLimit);
-              setPage(1);
-            }}
-          />
-        )}
+        <DataTable
+          columns={columns}
+          data={holidays}
+          isLoading={isLoading}
+          isError={isError}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSort={handleSort}
+          page={page}
+          limit={limit}
+          total={total}
+          onPageChange={setPage}
+          onLimitChange={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1);
+          }}
+        />
       </Card>
 
       {previewData && (

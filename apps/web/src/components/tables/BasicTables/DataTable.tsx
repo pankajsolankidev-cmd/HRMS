@@ -64,7 +64,7 @@ export default function DataTable<T>({
   }
 
   return (
-    <div className="overflow-visible rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+    <div className="overflow-visible rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 ">
       {onLimitChange && (
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20">
           <div className="flex items-center gap-3">
@@ -108,7 +108,7 @@ export default function DataTable<T>({
 
       <div className="max-w-full">
         <Table>
-          <TableHeader className="border-b border-gray-100 dark:border-gray-800">
+          <TableHeader className="border-b border-gray-100 dark:border-gray-800 whitespace-nowrap">
             <TableRow className="bg-gray-50 dark:bg-gray-800/50">
               {columns.map((col, index) => {
                 const isSortable = col.sortable && col.accessor && onSort;
@@ -128,7 +128,7 @@ export default function DataTable<T>({
                     }
                     className={`
                       px-6 py-4 text-${col.align ?? "left"}
-                      text-sm font-semibold uppercase
+                      text-sm font-semibold uppercase 
                       ${
                         isSortable
                           ? "cursor-pointer select-none"
@@ -176,11 +176,11 @@ export default function DataTable<T>({
             </TableRow>
           </TableHeader>
 
-          <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
+          <TableBody className="divide-y divide-gray-100 dark:divide-gray-800 whitespace-nowrap">
             {data.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={columns.length} className="p-0">
-                  <div className="flex items-center justify-center min-h-[300px] w-full">
+                  <div className="flex items-center justify-center min-h-[250px] w-full">
                     <div className="text-center space-y-2">
                       <p className=" font-medium text-gray-600 dark:text-gray-300">
                         No data available

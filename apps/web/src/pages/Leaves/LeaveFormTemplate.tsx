@@ -128,7 +128,7 @@ export default function LeaveForm({
   }, [dayType, fromDate, setValue]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {showEmployeeSelect && (
           <Controller
@@ -142,6 +142,7 @@ export default function LeaveForm({
                 value={field.value}
                 onChange={field.onChange}
                 error={!!errors.employeeId}
+                hint={errors.employeeId?.message}
               />
             )}
           />
@@ -158,6 +159,7 @@ export default function LeaveForm({
               value={field.value}
               onChange={field.onChange}
               error={!!errors.type}
+              hint={errors.type?.message}
             />
           )}
         />
@@ -173,6 +175,7 @@ export default function LeaveForm({
               value={field.value}
               onChange={field.onChange}
               error={!!errors.dayType}
+              hint={errors.dayType?.message}
             />
           )}
         />
@@ -192,6 +195,8 @@ export default function LeaveForm({
               onChange={(d) =>
                 d?.[0] && field.onChange(d[0].toLocaleDateString("en-CA"))
               }
+              error={!!errors.fromDate}
+              hint={errors.fromDate?.message}
             />
           )}
         />
@@ -231,6 +236,8 @@ export default function LeaveForm({
                     field.onChange(val);
                     setValue("fromHour", hourTypeToHours(val));
                   }}
+                  error={!!errors.fromHourType}
+                  hint={errors.fromHourType?.message}
                 />
               )}
             />
@@ -247,6 +254,8 @@ export default function LeaveForm({
                     field.onChange(val);
                     setValue("toHour", hourTypeToHours(val));
                   }}
+                  error={!!errors.toHourType}
+                  hint={errors.toHourType?.message}
                 />
               )}
             />
@@ -259,6 +268,7 @@ export default function LeaveForm({
           placeholder="Enter reason"
           {...register("reason")}
           error={!!errors.reason}
+          hint={errors.reason?.message}
         />
 
         <FileInput

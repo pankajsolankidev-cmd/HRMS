@@ -90,7 +90,11 @@ export default function SignInForm() {
             Sign In
           </h1>
 
-          <form className="space-y-5 mt-8" onSubmit={handleSubmit(onSubmit)}>
+          <form
+            noValidate
+            className="space-y-5 mt-8"
+            onSubmit={handleSubmit(onSubmit)}
+          >
             <Input
               required
               label="Email"

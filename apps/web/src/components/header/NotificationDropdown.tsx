@@ -17,6 +17,7 @@ type Notification = {
   message: string;
   isRead: boolean;
   createdAt: string;
+  type: string;
 };
 
 export default function NotificationDropdown() {
@@ -134,6 +135,18 @@ export default function NotificationDropdown() {
                   title="Mark as Read"
                 >
                   <IconCheck size={18} />
+                </button>
+                <button
+                  onClick={() =>
+                    navigate(
+                      notification.type === "expenses"
+                        ? "/expenses"
+                        : "/leave-requests",
+                    )
+                  }
+                  className="text-green-500 hover:text-green-700 text-xs font-medium"
+                >
+                  View
                 </button>
               </li>
             ))

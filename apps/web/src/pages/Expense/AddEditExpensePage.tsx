@@ -16,6 +16,7 @@ import { getExpenseById } from "../../api/get";
 import { addExpense, uploadFile } from "../../api/post";
 import { updateExpense } from "../../api/put";
 import Card from "../../components/common/ComponentCard";
+import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const MAX_AMOUNT = 1_000_000;
@@ -135,8 +136,13 @@ export default function AddEditExpensePage() {
 
   return (
     <>
-      <Card title={isEditMode ? "Edit Expense" : "Add Expense"}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <PageBreadcrumb pageTitle={isEditMode ? "Edit Expense" : "Add Expense"} />
+      <Card>
+        <form
+          noValidate
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-6"
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Input
               required
