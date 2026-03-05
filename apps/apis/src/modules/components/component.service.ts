@@ -15,23 +15,38 @@ export async function createComponentHandler(
   reply: FastifyReply,
 ) {
   const body = request.body as CreateComponentDto;
-  request.log.info("Request received");
-
-  request.log.info({ name: body.name }, "Create component request received");
 
   try {
-    await db.insert(components).values(body);
+    const data = {
+      name: body.name.trim(),
+      description: body.description?.trim(),
+      code: body.code.trim().toUpperCase(),
+    };
 
-    request.log.info({ name: body.name }, "Component created successfully");
+    await db.insert(components).values(data);
 
     return sendMessage(reply, "Component created successfully", 201);
-  } catch (err) {
-    request.log.error({ err, body }, "Failed to create component");
-    throw err;
+  } catch (err: any) {
+    request.log.error({ err }, "Create component failed");
+
+    const errorCode = err.code || err?.cause?.code;
+
+    if (errorCode === "23505") {
+      return reply.status(409).send({
+        message: "Component code already exists",
+      });
+    }
+
+    return reply.status(400).send({
+      message: err.message || "Unable to create component",
+    });
   }
 }
 
-export async function getComponentsHandler(request: FastifyRequest) {
+export async function getComponentsHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
   const query = request.query as {
     search?: string;
     page?: number;
@@ -56,7 +71,7 @@ export async function getComponentsHandler(request: FastifyRequest) {
     const conditions = [];
 
     if (query?.search) {
-      conditions.push(ilike(components.name, `%${query.search}%`));
+      conditions.push(ilike(components.name, `%${query.search.trim()}%`));
     }
 
     const { page, limit, offset } = getPagination(query);
@@ -102,15 +117,15 @@ export async function getComponentsHandler(request: FastifyRequest) {
       "Components fetched successfully",
     );
 
-    return {
+    return reply.send({
       data,
       meta: {
         page,
         limit: limit ?? null,
         total: Number(count),
       },
-    };
-  } catch (err) {
+    });
+  } catch (err: any) {
     request.log.error(
       {
         action: "GET_COMPONENTS",
@@ -119,7 +134,10 @@ export async function getComponentsHandler(request: FastifyRequest) {
       },
       "Failed to fetch components",
     );
-    throw err;
+
+    return reply.status(400).send({
+      message: err?.message || "Unable to fetch components",
+    });
   }
 }
 export async function getComponentByIdHandler(
@@ -151,7 +169,9 @@ export async function getComponentByIdHandler(
         "Component not found",
       );
 
-      return reply.status(404).send({ message: "Component not found" });
+      return reply.status(404).send({
+        message: "Component not found",
+      });
     }
 
     request.log.info(
@@ -162,8 +182,8 @@ export async function getComponentByIdHandler(
       "Component fetched successfully",
     );
 
-    return component;
-  } catch (err) {
+    return reply.send(component);
+  } catch (err: any) {
     request.log.error(
       {
         action: "GET_COMPONENT_BY_ID",
@@ -172,10 +192,12 @@ export async function getComponentByIdHandler(
       },
       "Failed to fetch component",
     );
-    throw err;
+
+    return reply.status(400).send({
+      message: err?.message || "Unable to fetch component",
+    });
   }
 }
-
 export async function updateComponentHandler(
   request: FastifyRequest,
   reply: FastifyReply,
@@ -193,9 +215,17 @@ export async function updateComponentHandler(
   );
 
   try {
+    const data: Partial<UpdateComponentDto> = {
+      ...body,
+    };
+
+    if (data.name) data.name = data.name.trim();
+    if (data.description) data.description = data.description.trim();
+    if (data.code) data.code = data.code.trim().toUpperCase();
+
     const [updated] = await db
       .update(components)
-      .set({ ...body })
+      .set(data)
       .where(eq(components.id, id))
       .returning();
 
@@ -208,7 +238,9 @@ export async function updateComponentHandler(
         "Component not found for update",
       );
 
-      return reply.status(404).send({ message: "Component not found" });
+      return reply.status(404).send({
+        message: "Component not found",
+      });
     }
 
     request.log.info(
@@ -220,7 +252,7 @@ export async function updateComponentHandler(
     );
 
     return sendMessage(reply, "Component updated successfully");
-  } catch (err) {
+  } catch (err: any) {
     request.log.error(
       {
         action: "UPDATE_COMPONENT",
@@ -229,7 +261,18 @@ export async function updateComponentHandler(
       },
       "Failed to update component",
     );
-    throw err;
+
+    const errorCode = err?.code || err?.cause?.code;
+
+    if (errorCode === "23505") {
+      return reply.status(409).send({
+        message: "Component code already exists",
+      });
+    }
+
+    return reply.status(400).send({
+      message: err?.message || "Unable to update component",
+    });
   }
 }
 
@@ -262,7 +305,9 @@ export async function deleteComponentHandler(
         "Component not found for delete",
       );
 
-      return reply.status(404).send({ message: "Component not found" });
+      return reply.status(404).send({
+        message: "Component not found",
+      });
     }
 
     request.log.info(
@@ -274,7 +319,7 @@ export async function deleteComponentHandler(
     );
 
     return sendMessage(reply, "Component deleted successfully");
-  } catch (err) {
+  } catch (err: any) {
     request.log.error(
       {
         action: "DELETE_COMPONENT",
@@ -283,6 +328,17 @@ export async function deleteComponentHandler(
       },
       "Failed to delete component",
     );
-    throw err;
+
+    const errorCode = err?.code || err?.cause?.code;
+
+    if (errorCode === "23503") {
+      return reply.status(409).send({
+        message: "Component cannot be deleted because it is in use",
+      });
+    }
+
+    return reply.status(400).send({
+      message: err?.message || "Unable to delete component",
+    });
   }
 }

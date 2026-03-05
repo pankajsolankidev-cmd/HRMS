@@ -88,7 +88,7 @@ export async function createEmployeeHandler(
         .where(eq(positions.id, body.positionId));
 
       if (!position) {
-        throw new Error("Invalid position");
+        throw new Error("INVALID_POSITION");
       }
 
       let roleName: RoleName;
@@ -110,7 +110,7 @@ export async function createEmployeeHandler(
         .where(eq(roles.name, roleName));
 
       if (!role) {
-        throw new Error(`Role not found: ${roleName}`);
+        throw new Error("ROLE_NOT_FOUND");
       }
 
       await tx.insert(userRoles).values({
@@ -157,18 +157,28 @@ export async function createEmployeeHandler(
         "Duplicate employee creation attempt",
       );
 
-      if (
-        dbError.constraint === "users_email_unique" ||
-        dbError.constraint === "users_username_unique" ||
-        dbError.constraint === "employees_email_unique"
-      ) {
-        return reply.code(409).send({
-          message: "Employee with this email already exists",
-        });
-      }
-
       return reply.code(409).send({
-        message: "Duplicate record",
+        message: "Employee with this email already exists",
+      });
+    }
+
+    if (dbError?.message === "INVALID_POSITION") {
+      return reply.code(400).send({
+        message: "Invalid position selected",
+      });
+    }
+
+    if (dbError?.message === "ROLE_NOT_FOUND") {
+      request.log.error(
+        {
+          action: "CREATE_EMPLOYEE",
+          email,
+        },
+        "Role configuration error",
+      );
+
+      return reply.code(400).send({
+        message: "Employee role configuration missing",
       });
     }
 
@@ -178,11 +188,11 @@ export async function createEmployeeHandler(
         email,
         err: dbError,
       },
-      "Failed to create employee",
+      "Unexpected employee creation error",
     );
 
-    return reply.code(500).send({
-      message: "Internal server error",
+    return reply.code(400).send({
+      message: "Unable to create employee",
     });
   }
 }
@@ -478,10 +488,11 @@ export async function getEmployeeByIdHandler(
         "Employee not found",
       );
 
-      return reply.code(404).send({ message: "Employee not found" });
+      return reply.code(404).send({
+        message: "Employee not found",
+      });
     }
 
-    // Group system components (avoid duplicates)
     const employeeMap = new Map<string, any>();
 
     for (const row of rows) {
@@ -539,11 +550,11 @@ export async function getEmployeeByIdHandler(
         employeeId: id,
         err,
       },
-      "Failed to fetch employee",
+      "Unexpected error while fetching employee",
     );
 
-    return reply.code(500).send({
-      message: "Internal server error",
+    return reply.code(400).send({
+      message: "Unable to fetch employee",
     });
   }
 }
@@ -573,21 +584,12 @@ export async function updateEmployeeHandler(
         .from(employees)
         .where(eq(employees.id, id));
 
-      if (!employee) return null;
+      if (!employee) {
+        throw new Error("EMPLOYEE_NOT_FOUND");
+      }
 
       if (employee.userId === loggedInUserId) {
-        request.log.warn(
-          {
-            action: "UPDATE_EMPLOYEE",
-            employeeId: id,
-            userId: loggedInUserId,
-          },
-          "Self update attempt blocked",
-        );
-
-        return reply.code(403).send({
-          message: "You cannot update your own record",
-        });
+        throw new Error("SELF_UPDATE_NOT_ALLOWED");
       }
 
       const employeeUpdateData: Partial<typeof employees.$inferInsert> = {
@@ -630,18 +632,6 @@ export async function updateEmployeeHandler(
       return result;
     });
 
-    if (!updated) {
-      request.log.warn(
-        {
-          action: "UPDATE_EMPLOYEE",
-          employeeId: id,
-        },
-        "Employee not found for update",
-      );
-
-      return reply.code(404).send({ message: "Employee not found" });
-    }
-
     request.log.info(
       {
         action: "UPDATE_EMPLOYEE",
@@ -652,17 +642,31 @@ export async function updateEmployeeHandler(
 
     return sendMessage(reply, "Employee updated successfully");
   } catch (err: any) {
+    const error = err?.cause ?? err;
+
+    if (error?.message === "EMPLOYEE_NOT_FOUND") {
+      return reply.code(404).send({
+        message: "Employee not found",
+      });
+    }
+
+    if (error?.message === "SELF_UPDATE_NOT_ALLOWED") {
+      return reply.code(403).send({
+        message: "You cannot update your own record",
+      });
+    }
+
     request.log.error(
       {
         action: "UPDATE_EMPLOYEE",
         employeeId: id,
-        err,
+        err: error,
       },
-      "Failed to update employee",
+      "Unexpected error while updating employee",
     );
 
-    return reply.code(500).send({
-      message: "Internal server error",
+    return reply.code(400).send({
+      message: "Unable to update employee",
     });
   }
 }

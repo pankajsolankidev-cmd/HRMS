@@ -50,42 +50,93 @@ export async function createHolidayHandler(
 ) {
   const body = request.body as CreateHolidayDto;
 
+  request.log.info(
+    {
+      action: "CREATE_HOLIDAY",
+      title: body.title,
+      fromDate: body.fromDate,
+      toDate: body.toDate,
+    },
+    "Create holiday request received",
+  );
+
   try {
     const fromDate = new Date(body.fromDate);
     const toDate = new Date(body.toDate);
 
+    if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+      return reply.code(400).send({
+        message: "Invalid date format. Use yyyy-mm-dd",
+      });
+    }
+
     if (fromDate > toDate) {
-      return reply
-        .status(400)
-        .send({ message: "fromDate cannot be greater than toDate" });
+      return reply.code(400).send({
+        message: "fromDate cannot be greater than toDate",
+      });
     }
 
     const overlapping = await db
-      .select()
+      .select({ id: holidays.id })
       .from(holidays)
       .where(
         and(
           sql`${holidays.fromDate} <= ${body.toDate}`,
-
           sql`${holidays.toDate} >= ${body.fromDate}`,
         ),
       );
 
     if (overlapping.length) {
-      return reply
-        .status(400)
-        .send({ message: "Holiday dates overlap with existing holiday" });
+      request.log.warn(
+        {
+          action: "CREATE_HOLIDAY",
+          fromDate: body.fromDate,
+          toDate: body.toDate,
+        },
+        "Holiday overlap detected",
+      );
+
+      return reply.code(409).send({
+        message: "Holiday dates overlap with existing holiday",
+      });
     }
 
     await db.insert(holidays).values({
-      ...body,
       title: body.title.trim(),
+      description: body.description?.trim() ?? null,
+      fromDate: body.fromDate,
+      toDate: body.toDate,
     });
 
+    request.log.info(
+      {
+        action: "CREATE_HOLIDAY",
+        title: body.title,
+      },
+      "Holiday created successfully",
+    );
+
     return sendMessage(reply, "Holiday created successfully", 201);
-  } catch (err) {
-    request.log.error({ action: "CREATE_HOLIDAY", err });
-    return reply.status(500).send({ message: "Failed to create holiday" });
+  } catch (err: any) {
+    request.log.error(
+      {
+        action: "CREATE_HOLIDAY",
+        err,
+      },
+      "Failed to create holiday",
+    );
+
+    const errorCode = err?.code || err?.cause?.code;
+
+    if (errorCode === "23505") {
+      return reply.code(409).send({
+        message: "Holiday already exists for these dates",
+      });
+    }
+
+    return reply.code(400).send({
+      message: "Unable to create holiday",
+    });
   }
 }
 

@@ -18,7 +18,7 @@ export const employees = pgTable("employees", {
   ...baseColumns,
   firstName: varchar("first_name", { length: 100 }).notNull(),
   lastName: varchar("last_name", { length: 100 }).notNull(),
-  email: varchar("email", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
 
   positionId: uuid("position_id").notNull().references(() => positions.id),
   departmentId: uuid("department_id").references(() => departments.id),
@@ -30,7 +30,7 @@ export const employees = pgTable("employees", {
   welcomeWithGmail: boolean("welcomeWithGmail").default(false).notNull(),
   welcomeWithSlack: boolean("welcomeWithSlack").default(false).notNull(),
 
-  systemId: uuid("system_id").references(() => systems.id),
+  systemId: uuid("system_id").references(() => systems.id).unique(),
 
   userId: uuid("user_id")
     .notNull()

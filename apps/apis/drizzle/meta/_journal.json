@@ -43,6 +43,13 @@
       "when": 1772530765653,
       "tag": "0005_curious_morg",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1772707585187,
+      "tag": "0006_majestic_white_queen",
+      "breakpoints": true
     }
   ]
 }

@@ -294,7 +294,14 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
   }
 
   if (query.search) {
-    conditions.push(ilike(leaveRequests.reason, `%${query.search}%`));
+    const searchCondition = or(
+      ilike(leaveRequests.reason, `%${query.search}%`),
+      ilike(employees.firstName, `%${query.search}%`),
+      ilike(employees.lastName, `%${query.search}%`),
+    );
+    if (searchCondition) {
+      conditions.push(searchCondition);
+    }
   }
 
   if (query.status) {

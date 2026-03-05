@@ -69,7 +69,7 @@ export async function createExpenseHandler(
         "Expense date is in the future",
       );
 
-      return sendMessage(reply, "expenseDate cannot be in the future", 400);
+      return sendMessage(reply, "Expense date cannot be in the future", 400);
     }
 
     const [employee] = await db
@@ -137,21 +137,24 @@ export async function createExpenseHandler(
     );
 
     return sendMessage(reply, "Expense created successfully", 201);
-  } catch (err) {
+  } catch (err: any) {
     request.log.error(
       {
         action: "CREATE_EXPENSE",
         err,
         userId,
       },
-      "Failed to create expense",
+      "Unexpected error while creating expense",
     );
 
-    return sendMessage(reply, "Failed to create expense", 500);
+    return sendMessage(reply, "Unable to create expense", 400);
   }
 }
 
-export async function getExpensesHandler(request: FastifyRequest) {
+export async function getExpensesHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
   const query = request.query as {
     search?: string;
     status?: string;
@@ -214,13 +217,12 @@ export async function getExpensesHandler(request: FastifyRequest) {
             action: "GET_EXPENSES",
             userId,
           },
-          "Employee profile not found for user",
+          "Employee profile not found",
         );
 
-        return {
-          data: [],
-          meta: { page: 1, limit: 10, total: 0 },
-        };
+        return reply.code(404).send({
+          message: "Employee profile not found",
+        });
       }
 
       conditions.push(eq(expenses.employeeId, employee.id));
@@ -270,7 +272,13 @@ export async function getExpensesHandler(request: FastifyRequest) {
     const [{ count }] = await db
       .select({ count: sql<number>`count(*)` })
       .from(expenses)
-      .where(conditions.length ? and(...conditions) : undefined);
+      .innerJoin(employees, eq(expenses.employeeId, employees.id))
+      .where(
+        and(
+          eq(employees.isActive, true),
+          ...(conditions.length ? conditions : []),
+        ),
+      );
 
     request.log.info(
       {
@@ -292,20 +300,19 @@ export async function getExpensesHandler(request: FastifyRequest) {
         total: Number(count),
       },
     };
-  } catch (err) {
+  } catch (err: any) {
     request.log.error(
       {
         action: "GET_EXPENSES",
         userId,
         err,
       },
-      "Failed to fetch expenses",
+      "Unexpected error while fetching expenses",
     );
 
-    return {
-      data: [],
-      meta: { page: 1, limit: 10, total: 0 },
-    };
+    return reply.code(400).send({
+      message: "Unable to fetch expenses",
+    });
   }
 }
 
@@ -346,12 +353,14 @@ export async function getExpenseByIdHandler(
         "Expense not found",
       );
 
-      return reply.status(404).send({ message: "Expense not found" });
+      return reply.code(404).send({
+        message: "Expense not found",
+      });
     }
 
     if (!canViewAll) {
       const [employee] = await db
-        .select()
+        .select({ id: employees.id })
         .from(employees)
         .where(eq(employees.userId, userId));
 
@@ -365,7 +374,7 @@ export async function getExpenseByIdHandler(
           "Unauthorized expense access attempt",
         );
 
-        return reply.status(403).send({
+        return reply.code(403).send({
           message: "You are not authorized to view this expense",
         });
       }
@@ -381,7 +390,7 @@ export async function getExpenseByIdHandler(
     );
 
     return expense;
-  } catch (err) {
+  } catch (err: any) {
     request.log.error(
       {
         action: "GET_EXPENSE_BY_ID",
@@ -389,11 +398,11 @@ export async function getExpenseByIdHandler(
         userId,
         err,
       },
-      "Failed to fetch expense",
+      "Unexpected error while fetching expense",
     );
 
-    return reply.status(500).send({
-      message: "Failed to fetch expense",
+    return reply.code(400).send({
+      message: "Unable to fetch expense",
     });
   }
 }
@@ -431,7 +440,9 @@ export async function updateExpenseHandler(
         "Expense not found",
       );
 
-      return reply.status(404).send({ message: "Expense not found" });
+      return reply.code(404).send({
+        message: "Expense not found",
+      });
     }
 
     if (existing.status !== "DRAFT") {
@@ -444,9 +455,9 @@ export async function updateExpenseHandler(
         "Expense update not allowed for current status",
       );
 
-      return reply
-        .status(400)
-        .send({ message: "Only DRAFT expenses can be updated" });
+      return reply.code(400).send({
+        message: "Only DRAFT expenses can be updated",
+      });
     }
 
     if (body.expenseDate) {
@@ -462,7 +473,7 @@ export async function updateExpenseHandler(
           "Invalid expense date format",
         );
 
-        return reply.status(400).send({
+        return reply.code(400).send({
           message: "Invalid expenseDate. Use format yyyy-mm-dd",
         });
       }
@@ -482,22 +493,28 @@ export async function updateExpenseHandler(
           "Expense date is in the future",
         );
 
-        return reply.status(400).send({
-          message: "expenseDate cannot be in the future",
+        return reply.code(400).send({
+          message: "Expense date cannot be in the future",
         });
       }
     }
 
-    await db
-      .update(expenses)
-      .set({
-        expenseType: body.expenseType,
-        description: body.description,
-        file: body.file,
-        amount: body.amount !== undefined ? body.amount.toString() : undefined,
-        expenseDate: body.expenseDate,
-      })
-      .where(eq(expenses.id, id));
+    const updateData: any = {
+      expenseType: body.expenseType,
+      description: body.description,
+      file: body.file,
+      expenseDate: body.expenseDate,
+    };
+
+    if (body.amount !== undefined) {
+      updateData.amount = body.amount.toFixed(2);
+    }
+
+    Object.keys(updateData).forEach(
+      (key) => updateData[key] === undefined && delete updateData[key],
+    );
+
+    await db.update(expenses).set(updateData).where(eq(expenses.id, id));
 
     request.log.info(
       {
@@ -509,7 +526,7 @@ export async function updateExpenseHandler(
     );
 
     return sendMessage(reply, "Expense updated successfully");
-  } catch (err) {
+  } catch (err: any) {
     request.log.error(
       {
         action: "UPDATE_EXPENSE",
@@ -517,11 +534,11 @@ export async function updateExpenseHandler(
         userId,
         err,
       },
-      "Failed to update expense",
+      "Unexpected error while updating expense",
     );
 
-    return reply.status(500).send({
-      message: "Failed to update expense",
+    return reply.code(400).send({
+      message: "Unable to update expense",
     });
   }
 }
@@ -558,7 +575,9 @@ export async function deleteExpenseHandler(
         "Expense not found",
       );
 
-      return reply.status(404).send({ message: "Expense not found" });
+      return reply.code(404).send({
+        message: "Expense not found",
+      });
     }
 
     if (existing.status !== "DRAFT") {
@@ -571,9 +590,9 @@ export async function deleteExpenseHandler(
         "Expense delete not allowed for current status",
       );
 
-      return reply
-        .status(400)
-        .send({ message: "Only DRAFT expenses can be deleted" });
+      return reply.code(400).send({
+        message: "Only DRAFT expenses can be deleted",
+      });
     }
 
     await db.delete(expenses).where(eq(expenses.id, id));
@@ -588,7 +607,7 @@ export async function deleteExpenseHandler(
     );
 
     return sendMessage(reply, "Expense deleted successfully");
-  } catch (err) {
+  } catch (err: any) {
     request.log.error(
       {
         action: "DELETE_EXPENSE",
@@ -596,11 +615,11 @@ export async function deleteExpenseHandler(
         userId,
         err,
       },
-      "Failed to delete expense",
+      "Unexpected error while deleting expense",
     );
 
-    return reply.status(500).send({
-      message: "Failed to delete expense",
+    return reply.code(400).send({
+      message: "Unable to delete expense",
     });
   }
 }
@@ -816,7 +835,9 @@ export async function createExpenseRequestHandler(
         "Expense not found",
       );
 
-      return reply.status(404).send({ message: "Expense not found" });
+      return reply.code(404).send({
+        message: "Expense not found",
+      });
     }
 
     if (existing.status !== "DRAFT") {
@@ -829,8 +850,8 @@ export async function createExpenseRequestHandler(
         "Expense request creation not allowed for current status",
       );
 
-      return reply.status(400).send({
-        message: "Only DRAFT expenses can be created",
+      return reply.code(400).send({
+        message: "Only DRAFT expenses can be submitted",
       });
     }
 
@@ -838,7 +859,6 @@ export async function createExpenseRequestHandler(
       .update(expenses)
       .set({
         status: "CREATED",
-        updatedAt: new Date(),
       })
       .where(eq(expenses.id, id));
 
@@ -852,7 +872,7 @@ export async function createExpenseRequestHandler(
     );
 
     return sendMessage(reply, "Expense request created successfully");
-  } catch (err) {
+  } catch (err: any) {
     request.log.error(
       {
         action: "CREATE_EXPENSE_REQUEST",
@@ -860,11 +880,11 @@ export async function createExpenseRequestHandler(
         userId,
         err,
       },
-      "Failed to create expense request",
+      "Unexpected error while creating expense request",
     );
 
-    return reply.status(500).send({
-      message: "Failed to create expense request",
+    return reply.code(400).send({
+      message: "Unable to create expense request",
     });
   }
 }
@@ -904,7 +924,9 @@ export async function approveExpenseHandler(
         "Expense not found",
       );
 
-      return reply.status(404).send({ message: "Expense not found" });
+      return reply.code(404).send({
+        message: "Expense not found",
+      });
     }
 
     if (existing.status !== "CREATED") {
@@ -917,7 +939,7 @@ export async function approveExpenseHandler(
         "Expense approval not allowed for current status",
       );
 
-      return reply.status(400).send({
+      return reply.code(400).send({
         message: "Only CREATED expenses can be approved",
       });
     }
@@ -931,14 +953,11 @@ export async function approveExpenseHandler(
         rejectedBy: null,
         rejectedAt: null,
         rejectionReason: null,
-        updatedAt: new Date(),
       })
       .where(eq(expenses.id, id));
 
     const [employee] = await db
-      .select({
-        userId: employees.userId,
-      })
+      .select({ userId: employees.userId })
       .from(employees)
       .where(eq(employees.id, existing.employeeId));
 
@@ -980,7 +999,7 @@ export async function approveExpenseHandler(
     );
 
     return sendMessage(reply, "Expense approved successfully");
-  } catch (err) {
+  } catch (err: any) {
     request.log.error(
       {
         action: "APPROVE_EXPENSE",
@@ -988,15 +1007,14 @@ export async function approveExpenseHandler(
         userId,
         err,
       },
-      "Failed to approve expense",
+      "Unexpected error while approving expense",
     );
 
-    return reply.status(500).send({
-      message: "Failed to approve expense",
+    return reply.code(400).send({
+      message: "Unable to approve expense",
     });
   }
 }
-
 export async function rejectExpenseHandler(
   request: FastifyRequest,
   reply: FastifyReply,
@@ -1075,7 +1093,6 @@ export async function rejectExpenseHandler(
         rejectionReason: reason,
         approvedBy: null,
         approvedAt: null,
-        updatedAt: new Date(),
       })
       .where(eq(expenses.id, id));
 
@@ -1135,7 +1152,7 @@ export async function rejectExpenseHandler(
       "Failed to reject expense",
     );
 
-    return reply.status(500).send({
+    return reply.status(400).send({
       message: "Failed to reject expense",
     });
   }
