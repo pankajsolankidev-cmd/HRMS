@@ -18,7 +18,7 @@ import Button from "../../components/ui/button/Button";
 
 const componentSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  description: z.string().min(1, "Description is required"),
+  description: z.string().optional(),
   code: z.string().trim().min(1, "Code is required"),
 });
 
@@ -129,7 +129,6 @@ export default function AddEditComponentPage() {
 
             <div className="md:col-span-2">
               <Input
-                required
                 label="Description"
                 placeholder="Enter description"
                 {...register("description")}

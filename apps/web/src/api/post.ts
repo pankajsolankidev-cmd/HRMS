@@ -48,7 +48,7 @@ export const addEmployee = async (payload: any) => {
 
 export const addComponent = async (payload: {
   name: string;
-  description: string;
+  description?: string;
   code: string;
 }) => {
   const res = await api.post("/components", payload);
@@ -57,7 +57,7 @@ export const addComponent = async (payload: {
 
 export const addSystem = async (payload: {
   name: string;
-  description: string;
+  description?: string;
   components: string[];
 }) => {
   const res = await api.post("/systems", {

@@ -159,7 +159,7 @@ export default function LeaveForm({
               value={field.value}
               onChange={field.onChange}
               error={!!errors.type}
-              hint={errors.type?.message}
+              hint="Please select a leave type"
             />
           )}
         />
@@ -175,7 +175,7 @@ export default function LeaveForm({
               value={field.value}
               onChange={field.onChange}
               error={!!errors.dayType}
-              hint={errors.dayType?.message}
+              hint="Please select a day type"
             />
           )}
         />
@@ -192,9 +192,11 @@ export default function LeaveForm({
               required
               label="From Date"
               value={field.value ? new Date(field.value) : null}
-              onChange={(d) =>
-                d?.[0] && field.onChange(d[0].toLocaleDateString("en-CA"))
-              }
+              onChange={(dates) => {
+                field.onChange(
+                  dates?.[0] ? dates[0].toLocaleDateString("en-CA") : "",
+                );
+              }}
               error={!!errors.fromDate}
               hint={errors.fromDate?.message}
             />
@@ -213,11 +215,13 @@ export default function LeaveForm({
               required
               label="To Date"
               value={field.value ? new Date(field.value) : null}
+              onChange={(dates) => {
+                field.onChange(
+                  dates?.[0] ? dates[0].toLocaleDateString("en-CA") : "",
+                );
+              }}
               error={!!errors.toDate}
               hint={errors.toDate?.message}
-              onChange={(d) =>
-                d?.[0] && field.onChange(d[0].toLocaleDateString("en-CA"))
-              }
             />
           )}
         />
@@ -237,7 +241,7 @@ export default function LeaveForm({
                     setValue("fromHour", hourTypeToHours(val));
                   }}
                   error={!!errors.fromHourType}
-                  hint={errors.fromHourType?.message}
+                  hint="Please select a from day type"
                 />
               )}
             />
@@ -255,7 +259,7 @@ export default function LeaveForm({
                     setValue("toHour", hourTypeToHours(val));
                   }}
                   error={!!errors.toHourType}
-                  hint={errors.toHourType?.message}
+                  hint="Please select a to day type"
                 />
               )}
             />

@@ -47,22 +47,6 @@ export default function DataTable<T>({
   onPageChange,
   onLimitChange,
 }: DataTableProps<T>) {
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-10">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-black dark:border-gray-600 dark:border-t-white" />
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="p-6 text-center text-red-600 dark:text-red-400">
-        Failed to load data
-      </div>
-    );
-  }
-
   return (
     <div className="overflow-visible rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 ">
       {onLimitChange && (
@@ -177,12 +161,30 @@ export default function DataTable<T>({
           </TableHeader>
 
           <TableBody className="divide-y divide-gray-100 dark:divide-gray-800 whitespace-nowrap">
-            {data.length === 0 ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="p-0">
+                  <div className="flex items-center justify-center min-h-[200px] w-full">
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-black dark:border-gray-600 dark:border-t-white" />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : isError ? (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="p-0">
+                  <div className="flex items-center justify-center min-h-[200px] w-full">
+                    <p className="text-red-600 dark:text-red-400 font-medium">
+                      Failed to load data
+                    </p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : data.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={columns.length} className="p-0">
                   <div className="flex items-center justify-center min-h-[250px] w-full">
                     <div className="text-center space-y-2">
-                      <p className=" font-medium text-gray-600 dark:text-gray-300">
+                      <p className="font-medium text-gray-600 dark:text-gray-300">
                         No data available
                       </p>
                       <p className="text-xs text-gray-400">

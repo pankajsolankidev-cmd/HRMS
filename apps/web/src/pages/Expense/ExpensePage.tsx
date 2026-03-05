@@ -36,6 +36,7 @@ type Expense = {
   rejectionReason?: string;
   status: "DRAFT" | "CREATED" | "APPROVED" | "REJECTED";
   description?: string;
+  employeeName: string;
 };
 
 export default function ExpensePage() {
@@ -80,6 +81,11 @@ export default function ExpensePage() {
       }),
     placeholderData: (prev) => prev,
   });
+  const tableData =
+    data?.data.map(({ expenses, employees }: any) => ({
+      ...expenses,
+      employeeName: `${employees.firstName} ${employees.lastName}`,
+    })) ?? [];
 
   const { mutate: remove, isPending } = useMutation({
     mutationFn: deleteExpense,
@@ -134,6 +140,14 @@ export default function ExpensePage() {
       cell: (row) => (
         <span className="font-medium text-gray-800 dark:text-white/90">
           {row.expenseType}
+        </span>
+      ),
+    },
+    {
+      header: "Submitted By",
+      cell: (row) => (
+        <span className="font-medium text-gray-800 dark:text-white/90">
+          {row.employeeName}
         </span>
       ),
     },
@@ -298,7 +312,7 @@ export default function ExpensePage() {
     >
       <DataTable
         columns={columns}
-        data={data?.data.map((item: any) => item.expenses) ?? []}
+        data={tableData}
         isLoading={isLoading}
         isError={isError}
         sortBy={sortBy}

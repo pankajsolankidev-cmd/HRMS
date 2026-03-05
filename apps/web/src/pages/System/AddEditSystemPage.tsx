@@ -18,7 +18,7 @@ import Button from "../../components/ui/button/Button";
 
 const systemSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  description: z.string().min(1, "Description is required"),
+  description: z.string().optional(),
   components: z.array(z.string()).min(1, "Select at least one component"),
 });
 
@@ -55,7 +55,7 @@ export default function AddEditSystemPage() {
 
   const componentOptions = (componentsData?.data ?? []).map((c: any) => ({
     value: String(c.id),
-    text: c.name,
+    text: `${c.name} (${c.code})`,
   }));
 
   const { data: systemData, isLoading: systemLoading } = useQuery({
@@ -149,7 +149,6 @@ export default function AddEditSystemPage() {
 
             <div className="md:col-span-2">
               <Input
-                required
                 label="Description"
                 placeholder="Enter description"
                 {...register("description")}
