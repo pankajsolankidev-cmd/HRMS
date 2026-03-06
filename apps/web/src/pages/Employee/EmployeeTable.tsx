@@ -155,7 +155,7 @@ export default function EmployeeTable() {
 
               <DeleteConfirm<number>
                 title="Delete Employee"
-                description={`Are you sure you want to delete ${row.firstName}? This action cannot be undone.`}
+                description={`Are you sure you want to delete ${row.firstName}?`}
                 loading={isPending}
                 onConfirm={(id) => removeEmployee(id)}
               >

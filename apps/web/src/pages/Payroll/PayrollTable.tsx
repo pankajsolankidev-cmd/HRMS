@@ -389,7 +389,7 @@ export default function PayrollTable() {
           </Button>
 
           <Button
-            className=" dark:bg-blue-500"
+            className=" dark:bg-blue-500 bg-green-500"
             disabled={isPending || selectedIds.length === 0}
             onClick={() => {
               const adjustments = employees
@@ -496,10 +496,7 @@ export default function PayrollTable() {
         {historyEmployee && (
           <div className="fixed inset-0 bg-black/30 z-50 flex justify-end">
             <div
-              className={`w-[900px] bg-white dark:bg-gray-900 
-  h-full shadow-xl flex flex-col 
-  transform transition-transform duration-300 ease-in-out
-  ${isDrawerOpen ? "translate-x-0" : "translate-x-full"}`}
+              className={`w-[900px] bg-white dark:bg-gray-900 h-full shadow-xl flex flex-col transform transition-transform duration-300 ease-in-out ${isDrawerOpen ? "translate-x-0" : "translate-x-full"}`}
             >
               <div className="p-6 border-b flex justify-between items-center">
                 <h2 className="text-lg font-semibold">

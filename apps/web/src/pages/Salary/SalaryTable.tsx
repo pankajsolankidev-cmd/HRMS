@@ -1,11 +1,11 @@
 import { IconEdit, IconSearch, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
 import { deleteSalaryStructure } from "../../api/delete";
-import { getEmployees, getSalaryStructures } from "../../api/get";
+import { getSalaryStructures } from "../../api/get";
 import type { PaginatedResponse } from "../../api/types";
 import Card from "../../components/common/ComponentCard";
 import DeleteConfirm from "../../components/common/DeleteConfirmModal";
@@ -50,19 +50,6 @@ export default function SalaryTable() {
     setPage(1);
   }, [sortBy, sortOrder]);
 
-  const { data: employees } = useQuery({
-    queryKey: ["employees", "lookup"],
-    queryFn: () => getEmployees(),
-  });
-
-  const employeeMap = useMemo(() => {
-    const map = new Map<string, string>();
-    employees?.data?.forEach((emp: any) => {
-      map.set(emp.id, `${emp.firstName} ${emp.lastName}`);
-    });
-    return map;
-  }, [employees]);
-
   const { data, isLoading, isError, refetch } = useQuery<
     PaginatedResponse<any>
   >({
@@ -83,23 +70,11 @@ export default function SalaryTable() {
       }),
     placeholderData: (prev) => prev,
   });
-
-  const salaryData: SalaryStructure[] = useMemo(
-    () =>
-      data?.data?.map((s: any) => ({
-        id: s.id,
-        employeeName: employeeMap.get(s.employeeId) ?? "—",
-        basicSalary: Number(s.basicSalary),
-        tax: Number(s.tax),
-        pf: Number(s.pf),
-        netSalary: Number(s.netSalary),
-        description: s.description,
-        appraisalDate: s.appraisalDate
-          ? s.appraisalDate.split("T")[0]
-          : undefined,
-      })) ?? [],
-    [data, employeeMap],
-  );
+  const tableData =
+    data?.data.map(({ salary, employees }: any) => ({
+      ...salary,
+      employeeName: `${employees.firstName} ${employees.lastName}`,
+    })) ?? [];
 
   const total = data?.meta?.total ?? 0;
 
@@ -244,7 +219,7 @@ export default function SalaryTable() {
       >
         <DataTable
           columns={columns}
-          data={salaryData}
+          data={tableData}
           isLoading={isLoading}
           isError={isError}
           sortBy={sortBy}

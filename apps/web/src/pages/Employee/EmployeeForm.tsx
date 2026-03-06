@@ -156,10 +156,25 @@ export default function EmployeeForm() {
       },
     });
   }, [isEditMode, employeeData, reset]);
+  const normalizePayload = (data: EmployeeFormValues) => ({
+    ...data,
+    departmentId: data.departmentId ?? undefined,
+    managerId: data.managerId ?? undefined,
+    systemId: data.systemId ?? undefined,
+  });
+  const saveMutation = useMutation<
+    any,
+    AxiosError<{ message?: string }>,
+    EmployeeFormValues
+  >({
+    mutationFn: (payload) => {
+      const cleanPayload = normalizePayload(payload);
 
-  const saveMutation = useMutation({
-    mutationFn: (payload: EmployeeFormValues) =>
-      isEditMode ? updateEmployee({ id: id!, payload }) : addEmployee(payload),
+      return isEditMode
+        ? updateEmployee({ id: id!, payload: cleanPayload })
+        : addEmployee(cleanPayload);
+    },
+
     onSuccess: (res) => {
       toast.success(
         res?.message ??
@@ -168,6 +183,7 @@ export default function EmployeeForm() {
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       navigate("/employees");
     },
+
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error?.response?.data?.message ?? "Please check form values");
     },

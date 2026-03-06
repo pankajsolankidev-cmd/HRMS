@@ -125,7 +125,7 @@ export default function SystemTable() {
 
           <DeleteConfirm<number>
             title="Delete System"
-            description="Are you sure you want to delete this system? This action cannot be undone."
+            description="Are you sure you want to delete this system?"
             loading={isPending}
             onConfirm={(id) => removeSystem(id)}
           >
