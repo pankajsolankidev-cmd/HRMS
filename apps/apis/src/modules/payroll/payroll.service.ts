@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, SQL, sql } from "drizzle-orm";
 import { db } from "../../db";
 import { employees, payrolls, roles, salary, userRoles } from "../../db/schema";
 import type { PayrollFilterDto } from "@shared/types/src/payroll/payroll-filter.dto";
@@ -22,7 +22,7 @@ export async function getPayrollsHandler(request: FastifyRequest) {
   );
 
   try {
-    const conditions = [];
+    const conditions: SQL[] = [eq(employees.isActive, true)];
 
     const userRolesRows = await db
       .select({ roleName: roles.name })
@@ -57,7 +57,7 @@ export async function getPayrollsHandler(request: FastifyRequest) {
     const [employee] = await db
       .select({ id: employees.id, userId: employees.userId })
       .from(employees)
-      .where(eq(employees.userId, userId));
+      .where(and(eq(employees.userId, userId), eq(employees.isActive, true)));
 
     if (!isHRorAdmin) {
       if (!employee) {
@@ -107,7 +107,8 @@ export async function getPayrollsHandler(request: FastifyRequest) {
     const [countResult] = await db
       .select({ count: sql<number>`cast(count(*) as integer)` })
       .from(payrolls)
-      .where(whereClause);
+      .innerJoin(employees, eq(employees.id, payrolls.employeeId))
+      .where(and(...conditions));
 
     let queryBuilder = db
       .select({
@@ -166,7 +167,6 @@ export async function getPayrollsHandler(request: FastifyRequest) {
   }
 }
 
-
 export async function deletePayrollHandler(
   request: FastifyRequest,
   reply: FastifyReply,
@@ -223,9 +223,7 @@ export async function deletePayrollHandler(
     return reply.code(500).send({ message: "Internal Server Error" });
   }
 }
-export async function getPayrollSummaryHandler(
-  request: FastifyRequest,
-) {
+export async function getPayrollSummaryHandler(request: FastifyRequest) {
   const { month, year } = request.query as {
     month: PayrollMonthType;
     year: number;
@@ -251,24 +249,13 @@ export async function getPayrollSummaryHandler(
         `,
       })
       .from(payrolls)
-      .where(
-        and(
-          eq(payrolls.month, month),
-          eq(payrolls.year, year),
-        ),
-      );
+      .where(and(eq(payrolls.month, month), eq(payrolls.year, year)));
 
-    const employeesProcessed = Number(
-      result?.employeesProcessed ?? 0,
-    );
-    const netPayroll = Number(
-      result?.totalNetPayroll ?? 0,
-    );
+    const employeesProcessed = Number(result?.employeesProcessed ?? 0);
+    const netPayroll = Number(result?.totalNetPayroll ?? 0);
 
     const avgSalary =
-      employeesProcessed > 0
-        ? Math.round(netPayroll / employeesProcessed)
-        : 0;
+      employeesProcessed > 0 ? Math.round(netPayroll / employeesProcessed) : 0;
 
     request.log.info(
       {
@@ -305,9 +292,7 @@ export async function getPayrollSummaryHandler(
     };
   }
 }
-export async function employeeBulkPayrollHandler(
-  request: FastifyRequest,
-) {
+export async function employeeBulkPayrollHandler(request: FastifyRequest) {
   const { month, year } = request.query as {
     month?: PayrollMonthType;
     year?: number;
@@ -319,16 +304,10 @@ export async function employeeBulkPayrollHandler(
   let resolvedYear: number;
 
   if (!month || !year) {
-    const prevMonthDate = new Date(
-      now.getFullYear(),
-      now.getMonth() - 1,
-      1,
-    );
+    const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
     resolvedYear = prevMonthDate.getFullYear();
-    resolvedMonth = PayrollMonth[
-      prevMonthDate.getMonth()
-    ] as PayrollMonthType;
+    resolvedMonth = PayrollMonth[prevMonthDate.getMonth()] as PayrollMonthType;
   } else {
     resolvedMonth = month;
     resolvedYear = year;
@@ -344,8 +323,7 @@ export async function employeeBulkPayrollHandler(
   );
 
   try {
-    const monthIndex =
-      PayrollMonth.indexOf(resolvedMonth) + 1;
+    const monthIndex = PayrollMonth.indexOf(resolvedMonth) + 1;
 
     const employeesWithSalary = await db
       .select({
@@ -357,10 +335,7 @@ export async function employeeBulkPayrollHandler(
         tax: salary.tax,
       })
       .from(salary)
-      .innerJoin(
-        employees,
-        eq(employees.id, salary.employeeId),
-      );
+      .innerJoin(employees, eq(employees.id, salary.employeeId));
 
     const processedPayrolls = await db
       .select({
@@ -368,10 +343,7 @@ export async function employeeBulkPayrollHandler(
       })
       .from(payrolls)
       .where(
-        and(
-          eq(payrolls.month, resolvedMonth),
-          eq(payrolls.year, resolvedYear),
-        ),
+        and(eq(payrolls.month, resolvedMonth), eq(payrolls.year, resolvedYear)),
       );
 
     const processedEmployeeSet = new Set(
@@ -383,13 +355,12 @@ export async function employeeBulkPayrollHandler(
     for (const row of employeesWithSalary) {
       const salaryNet = Number(row.salaryNet);
 
-      const { leaveDeduction } =
-        await calculateLeaveDeductionForPayroll({
-          employeeId: row.employeeId,
-          month: monthIndex,
-          year: resolvedYear,
-          salaryNet,
-        });
+      const { leaveDeduction } = await calculateLeaveDeductionForPayroll({
+        employeeId: row.employeeId,
+        month: monthIndex,
+        year: resolvedYear,
+        salaryNet,
+      });
 
       preview.push({
         employeeId: row.employeeId,
@@ -399,12 +370,8 @@ export async function employeeBulkPayrollHandler(
         pf: row.pf,
         tax: row.tax,
         leaveDeduction,
-        suggestedNetSalary:
-          salaryNet - leaveDeduction,
-        isSalaryProcessed:
-          processedEmployeeSet.has(
-            row.employeeId,
-          ),
+        suggestedNetSalary: salaryNet - leaveDeduction,
+        isSalaryProcessed: processedEmployeeSet.has(row.employeeId),
       });
     }
 
@@ -464,16 +431,10 @@ export async function processBulkPayrollHandler(
   let resolvedYear: number;
 
   if (!month || !year) {
-    const prevMonthDate = new Date(
-      now.getFullYear(),
-      now.getMonth() - 1,
-      1,
-    );
+    const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
     resolvedYear = prevMonthDate.getFullYear();
-    resolvedMonth = PayrollMonth[
-      prevMonthDate.getMonth()
-    ] as PayrollMonthType;
+    resolvedMonth = PayrollMonth[prevMonthDate.getMonth()] as PayrollMonthType;
   } else {
     resolvedMonth = month;
     resolvedYear = year;
@@ -491,13 +452,11 @@ export async function processBulkPayrollHandler(
 
   const currentYear = now.getFullYear();
   const currentMonthIndex = now.getMonth() + 1;
-  const requestedMonthIndex =
-    PayrollMonth.indexOf(resolvedMonth) + 1;
+  const requestedMonthIndex = PayrollMonth.indexOf(resolvedMonth) + 1;
 
   if (
     resolvedYear > currentYear ||
-    (resolvedYear === currentYear &&
-      requestedMonthIndex > currentMonthIndex)
+    (resolvedYear === currentYear && requestedMonthIndex > currentMonthIndex)
   ) {
     request.log.warn(
       {
@@ -536,10 +495,7 @@ export async function processBulkPayrollHandler(
         lastName: employees.lastName,
       })
       .from(payrolls)
-      .innerJoin(
-        employees,
-        eq(employees.id, payrolls.employeeId),
-      )
+      .innerJoin(employees, eq(employees.id, payrolls.employeeId))
       .where(
         and(
           eq(payrolls.month, resolvedMonth),
@@ -554,17 +510,14 @@ export async function processBulkPayrollHandler(
           action: "PROCESS_BULK_PAYROLL",
           month: resolvedMonth,
           year: resolvedYear,
-          alreadyProcessedCount:
-            alreadyProcessed.length,
+          alreadyProcessedCount: alreadyProcessed.length,
         },
         "Payroll already processed for some employees",
       );
 
       return reply.code(409).send({
         message: `Payroll already processed for ${resolvedMonth} ${resolvedYear}`,
-        employees: alreadyProcessed.map(
-          (e) => `${e.firstName} ${e.lastName}`,
-        ),
+        employees: alreadyProcessed.map((e) => `${e.firstName} ${e.lastName}`),
       });
     }
 
@@ -576,15 +529,10 @@ export async function processBulkPayrollHandler(
         lastName: employees.lastName,
       })
       .from(salary)
-      .innerJoin(
-        employees,
-        eq(employees.id, salary.employeeId),
-      )
+      .innerJoin(employees, eq(employees.id, salary.employeeId))
       .where(sql`${salary.employeeId} IN ${employeeIds}`);
 
-    const salaryMap = new Map(
-      salaryRows.map((r) => [r.employeeId, r]),
-    );
+    const salaryMap = new Map(salaryRows.map((r) => [r.employeeId, r]));
 
     const invalidEmployees: string[] = [];
 
@@ -597,30 +545,21 @@ export async function processBulkPayrollHandler(
       const bonus = Number(adj.bonus ?? 0);
 
       if (deductions < 0 || bonus < 0) {
-        invalidEmployees.push(
-          `${row.firstName} ${row.lastName}`,
-        );
+        invalidEmployees.push(`${row.firstName} ${row.lastName}`);
         continue;
       }
 
-      const { leaveDeduction } =
-        await calculateLeaveDeductionForPayroll({
-          employeeId: adj.employeeId,
-          month: monthIndex,
-          year: resolvedYear,
-          salaryNet,
-        });
+      const { leaveDeduction } = await calculateLeaveDeductionForPayroll({
+        employeeId: adj.employeeId,
+        month: monthIndex,
+        year: resolvedYear,
+        salaryNet,
+      });
 
-      const finalNetSalary =
-        salaryNet -
-        leaveDeduction -
-        deductions +
-        bonus;
+      const finalNetSalary = salaryNet - leaveDeduction - deductions + bonus;
 
       if (finalNetSalary < 0) {
-        invalidEmployees.push(
-          `${row.firstName} ${row.lastName}`,
-        );
+        invalidEmployees.push(`${row.firstName} ${row.lastName}`);
       }
     }
 
@@ -628,15 +567,13 @@ export async function processBulkPayrollHandler(
       request.log.warn(
         {
           action: "PROCESS_BULK_PAYROLL",
-          invalidEmployeeCount:
-            invalidEmployees.length,
+          invalidEmployeeCount: invalidEmployees.length,
         },
         "Invalid payroll data detected",
       );
 
       return reply.code(422).send({
-        message:
-          "Invalid payroll data for selected employees",
+        message: "Invalid payroll data for selected employees",
         employees: invalidEmployees,
       });
     }
@@ -648,22 +585,17 @@ export async function processBulkPayrollHandler(
 
         const salaryNet = Number(row.netSalary);
 
-        const { leaveDeduction } =
-          await calculateLeaveDeductionForPayroll({
-            employeeId: adj.employeeId,
-            month: monthIndex,
-            year: resolvedYear,
-            salaryNet,
-          });
+        const { leaveDeduction } = await calculateLeaveDeductionForPayroll({
+          employeeId: adj.employeeId,
+          month: monthIndex,
+          year: resolvedYear,
+          salaryNet,
+        });
 
         const deductions = Number(adj.deductions ?? 0);
         const bonus = Number(adj.bonus ?? 0);
 
-        const finalNetSalary =
-          salaryNet -
-          leaveDeduction -
-          deductions +
-          bonus;
+        const finalNetSalary = salaryNet - leaveDeduction - deductions + bonus;
 
         await tx.insert(payrolls).values({
           employeeId: adj.employeeId,
@@ -671,13 +603,10 @@ export async function processBulkPayrollHandler(
           year: resolvedYear,
           processedBy,
           deductions: deductions.toString(),
-          deductionReason:
-            adj.deductionReason ?? null,
+          deductionReason: adj.deductionReason ?? null,
           bonus: bonus.toString(),
-          bonusDescription:
-            adj.bonusDescription ?? null,
-          leaveDeduction:
-            leaveDeduction.toString(),
+          bonusDescription: adj.bonusDescription ?? null,
+          leaveDeduction: leaveDeduction.toString(),
           netSalary: finalNetSalary.toString(),
         });
       }
@@ -693,11 +622,7 @@ export async function processBulkPayrollHandler(
       "Bulk payroll processed successfully",
     );
 
-    return sendMessage(
-      reply,
-      "Bulk payroll processed successfully",
-      201,
-    );
+    return sendMessage(reply, "Bulk payroll processed successfully", 201);
   } catch (err) {
     request.log.error(
       {
@@ -709,9 +634,6 @@ export async function processBulkPayrollHandler(
       "Failed to process bulk payroll",
     );
 
-    return reply
-      .code(500)
-      .send({ message: "Internal Server Error" });
+    return reply.code(500).send({ message: "Internal Server Error" });
   }
 }
-

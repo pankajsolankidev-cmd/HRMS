@@ -21,17 +21,48 @@ export const createEmployeeSchema = {
       "documents",
     ],
     properties: {
-      firstName: { type: "string" },
-      lastName: { type: "string" },
-      email: { type: "string", format: "email" },
+      firstName: {
+        type: "string",
+        transform: ["trim"],
+        minLength: 1,
+      },
 
-      positionId: { type: "string", format: "uuid" },
+      lastName: {
+        type: "string",
+        transform: ["trim"],
+        minLength: 1,
+      },
 
-      departmentId: { type: "string" },
-      joiningDate: { type: "string", format: "date" },
+      email: {
+        type: "string",
+        format: "email",
+        transform: ["trim"],
+      },
 
-      managerId: { type: ["string", "null"], format: "uuid" },
-      systemId: { type: ["string", "null"], format: "uuid" },
+      positionId: {
+        type: "string",
+        format: "uuid",
+      },
+
+      departmentId: {
+        type: ["string", "null"],
+        format: "uuid",
+      },
+
+      joiningDate: {
+        type: "string",
+        format: "date",
+      },
+
+      managerId: {
+        type: ["string", "null"],
+        format: "uuid",
+      },
+
+      systemId: {
+        type: ["string", "null"],
+        format: "uuid",
+      },
 
       welcome: {
         type: "object",
@@ -58,6 +89,7 @@ export const createEmployeeSchema = {
         additionalProperties: false,
       },
     },
+
     additionalProperties: false,
   },
 
@@ -66,11 +98,12 @@ export const createEmployeeSchema = {
       type: "object",
       properties: {
         message: { type: "string" },
-        employeeId: { type: "string" },
-        userId: { type: "string" },
+        employeeId: { type: "string", format: "uuid" },
+        userId: { type: "string", format: "uuid" },
       },
       required: ["message", "employeeId", "userId"],
     },
+
     409: errorResponse,
     500: errorResponse,
   },
@@ -309,15 +342,42 @@ export const updateEmployeeSchema = {
   body: {
     type: "object",
     properties: {
-      firstName: { type: "string" },
-      lastName: { type: "string" },
+      firstName: {
+        type: "string",
+        transform: ["trim"],
+        minLength: 1,
+      },
 
-      positionId: { type: "string", format: "uuid" },
+      lastName: {
+        type: "string",
+        transform: ["trim"],
+        minLength: 1,
+      },
 
-      departmentId: { type: "string" },
-      managerId: { type: ["string", "null"], format: "uuid" },
-      systemId: { type: ["string", "null"], format: "uuid" },
-      joiningDate: { type: "string", format: "date" },
+      positionId: {
+        type: "string",
+        format: "uuid",
+      },
+
+      departmentId: {
+        type: ["string", "null"],
+        format: "uuid",
+      },
+
+      managerId: {
+        type: ["string", "null"],
+        format: "uuid",
+      },
+
+      systemId: {
+        type: ["string", "null"],
+        format: "uuid",
+      },
+
+      joiningDate: {
+        type: "string",
+        format: "date",
+      },
 
       welcome: {
         type: "object",
@@ -338,6 +398,7 @@ export const updateEmployeeSchema = {
         additionalProperties: false,
       },
     },
+
     additionalProperties: false,
   },
 
@@ -349,6 +410,7 @@ export const updateEmployeeSchema = {
       },
       required: ["message"],
     },
+
     404: errorResponse,
     500: errorResponse,
   },

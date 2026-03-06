@@ -1,5 +1,17 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { eq, desc, asc, and, ilike, sql, or, lte, gte, not } from "drizzle-orm";
+import {
+  eq,
+  desc,
+  asc,
+  and,
+  ilike,
+  sql,
+  or,
+  lte,
+  gte,
+  not,
+  SQL,
+} from "drizzle-orm";
 import { db } from "../../db";
 import { employees } from "../../db/schema/employees.schema";
 import { leaveRequests } from "../../db/schema/leave-requests.schema";
@@ -157,6 +169,7 @@ export async function createLeaveRequestHandler(
   for (const admin of adminUsers) {
     await db.insert(notifications).values({
       userId: admin.userId,
+      type: "leave",
       message,
     });
   }
@@ -207,7 +220,7 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
     "Get leave requests received",
   );
 
-  const conditions = [];
+  const conditions: SQL[] = [eq(employees.isActive, true)];
 
   const userRolesRows = await db
     .select({ roleName: roles.name })
@@ -242,7 +255,7 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
   const [employee] = await db
     .select({ id: employees.id, userId: employees.userId })
     .from(employees)
-    .where(eq(employees.userId, userId));
+    .where(and(eq(employees.userId, userId), eq(employees.isActive, true)));
 
   if (!isHRorAdmin) {
     if (!employee) {
@@ -275,17 +288,20 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
     }
 
     if (query.createdByType === "self" && employee) {
-      conditions.push(
-        and(
-          eq(leaveRequests.createdBy, userId),
-          eq(leaveRequests.employeeId, employee.id),
-        ),
-      );
+      conditions.push(eq(leaveRequests.createdBy, userId));
+      conditions.push(eq(leaveRequests.employeeId, employee.id));
     }
   }
 
   if (query.search) {
-    conditions.push(ilike(leaveRequests.reason, `%${query.search}%`));
+    const searchCondition = or(
+      ilike(leaveRequests.reason, `%${query.search}%`),
+      ilike(employees.firstName, `%${query.search}%`),
+      ilike(employees.lastName, `%${query.search}%`),
+    );
+    if (searchCondition) {
+      conditions.push(searchCondition);
+    }
   }
 
   if (query.status) {
@@ -955,6 +971,7 @@ export async function approveLeaveRequestHandler(
 
   await db.insert(notifications).values({
     userId: leaveRow.targetUserId,
+    type: "leave",
     message,
   });
 
@@ -1154,6 +1171,7 @@ export async function rejectLeaveRequestHandler(
 
   await db.insert(notifications).values({
     userId: leaveRow.targetUserId,
+    type: "leave",
     message,
   });
 
@@ -1639,7 +1657,7 @@ export async function getManualLeaveRequestByIdHandler(
       createdByEmployee,
       eq(leaveRequests.createdBy, createdByEmployee.userId),
     )
-    .where(eq(leaveRequests.id, id));
+    .where(and(eq(leaveRequests.id, id), eq(employees.isActive, true)));
 
   if (!row || !row.employee || row.leave.createdBy === row.employee.userId) {
     request.log.warn(
