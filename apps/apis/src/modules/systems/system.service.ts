@@ -12,6 +12,7 @@ import type {
   CreateSystemDto,
   UpdateSystemDto,
 } from "@shared/types/src/system/system.dto";
+import { employees } from "../../db/schema";
 
 export async function createSystemHandler(
   request: FastifyRequest,
@@ -73,28 +74,35 @@ export async function createSystemHandler(
       data: system,
     });
   } catch (err: any) {
+    const dbError = err?.cause ?? err?.originalError ?? err;
+
+    // duplicate system name
+    if (dbError?.code === "23505") {
+      return reply.code(409).send({
+        message: "System with this name already exists",
+      });
+    }
+
+    // invalid component reference
+    if (dbError?.code === "23503") {
+      return reply.code(400).send({
+        message: "One or more components are invalid",
+      });
+    }
+
     request.log.error(
       {
         action: "CREATE_SYSTEM",
-        err,
+        err: dbError,
       },
-      "Failed to create system",
+      "Unexpected system creation error",
     );
-
-    const errorCode = err?.code || err?.cause?.code;
-
-    if (errorCode === "23505") {
-      return reply.code(409).send({
-        message: "Component already assigned to this system",
-      });
-    }
 
     return reply.code(400).send({
       message: "Unable to create system",
     });
   }
 }
-
 export async function getSystemsHandler(request: FastifyRequest) {
   const query = request.query as {
     search?: string;
@@ -376,30 +384,26 @@ export async function deleteSystemHandler(
     "Delete system request received",
   );
 
+  const assigned = await db
+    .select({ id: employees.id })
+    .from(employees)
+    .where(eq(employees.systemId, id))
+    .limit(1);
+
+  if (assigned.length) {
+    return reply.code(400).send({
+      message: "System is assigned to an employee and cannot be deleted",
+    });
+  }
+
   const [deleted] = await db
     .delete(systems)
     .where(eq(systems.id, id))
     .returning({ id: systems.id });
 
   if (!deleted) {
-    request.log.warn(
-      {
-        action: "DELETE_SYSTEM",
-        systemId: id,
-      },
-      "System not found for delete",
-    );
-
     return reply.code(404).send({ message: "System not found" });
   }
-
-  request.log.info(
-    {
-      action: "DELETE_SYSTEM",
-      systemId: id,
-    },
-    "System deleted successfully",
-  );
 
   return sendMessage(reply, "System deleted successfully");
 }

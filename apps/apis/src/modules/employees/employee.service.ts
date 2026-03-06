@@ -705,7 +705,7 @@ export async function deleteEmployeeHandler(
 
       await tx
         .update(employees)
-        .set({ isActive: false })
+        .set({ isActive: false,systemId: null })
         .where(eq(employees.id, id));
 
       await tx
