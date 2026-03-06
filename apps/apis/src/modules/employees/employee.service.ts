@@ -592,6 +592,12 @@ export async function updateEmployeeHandler(
         throw new Error("SELF_UPDATE_NOT_ALLOWED");
       }
 
+      if (body.managerId && body.managerId === id) {
+        return reply.code(400).send({
+          message: "Employee cannot be their own manager",
+        });
+      }
+
       const employeeUpdateData: Partial<typeof employees.$inferInsert> = {
         firstName: body.firstName,
         lastName: body.lastName,
@@ -705,7 +711,7 @@ export async function deleteEmployeeHandler(
 
       await tx
         .update(employees)
-        .set({ isActive: false,systemId: null })
+        .set({ isActive: false, systemId: null })
         .where(eq(employees.id, id));
 
       await tx
