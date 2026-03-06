@@ -24,13 +24,14 @@ export async function createSystemHandler(
       action: "CREATE_SYSTEM",
       name: body.name,
       componentCount: body.componentIds?.length ?? 0,
+      componentIds: body.componentIds,
     },
     "Create system request received",
   );
 
   try {
-    await db.transaction(async (tx) => {
-      const [system] = await tx
+    const system = await db.transaction(async (tx) => {
+      const [createdSystem] = await tx
         .insert(systems)
         .values({
           name: body.name.trim(),
@@ -38,25 +39,39 @@ export async function createSystemHandler(
         })
         .returning();
 
-      if (body.componentIds?.length) {
-        await tx.insert(systemComponents).values(
-          body.componentIds.map((componentId) => ({
-            systemId: system.id,
-            componentId,
-          })),
+      if (Array.isArray(body.componentIds) && body.componentIds.length > 0) {
+        const values = body.componentIds.map((componentId) => ({
+          systemId: createdSystem.id,
+          componentId,
+        }));
+
+        request.log.info(
+          {
+            action: "CREATE_SYSTEM_COMPONENTS",
+            systemId: createdSystem.id,
+            componentIds: body.componentIds,
+          },
+          "Inserting system components",
         );
+
+        await tx.insert(systemComponents).values(values);
       }
 
-      request.log.info(
-        {
-          action: "CREATE_SYSTEM",
-          systemId: system.id,
-        },
-        "System created successfully",
-      );
+      return createdSystem;
     });
 
-    return sendMessage(reply, "System created successfully", 201);
+    request.log.info(
+      {
+        action: "CREATE_SYSTEM",
+        systemId: system.id,
+      },
+      "System created successfully",
+    );
+
+    return reply.code(201).send({
+      message: "System created successfully",
+      data: system,
+    });
   } catch (err: any) {
     request.log.error(
       {
