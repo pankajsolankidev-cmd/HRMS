@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { eq, inArray, ilike, asc, desc, and, sql } from "drizzle-orm";
+import { eq, inArray, ilike, asc, desc, and, sql, or, isNull } from "drizzle-orm";
 
 import { db } from "../../db";
 import { systems } from "../../db/schema/systems.schema";
@@ -110,6 +110,8 @@ export async function getSystemsHandler(request: FastifyRequest) {
     limit?: number;
     sortBy?: "createdAt" | "name";
     sortOrder?: "asc" | "desc";
+    excludeAssigned?: boolean;
+    employeeId?: string;
   };
 
   request.log.info(
@@ -120,6 +122,8 @@ export async function getSystemsHandler(request: FastifyRequest) {
       limit: query.limit,
       sortBy: query.sortBy,
       sortOrder: query.sortOrder,
+      excludeAssigned: query.excludeAssigned,
+      employeeId: query.employeeId,
     },
     "Get systems request received",
   );
@@ -130,6 +134,15 @@ export async function getSystemsHandler(request: FastifyRequest) {
 
   if (query?.search) {
     conditions.push(ilike(systems.name, `%${query.search}%`));
+  }
+
+  if (query?.excludeAssigned) {
+    conditions.push(
+      or(
+        isNull(employees.id),
+        query.employeeId ? eq(employees.id, query.employeeId) : undefined,
+      ),
+    );
   }
 
   const whereClause = conditions.length ? and(...conditions) : undefined;
@@ -147,13 +160,21 @@ export async function getSystemsHandler(request: FastifyRequest) {
   }
 
   const [{ count }] = await db
-    .select({ count: sql<number>`count(*)` })
+    .select({ count: sql<number>`count(distinct ${systems.id})` })
     .from(systems)
+    .leftJoin(employees, eq(employees.systemId, systems.id))
     .where(whereClause);
 
   let systemsQuery = db
-    .select()
+    .selectDistinct({
+      id: systems.id,
+      name: systems.name,
+      description: systems.description,
+      createdAt: systems.createdAt,
+      updatedAt: systems.updatedAt,
+    })
     .from(systems)
+    .leftJoin(employees, eq(employees.systemId, systems.id))
     .where(whereClause)
     .orderBy(...orderByClauses)
     .$dynamic();
