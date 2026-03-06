@@ -22,6 +22,7 @@ import Button from "../../components/ui/button/Button";
 type SystemComponent = {
   id: string;
   name: string;
+  code: string;
 };
 
 type System = {
@@ -105,7 +106,9 @@ export default function SystemTable() {
       cell: (row) => (
         <div className="flex flex-wrap gap-2">
           {row.components?.length ? (
-            row.components.map((c) => <Chip key={c.id} label={c.name} />)
+            row.components.map((c) => (
+              <Chip key={c.id} label={`${c.name} (${c.code})`} />
+            ))
           ) : (
             <span className="text-sm text-gray-400">—</span>
           )}
