@@ -1,4 +1,4 @@
-import { IconBell, IconCheck } from "@tabler/icons-react";
+import { IconBell, IconCheck, IconEye } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate } from "react-router";
@@ -17,6 +17,7 @@ type Notification = {
   message: string;
   isRead: boolean;
   createdAt: string;
+  type: string;
 };
 
 export default function NotificationDropdown() {
@@ -128,13 +129,28 @@ export default function NotificationDropdown() {
                   </p>
                 </div>
 
-                <button
-                  onClick={() => markOneMutation.mutate(notification.id)}
-                  className="text-blue-500 hover:text-blue-700"
-                  title="Mark as Read"
-                >
-                  <IconCheck size={18} />
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => markOneMutation.mutate(notification.id)}
+                    className="text-blue-500 hover:text-blue-700"
+                    title="Mark as Read"
+                  >
+                    <IconCheck size={18} />
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      navigate(
+                        notification.type === "expenses"
+                          ? "/expenses"
+                          : "/leave-requests",
+                      )
+                    }
+                    className="text-green-500 hover:text-green-700 text-xs font-medium"
+                  >
+                    <IconEye size={20} />
+                  </button>
+                </div>
               </li>
             ))
           )}

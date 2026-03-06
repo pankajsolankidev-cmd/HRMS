@@ -18,7 +18,7 @@ import { addEmployee } from "../../api/post";
 import { updateEmployee } from "../../api/put";
 
 import ComponentCard from "../../components/common/ComponentCard";
-import PageMeta from "../../components/common/PageMeta";
+import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import DatePicker from "../../components/form/date-picker";
 import Checkbox from "../../components/form/input/Checkbox";
 import Input from "../../components/form/input/InputField";
@@ -26,9 +26,11 @@ import Select from "../../components/form/Select";
 import Button from "../../components/ui/button/Button";
 
 const employeeSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  email: z.string().email("Invalid email address"),
+  firstName: z.string().trim().min(1, "First name is required"),
+  lastName: z.string().trim().min(1, "Last name is required"),
+  email: z
+    .email({ message: "Invalid email address" })
+    .min(1, "Email is required"),
   positionId: z.string().min(1, "Position is required"),
   joiningDate: z.string().min(1, "Joining date is required"),
   departmentId: z.string().nullable().optional(),
@@ -187,15 +189,15 @@ export default function AddEditEmployeePage() {
 
   return (
     <>
-      <PageMeta
-        title={isEditMode ? "Edit Employee" : "Add Employee"}
-        description={
-          isEditMode ? "Edit employee details" : "Add a new employee"
-        }
+      <PageBreadcrumb
+        pageTitle={isEditMode ? "Edit Employee" : "Add Employee"}
       />
-
-      <ComponentCard title={isEditMode ? "Edit Employee" : "Add Employee"}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <ComponentCard>
+        <form
+          noValidate
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-8"
+        >
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
             <div className="rounded-xl border bg-white p-6 dark:bg-gray-900 dark:border-gray-700">
               <div className="grid gap-6 md:grid-cols-2">
@@ -401,7 +403,11 @@ export default function AddEditEmployeePage() {
                   ? "Update"
                   : "Save"}
             </Button>
-            <Button variant="outline" onClick={() => navigate("/employees")}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/employees")}
+            >
               Back
             </Button>
           </div>

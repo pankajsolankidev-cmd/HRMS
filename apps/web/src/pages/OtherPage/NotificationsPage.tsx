@@ -26,7 +26,7 @@ export default function NotificationsPage() {
 
   const { sortBy, sortOrder, handleSort } = useTableSort<Notification>();
 
-  const { data, isLoading, isError,refetch:notificationTable } = useQuery<
+  const { data, isLoading, isError } = useQuery<
     PaginatedResponse<Notification>
   >({
     queryKey: ["notifications", page, limit, sortBy, sortOrder],

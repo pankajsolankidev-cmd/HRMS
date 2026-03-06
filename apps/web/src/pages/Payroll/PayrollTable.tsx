@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router";
 
 import {
   getEmployeePayrollHistory,
@@ -36,7 +35,6 @@ const MONTHS = [
 ];
 
 export default function PayrollTable() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const today = new Date();
 
@@ -386,12 +384,12 @@ export default function PayrollTable() {
         />
 
         <div className="flex justify-end gap-3 mt-6">
-          <Button className="bg-gray-500" onClick={() => navigate("/payrolls")}>
+          <Button className="bg-gray-500" onClick={() => setSelectedIds([])}>
             Cancel
           </Button>
 
           <Button
-            className="bg-green-600"
+            className=" dark:bg-blue-500"
             disabled={isPending || selectedIds.length === 0}
             onClick={() => {
               const adjustments = employees

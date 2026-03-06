@@ -1,4 +1,4 @@
-import type { MouseEventHandler, ReactNode } from "react";
+import type { ReactNode } from "react";
 
 interface TableProps {
   children: ReactNode;
@@ -20,11 +20,8 @@ interface TableRowProps {
   className?: string;
 }
 
-interface TableCellProps {
-  children: ReactNode;
+interface TableCellProps extends React.TdHTMLAttributes<HTMLTableCellElement> {
   isHeader?: boolean;
-  className?: string;
-  onClick?: MouseEventHandler<HTMLTableCellElement>;
 }
 
 const Table: React.FC<TableProps> = ({ children, className }) => {
@@ -48,11 +45,12 @@ const TableCell: React.FC<TableCellProps> = ({
   isHeader = false,
   className,
   onClick,
+  ...props
 }) => {
   const CellTag = isHeader ? "th" : "td";
 
   return (
-    <CellTag className={className} onClick={onClick}>
+    <CellTag className={className} onClick={onClick} {...props}>
       {children}
     </CellTag>
   );

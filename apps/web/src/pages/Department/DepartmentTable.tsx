@@ -6,7 +6,6 @@ import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router";
 import { deleteDepartment } from "../../api/delete";
 import { getDepartments } from "../../api/get";
-import type { PaginatedResponse } from "../../api/types";
 import Card from "../../components/common/ComponentCard";
 import DeleteConfirm from "../../components/common/DeleteConfirmModal";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
@@ -26,13 +25,13 @@ export default function DepartmentTable() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const { data, isLoading, isError, refetch } = useQuery<
-    PaginatedResponse<Department>
-  >({
+
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["departments", page, limit],
     queryFn: () => getDepartments({ page, limit }),
     placeholderData: (prev) => prev,
   });
+
   const { mutate: removeDepartment, isPending } = useMutation({
     mutationFn: deleteDepartment,
     onSuccess: (res) => {
@@ -98,33 +97,27 @@ export default function DepartmentTable() {
             <Button
               onClick={() => navigate("/departments/new")}
               size="md"
-              className="bg-black dark:bg-blue-500 dark:hover:bg-brand-600 whitespace-nowrap"
+              className="h-[42px] bg-black dark:bg-blue-500 whitespace-nowrap"
             >
               Add Department
             </Button>
           </div>
         }
       >
-        {isError ? (
-          <div className="text-red-500 p-4">
-            Failed to load department data.
-          </div>
-        ) : (
-          <DataTable
-            columns={columns}
-            data={departmentData}
-            isLoading={isLoading}
-            isError={isError}
-            page={page}
-            limit={limit}
-            total={total}
-            onPageChange={setPage}
-            onLimitChange={(newLimit) => {
-              setLimit(newLimit);
-              setPage(1);
-            }}
-          />
-        )}
+        <DataTable
+          columns={columns}
+          data={departmentData}
+          isLoading={isLoading}
+          isError={isError}
+          page={page}
+          limit={limit}
+          total={total}
+          onPageChange={setPage}
+          onLimitChange={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1);
+          }}
+        />
       </Card>
     </>
   );

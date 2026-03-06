@@ -199,34 +199,30 @@ export default function ProjectTable() {
             <Button
               onClick={() => navigate("/projects/new")}
               size="md"
-              className="bg-black dark:bg-blue-500 dark:hover:bg-brand-600 whitespace-nowrap"
+              className="h-[42px] bg-black dark:bg-blue-500 whitespace-nowrap"
             >
               Add Projects
             </Button>
           </div>
         }
       >
-        {isError ? (
-          <div className="text-red-500 p-4">Failed to load project data.</div>
-        ) : (
-          <DataTable
-            columns={columns}
-            data={projectData}
-            isLoading={isLoading}
-            isError={isError}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            onSort={handleSort}
-            page={page}
-            limit={limit}
-            total={total}
-            onPageChange={setPage}
-            onLimitChange={(newLimit) => {
-              setLimit(newLimit);
-              setPage(1);
-            }}
-          />
-        )}
+        <DataTable
+          columns={columns}
+          data={projectData}
+          isLoading={isLoading}
+          isError={isError}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSort={handleSort}
+          page={page}
+          limit={limit}
+          total={total}
+          onPageChange={setPage}
+          onLimitChange={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1);
+          }}
+        />
       </Card>
     </>
   );

@@ -21,7 +21,7 @@ const Button: React.FC<ButtonProps> = ({
   onClick,
   className = "",
   disabled = false,
-  type = "button",
+  type = "submit",
 }) => {
   const sizeClasses = {
     sm: "px-4 py-3 text-sm",

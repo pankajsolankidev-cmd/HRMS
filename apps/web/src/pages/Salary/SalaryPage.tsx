@@ -1,11 +1,11 @@
 import { IconEdit, IconSearch, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
 import { deleteSalaryStructure } from "../../api/delete";
-import { getEmployees, getSalaryStructures } from "../../api/get";
+import { getSalaryStructures } from "../../api/get";
 import type { PaginatedResponse } from "../../api/types";
 import Card from "../../components/common/ComponentCard";
 import DeleteConfirm from "../../components/common/DeleteConfirmModal";
@@ -50,19 +50,6 @@ export default function SalaryPage() {
     setPage(1);
   }, [sortBy, sortOrder]);
 
-  const { data: employees } = useQuery({
-    queryKey: ["employees", "lookup"],
-    queryFn: () => getEmployees(),
-  });
-
-  const employeeMap = useMemo(() => {
-    const map = new Map<string, string>();
-    employees?.data?.forEach((emp: any) => {
-      map.set(emp.id, `${emp.firstName} ${emp.lastName}`);
-    });
-    return map;
-  }, [employees]);
-
   const { data, isLoading, isError, refetch } = useQuery<
     PaginatedResponse<any>
   >({
@@ -83,23 +70,11 @@ export default function SalaryPage() {
       }),
     placeholderData: (prev) => prev,
   });
-
-  const salaryData: SalaryStructure[] = useMemo(
-    () =>
-      data?.data?.map((s: any) => ({
-        id: s.id,
-        employeeName: employeeMap.get(s.employeeId) ?? "—",
-        basicSalary: Number(s.basicSalary),
-        tax: Number(s.tax),
-        pf: Number(s.pf),
-        netSalary: Number(s.netSalary),
-        description: s.description,
-        appraisalDate: s.appraisalDate
-          ? s.appraisalDate.split("T")[0]
-          : undefined,
-      })) ?? [],
-    [data, employeeMap],
-  );
+  const tableData =
+    data?.data.map(({ salary, employees }: any) => ({
+      ...salary,
+      employeeName: `${employees.firstName} ${employees.lastName}`,
+    })) ?? [];
 
   const total = data?.meta?.total ?? 0;
 
@@ -207,16 +182,16 @@ export default function SalaryPage() {
 
       <Card
         action={
-          <div className="flex flex-col sm:flex-row items-center gap-3">
-            <div className="relative w-full sm:max-w-xs">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+          <div className="flex items-center justify-between gap-3">
+            <div className="relative w-full max-w-xs">
+              <div className="absolute left-3 top-3 text-gray-400">
                 <IconSearch size={18} stroke={2} />
               </div>
               <Input
-                placeholder="Search here..."
+                placeholder="Search by name"
                 value={rawSearch}
                 onChange={(e) => setRawSearch(e.target.value)}
-                className="pl-10 pr-12"
+                className="pl-10 pr-10 h-[42px] focus-visible:ring-0"
               />
               {rawSearch && (
                 <Button
@@ -232,47 +207,33 @@ export default function SalaryPage() {
                 </Button>
               )}
             </div>
-
             <Button
               onClick={() => navigate("/salary/new")}
               size="md"
-              className="bg-black dark:bg-blue-500 dark:hover:bg-brand-600 whitespace-nowrap"
+              className="h-[42px] bg-black dark:bg-blue-500  whitespace-nowrap"
             >
               Add Salary
             </Button>
           </div>
         }
       >
-        {!isLoading && salaryData.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
-              No records found
-            </p>
-            {search && (
-              <p className="mt-1 text-sm text-gray-500">
-                No results for <span className="font-medium">"{search}"</span>
-              </p>
-            )}
-          </div>
-        ) : (
-          <DataTable
-            columns={columns}
-            data={salaryData}
-            isLoading={isLoading}
-            isError={isError}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            onSort={handleSort}
-            page={page}
-            limit={limit}
-            total={total}
-            onPageChange={setPage}
-            onLimitChange={(newLimit) => {
-              setLimit(newLimit);
-              setPage(1);
-            }}
-          />
-        )}
+        <DataTable
+          columns={columns}
+          data={tableData}
+          isLoading={isLoading}
+          isError={isError}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSort={handleSort}
+          page={page}
+          limit={limit}
+          total={total}
+          onPageChange={setPage}
+          onLimitChange={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1);
+          }}
+        />
       </Card>
     </>
   );

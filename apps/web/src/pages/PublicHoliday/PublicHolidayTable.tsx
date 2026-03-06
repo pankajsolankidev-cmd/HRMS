@@ -1,6 +1,7 @@
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
+import { saveAs } from "file-saver";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useSelector } from "react-redux";
@@ -22,7 +23,6 @@ import DataTable, {
 import { useTableSort } from "../../components/tables/useTableSort";
 import Button from "../../components/ui/button/Button";
 import type { RootState } from "../../context";
-
 type PublicHoliday = {
   id: number;
   title: string;
@@ -76,15 +76,8 @@ export default function PublicHolidayTable() {
 
   const { mutate: downloadPDF, isPending: isDownloading } = useMutation({
     mutationFn: exportPublicHolidayPDF,
-    onSuccess: (blob) => {
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "public-holidays.pdf";
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+    onSuccess: (blob: Blob) => {
+      saveAs(blob, "public-holidays.pdf");
       toast.success("PDF downloaded successfully");
     },
     onError: (error: AxiosError<{ message?: string }>) => {
@@ -98,15 +91,8 @@ export default function PublicHolidayTable() {
   const { mutate: downloadTemplate, isPending: isDownloadingTemplate } =
     useMutation({
       mutationFn: downloadHolidayTemplate,
-      onSuccess: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "holiday-template.xlsx";
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.URL.revokeObjectURL(url);
+      onSuccess: (blob: Blob) => {
+        saveAs(blob, "holiday-template.xlsx");
         toast.success("Template downloaded successfully");
       },
       onError: (error: AxiosError<{ message?: string }>) => {
@@ -299,7 +285,7 @@ export default function PublicHolidayTable() {
                 <Button
                   onClick={() => navigate("/holidays/new")}
                   size="md"
-                  className="bg-black text-white dark:bg-blue-500"
+                  className=" bg-black text-white dark:bg-blue-500"
                 >
                   Add Holiday
                 </Button>
@@ -347,31 +333,23 @@ export default function PublicHolidayTable() {
           </div>
         }
       >
-        {!isLoading && holidays.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <p className="text-lg font-medium text-gray-700">
-              No records found
-            </p>
-          </div>
-        ) : (
-          <DataTable
-            columns={columns}
-            data={holidays}
-            isLoading={isLoading}
-            isError={isError}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            onSort={handleSort}
-            page={page}
-            limit={limit}
-            total={total}
-            onPageChange={setPage}
-            onLimitChange={(newLimit) => {
-              setLimit(newLimit);
-              setPage(1);
-            }}
-          />
-        )}
+        <DataTable
+          columns={columns}
+          data={holidays}
+          isLoading={isLoading}
+          isError={isError}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSort={handleSort}
+          page={page}
+          limit={limit}
+          total={total}
+          onPageChange={setPage}
+          onLimitChange={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1);
+          }}
+        />
       </Card>
 
       {previewData && (
