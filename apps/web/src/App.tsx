@@ -13,8 +13,6 @@ import AuthLayout from "./layout/AuthPageLayout";
 import NotFound from "./pages/OtherPage/NotFound";
 import PublicRoute from "./pages/OtherPage/PublicRoute";
 
-import { ScrollToTop } from "./components/common/ScrollToTop";
-
 import { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
 import { useDispatch } from "react-redux";
@@ -169,7 +167,6 @@ export default function App() {
           zIndex: 99999,
         }}
       />
-      <ScrollToTop />
       <AnimatedRoutes />
     </Router>
   );
