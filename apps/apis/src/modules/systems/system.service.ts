@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { eq, inArray, ilike, asc, desc, and, sql, or, isNull } from "drizzle-orm";
+import { eq, inArray, ilike, asc, desc, and, sql, isNull } from "drizzle-orm";
 
 import { db } from "../../db";
 import { systems } from "../../db/schema/systems.schema";
@@ -111,7 +111,6 @@ export async function getSystemsHandler(request: FastifyRequest) {
     sortBy?: "createdAt" | "name";
     sortOrder?: "asc" | "desc";
     excludeAssigned?: boolean;
-    employeeId?: string;
   };
 
   request.log.info(
@@ -123,7 +122,6 @@ export async function getSystemsHandler(request: FastifyRequest) {
       sortBy: query.sortBy,
       sortOrder: query.sortOrder,
       excludeAssigned: query.excludeAssigned,
-      employeeId: query.employeeId,
     },
     "Get systems request received",
   );
@@ -137,12 +135,7 @@ export async function getSystemsHandler(request: FastifyRequest) {
   }
 
   if (query?.excludeAssigned) {
-    conditions.push(
-      or(
-        isNull(employees.id),
-        query.employeeId ? eq(employees.id, query.employeeId) : undefined,
-      ),
-    );
+    conditions.push(isNull(employees.id));
   }
 
   const whereClause = conditions.length ? and(...conditions) : undefined;

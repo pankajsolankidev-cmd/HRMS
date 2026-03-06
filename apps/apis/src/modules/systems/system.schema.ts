@@ -143,11 +143,6 @@ export const getSystemsSchema = {
       excludeAssigned: {
         type: "boolean",
       },
-
-      employeeId: {
-        type: "string",
-        format: "uuid",
-      },
     },
 
     additionalProperties: false,
