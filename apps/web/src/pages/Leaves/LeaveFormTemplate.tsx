@@ -63,10 +63,15 @@ export const leaveSchema = z
       .optional(),
   })
   .superRefine((data, ctx) => {
-    if (data.dayType === "multiple_days" && (!data.fromDate || !data.toDate)) {
+    if (
+      data.dayType === "multiple_days" &&
+      data.fromDate &&
+      data.toDate &&
+      new Date(data.toDate) <= new Date(data.fromDate)
+    ) {
       ctx.addIssue({
         path: ["toDate"],
-        message: "Date range is required",
+        message: "To date must be after From date",
         code: z.ZodIssueCode.custom,
       });
     }
@@ -102,6 +107,8 @@ export default function LeaveForm({
   } = useForm<LeaveFormData>({
     resolver: zodResolver(leaveSchema),
     defaultValues: {
+      type: "sick",
+      dayType: "full_day",
       fromHour: 8,
       toHour: 8,
       fromHourType: "full_day",
@@ -123,7 +130,7 @@ export default function LeaveForm({
   }, [dayType, fromDate, setValue]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {showEmployeeSelect && (
           <Controller
@@ -137,6 +144,7 @@ export default function LeaveForm({
                 value={field.value}
                 onChange={field.onChange}
                 error={!!errors.employeeId}
+                hint={errors.employeeId?.message}
               />
             )}
           />
@@ -153,6 +161,7 @@ export default function LeaveForm({
               value={field.value}
               onChange={field.onChange}
               error={!!errors.type}
+              hint={errors.type?.message}
             />
           )}
         />
@@ -168,6 +177,7 @@ export default function LeaveForm({
               value={field.value}
               onChange={field.onChange}
               error={!!errors.dayType}
+              hint={errors.dayType?.message}
             />
           )}
         />
@@ -178,43 +188,51 @@ export default function LeaveForm({
           render={({ field }) => (
             <DatePicker
               id="fromDate"
+              disableFuture={showEmployeeSelect}
+              disablePast={!showEmployeeSelect}
               placeholder="Select from date"
               required
               label="From Date"
               value={field.value ? new Date(field.value) : null}
-              onChange={(d) =>
-                d?.[0] && field.onChange(d[0].toLocaleDateString("en-CA"))
-              }
+              onChange={(dates) => {
+                field.onChange(
+                  dates?.[0] ? dates[0].toLocaleDateString("en-CA") : "",
+                );
+              }}
+              error={!!errors.fromDate}
+              hint={errors.fromDate?.message}
             />
           )}
         />
 
-        {dayType === "multiple_days" ? (
+        <div
+          className={
+            dayType !== "multiple_days" ? "pointer-events-none opacity-60" : ""
+          }
+        >
           <Controller
             name="toDate"
             control={control}
             render={({ field }) => (
               <DatePicker
                 id="toDate"
+                disableFuture={showEmployeeSelect}
+                disablePast={!showEmployeeSelect}
                 placeholder="Select to date"
                 required
                 label="To Date"
                 value={field.value ? new Date(field.value) : null}
-                onChange={(d) =>
-                  d?.[0] && field.onChange(d[0].toLocaleDateString("en-CA"))
-                }
+                onChange={(dates) => {
+                  field.onChange(
+                    dates?.[0] ? dates[0].toLocaleDateString("en-CA") : "",
+                  );
+                }}
+                error={!!errors.toDate}
+                hint={errors.toDate?.message}
               />
             )}
           />
-        ) : (
-          <Input
-            label="To Date"
-            required
-            placeholder="Select to date"
-            value={fromDate || ""}
-            disabled
-          />
-        )}
+        </div>
 
         {dayType === "multiple_days" && (
           <>
@@ -230,6 +248,8 @@ export default function LeaveForm({
                     field.onChange(val);
                     setValue("fromHour", hourTypeToHours(val));
                   }}
+                  error={!!errors.fromHourType}
+                  hint={errors.fromHour?.message}
                 />
               )}
             />
@@ -246,6 +266,8 @@ export default function LeaveForm({
                     field.onChange(val);
                     setValue("toHour", hourTypeToHours(val));
                   }}
+                  error={!!errors.toHourType}
+                  hint={errors.toHour?.message}
                 />
               )}
             />
@@ -258,6 +280,7 @@ export default function LeaveForm({
           placeholder="Enter reason"
           {...register("reason")}
           error={!!errors.reason}
+          hint={errors.reason?.message}
         />
 
         <FileInput
@@ -269,7 +292,7 @@ export default function LeaveForm({
         />
       </div>
 
-      <div className="flex justify-end gap-3 pt-6 border-t dark:border-gray-700">
+      <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
         <Button className="bg-black dark:bg-blue-500" disabled={loading}>
           {loading ? "Processing..." : "Save"}
         </Button>

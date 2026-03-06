@@ -97,33 +97,27 @@ export default function DepartmentTable() {
             <Button
               onClick={() => navigate("/departments/new")}
               size="md"
-              className="bg-black dark:bg-blue-500 dark:hover:bg-brand-600 whitespace-nowrap"
+              className="h-[42px] bg-black dark:bg-blue-500 whitespace-nowrap"
             >
               Add Department
             </Button>
           </div>
         }
       >
-        {isError ? (
-          <div className="text-red-500 p-4">
-            Failed to load department data.
-          </div>
-        ) : (
-          <DataTable
-            columns={columns}
-            data={departmentData}
-            isLoading={isLoading}
-            isError={isError}
-            page={page}
-            limit={limit}
-            total={total}
-            onPageChange={setPage}
-            onLimitChange={(newLimit) => {
-              setLimit(newLimit);
-              setPage(1);
-            }}
-          />
-        )}
+        <DataTable
+          columns={columns}
+          data={departmentData}
+          isLoading={isLoading}
+          isError={isError}
+          page={page}
+          limit={limit}
+          total={total}
+          onPageChange={setPage}
+          onLimitChange={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1);
+          }}
+        />
       </Card>
     </>
   );

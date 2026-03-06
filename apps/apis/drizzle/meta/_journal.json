@@ -29,6 +29,27 @@
       "when": 1772021153032,
       "tag": "0003_nosy_the_twelve",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1772528121522,
+      "tag": "0004_bumpy_namor",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1772530765653,
+      "tag": "0005_curious_morg",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1772707585187,
+      "tag": "0006_majestic_white_queen",
+      "breakpoints": true
     }
   ]
 }

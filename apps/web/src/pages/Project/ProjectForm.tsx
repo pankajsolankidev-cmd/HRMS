@@ -12,14 +12,14 @@ import { addProject } from "../../api/post";
 import { updateProject } from "../../api/put";
 
 import ComponentCard from "../../components/common/ComponentCard";
-import PageMeta from "../../components/common/PageMeta";
+import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import DatePicker from "../../components/form/date-picker";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 
 const projectSchema = z.object({
-  name: z.string().min(1, "Project name is required"),
-  clientName: z.string().min(1, "Client name is required"),
+  name: z.string().trim().min(1, "Project name is required"),
+  clientName: z.string().trim().min(1, "Client name is required"),
   startDate: z.string().min(1, "Start date is required"),
   expectedEndDate: z.string().min(1, "Expected end date is required"),
 });
@@ -96,13 +96,14 @@ export default function ProjectForm() {
 
   return (
     <>
-      <PageMeta
-        title={isEditMode ? "Edit Project" : "Add Project"}
-        description="Manage project details"
-      />
+      <PageBreadcrumb pageTitle={isEditMode ? "Edit Project" : "Add Project"} />
 
-      <ComponentCard title={isEditMode ? "Edit Project" : "Add Project"}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <ComponentCard>
+        <form
+          noValidate
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-8"
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Input
               required

@@ -266,9 +266,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
           )}
         </div>
       </div>
-      {error && hint && (
-        <p className="text-sm text-red-400 dark:text-red-400">{hint}</p>
-      )}
+      {error && hint && <p className="text-xs text-red-500">{hint}</p>}
     </div>
   );
 };

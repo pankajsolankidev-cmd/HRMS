@@ -8,18 +8,18 @@ import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
 
 import ComponentCard from "../../components/common/ComponentCard";
-import PageMeta from "../../components/common/PageMeta";
 import Input from "../../components/form/input/InputField";
 
 import { getComponentById } from "../../api/get";
 import { addComponent } from "../../api/post";
 import { updateComponent } from "../../api/put";
+import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import Button from "../../components/ui/button/Button";
 
 const componentSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  description: z.string().min(1, "Description is required"),
-  code: z.string().trim().min(1, "Code is required"),
+  name: z.string().trim().min(1, "Name is required"),
+  description: z.string().trim().optional(),
+  code: z.string().trim().trim().min(1, "Code is required"),
 });
 
 type ComponentFormData = z.infer<typeof componentSchema>;
@@ -98,19 +98,16 @@ export default function AddEditComponentPage() {
 
   return (
     <>
-      <PageMeta
-        title={
-          isEditMode
-            ? "Edit Component | TailAdmin - React Dashboard"
-            : "Add Component | TailAdmin - React Dashboard"
-        }
-        description={
-          isEditMode ? "Edit Component details" : "Add a new Component"
-        }
+      <PageBreadcrumb
+        pageTitle={isEditMode ? "Edit Component" : "Add Component"}
       />
 
-      <ComponentCard title={isEditMode ? "Edit Component" : "Add Component"}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <ComponentCard>
+        <form
+          noValidate
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-6"
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Input
               required
@@ -132,7 +129,6 @@ export default function AddEditComponentPage() {
 
             <div className="md:col-span-2">
               <Input
-                required
                 label="Description"
                 placeholder="Enter description"
                 {...register("description")}

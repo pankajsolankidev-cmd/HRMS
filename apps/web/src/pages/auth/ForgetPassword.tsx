@@ -58,6 +58,7 @@ export default function ForgetPassword() {
       </p>
 
       <form
+        noValidate
         className="space-y-5 mt-8"
         onSubmit={handleSubmit((data) => mutation.mutate(data))}
       >

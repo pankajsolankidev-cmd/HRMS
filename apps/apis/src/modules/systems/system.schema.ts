@@ -8,19 +8,36 @@ const messageResponse = {
 
 export const createSystemSchema = {
   tags: ["Systems"],
+
   body: {
     type: "object",
     required: ["name"],
+
     properties: {
-      name: { type: "string" },
-      description: { type: "string" },
+      name: {
+        type: "string",
+        transform: ["trim"],
+        minLength: 2,
+      },
+
+      description: {
+        type: "string",
+        transform: ["trim"],
+      },
+
       componentIds: {
         type: "array",
-        items: { type: "string" },
+
+        items: {
+          type: "string",
+          format: "uuid",
+        },
       },
     },
+
     additionalProperties: false,
   },
+
   response: {
     201: messageResponse,
     500: messageResponse,
@@ -29,25 +46,44 @@ export const createSystemSchema = {
 
 export const updateSystemSchema = {
   tags: ["Systems"],
+
   params: {
     type: "object",
     required: ["id"],
+
     properties: {
-      id: { type: "string" },
+      id: { type: "string", format: "uuid" },
     },
   },
+
   body: {
     type: "object",
+
     properties: {
-      name: { type: "string" },
-      description: { type: "string" },
+      name: {
+        type: "string",
+        transform: ["trim"],
+        minLength: 2,
+      },
+
+      description: {
+        type: "string",
+        transform: ["trim"],
+      },
+
       componentIds: {
         type: "array",
-        items: { type: "string" },
+
+        items: {
+          type: "string",
+          format: "uuid",
+        },
       },
     },
+
     additionalProperties: false,
   },
+
   response: {
     200: messageResponse,
     404: messageResponse,
@@ -57,13 +93,16 @@ export const updateSystemSchema = {
 
 export const getSystemByIdSchema = {
   tags: ["Systems"],
+
   params: {
     type: "object",
     required: ["id"],
+
     properties: {
-      id: { type: "string" },
+      id: { type: "string", format: "uuid" },
     },
   },
+
   response: {
     404: messageResponse,
   },
@@ -71,21 +110,38 @@ export const getSystemByIdSchema = {
 
 export const getSystemsSchema = {
   tags: ["Systems"],
+
   querystring: {
     type: "object",
+
     properties: {
-      search: { type: "string" },
-      page: { type: "number", minimum: 1 },
-      limit: { type: "number", minimum: 1, maximum: 100 },
+      search: {
+        type: "string",
+        transform: ["trim"],
+      },
+
+      page: {
+        type: "number",
+        minimum: 1,
+      },
+
+      limit: {
+        type: "number",
+        minimum: 1,
+        maximum: 100,
+      },
+
       sortBy: {
         type: "string",
         enum: ["createdAt", "name"],
       },
+
       sortOrder: {
         type: "string",
         enum: ["asc", "desc"],
       },
     },
+
     additionalProperties: false,
   },
 };

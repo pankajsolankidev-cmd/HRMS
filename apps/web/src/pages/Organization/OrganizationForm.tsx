@@ -10,13 +10,13 @@ import { z } from "zod";
 import { getOrganization } from "../../api/get";
 import { addOrganization } from "../../api/post";
 import ComponentCard from "../../components/common/ComponentCard";
-import PageMeta from "../../components/common/PageMeta";
 import DatePicker from "../../components/form/date-picker";
 import Input from "../../components/form/input/InputField";
 import MultiSelect from "../../components/form/MultiSelect";
 import Button from "../../components/ui/button/Button";
 
 import type { CreateOrganizationDto } from "@shared/types";
+import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 
 const WEEK_DAYS: CreateOrganizationDto["weekOff"][number][] = [
   "MONDAY",
@@ -29,7 +29,7 @@ const WEEK_DAYS: CreateOrganizationDto["weekOff"][number][] = [
 ];
 
 const organizationSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().trim().min(1, "Name is required"),
   workingHours: z.object({
     start: z.string().min(1, "Start time is required"),
     end: z.string().min(1, "End time is required"),
@@ -124,19 +124,16 @@ export default function OrganizationForm() {
 
   return (
     <>
-      <PageMeta
-        title={isEditMode ? "Edit Organization" : "Add Organization"}
-        description={
-          isEditMode
-            ? "Update organization details"
-            : "Create a new Organization"
-        }
+      <PageBreadcrumb
+        pageTitle={isEditMode ? "Edit Organization" : "Add Organization"}
       />
 
-      <ComponentCard
-        title={isEditMode ? "Edit Organization" : "Add Organization"}
-      >
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <ComponentCard>
+        <form
+          noValidate
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-6"
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Input
               required
@@ -152,10 +149,10 @@ export default function OrganizationForm() {
               control={control}
               render={({ field }) => (
                 <DatePicker
-                  placeholder="Start time"
+                  placeholder="Office Start Time"
                   id="start-time"
                   mode="time"
-                  label="Start Time"
+                  label="Office Start Time"
                   value={field.value}
                   onChange={(_, dateStr) => field.onChange(dateStr)}
                   error={!!errors.workingHours?.start}
@@ -170,10 +167,10 @@ export default function OrganizationForm() {
               control={control}
               render={({ field }) => (
                 <DatePicker
-                  placeholder="End time"
+                  placeholder="Office End Time"
                   id="end-time"
                   mode="time"
-                  label="End Time"
+                  label="Office End Time"
                   value={field.value}
                   onChange={(_, dateStr) => field.onChange(dateStr)}
                   error={!!errors.workingHours?.end}

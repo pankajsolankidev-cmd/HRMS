@@ -7,6 +7,7 @@ import { getLeaveById } from "../../api/get";
 import { updateLeave } from "../../api/patch";
 import { addLeave, type AddLeavePayload } from "../../api/post";
 import Card from "../../components/common/ComponentCard";
+import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import { mapFormToAddLeavePayload } from "./EmployeeLeavePage";
 import LeaveForm, { type LeaveFormData } from "./LeaveFormTemplate";
 
@@ -86,13 +87,18 @@ export default function SelfLeavePage() {
   };
 
   return (
-    <Card title={isEditMode ? "Edit Leave Request" : "Apply Leave"}>
-      <LeaveForm
-        defaultValues={defaultValues}
-        loading={addMutation.isPending || updateMutation.isPending}
-        onBack={() => navigate("/leave-requests")}
-        onSubmit={handleSubmit}
+    <>
+      <PageBreadcrumb
+        pageTitle={isEditMode ? "Edit Leave Request" : "Apply Leave"}
       />
-    </Card>
+      <Card>
+        <LeaveForm
+          defaultValues={defaultValues}
+          loading={addMutation.isPending || updateMutation.isPending}
+          onBack={() => navigate("/leave-requests")}
+          onSubmit={handleSubmit}
+        />
+      </Card>
+    </>
   );
 }

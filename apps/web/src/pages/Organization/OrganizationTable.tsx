@@ -82,25 +82,19 @@ export default function OrganizationTable() {
             <Button
               onClick={() => navigate("/organization/new")}
               size="md"
-              className="bg-black dark:bg-blue-500 dark:hover:bg-brand-600 whitespace-nowrap"
+              className="bg-black dark:bg-blue-500  whitespace-nowrap"
             >
               Add Organization
             </Button>
           </div>
         }
       >
-        {isError ? (
-          <div className="text-red-500 p-4">
-            Failed to load organization data.
-          </div>
-        ) : (
-          <DataTable
-            columns={columns}
-            data={organizationData}
-            isLoading={isLoading}
-            isError={isError}
-          />
-        )}
+        <DataTable
+          columns={columns}
+          data={organizationData}
+          isLoading={isLoading}
+          isError={isError}
+        />
       </Card>
     </>
   );

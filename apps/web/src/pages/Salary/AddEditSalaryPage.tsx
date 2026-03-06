@@ -8,7 +8,6 @@ import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
 
 import ComponentCard from "../../components/common/ComponentCard";
-import PageMeta from "../../components/common/PageMeta";
 import DatePicker from "../../components/form/date-picker";
 import Input from "../../components/form/input/InputField";
 import Select from "../../components/form/Select";
@@ -18,6 +17,7 @@ import { getEmployees, getSalaryStructureById } from "../../api/get";
 import { updateSalaryStructure } from "../../api/patch";
 import { addSalaryStructure } from "../../api/post";
 import type { PaginatedResponse } from "../../api/types";
+import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 
 const MAX_AMOUNT = 1_000_000;
 const TAX_AMOUNT = 1_000;
@@ -35,7 +35,7 @@ const schema = z.object({
     .number()
     .min(1, "PF must be greater than 0")
     .max(TAX_AMOUNT, "Amount is too large"),
-  description: z.string().optional(),
+  description: z.string().trim().optional(),
   appraisalDate: z.string().min(1, "Appraisal date is required"),
 });
 
@@ -135,12 +135,9 @@ export default function AddEditSalaryPage() {
 
   return (
     <>
-      <PageMeta
-        title={isEditMode ? "Edit Salary" : "Add Salary"}
-        description={isEditMode ? "Edit Salary details" : "Add a new Salary"}
-      />
+      <PageBreadcrumb pageTitle={isEditMode ? "Edit Salary" : "Add Salary"} />
 
-      <ComponentCard title={isEditMode ? "Edit Salary" : "Add Salary"}>
+      <ComponentCard>
         <form
           noValidate
           onSubmit={handleSubmit(onSubmit)}

@@ -31,7 +31,7 @@ export const updateSystem = async ({
   id: string;
   payload: {
     name: string;
-    description: string;
+    description?: string;
     components: string[];
   };
 }) => {

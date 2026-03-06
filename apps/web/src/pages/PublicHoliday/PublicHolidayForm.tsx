@@ -11,15 +11,15 @@ import { getPublicHolidayById } from "../../api/get";
 import { addPublicHoliday } from "../../api/post";
 import { updatePublicHoliday } from "../../api/put";
 import ComponentCard from "../../components/common/ComponentCard";
-import PageMeta from "../../components/common/PageMeta";
+import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import DatePicker from "../../components/form/date-picker";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 
 const holidaySchema = z
   .object({
-    title: z.string().min(1, "Holiday title is required"),
-    description: z.string().optional(),
+    title: z.string().trim().min(1, "Holiday title is required"),
+    description: z.string().trim().optional(),
     fromDate: z.string().min(1, "From date is required"),
     toDate: z.string().min(1, "To date is required"),
   })
@@ -107,15 +107,14 @@ export default function PublicHolidayForm() {
 
   return (
     <>
-      <PageMeta
-        title={isEditMode ? "Edit Holiday" : "Add Holiday"}
-        description={
-          isEditMode ? "Update holiday details" : "Create a new public holiday"
-        }
-      />
+      <PageBreadcrumb pageTitle={isEditMode ? "Edit Holiday" : "Add Holiday"} />
 
-      <ComponentCard title={isEditMode ? "Edit Holiday" : "Add Holiday"}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <ComponentCard>
+        <form
+          noValidate
+          onSubmit={handleSubmit(onSubmit)}
+          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+        >
           <Input
             required
             label="Holiday Title"
@@ -166,6 +165,7 @@ export default function PublicHolidayForm() {
               />
             )}
           />
+
           <Input
             label="Description"
             placeholder="Enter holiday description"
@@ -174,7 +174,8 @@ export default function PublicHolidayForm() {
             hint={errors.description?.message}
           />
 
-          <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
+          {/* Buttons full width */}
+          <div className="col-span-1 md:col-span-2 flex justify-end gap-3 pt-6">
             <Button
               disabled={saveMutation.isPending}
               className="bg-black dark:bg-blue-500 text-white"

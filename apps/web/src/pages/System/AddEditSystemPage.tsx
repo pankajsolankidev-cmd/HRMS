@@ -11,14 +11,14 @@ import { addSystem } from "../../api/post";
 import { updateSystem } from "../../api/put";
 import type { PaginatedResponse } from "../../api/types";
 import ComponentCard from "../../components/common/ComponentCard";
-import PageMeta from "../../components/common/PageMeta";
+import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import Input from "../../components/form/input/InputField";
 import MultiSelect from "../../components/form/MultiSelect";
 import Button from "../../components/ui/button/Button";
 
 const systemSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
-  description: z.string().trim().min(1, "Description is required"),
+  description: z.string().trim().optional(),
   components: z.array(z.string()).min(1, "Select at least one component"),
 });
 
@@ -55,7 +55,7 @@ export default function AddEditSystemPage() {
 
   const componentOptions = (componentsData?.data ?? []).map((c: any) => ({
     value: String(c.id),
-    text: c.name,
+    text: `${c.name} (${c.code})`,
   }));
 
   const { data: systemData, isLoading: systemLoading } = useQuery({
@@ -111,13 +111,14 @@ export default function AddEditSystemPage() {
 
   return (
     <>
-      <PageMeta
-        title={isEditMode ? "Edit System" : "Add System"}
-        description={isEditMode ? "Edit System details" : "Add a new System"}
-      />
+      <PageBreadcrumb pageTitle={isEditMode ? "Edit System" : "Add System"} />
 
-      <ComponentCard title={isEditMode ? "Edit System" : "Add System"}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <ComponentCard>
+        <form
+          noValidate
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-6"
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Input
               required
@@ -148,7 +149,6 @@ export default function AddEditSystemPage() {
 
             <div className="md:col-span-2">
               <Input
-                required
                 label="Description"
                 placeholder="Enter description"
                 {...register("description")}
