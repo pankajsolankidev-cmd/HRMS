@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
@@ -84,7 +84,10 @@ export default function EmployeeForm() {
 
   const { data: systems } = useQuery({
     queryKey: ["systems-lookup"],
-    queryFn: () => getSystems(),
+    queryFn: () =>
+      getSystems({
+        excludeAssigned: true,
+      }),
   });
 
   const { data: positions } = useQuery({
@@ -112,21 +115,33 @@ export default function EmployeeForm() {
       label: p.name,
     }),
   );
-
-  const systemOptions = (systems?.data ?? []).map((s: any) => ({
-    value: String(s.id),
-    label: s.name,
-  }));
+  const systemOptions = React.useMemo(() => {
+    const baseOptions = (systems?.data ?? []).map((s: any) => ({
+      value: String(s.id),
+      label: s.name,
+    }));
+    if (employeeData?.system) {
+      const newOption = {
+        value: String(employeeData.system.id),
+        label: employeeData.system.name,
+      };
+      return [...baseOptions, newOption];
+    }
+    return baseOptions;
+  }, [systems?.data, employeeData]);
+  const hasSystem = systemOptions.length > 0;
 
   const departmentOptions = (departments?.data ?? []).map((d: any) => ({
     value: String(d.id),
     label: d.name,
   }));
 
-  const managerOptions = (employees?.data ?? []).map((e: any) => ({
-    value: String(e.id),
-    label: e.firstName + " " + e.lastName,
-  }));
+  const managerOptions = (employees?.data ?? [])
+    .filter((e: any) => String(e.id) !== id)
+    .map((e: any) => ({
+      value: String(e.id),
+      label: e.firstName + " " + e.lastName,
+    }));
 
   useEffect(() => {
     if (!isEditMode || !employeeData) return;
@@ -264,7 +279,6 @@ export default function EmployeeForm() {
                   control={control}
                   render={({ field }) => (
                     <Select
-                      required
                       label="Department"
                       placeholder="Select Department"
                       options={departmentOptions}
@@ -356,6 +370,9 @@ export default function EmployeeForm() {
                   control={control}
                   render={({ field }) => (
                     <Select
+                      placeholder={
+                        hasSystem ? "Select system" : "No systems available"
+                      }
                       label="System"
                       options={systemOptions}
                       value={field.value ?? ""}

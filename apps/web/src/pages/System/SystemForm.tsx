@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
@@ -19,7 +19,7 @@ import Button from "../../components/ui/button/Button";
 const systemSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
-  components: z.array(z.string()).min(1, "Select at least one component"),
+  componentIds: z.array(z.string()).min(1, "Select at least one component"),
 });
 
 type SystemFormData = z.infer<typeof systemSchema>;
@@ -42,7 +42,7 @@ export default function SystemForm() {
     defaultValues: {
       name: "",
       description: "",
-      components: [],
+      componentIds: [],
     },
   });
 
@@ -50,26 +50,49 @@ export default function SystemForm() {
     PaginatedResponse<any>
   >({
     queryKey: ["components-lookup"],
-    queryFn: () => getComponents(),
+    queryFn: () =>
+      getComponents({
+        excludeAssigned: true,
+      }),
   });
-
-  const componentOptions = (componentsData?.data ?? []).map((c: any) => ({
-    value: String(c.id),
-    text: `${c.name} (${c.code})`,
-  }));
-
   const { data: systemData, isLoading: systemLoading } = useQuery({
     queryKey: ["system", id],
     queryFn: () => getSystemById(id!),
     enabled: isEditMode,
   });
 
+  const componentOptions = React.useMemo(() => {
+    const baseOptions = (componentsData?.data ?? []).map((c: any) => ({
+      value: String(c.id),
+      text: `${c.name} (${c.code})`,
+    }));
+
+    const newOption: { value: string; text: string }[] = (
+      systemData?.components ?? []
+    ).map((c: any) => ({
+      value: String(c.id),
+      text: `${c.name} (${c.code})`,
+    }));
+
+    const mergedOptions = [...baseOptions];
+
+    newOption.forEach((assigned) => {
+      const exists = mergedOptions.some((opt) => opt.value === assigned.value);
+      if (!exists) {
+        mergedOptions.push(assigned);
+      }
+    });
+    return mergedOptions;
+  }, [componentsData?.data, systemData]);
+  const hasComponent = componentOptions.length > 0;
+
   useEffect(() => {
     if (systemData) {
       reset({
         name: systemData.name ?? "",
         description: systemData.description ?? "",
-        components: systemData.components?.map((c: any) => String(c.id)) ?? [],
+        componentIds:
+          systemData.components?.map((c: any) => String(c.id)) ?? [],
       });
     }
   }, [systemData, reset]);
@@ -130,7 +153,7 @@ export default function SystemForm() {
             />
 
             <Controller
-              name="components"
+              name="componentIds"
               control={control}
               render={({ field }) => (
                 <MultiSelect
@@ -139,10 +162,12 @@ export default function SystemForm() {
                   value={field.value ?? []}
                   onChange={field.onChange}
                   onBlur={field.onBlur}
-                  placeholder="Select components"
+                  placeholder={
+                    hasComponent ? "Select components" : "No components available"
+                  }
                   required
-                  error={!!errors.components}
-                  hint={errors.components?.message}
+                  error={!!errors.componentIds}
+                  hint={errors.componentIds?.message}
                 />
               )}
             />
