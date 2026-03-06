@@ -313,6 +313,26 @@ export async function deleteComponentHandler(
   );
 
   try {
+    const [assigned] = await db
+      .select({ id: systemComponents.componentId })
+      .from(systemComponents)
+      .where(eq(systemComponents.componentId, id))
+      .limit(1);
+
+    if (assigned) {
+      request.log.warn(
+        {
+          action: "DELETE_COMPONENT",
+          componentId: id,
+        },
+        "Component cannot be deleted because it is assigned to a system",
+      );
+
+      return reply.status(409).send({
+        message: "Component is assigned to a system and cannot be deleted",
+      });
+    }
+
     const deleted = await db
       .delete(components)
       .where(eq(components.id, id))
@@ -350,14 +370,6 @@ export async function deleteComponentHandler(
       },
       "Failed to delete component",
     );
-
-    const errorCode = err?.code || err?.cause?.code;
-
-    if (errorCode === "23503") {
-      return reply.status(409).send({
-        message: "Component cannot be deleted because it is in use",
-      });
-    }
 
     return reply.status(400).send({
       message: err?.message || "Unable to delete component",
