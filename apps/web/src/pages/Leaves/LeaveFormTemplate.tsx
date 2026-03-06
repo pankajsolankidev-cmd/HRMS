@@ -205,28 +205,34 @@ export default function LeaveForm({
           )}
         />
 
-        <Controller
-          name="toDate"
-          control={control}
-          render={({ field }) => (
-            <DatePicker
-              id="toDate"
-              disableFuture={showEmployeeSelect}
-              disablePast={!showEmployeeSelect}
-              placeholder="Select to date"
-              required
-              label="To Date"
-              value={field.value ? new Date(field.value) : null}
-              onChange={(dates) => {
-                field.onChange(
-                  dates?.[0] ? dates[0].toLocaleDateString("en-CA") : "",
-                );
-              }}
-              error={!!errors.toDate}
-              hint={errors.toDate?.message}
-            />
-          )}
-        />
+        <div
+          className={
+            dayType !== "multiple_days" ? "pointer-events-none opacity-60" : ""
+          }
+        >
+          <Controller
+            name="toDate"
+            control={control}
+            render={({ field }) => (
+              <DatePicker
+                id="toDate"
+                disableFuture={showEmployeeSelect}
+                disablePast={!showEmployeeSelect}
+                placeholder="Select to date"
+                required
+                label="To Date"
+                value={field.value ? new Date(field.value) : null}
+                onChange={(dates) => {
+                  field.onChange(
+                    dates?.[0] ? dates[0].toLocaleDateString("en-CA") : "",
+                  );
+                }}
+                error={!!errors.toDate}
+                hint={errors.toDate?.message}
+              />
+            )}
+          />
+        </div>
 
         {dayType === "multiple_days" && (
           <>
