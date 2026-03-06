@@ -41,7 +41,7 @@ export const leaveSchema = z
     type: z.enum(["sick", "casual", "marriage", "wfh"]),
     dayType: z.enum(["full_day", "first_half", "second_half", "multiple_days"]),
 
-    reason: z.string().trim().min(1, "Reason is required"),
+    reason: z.string().min(1, "Reason is required"),
 
     fromHourType: z.enum(["first_half", "second_half", "full_day"]),
     toHourType: z.enum(["first_half", "second_half", "full_day"]),
@@ -107,6 +107,8 @@ export default function LeaveForm({
   } = useForm<LeaveFormData>({
     resolver: zodResolver(leaveSchema),
     defaultValues: {
+      type: "sick",
+      dayType: "full_day",
       fromHour: 8,
       toHour: 8,
       fromHourType: "full_day",
@@ -159,7 +161,7 @@ export default function LeaveForm({
               value={field.value}
               onChange={field.onChange}
               error={!!errors.type}
-              hint="Please select a leave type"
+              hint={errors.type?.message}
             />
           )}
         />
@@ -175,7 +177,7 @@ export default function LeaveForm({
               value={field.value}
               onChange={field.onChange}
               error={!!errors.dayType}
-              hint="Please select a day type"
+              hint={errors.dayType?.message}
             />
           )}
         />
@@ -241,7 +243,7 @@ export default function LeaveForm({
                     setValue("fromHour", hourTypeToHours(val));
                   }}
                   error={!!errors.fromHourType}
-                  hint="Please select a from day type"
+                  hint={errors.fromHour?.message}
                 />
               )}
             />
@@ -259,7 +261,7 @@ export default function LeaveForm({
                     setValue("toHour", hourTypeToHours(val));
                   }}
                   error={!!errors.toHourType}
-                  hint="Please select a to day type"
+                  hint={errors.toHour?.message}
                 />
               )}
             />
