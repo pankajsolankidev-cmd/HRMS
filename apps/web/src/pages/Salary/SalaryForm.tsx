@@ -35,7 +35,7 @@ const schema = z.object({
     .number()
     .min(1, "PF must be greater than 0")
     .max(TAX_AMOUNT, "Amount is too large"),
-  description: z.string().optional(),
+  description: z.string().trim().optional(),
   appraisalDate: z.string().min(1, "Appraisal date is required"),
 });
 

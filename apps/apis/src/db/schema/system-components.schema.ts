@@ -10,6 +10,7 @@ export const systemComponents = pgTable("system_components", {
 
   componentId: uuid("component_id")
     .notNull()
+    .unique()
     .references(() => components.id, { onDelete: "cascade" }),
   ...baseColumns,
 });

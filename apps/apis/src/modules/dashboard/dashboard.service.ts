@@ -13,7 +13,6 @@ import { expenses } from "../../db/schema/expenses";
 import { LeaveStatus } from "../../db/schema/leave.enums";
 import { hasAnyRole } from "../../utils/role.utils";
 import { holidays } from "../../db/schema/holidays.schema";
-
 export async function getDashboardSummaryHandler(
   request: FastifyRequest,
   reply: FastifyReply,
@@ -51,7 +50,6 @@ export async function getDashboardSummaryHandler(
     }
 
     const today = sql`CURRENT_DATE`;
-
     const startOfMonth = sql`date_trunc('month', CURRENT_DATE)`;
 
     const [
@@ -65,7 +63,8 @@ export async function getDashboardSummaryHandler(
         .select({
           count: sql<number>`count(*)`,
         })
-        .from(employees),
+        .from(employees)
+        .where(eq(employees.isActive, true)),
 
       db
         .select({
@@ -84,6 +83,7 @@ export async function getDashboardSummaryHandler(
             eq(leaveRequests.status, LeaveStatus.Approved),
             lte(leaveRequests.fromDate, today),
             gte(leaveRequests.toDate, today),
+            eq(employees.isActive, true),
           ),
         ),
 
@@ -99,7 +99,12 @@ export async function getDashboardSummaryHandler(
         })
         .from(leaveRequests)
         .innerJoin(employees, eq(employees.id, leaveRequests.employeeId))
-        .where(eq(leaveRequests.status, LeaveStatus.Pending))
+        .where(
+          and(
+            eq(leaveRequests.status, LeaveStatus.Pending),
+            eq(employees.isActive, true),
+          ),
+        )
         .orderBy(desc(leaveRequests.createdAt))
         .limit(5),
 
@@ -116,7 +121,12 @@ export async function getDashboardSummaryHandler(
         })
         .from(expenses)
         .innerJoin(employees, eq(employees.id, expenses.employeeId))
-        .where(eq(expenses.status, "CREATED"))
+        .where(
+          and(
+            eq(expenses.status, "CREATED"),
+            eq(employees.isActive, true),
+          ),
+        )
         .orderBy(desc(expenses.createdAt))
         .limit(5),
 
@@ -125,7 +135,13 @@ export async function getDashboardSummaryHandler(
           total: sql<number>`coalesce(sum(${expenses.amount}), 0)::float`,
         })
         .from(expenses)
-        .where(gte(expenses.expenseDate, startOfMonth)),
+        .innerJoin(employees, eq(employees.id, expenses.employeeId))
+        .where(
+          and(
+            gte(expenses.expenseDate, startOfMonth),
+            eq(employees.isActive, true),
+          ),
+        ),
     ]);
 
     const totalEmployees = Number(totalEmployeesResult[0]?.count ?? 0);
@@ -135,7 +151,10 @@ export async function getDashboardSummaryHandler(
       employees: onLeaveRows,
     };
 
-    const availableToday = totalEmployees - onLeaveToday.count;
+    const availableToday = Math.max(
+      totalEmployees - onLeaveToday.count,
+      0,
+    );
 
     const totalExpenseThisMonth = Number(
       totalExpenseThisMonthResult[0]?.total ?? 0,
@@ -155,8 +174,8 @@ export async function getDashboardSummaryHandler(
       "Failed to fetch dashboard summary",
     );
 
-    return reply.code(500).send({
-      message: "Internal server error",
+    return reply.code(400).send({
+      message: "Unable to fetch dashboard summary",
     });
   }
 }
@@ -173,7 +192,7 @@ export async function getEmployeeDashboardHandler(
     }
 
     const employee = await db.query.employees.findFirst({
-      where: eq(employees.userId, userId),
+      where: and(eq(employees.userId, userId), eq(employees.isActive, true)),
     });
 
     if (!employee) {
@@ -287,8 +306,8 @@ export async function getEmployeeDashboardHandler(
       "Failed to fetch employee dashboard summary",
     );
 
-    return reply.code(500).send({
-      message: "Internal server error",
+    return reply.code(400).send({
+      message: "Unable to fetch dashboard",
     });
   }
 }

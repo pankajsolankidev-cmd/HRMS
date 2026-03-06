@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 import { db } from "../../db";
@@ -89,7 +89,13 @@ export async function getProfileHandler(
       .leftJoin(systems, eq(systems.id, employees.systemId))
       .leftJoin(systemComponents, eq(systemComponents.systemId, systems.id))
       .leftJoin(components, eq(components.id, systemComponents.componentId))
-      .where(eq(users.id, userId));
+      .where(
+        and(
+          eq(users.id, userId),
+          eq(users.isActive, true),
+          eq(employees.isActive, true),
+        ),
+      );
 
     const org = await db.query.organization.findFirst();
 

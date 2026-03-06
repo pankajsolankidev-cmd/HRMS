@@ -18,8 +18,8 @@ import Button from "../../components/ui/button/Button";
 
 const holidaySchema = z
   .object({
-    title: z.string().min(1, "Holiday title is required"),
-    description: z.string().optional(),
+    title: z.string().trim().min(1, "Holiday title is required"),
+    description: z.string().trim().optional(),
     fromDate: z.string().min(1, "From date is required"),
     toDate: z.string().min(1, "To date is required"),
   })

@@ -26,9 +26,11 @@ import Select from "../../components/form/Select";
 import Button from "../../components/ui/button/Button";
 
 const employeeSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  email: z.string().email("Invalid email address"),
+  firstName: z.string().trim().min(1, "First name is required"),
+  lastName: z.string().trim().min(1, "Last name is required"),
+  email: z
+    .email({ message: "Invalid email address" })
+    .min(1, "Email is required"),
   positionId: z.string().min(1, "Position is required"),
   joiningDate: z.string().min(1, "Joining date is required"),
   departmentId: z.string().nullable().optional(),

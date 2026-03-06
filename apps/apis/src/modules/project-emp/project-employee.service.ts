@@ -14,38 +14,49 @@ export async function assignEmployeesToProjectHandler(
   const { id: projectId } = request.params as { id: string };
   const body = request.body as AssignProjectEmployeesDto;
 
-  const [project] = await db
-    .select({ id: projects.id })
-    .from(projects)
-    .where(eq(projects.id, projectId));
+  return db.transaction(async (tx) => {
+    const [project] = await tx
+      .select({ id: projects.id })
+      .from(projects)
+      .where(eq(projects.id, projectId));
 
-  if (!project) {
-    return reply.status(404).send({ message: "Project not found" });
-  }
+    if (!project) {
+      return reply.status(404).send({ message: "Project not found" });
+    }
 
-  const existingEmployees = await db
-    .select({ id: employees.id })
-    .from(employees)
-    .where(inArray(employees.id, body.employeeIds));
+    const existingEmployees = await tx
+      .select({ id: employees.id })
+      .from(employees)
+      .where(
+        and(
+          inArray(employees.id, body.employeeIds),
+          eq(employees.isActive, true),
+        ),
+      );
 
-  if (existingEmployees.length !== body.employeeIds.length) {
-    return reply.status(400).send({
-      message: "One or more employees are invalid",
-    });
-  }
+    if (existingEmployees.length !== body.employeeIds.length) {
+      return reply.status(400).send({
+        message: "One or more employees are invalid or inactive",
+      });
+    }
 
-  await db
-    .delete(projectEmployees)
-    .where(eq(projectEmployees.projectId, projectId));
+    await tx
+      .delete(projectEmployees)
+      .where(eq(projectEmployees.projectId, projectId));
 
-  await db.insert(projectEmployees).values(
-    body.employeeIds.map((employeeId) => ({
-      projectId,
-      employeeId,
-    })),
-  );
+    await tx.insert(projectEmployees).values(
+      body.employeeIds.map((employeeId) => ({
+        projectId,
+        employeeId,
+      })),
+    );
 
-  return sendMessage(reply, "Employees assigned to project successfully", 201);
+    return sendMessage(
+      reply,
+      "Employees assigned to project successfully",
+      201,
+    );
+  });
 }
 
 export async function getProjectEmployeesHandler(request: FastifyRequest) {
@@ -60,7 +71,12 @@ export async function getProjectEmployeesHandler(request: FastifyRequest) {
     })
     .from(projectEmployees)
     .innerJoin(employees, eq(projectEmployees.employeeId, employees.id))
-    .where(eq(projectEmployees.projectId, projectId));
+    .where(
+      and(
+        eq(projectEmployees.projectId, projectId),
+        eq(employees.isActive, true),
+      ),
+    );
 
   return { data };
 }

@@ -18,8 +18,8 @@ import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 
 const projectSchema = z.object({
-  name: z.string().min(1, "Project name is required"),
-  clientName: z.string().min(1, "Client name is required"),
+  name: z.string().trim().min(1, "Project name is required"),
+  clientName: z.string().trim().min(1, "Client name is required"),
   startDate: z.string().min(1, "Start date is required"),
   expectedEndDate: z.string().min(1, "Expected end date is required"),
 });

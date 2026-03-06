@@ -22,14 +22,14 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const MAX_AMOUNT = 1_000_000;
 
 const expenseSchema = z.object({
-  expenseType: z.string().min(1, "Expense type is required"),
+  expenseType: z.string().trim().min(1, "Expense type is required"),
   amount: z
     .number()
     .refine((val) => !isNaN(val), "Amount is required")
     .positive("Amount must be greater than 0")
     .max(MAX_AMOUNT, "Amount is too large"),
   expenseDate: z.string().min(1, "Expense date is required"),
-  description: z.string().optional(),
+  description: z.string().trim().optional(),
   file: z
     .union([
       z

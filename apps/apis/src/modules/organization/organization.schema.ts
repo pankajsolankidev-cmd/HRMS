@@ -1,24 +1,48 @@
+const errorResponse = {
+  type: "object",
+  properties: {
+    message: { type: "string" },
+  },
+  required: ["message"],
+};
+
 export const upsertOrganizationSchema = {
   tags: ["Organization"],
+
   body: {
     type: "object",
     required: ["name", "workingHours", "weekOff"],
+
     properties: {
-      name: { type: "string", minLength: 3 },
+      name: {
+        type: "string",
+        transform: ["trim"],
+        minLength: 3,
+      },
 
       workingHours: {
         type: "object",
         required: ["start", "end"],
+
         properties: {
-          start: { type: "string" }, // HH:mm
-          end: { type: "string" },   // HH:mm
+          start: {
+            type: "string",
+            transform: ["trim"], // HH:mm
+          },
+
+          end: {
+            type: "string",
+            transform: ["trim"], // HH:mm
+          },
         },
+
         additionalProperties: false,
       },
 
       weekOff: {
         type: "array",
         minItems: 1,
+
         items: {
           type: "string",
           enum: [
@@ -33,8 +57,10 @@ export const upsertOrganizationSchema = {
         },
       },
     },
+
     additionalProperties: false,
   },
+
   response: {
     200: {
       type: "object",
@@ -43,6 +69,7 @@ export const upsertOrganizationSchema = {
       },
       required: ["message"],
     },
+
     201: {
       type: "object",
       properties: {
@@ -50,28 +77,29 @@ export const upsertOrganizationSchema = {
       },
       required: ["message"],
     },
-    400: {
-      type: "object",
-      properties: {
-        message: { type: "string" },
-      },
-      required: ["message"],
-    },
+
+    400: errorResponse,
   },
 };
 
 export const getOrganizationSchema = {
   tags: ["Organization"],
+
   response: {
     200: {
       type: "object",
+
       properties: {
-        id: { type: "string" },
+        id: { type: "string", format: "uuid" },
+
         name: { type: "string" },
+
         workingStartTime: { type: "string" },
         workingEndTime: { type: "string" },
+
         weekOff: {
           type: "array",
+
           items: {
             type: "string",
             enum: [
@@ -85,9 +113,18 @@ export const getOrganizationSchema = {
             ],
           },
         },
-        createdAt: { type: "string" },
-        updatedAt: { type: "string" },
+
+        createdAt: {
+          type: "string",
+          format: "date-time",
+        },
+
+        updatedAt: {
+          type: "string",
+          format: "date-time",
+        },
       },
+
       required: [
         "id",
         "name",
@@ -98,12 +135,7 @@ export const getOrganizationSchema = {
         "updatedAt",
       ],
     },
-    404: {
-      type: "object",
-      properties: {
-        message: { type: "string" },
-      },
-      required: ["message"],
-    },
+
+    404: errorResponse,
   },
 };
