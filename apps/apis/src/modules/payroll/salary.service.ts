@@ -144,7 +144,13 @@ export async function getSalariesHandler(request: FastifyRequest) {
   }
 
   let queryBuilder = db
-    .select()
+    .select({
+      salary,
+      employee: {
+        firstName: employees.firstName,
+        lastName: employees.lastName,
+      },
+    })
     .from(salary)
     .innerJoin(employees, eq(salary.employeeId, employees.id))
     .where(and(...conditions))
