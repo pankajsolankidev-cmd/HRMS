@@ -32,7 +32,7 @@ import EmployeeTable from "./pages/Employee/EmployeeTable";
 import ExpenseForm from "./pages/Expense/ExpenseForm";
 import ExpenseTable from "./pages/Expense/ExpenseTable";
 import EmployeeLeavePage from "./pages/Leaves/EmployeeLeavePage";
-import LeavePage from "./pages/Leaves/LeavePage";
+import LeaveTable from "./pages/Leaves/LeaveTable";
 import SelfLeavePage from "./pages/Leaves/SelfLeavePage";
 import OrganizationForm from "./pages/Organization/OrganizationForm";
 import OrganizationTable from "./pages/Organization/OrganizationTable";
@@ -81,7 +81,7 @@ function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<RoleDashboard />} />
-          <Route path="/leave-requests" element={<LeavePage />} />
+          <Route path="/leave-requests" element={<LeaveTable />} />
           <Route path="/leave-requests/:id" element={<SelfLeavePage />} />
           <Route path="/expenses" element={<ExpenseTable />} />
           <Route path="/expenses/:id" element={<ExpenseForm />} />

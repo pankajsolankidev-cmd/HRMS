@@ -95,7 +95,7 @@ export default function NotificationDropdown() {
       >
         <div className="flex items-center justify-between px-4 py-3 border-b dark:border-gray-800">
           <h5 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-            Unread Notifications
+            Notifications
           </h5>
 
           {unreadItems.length > 0 && (
@@ -125,7 +125,9 @@ export default function NotificationDropdown() {
                   </p>
 
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {new Date(notification.createdAt).toLocaleString()}
+                    {new Date(notification.createdAt).toLocaleString("en-IN", {
+                      timeZone: "Asia/Kolkata",
+                    })}
                   </p>
                 </div>
 

@@ -68,19 +68,25 @@ export default function PayrollTable() {
   const [editingEmployee, setEditingEmployee] = useState<any | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [historyEmployee, setHistoryEmployee] = useState<any | null>(null);
-
+  const [appliedTableMonth, setAppliedTableMonth] = useState(
+    previousMonth || null,
+  );
+  const [appliedTableYear, setAppliedTableYear] = useState(
+    previousYear || null,
+  );
   const { data: summaryData, isFetching } = useQuery({
     queryKey: ["payroll-summary", appliedMonth, appliedYear],
     queryFn: () => getPayrollSummary(appliedMonth!, appliedYear!),
     enabled: Boolean(appliedMonth && appliedYear),
   });
   const { data: bulkData, isFetching: isLoadingEmployees } = useQuery({
-    queryKey: ["bulk-payroll", selectedMonth, selectedYear],
+    queryKey: ["bulk-payroll", appliedTableMonth, appliedTableYear],
     queryFn: () =>
       getPayrollPreview({
-        month: selectedMonth,
-        year: selectedYear,
+        month: appliedTableMonth!,
+        year: appliedTableYear!,
       }),
+    enabled: Boolean(appliedTableMonth && appliedTableYear),
   });
   useEffect(() => {
     if (bulkData?.data) {
@@ -165,6 +171,28 @@ export default function PayrollTable() {
       setIsDrawerOpen(false);
     }
   }, [historyEmployee]);
+
+  const handleSummaryClear = () => {
+    setSummaryMonth(previousMonth);
+    setSummaryYear(previousYear);
+
+    setAppliedMonth(null);
+    setAppliedYear(null);
+  };
+  const handleTableClear = () => {
+    setSelectedMonth(previousMonth);
+    setSelectedYear(previousYear);
+
+    setAppliedTableMonth(null);
+    setAppliedTableYear(null);
+
+    setEmployees([]);
+    setSelectedIds([]);
+  };
+  const handleLoad = () => {
+    setAppliedTableMonth(selectedMonth);
+    setAppliedTableYear(selectedYear);
+  };
 
   const columns: Column<any>[] = [
     {
@@ -322,6 +350,13 @@ export default function PayrollTable() {
             >
               {isFetching ? "Processing..." : "Process Payroll"}
             </Button>
+            <button
+              onClick={handleSummaryClear}
+              className="h-[45px] rounded-lg border px-6 text-sm
+               hover:bg-gray-200 dark:hover:bg-gray-700"
+            >
+              Clear
+            </button>
           </div>
         </div>
 
@@ -362,12 +397,16 @@ export default function PayrollTable() {
               />
             </div>
 
-            <Button
-              className="bg-black h-11"
-              disabled={!selectedMonth || !selectedYear || isLoadingEmployees}
-            >
+            <Button className="bg-black h-11" onClick={handleLoad}>
               {isLoadingEmployees ? "Loading..." : "Load"}
             </Button>
+            <button
+              onClick={handleTableClear}
+              className="h-[45px] rounded-lg border px-6 text-sm
+  hover:bg-gray-200 dark:hover:bg-gray-700"
+            >
+              Clear
+            </button>
           </div>
         }
       >
@@ -514,75 +553,102 @@ export default function PayrollTable() {
 
               <div className="flex-1 overflow-y-auto p-6">
                 {isHistoryLoading ? (
-                  <div className="text-center py-6">Loading...</div>
+                  <div className="text-center py-10 text-gray-500">
+                    Loading payroll history...
+                  </div>
                 ) : (
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b text-left">
-                        <th className="py-2">Month</th>
-                        <th>Year</th>
-                        <th>Leave Deduction</th>
-                        <th>Bonus</th>
-                        <th>Deduction</th>
-                        <th>Deduction Reason</th>
-                        <th>Bonus Description</th>
-                        <th>Net Salary</th>
-                      </tr>
-                    </thead>
+                  <div className="border rounded-xl">
+                    <table className="w-full text-sm table-fixed">
+                      <thead className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                        <tr>
+                          <th className="px-4 py-3 text-left">Month</th>
+                          <th className="px-4 py-3 text-left">Year</th>
+                          <th className="px-4 py-3 text-left whitespace-nowrap w-[120px]">
+                            Leave Deduction
+                          </th>
+                          <th className="px-4 py-3 text-left">Bonus</th>
+                          <th className="px-4 py-3 text-left">Deduction</th>
+                          <th className="px-4 py-3 text-left whitespace-nowrap w-[130px]">
+                            Deduction Reason
+                          </th>
+                          <th className="px-4 py-3 text-left whitespace-nowrap w-[130px]">
+                            Bonus Description
+                          </th>
+                          <th className="px-4 py-3 text-left whitespace-nowrap w-[100px]">
+                            Net Salary
+                          </th>
+                        </tr>
+                      </thead>
 
-                    <tbody>
-                      {historyData?.data?.map((item: any, index: number) => {
-                        const payroll = item.payroll;
+                      <tbody>
+                        {historyData?.data?.length ? (
+                          historyData.data.map((item: any, index: number) => {
+                            const payroll = item.payroll;
 
-                        return (
-                          <tr key={index} className="border-b">
-                            <td className="py-2">{payroll?.month}</td>
-                            <td>{payroll?.year}</td>
+                            return (
+                              <tr
+                                key={index}
+                                className="border-t hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                              >
+                                <td className="px-4 py-3 font-medium">
+                                  {payroll?.month ?? "-"}
+                                </td>
 
-                            <td className="text-red-600">
-                              ₹{" "}
-                              {Number(
-                                payroll?.leaveDeduction ?? 0,
-                              ).toLocaleString("en-IN")}
-                            </td>
+                                <td className="px-4 py-3">
+                                  {payroll?.year ?? "-"}
+                                </td>
 
-                            <td className="text-green-600">
-                              ₹{" "}
-                              {Number(payroll?.bonus ?? 0).toLocaleString(
-                                "en-IN",
-                              )}
-                            </td>
+                                <td className="px-4 py-3  text-red-600 font-medium">
+                                  ₹{" "}
+                                  {Number(
+                                    payroll?.leaveDeduction ?? 0,
+                                  ).toLocaleString("en-IN")}
+                                </td>
 
-                            <td className="text-red-600">
-                              ₹{" "}
-                              {Number(payroll?.deductions ?? 0).toLocaleString(
-                                "en-IN",
-                              )}
-                            </td>
+                                <td className="px-4 py-3  text-green-600 font-medium">
+                                  ₹{" "}
+                                  {Number(payroll?.bonus ?? 0).toLocaleString(
+                                    "en-IN",
+                                  )}
+                                </td>
 
-                            <td>
-                              {payroll?.deductionReason
-                                ? payroll.deductionReason
-                                : "-"}
-                            </td>
+                                <td className="px-4 py-3  text-red-600 font-medium">
+                                  ₹{" "}
+                                  {Number(
+                                    payroll?.deductions ?? 0,
+                                  ).toLocaleString("en-IN")}
+                                </td>
 
-                            <td>
-                              {payroll?.bonusDescription
-                                ? payroll.bonusDescription
-                                : "-"}
-                            </td>
+                                <td className="px-4 py-3 text-gray-600">
+                                  {payroll?.deductionReason || "-"}
+                                </td>
 
-                            <td className="font-semibold text-blue-600">
-                              ₹{" "}
-                              {Number(payroll?.netSalary ?? 0).toLocaleString(
-                                "en-IN",
-                              )}
+                                <td className="px-4 py-3 text-gray-600">
+                                  {payroll?.bonusDescription || "-"}
+                                </td>
+
+                                <td className="px-4 py-3  font-semibold text-green-700">
+                                  ₹{" "}
+                                  {Number(
+                                    payroll?.netSalary ?? 0,
+                                  ).toLocaleString("en-IN")}
+                                </td>
+                              </tr>
+                            );
+                          })
+                        ) : (
+                          <tr>
+                            <td
+                              colSpan={8}
+                              className="text-center py-8 text-gray-500"
+                            >
+                              No payroll history found
                             </td>
                           </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </div>
 

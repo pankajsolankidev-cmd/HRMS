@@ -374,7 +374,7 @@ export default function ExpenseTable() {
                   <IconSearch size={18} stroke={2} />
                 </div>
                 <Input
-                  placeholder="Search by name"
+                  placeholder="Search by type"
                   value={rawSearch}
                   onChange={(e) => setRawSearch(e.target.value)}
                   className="pl-10 pr-10 h-[42px] focus-visible:ring-0"
@@ -511,6 +511,37 @@ export default function ExpenseTable() {
           </div>
         </div>
       )}
+      {/* {rejectId && (
+  <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    
+    <h3 className="text-lg font-semibold mb-2 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl w-full max-w-md">
+      Reject Expense
+    </h3>
+
+    <textarea
+      value={rejectionReason}
+      onChange={(e) => setRejectionReason(e.target.value)}
+      placeholder="Reason..."
+      className="w-full max-w-md rounded-md border p-2 text-sm dark:bg-gray-700 dark:border-gray-600 outline-none focus:ring-1 focus:ring-blue-500"
+      rows={3}
+    />
+
+    <div className="mt-4 flex justify-end gap-3 max-w-md w-full">
+      <Button variant="outline" onClick={() => setRejectId(null)}>
+        Cancel
+      </Button>
+
+      <Button
+        onClick={() => reject({ id: rejectId, reason: rejectionReason })}
+        className="bg-red-600 text-white"
+        disabled={!rejectionReason.trim()}
+      >
+        Confirm Reject
+      </Button>
+    </div>
+
+  </div>
+)} */}
     </>
   );
 }

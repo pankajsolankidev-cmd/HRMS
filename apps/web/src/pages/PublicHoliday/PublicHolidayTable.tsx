@@ -279,7 +279,7 @@ export default function PublicHolidayTable() {
 
       <Card
         action={
-          <div className="flex justify-end gap-3">
+          <div className="flex justify-end gap-3 h-[42px]">
             {!isEmployee && (
               <>
                 <Button

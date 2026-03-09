@@ -33,7 +33,6 @@ import DataTable, {
 import { useTableSort } from "../../components/tables/useTableSort";
 import Button from "../../components/ui/button/Button";
 import type { RootState } from "../../context";
-import type { LeaveApiResponse, LeaveList, LeaveRow } from "./leaveType";
 export const LEAVE_TYPES = [
   { label: "Sick", value: "sick" },
   { label: "Casual", value: "casual" },
@@ -50,7 +49,60 @@ const LEAVE_SOURCE_OPTIONS = [
   { label: "Self Leave", value: "self" },
   { label: "Manual Leave", value: "manual" },
 ];
-export default function LeavePage() {
+export type LeaveType = "sick" | "casual" | "marriage" | "wfh";
+
+export type LeaveDayType =
+  | "full_day"
+  | "first_half"
+  | "second_half"
+  | "multiple_days";
+
+export type LeaveStatus = "pending" | "approved" | "rejected";
+
+export type User = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  userId?: string;
+};
+
+export type LeaveApiResponse = {
+  id: string;
+  fromDate: string;
+  toDate: string;
+  type: LeaveType;
+  dayType: LeaveDayType;
+  status: LeaveStatus;
+  reason: string;
+  totalDays: string;
+  rejectionReason?: string | null;
+  file?: string;
+
+  employee: User;
+  createdByEmployee?: User;
+  approvedByUser?: User | null;
+  rejectedByUser?: User | null;
+};
+
+export type LeaveApiRaw = {
+  leave: {
+    id: string;
+    fromDate: string;
+    toDate: string;
+    type: LeaveType;
+    dayType: LeaveDayType;
+    status: LeaveStatus;
+    reason: string;
+    totalDays: string;
+    rejectionReason?: string | null;
+    file?: string;
+  };
+  employee: User;
+  createdByEmployee?: User;
+  approvedByUser?: User | null;
+  rejectedByUser?: User | null;
+};
+export default function LeaveTable() {
   const navigate = useNavigate();
   const { id, roles } = useSelector((state: RootState) => state.auth);
 
@@ -62,9 +114,9 @@ export default function LeavePage() {
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
 
-  const { sortBy, sortOrder, handleSort } = useTableSort<LeaveRow>();
+  const { sortBy, sortOrder, handleSort } = useTableSort<LeaveApiResponse>();
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const [viewLeave, setViewLeave] = useState<LeaveRow | null>(null);
+  const [viewLeave, setViewLeave] = useState<LeaveApiResponse | null>(null);
 
   const [type, setType] = useState<string | undefined>();
   const [status, setStatus] = useState<string | undefined>();
@@ -97,7 +149,7 @@ export default function LeavePage() {
     ...(createdByType && { createdByType }),
   };
   const { data, isLoading, isError, refetch } = useQuery<
-    PaginatedResponse<LeaveApiResponse<LeaveList>>
+    PaginatedResponse<LeaveApiRaw>
   >({
     queryKey: [
       "leaves",
@@ -184,34 +236,13 @@ export default function LeavePage() {
     },
   });
 
-  const leaves: LeaveRow[] = (data?.data ?? []).map((item) => ({
-    id: item.leave.id,
-    employee: item.employee,
-    fromDate: item.leave.fromDate,
-    toDate: item.leave.toDate,
-    type: item.leave.type,
-    dayType: item.leave.dayType,
-    status: item.leave.status,
-    reason: item.leave.reason,
-    totalDays: item.leave.totalDays,
-    rejectionReason: item.leave.rejectionReason ?? null,
-    file: item.leave.file,
-    createdByEmployee: item.createdByEmployee,
-    approvedByUser: item.approvedByUser
-      ? {
-          id: item.approvedByUser.id,
-          firstName: item.approvedByUser.firstName,
-          lastName: item.approvedByUser.lastName,
-        }
-      : null,
-    rejectedByUser: item.rejectedByUser
-      ? {
-          id: item.rejectedByUser.id,
-          firstName: item.rejectedByUser.firstName,
-          lastName: item.rejectedByUser.lastName,
-        }
-      : null,
-  }));
+  const leaves: LeaveApiResponse[] = (data?.data ?? []).map((item) => ({
+  ...item.leave,
+  employee: item.employee,
+  createdByEmployee: item.createdByEmployee,
+  approvedByUser: item.approvedByUser ?? null,
+  rejectedByUser: item.rejectedByUser ?? null,
+}));
 
   const total = data?.meta?.total ?? 0;
   const isEmployee = roles.includes("EMPLOYEE");
@@ -222,12 +253,12 @@ export default function LeavePage() {
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
 
-  const columns: Column<LeaveRow>[] = [
+  const columns: Column<LeaveApiResponse>[] = [
     ...(!isEmployee
       ? [
           {
             header: "Employee",
-            cell: (row: LeaveRow) => (
+            cell: (row: LeaveApiResponse) => (
               <span className="font-medium text-gray-800 dark:text-white/90">
                 {row.employee
                   ? `${row.employee.firstName} ${row.employee.lastName}`
@@ -243,15 +274,14 @@ export default function LeavePage() {
       cell: (row) => <span className="capitalize">{row.type}</span>,
     },
     {
-      header: "From Date",
+      header: "Leave Period",
       accessor: "fromDate",
       sortable: true,
-      cell: (row) => <span className="font-medium">{row.fromDate}</span>,
-    },
-    {
-      header: "To Date",
-      accessor: "toDate",
-      cell: (row) => row.toDate,
+      cell: (row) => (
+        <span className="font-medium">
+          {row.fromDate} → {row.toDate}
+        </span>
+      ),
     },
     {
       header: "Day Type",
@@ -283,7 +313,7 @@ export default function LeavePage() {
     },
     {
       header: "Action By",
-      cell: (row: LeaveRow) => {
+      cell: (row: LeaveApiResponse) => {
         const user = row.approvedByUser ?? row.rejectedByUser;
 
         if (!user) {

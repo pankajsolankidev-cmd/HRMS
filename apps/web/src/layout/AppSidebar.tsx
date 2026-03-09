@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
 import GridIcon from "../assets/icons/grid.svg?react";
@@ -80,6 +80,18 @@ const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
 
   const location = useLocation();
+  useEffect(() => {
+    for (const nav of menuItems) {
+      if (
+        nav.children?.some((child) => location.pathname.startsWith(child.path))
+      ) {
+        if (openMenu !== nav.name) {
+          setOpenMenu(nav.name);
+        }
+        return;
+      }
+    }
+  }, [location.pathname, menuItems]);
 
   return (
     <aside
@@ -134,11 +146,12 @@ const AppSidebar: React.FC = () => {
 
         <ul className="flex flex-col gap-2">
           {menuItems.map((nav) => {
-            const isChildActive = nav.children?.some((child) =>
-              location.pathname.startsWith(child.path),
+            const isChildActive = nav.children?.some(
+              (child) =>
+                location.pathname === child.path ||
+                location.pathname.startsWith(child.path + "/"),
             );
-
-            const isParentOpen = openMenu === nav.name || isChildActive;
+            const isParentOpen = openMenu === nav.name;
 
             return (
               <li key={nav.name}>
@@ -149,7 +162,9 @@ const AppSidebar: React.FC = () => {
                         setOpenMenu(openMenu === nav.name ? null : nav.name)
                       }
                       className={`menu-item flex justify-between w-full ${
-                        isParentOpen ? "menu-item-active" : "menu-item-inactive"
+                        isParentOpen || isChildActive
+                          ? "menu-item-active"
+                          : "menu-item-inactive"
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -174,20 +189,26 @@ const AppSidebar: React.FC = () => {
                       }`}
                     >
                       <ul className="ml-9 mt-3 pb-2 space-y-3">
-                        {nav.children.map((child) => (
-                          <li key={child.name}>
-                            <Link
-                              to={child.path}
-                              className={`block text-sm transition-colors ${
-                                location.pathname.startsWith(child.path)
-                                  ? "text-primary font-medium"
-                                  : "text-gray-500 hover:text-gray-800"
-                              }`}
-                            >
-                              {child.name}
-                            </Link>
-                          </li>
-                        ))}
+                        {nav.children.map((child) => {
+                          const isActive =
+                            location.pathname === child.path ||
+                            location.pathname.startsWith(child.path + "/");
+
+                          return (
+                            <li key={child.name}>
+                              <Link
+                                to={child.path}
+                                className={`block text-sm transition-colors ${
+                                  isActive
+                                    ? "text-primary font-medium"
+                                    : "text-gray-500 hover:text-gray-800"
+                                }`}
+                              >
+                                {child.name}
+                              </Link>
+                            </li>
+                          );
+                        })}
                       </ul>
                     </div>
                   </>

@@ -91,7 +91,9 @@ export default function SalaryForm() {
         tax: Number(salaryData.tax),
         pf: Number(salaryData.pf),
         description: salaryData.description || "",
-        appraisalDate: salaryData.appraisalDate ?? "",
+        appraisalDate: salaryData.appraisalDate
+        ? salaryData.appraisalDate.split("T")[0]
+        : "",
       });
     }
   }, [salaryData, reset]);

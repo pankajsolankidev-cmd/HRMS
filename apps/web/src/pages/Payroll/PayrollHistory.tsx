@@ -103,14 +103,6 @@ export default function PayrollHistory() {
       ),
     },
     {
-      header: "Deduction Reason",
-      cell: (row) => row.deductionReason || "—",
-    },
-    {
-      header: "Bonus Description",
-      cell: (row) => row.bonusDescription || "—",
-    },
-    {
       header: "Net Salary",
       accessor: "netSalary",
       cell: (row) => (

@@ -17,12 +17,26 @@ import DatePicker from "../../components/form/date-picker";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 
-const projectSchema = z.object({
-  name: z.string().trim().min(1, "Project name is required"),
-  clientName: z.string().trim().min(1, "Client name is required"),
-  startDate: z.string().min(1, "Start date is required"),
-  expectedEndDate: z.string().min(1, "Expected end date is required"),
-});
+const projectSchema = z
+  .object({
+    name: z.string().trim().min(1, "Project name is required"),
+    clientName: z.string().trim().min(1, "Client name is required"),
+    startDate: z.string().min(1, "Start date is required"),
+    expectedEndDate: z.string().min(1, "Expected end date is required"),
+  })
+  .superRefine((data, ctx) => {
+    if (
+      data.startDate &&
+      data.expectedEndDate &&
+      new Date(data.expectedEndDate) <= new Date(data.startDate)
+    ) {
+      ctx.addIssue({
+        path: ["expectedEndDate"],
+        message: "Expected end date must be after start date",
+        code: "custom",
+      });
+    }
+  });
 
 type ProjectFormData = z.infer<typeof projectSchema>;
 

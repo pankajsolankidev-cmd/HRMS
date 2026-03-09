@@ -31,53 +31,66 @@ const HOUR_OPTIONS = [
   { label: "Second Half", value: "second_half" },
 ];
 
-export const leaveSchema = z
-  .object({
-    employeeId: z.string().optional(),
+export const leaveSchema = (requireEmployee = false) =>
+  z
+    .object({
+      employeeId: z.string().optional(),
 
-    fromDate: z.string().min(1, "From date is required"),
-    toDate: z.string().min(1, "To date is required"),
+      fromDate: z.string().min(1, "From date is required"),
+      toDate: z.string().min(1, "To date is required"),
 
-    type: z.enum(["sick", "casual", "marriage", "wfh"]),
-    dayType: z.enum(["full_day", "first_half", "second_half", "multiple_days"]),
+      type: z.enum(["sick", "casual", "marriage", "wfh"]),
+      dayType: z.enum([
+        "full_day",
+        "first_half",
+        "second_half",
+        "multiple_days",
+      ]),
 
-    reason: z.string().min(1, "Reason is required"),
+      reason: z.string().min(1, "Reason is required"),
 
-    fromHourType: z.enum(["first_half", "second_half", "full_day"]),
-    toHourType: z.enum(["first_half", "second_half", "full_day"]),
+      fromHourType: z.enum(["first_half", "second_half", "full_day"]),
+      toHourType: z.enum(["first_half", "second_half", "full_day"]),
 
-    fromHour: z.number(),
-    toHour: z.number(),
+      fromHour: z.number(),
+      toHour: z.number(),
 
-    file: z
-      .union([
-        z
-          .instanceof(File)
-          .refine(
-            (file) => file.size <= MAX_FILE_SIZE,
-            "File size must be less than 10MB",
-          ),
-        z.null(),
-        z.undefined(),
-      ])
-      .optional(),
-  })
-  .superRefine((data, ctx) => {
-    if (
-      data.dayType === "multiple_days" &&
-      data.fromDate &&
-      data.toDate &&
-      new Date(data.toDate) <= new Date(data.fromDate)
-    ) {
-      ctx.addIssue({
-        path: ["toDate"],
-        message: "To date must be after From date",
-        code: z.ZodIssueCode.custom,
-      });
-    }
-  });
+      file: z
+        .union([
+          z
+            .instanceof(File)
+            .refine(
+              (file) => file.size <= MAX_FILE_SIZE,
+              "File size must be less than 10MB",
+            ),
+          z.null(),
+          z.undefined(),
+        ])
+        .optional(),
+    })
+    .superRefine((data, ctx) => {
+      if (requireEmployee && !data.employeeId) {
+        ctx.addIssue({
+          path: ["employeeId"],
+          message: "Employee is required",
+          code: "custom",
+        });
+      }
+      if (
+        data.dayType === "multiple_days" &&
+        data.fromDate &&
+        data.toDate &&
+        new Date(data.toDate) <= new Date(data.fromDate)
+      ) {
+        ctx.addIssue({
+          path: ["toDate"],
+          message: "To date must be after From date",
+          code: "custom",
+        });
+      }
+    });
 
-export type LeaveFormData = z.infer<typeof leaveSchema>;
+export type LeaveFormData = z.infer<ReturnType<typeof leaveSchema>>;
 
 const hourTypeToHours = (val: string) => (val === "full_day" ? 8 : 4);
 
@@ -105,7 +118,7 @@ export default function LeaveForm({
     setValue,
     formState: { errors },
   } = useForm<LeaveFormData>({
-    resolver: zodResolver(leaveSchema),
+    resolver: zodResolver(leaveSchema(showEmployeeSelect)),
     defaultValues: {
       type: "sick",
       dayType: "full_day",
@@ -206,9 +219,7 @@ export default function LeaveForm({
         />
 
         <div
-          className={
-            dayType !== "multiple_days" ? "pointer-events-none opacity-60" : ""
-          }
+          className={dayType !== "multiple_days" ? "pointer-events-none " : ""}
         >
           <Controller
             name="toDate"
@@ -241,6 +252,7 @@ export default function LeaveForm({
               control={control}
               render={({ field }) => (
                 <Select
+                  required
                   label="From Day Type"
                   options={HOUR_OPTIONS}
                   value={field.value}
@@ -249,7 +261,7 @@ export default function LeaveForm({
                     setValue("fromHour", hourTypeToHours(val));
                   }}
                   error={!!errors.fromHourType}
-                  hint={errors.fromHour?.message}
+                  hint={errors.fromHourType?.message}
                 />
               )}
             />
@@ -259,6 +271,7 @@ export default function LeaveForm({
               control={control}
               render={({ field }) => (
                 <Select
+                  required
                   label="To Day Type"
                   options={HOUR_OPTIONS}
                   value={field.value}
@@ -267,7 +280,7 @@ export default function LeaveForm({
                     setValue("toHour", hourTypeToHours(val));
                   }}
                   error={!!errors.toHourType}
-                  hint={errors.toHour?.message}
+                  hint={errors.toHourType?.message}
                 />
               )}
             />

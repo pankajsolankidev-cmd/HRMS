@@ -82,7 +82,7 @@ export default function OrganizationTable() {
             <Button
               onClick={() => navigate("/organization/new")}
               size="md"
-              className="bg-black dark:bg-blue-500  whitespace-nowrap"
+              className="h-[42px] bg-black dark:bg-blue-500  whitespace-nowrap"
             >
               Add Organization
             </Button>
