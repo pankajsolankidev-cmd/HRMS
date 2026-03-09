@@ -98,7 +98,7 @@ export default function ResetPassword() {
         <Input
           required
           label="Confirm Password"
-          type={showPassword ? "text" : "password"}
+          type="password"
           placeholder="Confirm new password"
           {...register("confirmPassword")}
           error={!!errors.confirmPassword}

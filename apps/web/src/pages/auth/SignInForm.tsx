@@ -16,9 +16,11 @@ import { setAuth } from "../../context/authSlice";
 const signInSchema = z.object({
   email: z
     .email({ message: "Invalid email address" })
-    .min(1, "Email is required"),
+    .min(1, "Email is required")
+    .trim(),
   password: z
     .string()
+    .trim()
     .min(1, "Password is required")
     .min(6, "Password must be at least 6 characters"),
 });
