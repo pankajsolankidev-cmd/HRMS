@@ -140,6 +140,9 @@ export const getComponentsSchema = {
         type: "string",
         enum: ["asc", "desc"],
       },
+      excludeAssigned: {
+        type: "boolean",
+      },
     },
 
     additionalProperties: false,

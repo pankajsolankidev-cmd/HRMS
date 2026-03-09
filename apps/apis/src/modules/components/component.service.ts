@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { and, eq, ilike, asc, desc, sql } from "drizzle-orm";
+import { and, eq, ilike, asc, desc, sql, isNull } from "drizzle-orm";
 
 import { db } from "../../db";
 import { components } from "../../db/schema/components.schema";
@@ -9,6 +9,7 @@ import type { UpdateComponentDto } from "@shared/types/src/components/update-com
 
 import { sendMessage } from "../../utils/api-response";
 import { getPagination } from "../../utils/pagination";
+import { systemComponents } from "../../db/schema";
 
 export async function createComponentHandler(
   request: FastifyRequest,
@@ -53,6 +54,7 @@ export async function getComponentsHandler(
     limit?: number;
     sortBy?: "name" | "createdAt";
     sortOrder?: "asc" | "desc";
+    excludeAssigned?: boolean;
   };
 
   request.log.info(
@@ -63,6 +65,7 @@ export async function getComponentsHandler(
       limit: query.limit,
       sortBy: query.sortBy,
       sortOrder: query.sortOrder,
+      excludeAssigned: query.excludeAssigned,
     },
     "Get components request received",
   );
@@ -72,6 +75,10 @@ export async function getComponentsHandler(
 
     if (query?.search) {
       conditions.push(ilike(components.name, `%${query.search.trim()}%`));
+    }
+
+    if (query?.excludeAssigned) {
+      conditions.push(isNull(systemComponents.componentId));
     }
 
     const { page, limit, offset } = getPagination(query);
@@ -89,8 +96,19 @@ export async function getComponentsHandler(
     }
 
     let queryBuilder = db
-      .select()
+      .selectDistinct({
+        id: components.id,
+        name: components.name,
+        code: components.code,
+        description: components.description,
+        createdAt: components.createdAt,
+        updatedAt: components.updatedAt,
+      })
       .from(components)
+      .leftJoin(
+        systemComponents,
+        eq(systemComponents.componentId, components.id),
+      )
       .where(conditions.length ? and(...conditions) : undefined)
       .orderBy(...orderByClauses)
       .$dynamic();
@@ -102,8 +120,12 @@ export async function getComponentsHandler(
     const data = await queryBuilder;
 
     const [{ count }] = await db
-      .select({ count: sql<number>`count(*)` })
+      .select({ count: sql<number>`count(distinct ${components.id})` })
       .from(components)
+      .leftJoin(
+        systemComponents,
+        eq(systemComponents.componentId, components.id),
+      )
       .where(conditions.length ? and(...conditions) : undefined);
 
     request.log.info(
@@ -291,6 +313,26 @@ export async function deleteComponentHandler(
   );
 
   try {
+    const [assigned] = await db
+      .select({ id: systemComponents.componentId })
+      .from(systemComponents)
+      .where(eq(systemComponents.componentId, id))
+      .limit(1);
+
+    if (assigned) {
+      request.log.warn(
+        {
+          action: "DELETE_COMPONENT",
+          componentId: id,
+        },
+        "Component cannot be deleted because it is assigned to a system",
+      );
+
+      return reply.status(409).send({
+        message: "Component is assigned to a system and cannot be deleted",
+      });
+    }
+
     const deleted = await db
       .delete(components)
       .where(eq(components.id, id))
@@ -328,14 +370,6 @@ export async function deleteComponentHandler(
       },
       "Failed to delete component",
     );
-
-    const errorCode = err?.code || err?.cause?.code;
-
-    if (errorCode === "23503") {
-      return reply.status(409).send({
-        message: "Component cannot be deleted because it is in use",
-      });
-    }
 
     return reply.status(400).send({
       message: err?.message || "Unable to delete component",

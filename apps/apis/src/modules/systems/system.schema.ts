@@ -140,6 +140,9 @@ export const getSystemsSchema = {
         type: "string",
         enum: ["asc", "desc"],
       },
+      excludeAssigned: {
+        type: "boolean",
+      },
     },
 
     additionalProperties: false,

@@ -507,7 +507,15 @@ export async function updateExpenseHandler(
     };
 
     if (body.amount !== undefined) {
-      updateData.amount = body.amount.toFixed(2);
+      const amount = Number(body.amount);
+
+      if (isNaN(amount)) {
+        return reply.code(400).send({
+          message: "Amount must be a valid number",
+        });
+      }
+
+      updateData.amount = amount.toFixed(2);
     }
 
     Object.keys(updateData).forEach(
