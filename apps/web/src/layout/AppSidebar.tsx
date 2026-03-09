@@ -96,7 +96,7 @@ export default function AppSidebar() {
     <aside
       className={`fixed top-0 left-0 z-50 h-screen border-r border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-800
       transition-all duration-300 flex flex-col
-      ${showText ? "w-[280px]" : "w-[90px]"}
+      ${showText ? "w-[290px]" : "w-[90px]"}
       ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
       lg:translate-x-0`}
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
