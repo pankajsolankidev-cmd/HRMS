@@ -11,7 +11,7 @@ import {
 } from "../../api/get";
 import { processBulkPayroll } from "../../api/post";
 
-import Card from "../../components/common/ComponentCard";
+import Card from "../../components/common/Card";
 import Checkbox from "../../components/form/input/Checkbox";
 import Select from "../../components/form/Select";
 import DataTable, {

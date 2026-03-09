@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { getEmployeePayrollHistory } from "../../api/get";
-import Card from "../../components/common/ComponentCard";
+import Card from "../../components/common/Card";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import DataTable, {

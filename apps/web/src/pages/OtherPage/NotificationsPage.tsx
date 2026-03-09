@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
-import Card from "../../components/common/ComponentCard";
+import Card from "../../components/common/Card";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import DataTable, {
   type Column,

@@ -10,7 +10,7 @@ import { z } from "zod";
 import { getDepartmentById } from "../../api/get";
 import { addDepartment } from "../../api/post";
 import { updateDepartment } from "../../api/put";
-import ComponentCard from "../../components/common/ComponentCard";
+import ComponentCard from "../../components/common/Card";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
@@ -26,7 +26,11 @@ export default function DepartmentForm() {
   const navigate = useNavigate();
 
   const isEditMode = Boolean(id && id !== "new");
-
+  const { data, isLoading } = useQuery({
+    queryKey: ["department", id],
+    queryFn: () => getDepartmentById(id!),
+    enabled: isEditMode,
+  });
   const {
     register,
     handleSubmit,
@@ -35,23 +39,17 @@ export default function DepartmentForm() {
   } = useForm<DepartmentFormData>({
     resolver: zodResolver(departmentSchema),
     defaultValues: {
-      name: "",
+      name: isEditMode ? data.name : "",
     },
   });
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["department", id],
-    queryFn: () => getDepartmentById(id!),
-    enabled: isEditMode,
-  });
-
-  useEffect(() => {
-    if (data && isEditMode) {
-      reset({
-        name: data.name ?? "",
-      });
-    }
-  }, [data, isEditMode, reset]);
+  // useEffect(() => {
+  //   if (data && isEditMode) {
+  //     reset({
+  //       name: data.name ?? "",
+  //     });
+  //   }
+  // }, [data, isEditMode, reset]);
 
   const saveMutation = useMutation({
     mutationFn: (payload: { name: string }) =>

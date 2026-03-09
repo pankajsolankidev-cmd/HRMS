@@ -19,7 +19,7 @@ import { getEmployees, getLeaves } from "../../api/get";
 import { approveLeave, rejectLeave } from "../../api/patch";
 import type { PaginatedResponse } from "../../api/types";
 import Can from "../../components/common/Can";
-import Card from "../../components/common/ComponentCard";
+import Card from "../../components/common/Card";
 import DeleteConfirm from "../../components/common/DeleteConfirmModal";
 import FilterCard from "../../components/common/FilterCard";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
@@ -393,6 +393,17 @@ export default function LeaveTable() {
                     >
                       <IconEdit size={16} /> Edit
                     </button>
+                    <button
+                      onClick={() => navigate(`/leave-requests/${row.id}`)}
+                      className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
+                    >
+                      <IconEdit size={16} /> Edit
+                    </button><button
+                      onClick={() => navigate(`/leave-requests/${row.id}`)}
+                      className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
+                    >
+                      <IconEdit size={16} /> Edit
+                    </button>
 
                     <DeleteConfirm<string>
                       title="Delete Leave Request"
@@ -424,6 +435,7 @@ export default function LeaveTable() {
                     >
                       <IconEdit size={16} /> Edit
                     </button>
+                    
 
                     <DeleteConfirm<string>
                       title="Delete Leave Request"

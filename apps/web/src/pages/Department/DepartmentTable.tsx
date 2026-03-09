@@ -6,7 +6,7 @@ import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router";
 import { deleteDepartment } from "../../api/delete";
 import { getDepartments } from "../../api/get";
-import Card from "../../components/common/ComponentCard";
+import Card from "../../components/common/Card";
 import DeleteConfirm from "../../components/common/DeleteConfirmModal";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import Input from "../../components/form/input/InputField";

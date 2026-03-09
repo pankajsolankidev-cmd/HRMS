@@ -14,7 +14,7 @@ import toast from "react-hot-toast";
 import { getProjects } from "../../api/get";
 import { updateProject } from "../../api/put";
 import type { PaginatedResponse } from "../../api/types";
-import Card from "../../components/common/ComponentCard";
+import Card from "../../components/common/Card";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import Input from "../../components/form/input/InputField";
 import DataTable, {

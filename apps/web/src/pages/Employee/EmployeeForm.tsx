@@ -17,7 +17,7 @@ import {
 import { addEmployee } from "../../api/post";
 import { updateEmployee } from "../../api/put";
 
-import ComponentCard from "../../components/common/ComponentCard";
+import ComponentCard from "../../components/common/Card";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import DatePicker from "../../components/form/date-picker";
 import Checkbox from "../../components/form/input/Checkbox";

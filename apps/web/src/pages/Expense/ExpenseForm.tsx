@@ -15,7 +15,7 @@ import Button from "../../components/ui/button/Button";
 import { getExpenseById } from "../../api/get";
 import { addExpense, addExpenseDraft, uploadFile } from "../../api/post";
 import { updateExpense } from "../../api/put";
-import Card from "../../components/common/ComponentCard";
+import Card from "../../components/common/Card";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;

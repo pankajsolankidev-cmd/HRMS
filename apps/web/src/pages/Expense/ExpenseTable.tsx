@@ -13,7 +13,7 @@ import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router";
 
 import Can from "../../components/common/Can";
-import Card from "../../components/common/ComponentCard";
+import Card from "../../components/common/Card";
 import Input from "../../components/form/input/InputField";
 import DataTable, {
   type Column,
@@ -116,9 +116,9 @@ export default function ExpenseTable() {
     placeholderData: (prev) => prev,
   });
   const tableData =
-    data?.data.map(({ expenses, employee }: any) => ({
+    data?.data.map(({ expenses, employees }: any) => ({
       ...expenses,
-      employeeName: `${employee.firstName} ${employee.lastName}`,
+      employeeName: `${employees.firstName} ${employees.lastName}`,
     })) ?? [];
 
   const { mutate: remove, isPending } = useMutation({

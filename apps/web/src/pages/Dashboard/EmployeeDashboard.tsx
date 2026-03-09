@@ -8,7 +8,7 @@ import {
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { getEmployeeDashboard } from "../../api/get";
-import Card from "../../components/common/ComponentCard";
+import Card from "../../components/common/Card";
 
 export default function EmployeeDashboard() {
   const { data, isLoading, isError } = useQuery({
@@ -109,13 +109,13 @@ export default function EmployeeDashboard() {
 
       <Card title="Upcoming Holiday" className="bg-white dark:bg-slate-900">
         {upcomingHoliday ? (
-          <div>
+          <>
             <p className="text-lg font-semibold">{upcomingHoliday.title}</p>
             <p className="text-sm text-gray-500">
               {upcomingHoliday.fromDate} → {upcomingHoliday.toDate}
             </p>
             <p className="text-gray-600">{upcomingHoliday.description}</p>
-          </div>
+          </>
         ) : (
           <p>No upcoming holidays</p>
         )}

@@ -11,7 +11,7 @@ import { getProjectById } from "../../api/get";
 import { addProject } from "../../api/post";
 import { updateProject } from "../../api/put";
 
-import ComponentCard from "../../components/common/ComponentCard";
+import ComponentCard from "../../components/common/Card";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import DatePicker from "../../components/form/date-picker";
 import Input from "../../components/form/input/InputField";

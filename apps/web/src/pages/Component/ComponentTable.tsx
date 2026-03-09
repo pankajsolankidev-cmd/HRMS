@@ -16,7 +16,7 @@ import { deleteComponent } from "../../api/delete";
 import { getComponents } from "../../api/get";
 import type { PaginatedResponse } from "../../api/types";
 
-import Card from "../../components/common/ComponentCard";
+import Card from "../../components/common/Card";
 import DeleteConfirm from "../../components/common/DeleteConfirmModal";
 import { useTableSort } from "../../components/tables/useTableSort";
 import Button from "../../components/ui/button/Button";
