@@ -645,9 +645,9 @@ export async function updateExpenseHandler(
     };
 
     if (body.amount !== undefined) {
-      const amount = Number(body.amount);
+      const amount = parseFloat(String(body.amount));
 
-      if (isNaN(amount)) {
+      if (Number.isNaN(amount)) {
         return reply.code(400).send({
           message: "Amount must be a valid number",
         });
@@ -655,7 +655,6 @@ export async function updateExpenseHandler(
 
       updateData.amount = amount.toFixed(2);
     }
-
     Object.keys(updateData).forEach(
       (key) => updateData[key] === undefined && delete updateData[key],
     );
