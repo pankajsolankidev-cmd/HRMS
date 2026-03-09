@@ -297,7 +297,7 @@ export default function LeaveForm({
         />
 
         <FileInput
-          label="Supporting Document"
+          label="File Attachment"
           onChange={(e) =>
             e.target.files?.[0] &&
             setValue("file", e.target.files[0], { shouldValidate: true })

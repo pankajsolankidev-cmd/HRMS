@@ -202,7 +202,7 @@ export default function ExpenseForm() {
 
             <div className="md:col-span-1">
               <FileInput
-                label="File Attachment (Optional)"
+                label="File Attachment"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) {

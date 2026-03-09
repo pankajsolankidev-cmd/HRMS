@@ -59,7 +59,7 @@ export default function PayrollTable() {
 
   const [summaryMonth, setSummaryMonth] = useState(previousMonth);
   const [summaryYear, setSummaryYear] = useState<number | null>(previousYear);
-
+  const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
   const [appliedMonth, setAppliedMonth] = useState<string | null>(null);
   const [appliedYear, setAppliedYear] = useState<number | null>(null);
   const [employees, setEmployees] = useState<any[]>([]);
@@ -93,6 +93,13 @@ export default function PayrollTable() {
       setEmployees(bulkData.data);
     }
   }, [bulkData]);
+  useEffect(() => {
+    if (editingEmployee) {
+      setTimeout(() => setIsEditDrawerOpen(true), 10);
+    } else {
+      setIsEditDrawerOpen(false);
+    }
+  }, [editingEmployee]);
 
   const handleSummaryProcess = () => {
     if (!summaryMonth || !summaryYear) return;
@@ -179,16 +186,7 @@ export default function PayrollTable() {
     setAppliedMonth(null);
     setAppliedYear(null);
   };
-  const handleTableClear = () => {
-    setSelectedMonth(previousMonth);
-    setSelectedYear(previousYear);
 
-    setAppliedTableMonth(null);
-    setAppliedTableYear(null);
-
-    setEmployees([]);
-    setSelectedIds([]);
-  };
   const handleLoad = () => {
     setAppliedTableMonth(selectedMonth);
     setAppliedTableYear(selectedYear);
@@ -400,13 +398,6 @@ export default function PayrollTable() {
             <Button className="bg-black h-11" onClick={handleLoad}>
               {isLoadingEmployees ? "Loading..." : "Load"}
             </Button>
-            <button
-              onClick={handleTableClear}
-              className="h-[45px] rounded-lg border px-6 text-sm
-  hover:bg-gray-200 dark:hover:bg-gray-700"
-            >
-              Clear
-            </button>
           </div>
         }
       >
@@ -454,10 +445,14 @@ export default function PayrollTable() {
         </div>
         {editingEmployee && (
           <div className="fixed inset-0 bg-black/30 z-50 flex justify-end">
-            <div className="w-[400px] bg-white dark:bg-gray-900 h-full shadow-xl flex flex-col">
+            <div
+              className={`w-[400px] bg-white dark:bg-gray-900 h-full shadow-xl flex flex-col
+                transform transition-transform duration-300 ease-in-out
+                ${isEditDrawerOpen ? "translate-x-0" : "translate-x-full"}`}
+            >
               <div className="p-6 border-b">
                 <h2 className="text-lg font-semibold">
-                  Edit {editingEmployee.firstName}
+                  Edit {editingEmployee.firstName}'s payroll
                 </h2>
               </div>
 
