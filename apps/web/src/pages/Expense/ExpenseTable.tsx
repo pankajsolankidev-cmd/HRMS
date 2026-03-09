@@ -101,7 +101,9 @@ export default function ExpenseTable() {
     queryClient.removeQueries({ queryKey: ["expense-summary"] });
   };
 
-  const { data, isLoading, isError } = useQuery<PaginatedResponse<Expense>>({
+  const { data, isLoading, isError, refetch } = useQuery<
+    PaginatedResponse<Expense>
+  >({
     queryKey: ["expenses", page, limit, sortBy, sortOrder, search ?? "all"],
     queryFn: () =>
       getExpenses({
@@ -123,7 +125,7 @@ export default function ExpenseTable() {
     mutationFn: deleteExpense,
     onSuccess: (res) => {
       toast.success(res.message ?? "Expense deleted successfully");
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      refetch();
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error?.response?.data?.message ?? "Something went wrong");
@@ -134,7 +136,7 @@ export default function ExpenseTable() {
     mutationFn: approveExpense,
     onSuccess: (res) => {
       toast.success(res.message ?? "Expense Approved");
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      refetch();
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error?.response?.data?.message ?? "Something went wrong");
@@ -147,7 +149,7 @@ export default function ExpenseTable() {
       toast.success(res.message ?? "Expense Rejected");
       setRejectId(null);
       setRejectionReason("");
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      refetch();
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error?.response?.data?.message ?? "Something went wrong");
@@ -158,7 +160,7 @@ export default function ExpenseTable() {
     mutationFn: createExpense,
     onSuccess: (res) => {
       toast.success(res.message ?? "Expense submitted for approval");
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      refetch();
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error?.response?.data?.message ?? "Something went wrong");
