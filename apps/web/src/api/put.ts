@@ -1,13 +1,18 @@
-import type { EmployeePayload } from "../pages/Employee/AddEditEmployeePage";
+import type {
+  UpdateEmployeeDto,
+  UpdateExpenseDto,
+  UpdateProjectDto,
+  UpdateSystemDto,
+} from "@shared/types";
+import type { UpdateComponentDto } from "@shared/types/src/components/update-component.dto";
 import api from "./axios";
-import type { ExpensePayload } from "./post";
 
 export const updateEmployee = async ({
   id,
   payload,
 }: {
   id: string;
-  payload: EmployeePayload;
+  payload: UpdateEmployeeDto;
 }) => {
   const res = await api.put(`/employees/${id}`, payload);
   return res.data;
@@ -18,7 +23,7 @@ export const updateComponent = async ({
   payload,
 }: {
   id: string;
-  payload: any;
+  payload: UpdateComponentDto;
 }) => {
   const res = await api.put(`/components/${id}`, payload);
   return res.data;
@@ -29,31 +34,26 @@ export const updateSystem = async ({
   payload,
 }: {
   id: string;
-  payload: {
-    name: string;
-    description?: string;
-    components: string[];
-  };
+  payload: UpdateSystemDto;
 }) => {
-  const res = await api.put(`/systems/${id}`, {
-    name: payload.name,
-    description: payload.description,
-    componentIds: payload.components,
-  });
+  const res = await api.put(`/systems/${id}`, payload);
   return res.data;
 };
+
 export const updateExpense = async (params: {
   id: string;
-  payload: ExpensePayload;
+  payload: UpdateExpenseDto;
 }) => {
   const { id, payload } = params;
-
   const res = await api.put(`/expenses/${id}`, payload);
   return res.data;
 };
-export const updateProject = async (params: { id: string; payload: any }) => {
-  const { id, payload } = params;
 
+export const updateProject = async (params: {
+  id: string;
+  payload: UpdateProjectDto;
+}) => {
+  const { id, payload } = params;
   const res = await api.put(`/projects/${id}`, payload);
   return res.data;
 };
@@ -65,6 +65,7 @@ export const updateDepartment = async (
   const res = await api.put(`/departments/${id}`, payload);
   return res.data;
 };
+
 export const updatePublicHoliday = async (id: string, payload: any) => {
   const res = await api.put(`/holidays/${id}`, payload);
   return res.data;

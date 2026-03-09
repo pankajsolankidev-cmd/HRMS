@@ -30,6 +30,9 @@ const Select: React.FC<SelectProps> = ({
   hint,
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+
+  const hasOptions = options.length > 0;
+
   return (
     <div className="space-y-1.5">
       {label && (
@@ -45,7 +48,7 @@ const Select: React.FC<SelectProps> = ({
             h-11 w-full rounded-lg border px-4 py-2.5 text-sm
             bg-white dark:bg-gray-900
             focus:outline-none focus:ring-2
-            appearance-none 
+            appearance-none
             ${
               value === ""
                 ? "text-gray-400 dark:text-gray-500"
@@ -59,6 +62,7 @@ const Select: React.FC<SelectProps> = ({
             ${className}
           `}
           value={value}
+          disabled={!hasOptions}
           onChange={(e) => {
             onChange(e.target.value);
             setIsOpen(false);
@@ -66,23 +70,29 @@ const Select: React.FC<SelectProps> = ({
           onFocus={() => setIsOpen(true)}
           onBlur={() => setIsOpen(false)}
         >
-          <option value="" disabled>
-            {placeholder}
-          </option>
+          {!hasOptions ? (
+            <option value="">No systems available</option>
+          ) : (
+            <>
+              <option value="" disabled>
+                {placeholder}
+              </option>
 
-          {options.map((option) => (
-            <option
-              key={option.value}
-              value={option.value}
-              className="text-gray-900 dark:text-gray-100"
-            >
-              {option.label}
-            </option>
-          ))}
+              {options.map((option) => (
+                <option
+                  key={option.value}
+                  value={option.value}
+                  className="text-gray-900 dark:text-gray-100"
+                >
+                  {option.label}
+                </option>
+              ))}
+            </>
+          )}
         </select>
 
         <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-2">
-          {value && (
+          {value && hasOptions && (
             <button
               type="button"
               onClick={(e) => {
@@ -94,6 +104,7 @@ const Select: React.FC<SelectProps> = ({
               <IconX size={16} stroke={2.5} />
             </button>
           )}
+
           {isOpen ? (
             <IconChevronUp
               size={18}

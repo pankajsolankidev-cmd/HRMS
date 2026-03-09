@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
@@ -49,7 +49,7 @@ const employeeSchema = z.object({
 
 type EmployeeFormValues = z.infer<typeof employeeSchema>;
 
-export default function AddEditEmployeePage() {
+export default function EmployeeForm() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
@@ -86,7 +86,10 @@ export default function AddEditEmployeePage() {
 
   const { data: systems } = useQuery({
     queryKey: ["systems-lookup"],
-    queryFn: () => getSystems(),
+    queryFn: () =>
+      getSystems({
+        excludeAssigned: true,
+      }),
   });
 
   const { data: positions } = useQuery({
@@ -114,21 +117,33 @@ export default function AddEditEmployeePage() {
       label: p.name,
     }),
   );
-
-  const systemOptions = (systems?.data ?? []).map((s: any) => ({
-    value: String(s.id),
-    label: s.name,
-  }));
+  const systemOptions = React.useMemo(() => {
+    const baseOptions = (systems?.data ?? []).map((s: any) => ({
+      value: String(s.id),
+      label: s.name,
+    }));
+    if (employeeData?.system) {
+      const newOption = {
+        value: String(employeeData.system.id),
+        label: employeeData.system.name,
+      };
+      return [...baseOptions, newOption];
+    }
+    return baseOptions;
+  }, [systems?.data, employeeData]);
+  const hasSystem = systemOptions.length > 0;
 
   const departmentOptions = (departments?.data ?? []).map((d: any) => ({
     value: String(d.id),
     label: d.name,
   }));
 
-  const managerOptions = (employees?.data ?? []).map((e: any) => ({
-    value: String(e.id),
-    label: e.firstName + " " + e.lastName,
-  }));
+  const managerOptions = (employees?.data ?? [])
+    .filter((e: any) => String(e.id) !== id)
+    .map((e: any) => ({
+      value: String(e.id),
+      label: e.firstName + " " + e.lastName,
+    }));
 
   useEffect(() => {
     if (!isEditMode || !employeeData) return;
@@ -158,10 +173,25 @@ export default function AddEditEmployeePage() {
       },
     });
   }, [isEditMode, employeeData, reset]);
+  const normalizePayload = (data: EmployeeFormValues) => ({
+    ...data,
+    departmentId: data.departmentId ?? undefined,
+    managerId: data.managerId ?? undefined,
+    systemId: data.systemId ?? undefined,
+  });
+  const saveMutation = useMutation<
+    any,
+    AxiosError<{ message?: string }>,
+    EmployeeFormValues
+  >({
+    mutationFn: (payload) => {
+      const cleanPayload = normalizePayload(payload);
 
-  const saveMutation = useMutation({
-    mutationFn: (payload: EmployeeFormValues) =>
-      isEditMode ? updateEmployee({ id: id!, payload }) : addEmployee(payload),
+      return isEditMode
+        ? updateEmployee({ id: id!, payload: cleanPayload })
+        : addEmployee(cleanPayload);
+    },
+
     onSuccess: (res) => {
       toast.success(
         res?.message ??
@@ -170,6 +200,7 @@ export default function AddEditEmployeePage() {
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       navigate("/employees");
     },
+
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error?.response?.data?.message ?? "Please check form values");
     },
@@ -250,7 +281,6 @@ export default function AddEditEmployeePage() {
                   control={control}
                   render={({ field }) => (
                     <Select
-                      required
                       label="Department"
                       placeholder="Select Department"
                       options={departmentOptions}
@@ -342,6 +372,9 @@ export default function AddEditEmployeePage() {
                   control={control}
                   render={({ field }) => (
                     <Select
+                      placeholder={
+                        hasSystem ? "Select system" : "No systems available"
+                      }
                       label="System"
                       options={systemOptions}
                       value={field.value ?? ""}

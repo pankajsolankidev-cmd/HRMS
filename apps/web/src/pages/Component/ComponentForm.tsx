@@ -24,7 +24,7 @@ const componentSchema = z.object({
 
 type ComponentFormData = z.infer<typeof componentSchema>;
 
-export default function AddEditComponentPage() {
+export default function ComponentForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 

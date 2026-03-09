@@ -4,59 +4,60 @@ import type { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
-
+import { deleteSystem } from "../../api/delete";
+import { getSystems } from "../../api/get";
+import type { PaginatedResponse } from "../../api/types";
+import Chip from "../../components/common/Chip";
+import Card from "../../components/common/ComponentCard";
+import DeleteConfirm from "../../components/common/DeleteConfirmModal";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
+import PageMeta from "../../components/common/PageMeta";
 import Input from "../../components/form/input/InputField";
-
 import DataTable, {
   type Column,
 } from "../../components/tables/BasicTables/DataTable";
-
-import { deleteComponent } from "../../api/delete";
-import { getComponents } from "../../api/get";
-import type { PaginatedResponse } from "../../api/types";
-
-import Card from "../../components/common/ComponentCard";
-import DeleteConfirm from "../../components/common/DeleteConfirmModal";
 import { useTableSort } from "../../components/tables/useTableSort";
 import Button from "../../components/ui/button/Button";
 
-type Component = {
-  id: number;
+type SystemComponent = {
+  id: string;
   name: string;
-  description: string;
   code: string;
 };
 
-export default function ComponentPage() {
-  const navigate = useNavigate();
+type System = {
+  id: number;
+  name: string;
+  description: string;
+  components: SystemComponent[];
+};
 
-  const [search, setSearch] = useState<string | undefined>();
+export default function SystemTable() {
+  const navigate = useNavigate();
   const [rawSearch, setRawSearch] = useState("");
+  const [search, setSearch] = useState<string | undefined>();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-
-  const { sortBy, sortOrder, handleSort } = useTableSort<Component>();
-
-  useEffect(() => {
-    setPage(1);
-  }, [search, sortBy, sortOrder]);
+  const { sortBy, sortOrder, handleSort } = useTableSort<System>();
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearch(rawSearch.trim() || undefined);
       setPage(1);
     }, 1000);
-
     return () => clearTimeout(timer);
   }, [rawSearch]);
 
+  useEffect(() => {
+    setPage(1);
+  }, [sortBy, sortOrder]);
+
   const { data, isLoading, isError, refetch } = useQuery<
-    PaginatedResponse<Component>
+    PaginatedResponse<System>
   >({
-    queryKey: ["components", page, limit, sortBy, sortOrder, search ?? "all"],
+    queryKey: ["systems", page, limit, sortBy, sortOrder, search ?? "all"],
     queryFn: () =>
-      getComponents({
+      getSystems({
         page,
         limit,
         ...(sortBy && sortOrder ? { sortBy: sortBy as string, sortOrder } : {}),
@@ -65,24 +66,23 @@ export default function ComponentPage() {
     placeholderData: (prev) => prev,
   });
 
-  const { mutate: removeComponent, isPending } = useMutation({
-    mutationFn: deleteComponent,
+  const { mutate: removeSystem, isPending } = useMutation({
+    mutationFn: deleteSystem,
     onSuccess: (res) => {
-      toast.success(res?.message ?? "Component Deleted Successfully");
+      toast.success(res?.message ?? "System Deleted Successfully");
       refetch();
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(
-        error?.response?.data?.message ??
-          "Something went wrong. Please try again.",
+        error?.response?.data?.message ?? "An unexpected error occurred",
       );
     },
   });
 
-  const components = data?.data ?? [];
+  const systems = data?.data ?? [];
   const total = data?.meta?.total ?? 0;
 
-  const columns: Column<Component>[] = [
+  const columns: Column<System>[] = [
     {
       header: "Name",
       accessor: "name",
@@ -94,17 +94,24 @@ export default function ComponentPage() {
       ),
     },
     {
-      header: "Code",
-      accessor: "code",
-      cell: (row) => (
-        <div className="text-gray-600 dark:text-gray-400">{row.code}</div>
-      ),
-    },
-    {
       header: "Description",
       cell: (row) => (
         <div className="text-sm text-gray-500 dark:text-gray-400">
           {row.description}
+        </div>
+      ),
+    },
+    {
+      header: "Components",
+      cell: (row) => (
+        <div className="flex flex-wrap gap-2">
+          {row.components?.length ? (
+            row.components.map((c) => (
+              <Chip key={c.id} label={`${c.name} (${c.code})`} />
+            ))
+          ) : (
+            <span className="text-sm text-gray-400">—</span>
+          )}
         </div>
       ),
     },
@@ -115,15 +122,15 @@ export default function ComponentPage() {
         <div className="flex items-center justify-center gap-3">
           <IconEdit
             size={18}
-            onClick={() => navigate(`/components/${row.id}`)}
+            onClick={() => navigate(`/systems/${row.id}`)}
             className="cursor-pointer text-blue-600 dark:text-blue-400"
           />
 
           <DeleteConfirm<number>
-            title="Delete Component"
-            description="Are you sure you want to delete this component?"
+            title="Delete System"
+            description="Are you sure you want to delete this system?"
             loading={isPending}
-            onConfirm={(id) => removeComponent(id)}
+            onConfirm={(id) => removeSystem(id)}
           >
             {(askDelete) => (
               <IconTrash
@@ -140,7 +147,8 @@ export default function ComponentPage() {
 
   return (
     <>
-      <PageBreadcrumb pageTitle="Components" />
+      <PageMeta title="Systems" description="Manage your systems" />
+      <PageBreadcrumb pageTitle="Systems" />
 
       <Card
         action={
@@ -171,18 +179,18 @@ export default function ComponentPage() {
             </div>
 
             <Button
-              onClick={() => navigate("/components/new")}
+              onClick={() => navigate("/systems/new")}
               size="md"
-              className="h-[42px] bg-black dark:bg-blue-500 whitespace-nowrap"
+              className="h-[42px] bg-black dark:bg-blue-500  whitespace-nowrap"
             >
-              Add Component
+              Add System
             </Button>
           </div>
         }
       >
         <DataTable
           columns={columns}
-          data={components}
+          data={systems}
           isLoading={isLoading}
           isError={isError}
           sortBy={sortBy}

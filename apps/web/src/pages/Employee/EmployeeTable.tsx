@@ -34,7 +34,7 @@ type Employee = {
   userId: string;
 };
 
-export default function EmployeePage() {
+export default function EmployeeTable() {
   const { id } = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
 
@@ -155,7 +155,7 @@ export default function EmployeePage() {
 
               <DeleteConfirm<number>
                 title="Delete Employee"
-                description={`Are you sure you want to delete ${row.firstName}? This action cannot be undone.`}
+                description={`Are you sure you want to delete ${row.firstName}?`}
                 loading={isPending}
                 onConfirm={(id) => removeEmployee(id)}
               >

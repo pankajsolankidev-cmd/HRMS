@@ -1,6 +1,10 @@
+import type { UpdateSalaryDto } from "@shared/types";
 import api from "./axios";
 
-export const updateSalaryStructure = async (id: string, payload: any) => {
+export const updateSalaryStructure = async (
+  id: string,
+  payload: UpdateSalaryDto,
+) => {
   const res = await api.put(`/salary/${id}`, payload);
   return res.data;
 };
@@ -29,6 +33,7 @@ export const updateLeave = async ({
   const res = await api.patch(`/leave-requests/${id}`, payload);
   return res.data;
 };
+
 export const updateEmployeeLeave = async ({
   id,
   payload,
@@ -49,6 +54,7 @@ export const updateEmployeeLeave = async ({
   const res = await api.patch(`/leave-requests/manual/${id}`, payload);
   return res.data;
 };
+
 export const approveLeave = async (id: string) => {
   const res = await api.patch(`/leave-requests/${id}/approve`);
   return res.data;
@@ -82,10 +88,12 @@ export const rejectExpense = async ({
   const res = await api.patch(`/expenses/${id}/reject`, { reason });
   return res.data;
 };
+
 export const createExpense = async (id: number) => {
   const res = await api.patch(`/expenses/${id}/create`);
   return res.data;
 };
+
 export const markNotificationRead = async (id: string) => {
   await api.patch(`/notifications/${id}/read`);
 };

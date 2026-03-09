@@ -29,7 +29,7 @@ export type SalaryStructure = {
   netSalary: number;
 };
 
-export default function SalaryPage() {
+export default function SalaryTable() {
   const navigate = useNavigate();
 
   const [rawSearch, setRawSearch] = useState("");

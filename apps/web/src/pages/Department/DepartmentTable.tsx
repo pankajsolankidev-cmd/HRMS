@@ -70,7 +70,7 @@ export default function DepartmentTable() {
 
           <DeleteConfirm<number>
             title="Delete Department"
-            description="Are you sure you want to delete this department? This action cannot be undone."
+            description="Are you sure you want to delete this department?"
             loading={isPending}
             onConfirm={(id) => removeDepartment(id)}
           >

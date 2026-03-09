@@ -48,7 +48,7 @@ export default function DataTable<T>({
   onLimitChange,
 }: DataTableProps<T>) {
   return (
-    <div className="overflow-visible rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 ">
+    <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
       {onLimitChange && (
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20">
           <div className="flex items-center gap-3">
@@ -90,7 +90,7 @@ export default function DataTable<T>({
         </div>
       )}
 
-      <div className="max-w-full">
+      <div className="w-full overflow-x-auto">
         <Table>
           <TableHeader className="border-b border-gray-100 dark:border-gray-800 whitespace-nowrap">
             <TableRow className="bg-gray-50 dark:bg-gray-800/50">
