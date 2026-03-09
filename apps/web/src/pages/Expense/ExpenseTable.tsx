@@ -114,9 +114,9 @@ export default function ExpenseTable() {
     placeholderData: (prev) => prev,
   });
   const tableData =
-    data?.data.map(({ expenses, employees }: any) => ({
+    data?.data.map(({ expenses, employee }: any) => ({
       ...expenses,
-      employeeName: `${employees.firstName} ${employees.lastName}`,
+      employeeName: `${employee.firstName} ${employee.lastName}`,
     })) ?? [];
 
   const { mutate: remove, isPending } = useMutation({

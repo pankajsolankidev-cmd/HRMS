@@ -13,7 +13,7 @@ import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 
 import { getExpenseById } from "../../api/get";
-import { addExpense, uploadFile } from "../../api/post";
+import { addExpense, addExpenseDraft, uploadFile } from "../../api/post";
 import { updateExpense } from "../../api/put";
 import Card from "../../components/common/ComponentCard";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
@@ -102,6 +102,39 @@ export default function ExpenseForm() {
       toast.error(error?.response?.data?.message ?? "Something went wrong.");
     },
   });
+  const draftMutation = useMutation({
+    mutationFn: (payload: any) => addExpenseDraft(payload),
+    onSuccess: (res) => {
+      toast.success(res?.message ?? "Expense saved as draft");
+      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      navigate("/expenses");
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error?.response?.data?.message ?? "Something went wrong.");
+    },
+  });
+  const onDraftSubmit = async (formData: ExpenseFormData) => {
+    try {
+      let filePath = data?.file;
+
+      if (formData.file instanceof File) {
+        const uploadedFile = await uploadFile(formData.file);
+        filePath = uploadedFile.path;
+      }
+
+      const payload = {
+        expenseType: formData.expenseType,
+        amount: formData.amount,
+        expenseDate: formData.expenseDate,
+        description: formData.description,
+        file: filePath,
+      };
+
+      draftMutation.mutate(payload);
+    } catch {
+      toast.error("File upload failed. Please try again.");
+    }
+  };
 
   const onSubmit = async (formData: ExpenseFormData) => {
     try {
@@ -228,6 +261,14 @@ export default function ExpenseForm() {
                 : isEditMode
                   ? "Update"
                   : "Save"}
+            </Button>
+            <Button
+              type="button"
+              disabled={draftMutation.isPending}
+              onClick={handleSubmit(onDraftSubmit)}
+              className="bg-black dark:bg-blue-500 text-white"
+            >
+              {draftMutation.isPending ? "Saving..." : "Draft"}
             </Button>
             <Button
               type="button"

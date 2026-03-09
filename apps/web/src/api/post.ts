@@ -109,10 +109,13 @@ export const addEmployeeLeave = async (
 };
 
 export const addExpense = async (payload: CreateExpenseDto) => {
+  const res = await api.post("/expenses/create", payload);
+  return res.data;
+};
+export const addExpenseDraft = async (payload: CreateExpenseDto) => {
   const res = await api.post("/expenses", payload);
   return res.data;
 };
-
 export const addProject = async (payload: CreateProjectDto) => {
   const res = await api.post("/projects", payload);
   return res.data;
