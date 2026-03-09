@@ -237,12 +237,12 @@ export default function LeaveTable() {
   });
 
   const leaves: LeaveApiResponse[] = (data?.data ?? []).map((item) => ({
-  ...item.leave,
-  employee: item.employee,
-  createdByEmployee: item.createdByEmployee,
-  approvedByUser: item.approvedByUser ?? null,
-  rejectedByUser: item.rejectedByUser ?? null,
-}));
+    ...item.leave,
+    employee: item.employee,
+    createdByEmployee: item.createdByEmployee,
+    approvedByUser: item.approvedByUser ?? null,
+    rejectedByUser: item.rejectedByUser ?? null,
+  }));
 
   const total = data?.meta?.total ?? 0;
   const isEmployee = roles.includes("EMPLOYEE");
@@ -727,7 +727,7 @@ export default function LeaveTable() {
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
               placeholder="Enter reason..."
-              className="w-full rounded-md border p-2 text-sm dark:bg-gray-700 dark:border-gray-600 outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-md border p-2 text-sm dark:bg-gray-700 dark:border-gray-600 outline-none focus:ring-1 focus:ring-red-500"
               rows={3}
             />
             <div className="mt-4 flex justify-end gap-3">
