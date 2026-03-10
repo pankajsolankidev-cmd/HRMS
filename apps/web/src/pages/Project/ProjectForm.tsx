@@ -13,6 +13,7 @@ import { updateProject } from "../../api/put";
 
 import ComponentCard from "../../components/common/Card";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
+import Skeleton from "../../components/common/SkeletonForm";
 import DatePicker from "../../components/form/date-picker";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
@@ -104,95 +105,92 @@ export default function ProjectForm() {
     saveMutation.mutate(formData);
   };
 
-  if (isEditMode && isLoading) {
-    return <div className="p-6 text-gray-500">Loading project data...</div>;
-  }
-
   return (
     <>
       <PageBreadcrumb pageTitle={isEditMode ? "Edit Project" : "Add Project"} />
+      <Skeleton loading={isEditMode && isLoading}>
+        <ComponentCard>
+          <form
+            noValidate
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-8"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Input
+                required
+                label="Project Name"
+                placeholder="Enter project name"
+                {...register("name")}
+                error={!!errors.name}
+                hint={errors.name?.message}
+              />
 
-      <ComponentCard>
-        <form
-          noValidate
-          onSubmit={handleSubmit(onSubmit)}
-          className="space-y-8"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input
-              required
-              label="Project Name"
-              placeholder="Enter project name"
-              {...register("name")}
-              error={!!errors.name}
-              hint={errors.name?.message}
-            />
+              <Input
+                required
+                label="Client Name"
+                placeholder="Enter client name"
+                {...register("clientName")}
+                error={!!errors.clientName}
+                hint={errors.clientName?.message}
+              />
 
-            <Input
-              required
-              label="Client Name"
-              placeholder="Enter client name"
-              {...register("clientName")}
-              error={!!errors.clientName}
-              hint={errors.clientName?.message}
-            />
+              <Controller
+                name="startDate"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    id="start-date"
+                    label="Start Date"
+                    placeholder="Select start date"
+                    value={field.value}
+                    onChange={(_, dateStr) => field.onChange(dateStr)}
+                    error={!!errors.startDate}
+                    hint={errors.startDate?.message}
+                    required
+                  />
+                )}
+              />
 
-            <Controller
-              name="startDate"
-              control={control}
-              render={({ field }) => (
-                <DatePicker
-                  id="start-date"
-                  label="Start Date"
-                  placeholder="Select start date"
-                  value={field.value}
-                  onChange={(_, dateStr) => field.onChange(dateStr)}
-                  error={!!errors.startDate}
-                  hint={errors.startDate?.message}
-                  required
-                />
-              )}
-            />
+              <Controller
+                name="expectedEndDate"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    id="end-date"
+                    label="Expected End Date"
+                    placeholder="Select expected end date"
+                    value={field.value}
+                    onChange={(_, dateStr) => field.onChange(dateStr)}
+                    error={!!errors.expectedEndDate}
+                    hint={errors.expectedEndDate?.message}
+                    required
+                  />
+                )}
+              />
+            </div>
 
-            <Controller
-              name="expectedEndDate"
-              control={control}
-              render={({ field }) => (
-                <DatePicker
-                  id="end-date"
-                  label="Expected End Date"
-                  placeholder="Select expected end date"
-                  value={field.value}
-                  onChange={(_, dateStr) => field.onChange(dateStr)}
-                  error={!!errors.expectedEndDate}
-                  hint={errors.expectedEndDate?.message}
-                  required
-                />
-              )}
-            />
-          </div>
-
-          <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
-            <Button
-              disabled={saveMutation.isPending}
-              className="bg-black dark:bg-blue-500 text-white"
-            >
-              {saveMutation.isPending
-                ? "Saving..."
-                : isEditMode
-                  ? "Update"
-                  : "Save"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate("/projects")}
-            >
-              Back
-            </Button>
-          </div>
-        </form>
-      </ComponentCard>
+            <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
+              <Button
+                disabled={saveMutation.isPending}
+                className="bg-black dark:bg-blue-500 text-white"
+              >
+                {saveMutation.isPending
+                  ? "Saving..."
+                  : isEditMode
+                    ? "Update"
+                    : "Save"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate("/projects")}
+              >
+                Back
+              </Button>
+            </div>
+          </form>
+        </ComponentCard>
+      </Skeleton>
     </>
   );
 }

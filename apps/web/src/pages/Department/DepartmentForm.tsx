@@ -1,7 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
-import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
@@ -12,6 +11,7 @@ import { addDepartment } from "../../api/post";
 import { updateDepartment } from "../../api/put";
 import ComponentCard from "../../components/common/Card";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
+import Skeleton from "../../components/common/SkeletonForm";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 
@@ -77,56 +77,49 @@ export default function DepartmentForm() {
     saveMutation.mutate(formData);
   };
 
-  if (isEditMode && isLoading) {
-    return (
-      <div className="p-6 text-gray-500 dark:text-gray-400">
-        Loading department data...
-      </div>
-    );
-  }
-
   return (
     <>
       <PageBreadcrumb
         pageTitle={isEditMode ? "Edit Department" : "Add Department"}
       />
+      <Skeleton loading={isEditMode && isLoading}>
+        <ComponentCard>
+          <form
+            noValidate
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-6"
+          >
+            <Input
+              required
+              label="Department Name"
+              placeholder="Enter department name"
+              {...register("name")}
+              error={!!errors.name}
+              hint={errors.name?.message}
+            />
 
-      <ComponentCard>
-        <form
-          noValidate
-          onSubmit={handleSubmit(onSubmit)}
-          className="space-y-6"
-        >
-          <Input
-            required
-            label="Department Name"
-            placeholder="Enter department name"
-            {...register("name")}
-            error={!!errors.name}
-            hint={errors.name?.message}
-          />
-
-          <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
-            <Button
-              disabled={saveMutation.isPending}
-              className="bg-black dark:bg-blue-500 text-white"
-            >
-              {saveMutation.isPending
-                ? "Saving..."
-                : isEditMode
-                  ? "Update"
-                  : "Save"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate("/departments")}
-            >
-              Back
-            </Button>
-          </div>
-        </form>
-      </ComponentCard>
+            <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
+              <Button
+                disabled={saveMutation.isPending}
+                className="bg-black dark:bg-blue-500 text-white"
+              >
+                {saveMutation.isPending
+                  ? "Saving..."
+                  : isEditMode
+                    ? "Update"
+                    : "Save"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate("/departments")}
+              >
+                Back
+              </Button>
+            </div>
+          </form>
+        </ComponentCard>
+      </Skeleton>
     </>
   );
 }

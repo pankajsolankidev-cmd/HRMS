@@ -7,7 +7,7 @@ import {
   IconTrash,
   IconX,
 } from "@tabler/icons-react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router";
@@ -45,8 +45,6 @@ type Expense = {
 
 export default function ExpenseTable() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-
   const [rawSearch, setRawSearch] = useState("");
   const [search, setSearch] = useState<string | undefined>();
   const [page, setPage] = useState(1);
@@ -80,26 +78,24 @@ export default function ExpenseTable() {
 
   const {
     data: summaryData,
-    isFetching: isSummaryFetching,
     error,
+    isFetching: isSummaryFetching,
+    refetch: refetchSummary,
   } = useQuery({
     queryKey: ["expense-summary", fromDate, toDate],
     queryFn: () => getExpenseSummary(fromDate, toDate),
     enabled: run,
   });
-
   useEffect(() => {
     if (summaryData) toast.success("Expense summary loaded!");
-  }, [summaryData]);
-
-  useEffect(() => {
     if (error) toast.error(`Failed to fetch: ${error.message}`);
-  }, [error]);
+  }, [summaryData, error]);
+
   const handleClear = () => {
     setFromDate(today);
     setToDate(today);
     setRun(false);
-    queryClient.removeQueries({ queryKey: ["expense-summary"] });
+    refetchSummary();
   };
 
   const { data, isLoading, isError, refetch } = useQuery<

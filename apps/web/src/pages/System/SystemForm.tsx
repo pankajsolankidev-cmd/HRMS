@@ -12,6 +12,7 @@ import { updateSystem } from "../../api/put";
 import type { PaginatedResponse } from "../../api/types";
 import ComponentCard from "../../components/common/Card";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
+import Skeleton from "../../components/common/SkeletonForm";
 import Input from "../../components/form/input/InputField";
 import MultiSelect from "../../components/form/MultiSelect";
 import Button from "../../components/ui/button/Button";
@@ -46,9 +47,7 @@ export default function SystemForm() {
     },
   });
 
-  const { data: componentsData, isLoading: componentsLoading } = useQuery<
-    PaginatedResponse<any>
-  >({
+  const { data: componentsData } = useQuery<PaginatedResponse<any>>({
     queryKey: ["components-lookup"],
     queryFn: () =>
       getComponents({
@@ -124,88 +123,81 @@ export default function SystemForm() {
     saveMutation.mutate(formData);
   };
 
-  if (componentsLoading || (isEditMode && systemLoading)) {
-    return (
-      <div className="p-6 text-gray-500 dark:text-gray-400">
-        Loading system data...
-      </div>
-    );
-  }
-
   return (
     <>
       <PageBreadcrumb pageTitle={isEditMode ? "Edit System" : "Add System"} />
-
-      <ComponentCard>
-        <form
-          noValidate
-          onSubmit={handleSubmit(onSubmit)}
-          className="space-y-6"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input
-              required
-              label="System Name"
-              placeholder="Enter system name"
-              {...register("name")}
-              error={!!errors.name}
-              hint={errors.name?.message}
-            />
-
-            <Controller
-              name="componentIds"
-              control={control}
-              render={({ field }) => (
-                <MultiSelect
-                  label="Components"
-                  options={componentOptions}
-                  value={field.value ?? []}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  placeholder={
-                    hasComponent
-                      ? "Select components"
-                      : "No components available"
-                  }
-                  required
-                  error={!!errors.componentIds}
-                  hint={errors.componentIds?.message}
-                />
-              )}
-            />
-
-            <div className="md:col-span-2">
+      <Skeleton loading={isEditMode && systemLoading}>
+        <ComponentCard>
+          <form
+            noValidate
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-6"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Input
-                label="Description"
-                placeholder="Enter description"
-                {...register("description")}
-                error={!!errors.description}
-                hint={errors.description?.message}
+                required
+                label="System Name"
+                placeholder="Enter system name"
+                {...register("name")}
+                error={!!errors.name}
+                hint={errors.name?.message}
               />
-            </div>
-          </div>
 
-          <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
-            <Button
-              disabled={saveMutation.isPending}
-              className="bg-black dark:bg-blue-500 text-white"
-            >
-              {saveMutation.isPending
-                ? "Saving..."
-                : isEditMode
-                  ? "Update"
-                  : "Save"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate("/systems")}
-            >
-              Back
-            </Button>
-          </div>
-        </form>
-      </ComponentCard>
+              <Controller
+                name="componentIds"
+                control={control}
+                render={({ field }) => (
+                  <MultiSelect
+                    label="Components"
+                    options={componentOptions}
+                    value={field.value ?? []}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    placeholder={
+                      hasComponent
+                        ? "Select components"
+                        : "No components available"
+                    }
+                    required
+                    error={!!errors.componentIds}
+                    hint={errors.componentIds?.message}
+                  />
+                )}
+              />
+
+              <div className="md:col-span-2">
+                <Input
+                  label="Description"
+                  placeholder="Enter description"
+                  {...register("description")}
+                  error={!!errors.description}
+                  hint={errors.description?.message}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
+              <Button
+                disabled={saveMutation.isPending}
+                className="bg-black dark:bg-blue-500 text-white"
+              >
+                {saveMutation.isPending
+                  ? "Saving..."
+                  : isEditMode
+                    ? "Update"
+                    : "Save"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate("/systems")}
+              >
+                Back
+              </Button>
+            </div>
+          </form>
+        </ComponentCard>
+      </Skeleton>
     </>
   );
 }

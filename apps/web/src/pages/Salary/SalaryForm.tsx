@@ -18,6 +18,7 @@ import { updateSalaryStructure } from "../../api/patch";
 import { addSalaryStructure } from "../../api/post";
 import type { PaginatedResponse } from "../../api/types";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
+import Skeleton from "../../components/common/SkeletonForm";
 
 const MAX_AMOUNT = 1_000_000;
 const TAX_AMOUNT = 1_000;
@@ -77,7 +78,7 @@ export default function SalaryForm() {
     value: String(emp.id),
   }));
 
-  const { data: salaryData, isLoading: salaryLoading } = useQuery({
+  const { data: salaryData, isLoading } = useQuery({
     queryKey: ["salary-structure", id],
     queryFn: () => getSalaryStructureById(id!),
     enabled: isEditMode,
@@ -127,143 +128,136 @@ export default function SalaryForm() {
     saveMutation.mutate(formData);
   };
 
-  if (isEditMode && salaryLoading) {
-    return (
-      <div className="p-6 text-gray-500 dark:text-gray-400">
-        Loading salary structure...
-      </div>
-    );
-  }
-
   return (
     <>
       <PageBreadcrumb pageTitle={isEditMode ? "Edit Salary" : "Add Salary"} />
-
-      <ComponentCard>
-        <form
-          noValidate
-          onSubmit={handleSubmit(onSubmit)}
-          className="space-y-6"
-        >
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <Controller
-              name="employeeId"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  label="Employee"
-                  options={employeeOptions}
-                  value={field.value}
-                  onChange={field.onChange}
-                  placeholder="Select employee"
-                  required
-                  error={!!errors.employeeId}
-                  hint={errors.employeeId?.message}
-                />
-              )}
-            />
-
-            <Input
-              required
-              label="Basic Salary"
-              type="number"
-              placeholder="0"
-              value={watch("basicSalary") === 0 ? "" : watch("basicSalary")}
-              onChange={(e) => {
-                const val = e.target.value;
-                setValue("basicSalary", val === "" ? 0 : Number(val), {
-                  shouldValidate: true,
-                });
-              }}
-              error={!!errors.basicSalary}
-              hint={errors.basicSalary?.message}
-            />
-            <Input
-              required
-              label="Tax"
-              type="number"
-              placeholder="0"
-              value={watch("tax") === 0 ? "" : watch("tax")}
-              onChange={(e) => {
-                const val = e.target.value;
-                setValue("tax", val === "" ? 0 : Number(val), {
-                  shouldValidate: true,
-                });
-              }}
-              error={!!errors.tax}
-              hint={errors.tax?.message}
-            />
-            <Input
-              required
-              label="PF"
-              type="number"
-              placeholder="0"
-              value={watch("pf") === 0 ? "" : watch("pf")}
-              onChange={(e) => {
-                const val = e.target.value;
-                setValue("pf", val === "" ? 0 : Number(val), {
-                  shouldValidate: true,
-                });
-              }}
-              error={!!errors.pf}
-              hint={errors.pf?.message}
-            />
-
-            <div className="md:col-span-1">
+      <Skeleton loading={isEditMode && isLoading}>
+        <ComponentCard>
+          <form
+            noValidate
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-6"
+          >
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <Controller
-                name="appraisalDate"
+                name="employeeId"
                 control={control}
                 render={({ field }) => (
-                  <DatePicker
+                  <Select
+                    label="Employee"
+                    options={employeeOptions}
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Select employee"
                     required
-                    id="appraisalDate"
-                    label="Appraisal Date"
-                    placeholder="Select appraisal date"
-                    value={field.value ? new Date(field.value) : null}
-                    onChange={(dates) => {
-                      if (dates?.[0]) {
-                        field.onChange(dates[0].toLocaleDateString("en-CA"));
-                      } else {
-                        field.onChange("");
-                      }
-                    }}
-                    error={!!errors.appraisalDate}
-                    hint={errors.appraisalDate?.message}
+                    error={!!errors.employeeId}
+                    hint={errors.employeeId?.message}
                   />
                 )}
               />
+
+              <Input
+                required
+                label="Basic Salary"
+                type="number"
+                placeholder="0"
+                value={watch("basicSalary") === 0 ? "" : watch("basicSalary")}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setValue("basicSalary", val === "" ? 0 : Number(val), {
+                    shouldValidate: true,
+                  });
+                }}
+                error={!!errors.basicSalary}
+                hint={errors.basicSalary?.message}
+              />
+              <Input
+                required
+                label="Tax"
+                type="number"
+                placeholder="0"
+                value={watch("tax") === 0 ? "" : watch("tax")}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setValue("tax", val === "" ? 0 : Number(val), {
+                    shouldValidate: true,
+                  });
+                }}
+                error={!!errors.tax}
+                hint={errors.tax?.message}
+              />
+              <Input
+                required
+                label="PF"
+                type="number"
+                placeholder="0"
+                value={watch("pf") === 0 ? "" : watch("pf")}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setValue("pf", val === "" ? 0 : Number(val), {
+                    shouldValidate: true,
+                  });
+                }}
+                error={!!errors.pf}
+                hint={errors.pf?.message}
+              />
+
+              <div className="md:col-span-1">
+                <Controller
+                  name="appraisalDate"
+                  control={control}
+                  render={({ field }) => (
+                    <DatePicker
+                      required
+                      id="appraisalDate"
+                      label="Appraisal Date"
+                      placeholder="Select appraisal date"
+                      value={field.value ? new Date(field.value) : null}
+                      onChange={(dates) => {
+                        if (dates?.[0]) {
+                          field.onChange(dates[0].toLocaleDateString("en-CA"));
+                        } else {
+                          field.onChange("");
+                        }
+                      }}
+                      error={!!errors.appraisalDate}
+                      hint={errors.appraisalDate?.message}
+                    />
+                  )}
+                />
+              </div>
+
+              <Input
+                label="Description"
+                placeholder="Enter description"
+                {...register("description")}
+                error={!!errors.description}
+                hint={errors.description?.message}
+              />
             </div>
 
-            <Input
-              label="Description"
-              placeholder="Enter description"
-              {...register("description")}
-              error={!!errors.description}
-              hint={errors.description?.message}
-            />
-          </div>
-
-          <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
-            <Button
-              disabled={saveMutation.isPending}
-              className="bg-black dark:bg-blue-500 text-white"
-            >
-              {saveMutation.isPending
-                ? "Saving..."
-                : isEditMode
-                  ? "Update"
-                  : "Save"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate("/salary")}
-            >
-              Back
-            </Button>
-          </div>
-        </form>
-      </ComponentCard>
+            <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
+              <Button
+                disabled={saveMutation.isPending}
+                className="bg-black dark:bg-blue-500 text-white"
+              >
+                {saveMutation.isPending
+                  ? "Saving..."
+                  : isEditMode
+                    ? "Update"
+                    : "Save"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate("/salary")}
+              >
+                Back
+              </Button>
+            </div>
+          </form>
+        </ComponentCard>
+      </Skeleton>
     </>
   );
 }
