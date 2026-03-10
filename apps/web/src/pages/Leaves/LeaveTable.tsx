@@ -393,17 +393,6 @@ export default function LeaveTable() {
                     >
                       <IconEdit size={16} /> Edit
                     </button>
-                    <button
-                      onClick={() => navigate(`/leave-requests/${row.id}`)}
-                      className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
-                    >
-                      <IconEdit size={16} /> Edit
-                    </button><button
-                      onClick={() => navigate(`/leave-requests/${row.id}`)}
-                      className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
-                    >
-                      <IconEdit size={16} /> Edit
-                    </button>
 
                     <DeleteConfirm<string>
                       title="Delete Leave Request"
@@ -435,7 +424,6 @@ export default function LeaveTable() {
                     >
                       <IconEdit size={16} /> Edit
                     </button>
-                    
 
                     <DeleteConfirm<string>
                       title="Delete Leave Request"
