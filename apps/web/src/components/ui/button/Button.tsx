@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 interface ButtonProps {
   children: ReactNode;
   type?: "button" | "submit" | "reset";
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "icon";
   variant?: "primary" | "outline";
   startIcon?: ReactNode;
   endIcon?: ReactNode;
@@ -26,6 +26,7 @@ const Button: React.FC<ButtonProps> = ({
   const sizeClasses = {
     sm: "px-4 py-3 text-sm",
     md: "px-5 py-3.5 text-sm",
+    icon: "h-7 w-7 p-0",
   };
 
   const variantClasses = {

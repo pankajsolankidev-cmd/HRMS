@@ -5,7 +5,7 @@ interface DeleteConfirmProps<T> {
   description?: string;
   loading?: boolean;
   onConfirm: (value: T) => void;
-  children: (askDelete: (value: T) => void) => React.ReactNode;
+  children: (onDelete: (value: T) => void) => React.ReactNode;
 }
 
 export default function DeleteConfirm<T>({
@@ -18,7 +18,7 @@ export default function DeleteConfirm<T>({
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState<T | null>(null);
 
-  const askDelete = (val: T) => {
+  const onDelete = (val: T) => {
     setValue(val);
     setOpen(true);
   };
@@ -30,7 +30,7 @@ export default function DeleteConfirm<T>({
 
   return (
     <>
-      {children(askDelete)}
+      {children(onDelete)}
 
       {open && (
         <div className="fixed inset-0 z-999 flex items-center justify-center bg-black/40">

@@ -1,4 +1,4 @@
-import { IconEdit, IconSearch, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { useEffect, useState } from "react";
@@ -19,6 +19,7 @@ import { deleteEmployee } from "../../api/delete";
 import { getEmployees } from "../../api/get";
 import type { PaginatedResponse } from "../../api/types";
 import Card from "../../components/common/Card";
+import Chip from "../../components/common/Chip";
 import { useTableSort } from "../../components/tables/useTableSort";
 import type { RootState } from "../../context";
 
@@ -122,9 +123,10 @@ export default function EmployeeTable() {
     {
       header: "Position",
       cell: (row) => (
-        <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">
-          {row.position}
-        </span>
+        <Chip
+          label={row.position}
+          className="bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400"
+        />
       ),
     },
     {
@@ -159,10 +161,10 @@ export default function EmployeeTable() {
                 loading={isPending}
                 onConfirm={(id) => removeEmployee(id)}
               >
-                {(askDelete) => (
+                {(onDelete) => (
                   <IconTrash
                     size={18}
-                    onClick={() => askDelete(row.id)}
+                    onClick={() => onDelete(row.id)}
                     className="cursor-pointer text-red-600 dark:text-red-400"
                   />
                 )}
@@ -194,15 +196,15 @@ export default function EmployeeTable() {
               />
               {rawSearch && (
                 <Button
-                  size="sm"
+                  size="icon"
                   variant="outline"
                   onClick={() => {
                     setRawSearch("");
                     setSearch(undefined);
                   }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0 rounded-full"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full"
                 >
-                  ✕
+                  <IconX size={16} />
                 </Button>
               )}
             </div>

@@ -20,6 +20,7 @@ import { approveLeave, rejectLeave } from "../../api/patch";
 import type { PaginatedResponse } from "../../api/types";
 import Can from "../../components/common/Can";
 import Card from "../../components/common/Card";
+import Chip from "../../components/common/Chip";
 import DeleteConfirm from "../../components/common/DeleteConfirmModal";
 import FilterCard from "../../components/common/FilterCard";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
@@ -293,19 +294,18 @@ export default function LeaveTable() {
     {
       header: "Status",
       accessor: "status",
-      cell: (row) => (
-        <span
-          className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-            row.status === "pending"
-              ? "bg-yellow-100 text-yellow-800"
-              : row.status === "approved"
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
-          }`}
-        >
-          {row.status.toLocaleUpperCase()}
-        </span>
-      ),
+      cell: (row) => {
+        const statusStyles =
+          row.status === "pending"
+            ? "bg-yellow-100 text-yellow-800"
+            : row.status === "approved"
+              ? "bg-green-100 text-green-800"
+              : "bg-red-100 text-red-800";
+
+        return (
+          <Chip label={row.status.toUpperCase()} className={statusStyles} />
+        );
+      },
     },
     {
       header: "Total Days",
@@ -393,17 +393,6 @@ export default function LeaveTable() {
                     >
                       <IconEdit size={16} /> Edit
                     </button>
-                    <button
-                      onClick={() => navigate(`/leave-requests/${row.id}`)}
-                      className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
-                    >
-                      <IconEdit size={16} /> Edit
-                    </button><button
-                      onClick={() => navigate(`/leave-requests/${row.id}`)}
-                      className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
-                    >
-                      <IconEdit size={16} /> Edit
-                    </button>
 
                     <DeleteConfirm<string>
                       title="Delete Leave Request"
@@ -415,9 +404,9 @@ export default function LeaveTable() {
                           : removeManualLeave(row.id)
                       }
                     >
-                      {(askDelete) => (
+                      {(onDelete) => (
                         <button
-                          onClick={() => askDelete(row.id)}
+                          onClick={() => onDelete(row.id)}
                           className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
                         >
                           <IconTrash size={16} /> Delete
@@ -435,7 +424,6 @@ export default function LeaveTable() {
                     >
                       <IconEdit size={16} /> Edit
                     </button>
-                    
 
                     <DeleteConfirm<string>
                       title="Delete Leave Request"
@@ -443,9 +431,9 @@ export default function LeaveTable() {
                       loading={isDeletePending}
                       onConfirm={() => removeLeave(row.id)}
                     >
-                      {(askDelete) => (
+                      {(onDelete) => (
                         <button
-                          onClick={() => askDelete(row.id)}
+                          onClick={() => onDelete(row.id)}
                           className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
                         >
                           <IconTrash size={16} /> Delete
@@ -582,15 +570,15 @@ export default function LeaveTable() {
               />
               {rawSearch && (
                 <Button
-                  size="sm"
+                  size="icon"
                   variant="outline"
                   onClick={() => {
                     setRawSearch("");
                     setSearch(undefined);
                   }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0 rounded-full"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full"
                 >
-                  ✕
+                  <IconX size={16} />
                 </Button>
               )}
             </div>

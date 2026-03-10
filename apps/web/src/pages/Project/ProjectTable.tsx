@@ -4,6 +4,7 @@ import {
   IconEdit,
   IconSearch,
   IconUser,
+  IconX,
 } from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
@@ -15,6 +16,7 @@ import { getProjects } from "../../api/get";
 import { updateProject } from "../../api/put";
 import type { PaginatedResponse } from "../../api/types";
 import Card from "../../components/common/Card";
+import Chip from "../../components/common/Chip";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import Input from "../../components/form/input/InputField";
 import DataTable, {
@@ -126,15 +128,14 @@ export default function ProjectTable() {
     {
       header: "Status",
       cell: (row) => (
-        <span
-          className={`px-3 py-1 rounded-full text-xs font-medium ${
+        <Chip
+          label={row.status}
+          className={
             row.status === "ACTIVE"
               ? "bg-green-100 text-green-700"
               : "bg-gray-200 text-gray-700"
-          }`}
-        >
-          {row.status}
-        </span>
+          }
+        />
       ),
     },
     {
@@ -220,15 +221,15 @@ export default function ProjectTable() {
               />
               {rawSearch && (
                 <Button
-                  size="sm"
+                  size="icon"
                   variant="outline"
                   onClick={() => {
                     setRawSearch("");
                     setSearch(undefined);
                   }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0 rounded-full"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full"
                 >
-                  ✕
+                  <IconX size={16} />
                 </Button>
               )}
             </div>

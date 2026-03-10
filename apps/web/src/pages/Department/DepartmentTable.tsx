@@ -1,4 +1,4 @@
-import { IconEdit, IconSearch, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { useEffect, useState } from "react";
@@ -84,10 +84,10 @@ export default function DepartmentTable() {
             loading={isPending}
             onConfirm={(id) => removeDepartment(id)}
           >
-            {(askDelete) => (
+            {(onDelete) => (
               <IconTrash
                 size={18}
-                onClick={() => askDelete(row.id)}
+                onClick={() => onDelete(row.id)}
                 className="cursor-pointer text-red-600 dark:text-red-400"
               />
             )}
@@ -116,15 +116,15 @@ export default function DepartmentTable() {
               />
               {rawSearch && (
                 <Button
-                  size="sm"
+                  size="icon"
                   variant="outline"
                   onClick={() => {
                     setRawSearch("");
                     setSearch(undefined);
                   }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0 rounded-full"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full"
                 >
-                  ✕
+                  <IconX size={16} />
                 </Button>
               )}
             </div>

@@ -26,6 +26,7 @@ import { deleteExpense } from "../../api/delete";
 import { getExpenses, getExpenseSummary } from "../../api/get";
 import { approveExpense, createExpense, rejectExpense } from "../../api/patch";
 import type { PaginatedResponse } from "../../api/types";
+import Chip from "../../components/common/Chip";
 import DeleteConfirm from "../../components/common/DeleteConfirmModal";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
@@ -208,21 +209,18 @@ export default function ExpenseTable() {
     {
       header: "Status",
       accessor: "status",
-      cell: (row) => (
-        <span
-          className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-            row.status === "APPROVED"
-              ? "bg-green-100 text-green-800"
-              : row.status === "REJECTED"
-                ? "bg-red-100 text-red-800"
-                : row.status === "CREATED"
-                  ? "bg-blue-100 text-blue-800"
-                  : "bg-gray-100 text-gray-800"
-          }`}
-        >
-          {row.status}
-        </span>
-      ),
+      cell: (row) => {
+        const statusStyles =
+          row.status === "APPROVED"
+            ? "bg-green-100 text-green-800"
+            : row.status === "REJECTED"
+              ? "bg-red-100 text-red-800"
+              : row.status === "CREATED"
+                ? "bg-blue-100 text-blue-800"
+                : "bg-gray-100 text-gray-800";
+
+        return <Chip label={row.status} className={statusStyles} />;
+      },
     },
     {
       header: "Action",
@@ -270,9 +268,9 @@ export default function ExpenseTable() {
                     loading={isPending}
                     onConfirm={() => remove(row.id)}
                   >
-                    {(askDelete) => (
+                    {(onDelete) => (
                       <button
-                        onClick={() => askDelete(row.id)}
+                        onClick={() => onDelete(row.id)}
                         className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
                       >
                         <IconTrash size={16} /> Delete
@@ -383,15 +381,15 @@ export default function ExpenseTable() {
                 />
                 {rawSearch && (
                   <Button
-                    size="sm"
+                    size="icon"
                     variant="outline"
                     onClick={() => {
                       setRawSearch("");
                       setSearch(undefined);
                     }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0 rounded-full"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full"
                   >
-                    ✕
+                    <IconX size={16} />
                   </Button>
                 )}
               </div>
