@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
 
+import { useEffect } from "react";
 import { getDepartmentById } from "../../api/get";
 import { addDepartment } from "../../api/post";
 import { updateDepartment } from "../../api/put";
@@ -32,14 +33,23 @@ export default function DepartmentForm() {
   });
   const {
     register,
+    reset,
     handleSubmit,
     formState: { errors },
   } = useForm<DepartmentFormData>({
     resolver: zodResolver(departmentSchema),
     defaultValues: {
-      name: isEditMode ? data.name : "",
+      name: "",
     },
   });
+
+  useEffect(() => {
+    if (data && isEditMode) {
+      reset({
+        name: data.name ?? "",
+      });
+    }
+  }, [data, isEditMode, reset]);
 
   const saveMutation = useMutation({
     mutationFn: (payload: { name: string }) =>
