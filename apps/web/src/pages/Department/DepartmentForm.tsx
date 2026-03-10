@@ -1,7 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
-import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
@@ -34,7 +33,6 @@ export default function DepartmentForm() {
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors },
   } = useForm<DepartmentFormData>({
     resolver: zodResolver(departmentSchema),
@@ -42,14 +40,6 @@ export default function DepartmentForm() {
       name: isEditMode ? data.name : "",
     },
   });
-
-  // useEffect(() => {
-  //   if (data && isEditMode) {
-  //     reset({
-  //       name: data.name ?? "",
-  //     });
-  //   }
-  // }, [data, isEditMode, reset]);
 
   const saveMutation = useMutation({
     mutationFn: (payload: { name: string }) =>
