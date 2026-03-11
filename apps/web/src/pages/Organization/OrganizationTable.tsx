@@ -1,14 +1,14 @@
+import { getOrganization } from "@/api/get";
+import Card from "@/components/common/Card";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import DataTable, {
+  type Column,
+} from "@/components/tables/BasicTables/DataTable";
+import Button from "@/components/ui/button/Button";
 import type { CreateOrganizationDto } from "@shared/types";
 import { IconEdit } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
-import { getOrganization } from "../../api/get";
-import Card from "../../components/common/Card";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import DataTable, {
-  type Column,
-} from "../../components/tables/BasicTables/DataTable";
-import Button from "../../components/ui/button/Button";
 
 type OrganizationResponse = {
   id: string;

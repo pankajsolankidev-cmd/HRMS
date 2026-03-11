@@ -1,3 +1,5 @@
+import { resetPassword } from "@/api/post";
+import Input from "@/components/form/input/InputField";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -7,9 +9,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { Link, useNavigate, useParams } from "react-router";
 import { z } from "zod";
-
-import { resetPassword } from "../../api/post";
-import Input from "../../components/form/input/InputField";
 
 const resetPasswordSchema = z
   .object({

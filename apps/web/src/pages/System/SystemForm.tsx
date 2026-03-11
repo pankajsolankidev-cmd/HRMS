@@ -1,3 +1,13 @@
+import { getComponents, getSystemById } from "@/api/get";
+import { addSystem } from "@/api/post";
+import { updateSystem } from "@/api/put";
+import type { PaginatedResponse } from "@/api/types";
+import ComponentCard from "@/components/common/Card";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import Skeleton from "@/components/common/SkeletonForm";
+import Input from "@/components/form/input/InputField";
+import MultiSelect from "@/components/form/MultiSelect";
+import Button from "@/components/ui/button/Button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
@@ -6,16 +16,6 @@ import { Controller, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
-import { getComponents, getSystemById } from "../../api/get";
-import { addSystem } from "../../api/post";
-import { updateSystem } from "../../api/put";
-import type { PaginatedResponse } from "../../api/types";
-import ComponentCard from "../../components/common/Card";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import Skeleton from "../../components/common/SkeletonForm";
-import Input from "../../components/form/input/InputField";
-import MultiSelect from "../../components/form/MultiSelect";
-import Button from "../../components/ui/button/Button";
 
 const systemSchema = z.object({
   name: z.string().min(1, "Name is required"),

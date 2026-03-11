@@ -1,3 +1,12 @@
+import { getProjectById } from "@/api/get";
+import { addProject } from "@/api/post";
+import { updateProject } from "@/api/put";
+import ComponentCard from "@/components/common/Card";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import Skeleton from "@/components/common/SkeletonForm";
+import DatePicker from "@/components/form/date-picker";
+import Input from "@/components/form/input/InputField";
+import Button from "@/components/ui/button/Button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
@@ -6,17 +15,6 @@ import { Controller, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
-
-import { getProjectById } from "../../api/get";
-import { addProject } from "../../api/post";
-import { updateProject } from "../../api/put";
-
-import ComponentCard from "../../components/common/Card";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import Skeleton from "../../components/common/SkeletonForm";
-import DatePicker from "../../components/form/date-picker";
-import Input from "../../components/form/input/InputField";
-import Button from "../../components/ui/button/Button";
 
 const projectSchema = z
   .object({

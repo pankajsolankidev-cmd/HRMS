@@ -1,3 +1,23 @@
+import { deleteLeave, deleteManualLeave } from "@/api/delete";
+import { getEmployees, getLeaves } from "@/api/get";
+import { approveLeave, rejectLeave } from "@/api/patch";
+import type { PaginatedResponse } from "@/api/types";
+import Can from "@/components/common/Can";
+import Card from "@/components/common/Card";
+import Chip from "@/components/common/Chip";
+import DeleteConfirm from "@/components/common/DeleteConfirmModal";
+import FilterCard from "@/components/common/FilterCard";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import PageMeta from "@/components/common/PageMeta";
+import DatePicker from "@/components/form/date-picker";
+import Input from "@/components/form/input/InputField";
+import Select from "@/components/form/Select";
+import DataTable, {
+  type Column,
+} from "@/components/tables/BasicTables/DataTable";
+import { useTableSort } from "@/components/tables/useTableSort";
+import Button from "@/components/ui/button/Button";
+import type { RootState } from "@/context";
 import {
   IconCheck,
   IconDotsVertical,
@@ -14,26 +34,6 @@ import { toast } from "react-hot-toast";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 
-import { deleteLeave, deleteManualLeave } from "../../api/delete";
-import { getEmployees, getLeaves } from "../../api/get";
-import { approveLeave, rejectLeave } from "../../api/patch";
-import type { PaginatedResponse } from "../../api/types";
-import Can from "../../components/common/Can";
-import Card from "../../components/common/Card";
-import Chip from "../../components/common/Chip";
-import DeleteConfirm from "../../components/common/DeleteConfirmModal";
-import FilterCard from "../../components/common/FilterCard";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import PageMeta from "../../components/common/PageMeta";
-import DatePicker from "../../components/form/date-picker";
-import Input from "../../components/form/input/InputField";
-import Select from "../../components/form/Select";
-import DataTable, {
-  type Column,
-} from "../../components/tables/BasicTables/DataTable";
-import { useTableSort } from "../../components/tables/useTableSort";
-import Button from "../../components/ui/button/Button";
-import type { RootState } from "../../context";
 export const LEAVE_TYPES = [
   { label: "Sick", value: "sick" },
   { label: "Casual", value: "casual" },

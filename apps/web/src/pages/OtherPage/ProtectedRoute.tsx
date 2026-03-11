@@ -1,7 +1,7 @@
+import type { RootState } from "@/context";
 import Cookies from "js-cookie";
 import { useSelector } from "react-redux";
 import { Navigate, Outlet } from "react-router";
-import type { RootState } from "../../context";
 
 type ProtectedRouteProps = {
   allowedRoles?: string[];

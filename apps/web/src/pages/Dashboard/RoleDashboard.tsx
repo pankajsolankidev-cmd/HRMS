@@ -1,5 +1,5 @@
+import type { RootState } from "@/context";
 import { useSelector } from "react-redux";
-import type { RootState } from "../../context";
 import AdminDashboard from "./AdminDashboard";
 import EmployeeDashboard from "./EmployeeDashboard";
 

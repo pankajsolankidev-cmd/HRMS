@@ -1,22 +1,21 @@
+import Card from "@/components/common/Card";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import DataTable, {
+  type Column,
+} from "@/components/tables/BasicTables/DataTable";
+import Button from "@/components/ui/button/Button";
 import { IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useLocation, useNavigate, useParams } from "react-router";
 
-import Card from "../../components/common/Card";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import DataTable, {
-  type Column,
-} from "../../components/tables/BasicTables/DataTable";
-import Button from "../../components/ui/button/Button";
-
+import { removeEmployeeFromProject } from "@/api/delete";
+import { getEmployees, getProjectEmployees } from "@/api/get";
+import { assignEmployeeToProject } from "@/api/post";
+import DeleteConfirm from "@/components/common/DeleteConfirmModal";
+import Checkbox from "@/components/form/input/Checkbox";
 import type { AxiosError } from "axios";
-import { removeEmployeeFromProject } from "../../api/delete";
-import { getEmployees, getProjectEmployees } from "../../api/get";
-import { assignEmployeeToProject } from "../../api/post";
-import DeleteConfirm from "../../components/common/DeleteConfirmModal";
-import Checkbox from "../../components/form/input/Checkbox";
 
 type Employee = {
   id: string;

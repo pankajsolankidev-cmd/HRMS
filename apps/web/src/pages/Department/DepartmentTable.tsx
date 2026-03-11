@@ -1,19 +1,18 @@
+import { deleteDepartment } from "@/api/delete";
+import { getDepartments } from "@/api/get";
+import Card from "@/components/common/Card";
+import DeleteConfirm from "@/components/common/DeleteConfirmModal";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import Input from "@/components/form/input/InputField";
+import type { Column } from "@/components/tables/BasicTables/DataTable";
+import DataTable from "@/components/tables/BasicTables/DataTable";
+import Button from "@/components/ui/button/Button";
 import { IconEdit, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { useEffect, useState } from "react";
-import { toast } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
-import { deleteDepartment } from "../../api/delete";
-import { getDepartments } from "../../api/get";
-import Card from "../../components/common/Card";
-import DeleteConfirm from "../../components/common/DeleteConfirmModal";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import Input from "../../components/form/input/InputField";
-import DataTable, {
-  type Column,
-} from "../../components/tables/BasicTables/DataTable";
-import Button from "../../components/ui/button/Button";
 
 type Department = {
   id: number;

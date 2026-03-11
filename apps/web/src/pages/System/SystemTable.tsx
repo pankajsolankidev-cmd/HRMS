@@ -1,23 +1,23 @@
+import { deleteSystem } from "@/api/delete";
+import { getSystems } from "@/api/get";
+import type { PaginatedResponse } from "@/api/types";
+import Card from "@/components/common/Card";
+import Chip from "@/components/common/Chip";
+import DeleteConfirm from "@/components/common/DeleteConfirmModal";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import PageMeta from "@/components/common/PageMeta";
+import Input from "@/components/form/input/InputField";
+import DataTable, {
+  type Column,
+} from "@/components/tables/BasicTables/DataTable";
+import { useTableSort } from "@/components/tables/useTableSort";
+import Button from "@/components/ui/button/Button";
 import { IconEdit, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
-import { deleteSystem } from "../../api/delete";
-import { getSystems } from "../../api/get";
-import type { PaginatedResponse } from "../../api/types";
-import Card from "../../components/common/Card";
-import Chip from "../../components/common/Chip";
-import DeleteConfirm from "../../components/common/DeleteConfirmModal";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import PageMeta from "../../components/common/PageMeta";
-import Input from "../../components/form/input/InputField";
-import DataTable, {
-  type Column,
-} from "../../components/tables/BasicTables/DataTable";
-import { useTableSort } from "../../components/tables/useTableSort";
-import Button from "../../components/ui/button/Button";
 
 type SystemComponent = {
   id: string;

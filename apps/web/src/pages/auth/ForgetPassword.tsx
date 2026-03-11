@@ -1,3 +1,5 @@
+import { forgetPassword } from "@/api/post";
+import Input from "@/components/form/input/InputField";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
@@ -6,9 +8,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { Link, useNavigate } from "react-router";
 import { z } from "zod";
-
-import { forgetPassword } from "../../api/post";
-import Input from "../../components/form/input/InputField";
 
 const forgetPasswordSchema = z.object({
   email: z

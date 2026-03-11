@@ -1,3 +1,6 @@
+import { getEmployeeDashboard } from "@/api/get";
+import Card from "@/components/common/Card";
+import Skeleton from "@/components/common/SkeletonForm";
 import {
   IconBeach,
   IconCalendarCheck,
@@ -7,9 +10,6 @@ import {
   IconTrendingUp,
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
-import { getEmployeeDashboard } from "../../api/get";
-import Card from "../../components/common/Card";
-import Skeleton from "../../components/common/SkeletonForm";
 
 export default function EmployeeDashboard() {
   const { data, isLoading } = useQuery({

@@ -1,3 +1,11 @@
+import { getComponentById } from "@/api/get";
+import { addComponent } from "@/api/post";
+import { updateComponent } from "@/api/put";
+import Card from "@/components/common/Card";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import Skeleton from "@/components/common/SkeletonForm";
+import Input from "@/components/form/input/InputField";
+import Button from "@/components/ui/button/Button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
@@ -6,16 +14,6 @@ import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
-
-import ComponentCard from "../../components/common/Card";
-import Input from "../../components/form/input/InputField";
-
-import { getComponentById } from "../../api/get";
-import { addComponent } from "../../api/post";
-import { updateComponent } from "../../api/put";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import Skeleton from "../../components/common/SkeletonForm";
-import Button from "../../components/ui/button/Button";
 
 const componentSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
@@ -95,7 +93,7 @@ export default function ComponentForm() {
         pageTitle={isEditMode ? "Edit Component" : "Add Component"}
       />
       <Skeleton loading={isEditMode && isLoading}>
-        <ComponentCard>
+        <Card>
           <form
             noValidate
             onSubmit={handleSubmit(onSubmit)}
@@ -151,7 +149,7 @@ export default function ComponentForm() {
               </Button>
             </div>
           </form>
-        </ComponentCard>
+        </Card>
       </Skeleton>
     </>
   );

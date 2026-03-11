@@ -1,6 +1,6 @@
+import { getProfile } from "@/api/get";
+import Chip from "@/components/common/Chip";
 import { useQuery } from "@tanstack/react-query";
-import { getProfile } from "../../api/get";
-import Chip from "../../components/common/Chip";
 
 const UserProfile = () => {
   const { data, isLoading, isError } = useQuery({

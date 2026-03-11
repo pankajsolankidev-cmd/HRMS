@@ -1,3 +1,15 @@
+import { getProjects } from "@/api/get";
+import { updateProject } from "@/api/put";
+import type { PaginatedResponse } from "@/api/types";
+import Card from "@/components/common/Card";
+import Chip from "@/components/common/Chip";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import Input from "@/components/form/input/InputField";
+import DataTable, {
+  type Column,
+} from "@/components/tables/BasicTables/DataTable";
+import { useTableSort } from "@/components/tables/useTableSort";
+import Button from "@/components/ui/button/Button";
 import {
   IconCheck,
   IconDotsVertical,
@@ -7,24 +19,11 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router";
-
 import type { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { getProjects } from "../../api/get";
-import { updateProject } from "../../api/put";
-import type { PaginatedResponse } from "../../api/types";
-import Card from "../../components/common/Card";
-import Chip from "../../components/common/Chip";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import Input from "../../components/form/input/InputField";
-import DataTable, {
-  type Column,
-} from "../../components/tables/BasicTables/DataTable";
-import { useTableSort } from "../../components/tables/useTableSort";
-import Button from "../../components/ui/button/Button";
-
+import { useNavigate } from "react-router";
+  
 type Project = {
   id: number;
   name: string;

@@ -1,23 +1,21 @@
+import {
+  getEmployeePayrollHistory,
+  getPayrollPreview,
+  getPayrollSummary,
+} from "@/api/get";
+import { processBulkPayroll } from "@/api/post";
+import Card from "@/components/common/Card";
+import Checkbox from "@/components/form/input/Checkbox";
+import Select from "@/components/form/Select";
+import DataTable, {
+  type Column,
+} from "@/components/tables/BasicTables/DataTable";
+import Button from "@/components/ui/button/Button";
 import { IconEdit, IconHistory, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-
-import {
-  getEmployeePayrollHistory,
-  getPayrollPreview,
-  getPayrollSummary,
-} from "../../api/get";
-import { processBulkPayroll } from "../../api/post";
-
-import Card from "../../components/common/Card";
-import Checkbox from "../../components/form/input/Checkbox";
-import Select from "../../components/form/Select";
-import DataTable, {
-  type Column,
-} from "../../components/tables/BasicTables/DataTable";
-import Button from "../../components/ui/button/Button";
 
 const MONTHS = [
   { label: "January", value: "JANUARY" },

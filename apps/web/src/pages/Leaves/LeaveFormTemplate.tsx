@@ -1,13 +1,12 @@
+import Select from "@/components/form/Select";
+import DatePicker from "@/components/form/date-picker";
+import FileInput from "@/components/form/input/FileInput";
+import Input from "@/components/form/input/InputField";
+import Button from "@/components/ui/button/Button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
-
-import Select from "../../components/form/Select";
-import DatePicker from "../../components/form/date-picker";
-import FileInput from "../../components/form/input/FileInput";
-import Input from "../../components/form/input/InputField";
-import Button from "../../components/ui/button/Button";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 

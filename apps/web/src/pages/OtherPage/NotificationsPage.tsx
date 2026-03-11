@@ -1,15 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-
-import Card from "../../components/common/Card";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
+import { getNotifications } from "@/api/get";
+import type { PaginatedResponse } from "@/api/types";
+import Card from "@/components/common/Card";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import DataTable, {
   type Column,
-} from "../../components/tables/BasicTables/DataTable";
-
-import { getNotifications } from "../../api/get";
-import type { PaginatedResponse } from "../../api/types";
-import { useTableSort } from "../../components/tables/useTableSort";
+} from "@/components/tables/BasicTables/DataTable";
+import { useTableSort } from "@/components/tables/useTableSort";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 
 type Notification = {
   id: string;

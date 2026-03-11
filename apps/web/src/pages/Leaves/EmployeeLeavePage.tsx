@@ -1,14 +1,14 @@
+import { getEmployees, getLeaveById, getManualLeaveById } from "@/api/get";
+import { updateEmployeeLeave } from "@/api/patch";
+import { addEmployeeLeave, type AddLeavePayload } from "@/api/post";
+import ComponentCard from "@/components/common/Card";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { AxiosError } from "axios";
 import { toast } from "react-hot-toast";
 import { useLocation, useNavigate, useParams } from "react-router";
-
-import type { AxiosError } from "axios";
-import { getEmployees, getLeaveById, getManualLeaveById } from "../../api/get";
-import { updateEmployeeLeave } from "../../api/patch";
-import { addEmployeeLeave, type AddLeavePayload } from "../../api/post";
-import ComponentCard from "../../components/common/Card";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import LeaveForm, { type LeaveFormData } from "./LeaveFormTemplate";
+import type { LeaveFormData } from "./LeaveFormTemplate";
+import LeaveForm from "./LeaveFormTemplate";
 
 export const mapFormToAddLeavePayload = (
   data: LeaveFormData,

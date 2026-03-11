@@ -1,12 +1,12 @@
+import { getDashboard } from "@/api/get";
+import Card from "@/components/common/Card";
+import Skeleton from "@/components/common/SkeletonForm";
 import {
   IconCalendarOff,
   IconCircleCheck,
   IconUsers,
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
-import { getDashboard } from "../../api/get";
-import Card from "../../components/common/Card";
-import Skeleton from "../../components/common/SkeletonForm";
 
 export default function AdminDashboard() {
   const { data, isLoading } = useQuery({
