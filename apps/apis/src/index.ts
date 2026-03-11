@@ -2,7 +2,14 @@ import dotenv from "dotenv";
 
 dotenv.config({ path: ".env" });
 
-import Fastify from "fastify";
+import Fastify, { FastifyInstance } from "fastify";
+import { Redis } from "ioredis";
+
+declare module "fastify" {
+  interface FastifyInstance {
+    redis: Redis;
+  }
+}
 import cors from "@fastify/cors";
 import swagger from "@fastify/swagger";
 import swaggerUI from "@fastify/swagger-ui";
@@ -31,6 +38,7 @@ import notificationRoutes from "./modules/notifications/notifications.routes";
 import holidayRoutes from "./modules/holiday/holiday.routes";
 import ajvKeywords from "ajv-keywords";
 import Ajv from "ajv";
+import redisPlugin from "./lib/redis";
 
 const app = Fastify({
   logger: true,
@@ -86,6 +94,7 @@ app.register(swaggerUI, {
   routePrefix: "/docs",
 });
 
+app.register(redisPlugin);
 app.register(authRoutes);
 
 app.register(employeeRoutes, {
@@ -112,6 +121,17 @@ app.register(holidayRoutes);
 
 app.get("/health", async () => {
   return { status: "API is running 🚀" };
+});
+
+app.get("/redis-test", async (request, reply) => {
+  await app.redis.set("hrms:test", "working");
+
+  const value = await app.redis.get("hrms:test");
+
+  return {
+    message: "Redis test success",
+    value,
+  };
 });
 
 async function start() {
