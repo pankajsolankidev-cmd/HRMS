@@ -55,7 +55,7 @@ export default function EmployeeDashboard() {
           <Card className="bg-blue-50 dark:bg-slate-900">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-sm text-gray-500">Total Earned</p>
+                <p className="text-sm text-gray-500">Total Leave Earned</p>
                 <h2 className="text-4xl font-bold text-blue-600 mt-2">
                   {leaveBalance.totalEarned ?? 0}
                 </h2>
@@ -67,7 +67,7 @@ export default function EmployeeDashboard() {
           <Card className="bg-emerald-50 dark:bg-slate-900">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-sm text-gray-500">Monthly Accrual</p>
+                <p className="text-sm text-gray-500">Monthly Accrual Leave</p>
                 <h2 className="text-4xl font-bold text-emerald-600 mt-2">
                   {leaveBalance.monthlyAccrual ?? 0}
                 </h2>
@@ -79,7 +79,7 @@ export default function EmployeeDashboard() {
           <Card className="bg-rose-50 dark:bg-slate-900">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-sm text-gray-500">Total Used</p>
+                <p className="text-sm text-gray-500">Total Leave Used</p>
                 <h2 className="text-4xl font-bold text-rose-600 mt-2">
                   {leaveBalance.totalUsed ?? 0}
                 </h2>

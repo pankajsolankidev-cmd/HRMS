@@ -454,134 +454,136 @@ export default function LeaveTable() {
     <>
       <PageMeta title="Leaves" description="Manage leave requests" />
       <PageBreadcrumb pageTitle="Leaves" />
-      {!isEmployee && (
-        <FilterCard className="mb-5">
-          <div className="grid grid-cols-6 gap-4 w-full">
-            <div className="col-span-6 md:col-span-2">
-              <Select
-                options={LEAVE_TYPES}
-                placeholder="Select type"
-                value={type ?? ""}
-                onChange={(val) => {
-                  setType(val || undefined);
-                  setPage(1);
-                }}
-                className="w-full"
-              />
-            </div>
+      <FilterCard className="mb-5">
+        <div className="grid grid-cols-6 gap-4 w-full">
+          <div className="col-span-6 md:col-span-2">
+            <Select
+              options={LEAVE_TYPES}
+              placeholder="Select type"
+              value={type ?? ""}
+              onChange={(val) => {
+                setType(val || undefined);
+                setPage(1);
+              }}
+            />
+          </div>
 
-            <div className="col-span-6 md:col-span-2">
-              <Select
-                options={LEAVE_STATUS}
-                placeholder="Select status"
-                value={status ?? ""}
-                onChange={(val) => {
-                  setStatus(val || undefined);
-                  setPage(1);
-                }}
-                className="w-full"
-              />
-            </div>
+          <div className="col-span-6 md:col-span-2">
+            <Select
+              options={LEAVE_STATUS}
+              placeholder="Select status"
+              value={status ?? ""}
+              onChange={(val) => {
+                setStatus(val || undefined);
+                setPage(1);
+              }}
+            />
+          </div>
 
-            <div className="col-span-6 md:col-span-2">
-              <Select
-                options={employeeOptions}
-                placeholder="Select employee"
-                value={employeeId ?? ""}
-                onChange={(val) => {
-                  setEmployeeId(val || undefined);
-                  setPage(1);
-                }}
-                className="w-full"
-              />
-            </div>
-
-            <div className="col-span-6 md:col-span-2">
-              <Select
-                options={LEAVE_SOURCE_OPTIONS}
-                placeholder="Leave source"
-                value={createdByType ?? ""}
-                onChange={(val) => {
-                  setCreatedByType(val || undefined);
-                  setPage(1);
-                }}
-                className="w-full"
-              />
-            </div>
-
-            <div className="col-span-6 md:col-span-2">
-              <DatePicker
-                id="dateRange"
-                mode="range"
-                placeholder="Select date range"
-                value={
-                  fromDate && toDate
-                    ? [new Date(fromDate), new Date(toDate)]
-                    : undefined
-                }
-                onChange={(dates) => {
-                  if (dates?.length === 2) {
-                    setFromDate(dates[0].toLocaleDateString("en-CA"));
-                    setToDate(dates[1].toLocaleDateString("en-CA"));
+          {!isEmployee && (
+            <>
+              <div className="col-span-6 md:col-span-2">
+                <Select
+                  options={employeeOptions}
+                  placeholder="Select employee"
+                  value={employeeId ?? ""}
+                  onChange={(val) => {
+                    setEmployeeId(val || undefined);
                     setPage(1);
-                  } else {
-                    setFromDate(undefined);
-                    setToDate(undefined);
-                  }
-                }}
-              />
-            </div>
+                  }}
+                />
+              </div>
 
-            <div className="col-span-6 md:col-span-1 flex items-end">
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  setType(undefined);
-                  setStatus(undefined);
-                  setEmployeeId(undefined);
-                  setCreatedByType(undefined);
+              <div className="col-span-6 md:col-span-2">
+                <Select
+                  options={LEAVE_SOURCE_OPTIONS}
+                  placeholder="Leave source"
+                  value={createdByType ?? ""}
+                  onChange={(val) => {
+                    setCreatedByType(val || undefined);
+                    setPage(1);
+                  }}
+                />
+              </div>
+            </>
+          )}
+
+          <div className="col-span-6 md:col-span-2">
+            <DatePicker
+              id="dateRange"
+              mode="range"
+              placeholder="Select date range"
+              value={
+                fromDate && toDate
+                  ? [new Date(fromDate), new Date(toDate)]
+                  : undefined
+              }
+              onChange={(dates) => {
+                if (dates?.length === 2) {
+                  setFromDate(dates[0].toLocaleDateString("en-CA"));
+                  setToDate(dates[1].toLocaleDateString("en-CA"));
+                  setPage(1);
+                } else {
                   setFromDate(undefined);
                   setToDate(undefined);
-                  setSearch(undefined);
-                  setRawSearch("");
-                  setPage(1);
-                }}
-              >
-                Clear
-              </Button>
-            </div>
+                }
+              }}
+            />
           </div>
-        </FilterCard>
-      )}
+
+          <div className="col-span-6 md:col-span-1 flex items-end">
+            <Button
+              variant="outline"
+              className=""
+              onClick={() => {
+                setType(undefined);
+                setStatus(undefined);
+                setEmployeeId(undefined);
+                setCreatedByType(undefined);
+                setFromDate(undefined);
+                setToDate(undefined);
+                setSearch(undefined);
+                setRawSearch("");
+                setPage(1);
+              }}
+            >
+              Clear
+            </Button>
+          </div>
+        </div>
+      </FilterCard>
 
       <Card
         action={
           <div className="flex items-center justify-between gap-3">
-            <div className="relative w-full max-w-xs">
-              <div className="absolute left-3 top-3 text-gray-400">
-                <IconSearch size={18} stroke={2} />
+            {!isEmployee && (
+              <div className="relative w-full max-w-xs">
+                <div className="absolute left-3 top-3 text-gray-400">
+                  <IconSearch size={18} stroke={2} />
+                </div>
+
+                <Input
+                  placeholder="Search by name"
+                  value={rawSearch}
+                  onChange={(e) => setRawSearch(e.target.value)}
+                  className="pl-10 pr-10 h-[42px] focus-visible:ring-0"
+                />
+
+                {rawSearch && (
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => {
+                      setRawSearch("");
+                      setSearch(undefined);
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full"
+                  >
+                    <IconX size={16} />
+                  </Button>
+                )}
               </div>
-              <Input
-                placeholder="Search by name"
-                value={rawSearch}
-                onChange={(e) => setRawSearch(e.target.value)}
-                className="pl-10 pr-10 h-[42px] focus-visible:ring-0"
-              />
-              {rawSearch && (
-                <Button
-                  size="icon"
-                  variant="outline"
-                  onClick={() => {
-                    setRawSearch("");
-                    setSearch(undefined);
-                  }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full"
-                >
-                  <IconX size={16} />
-                </Button>
-              )}
-            </div>
+            )}
 
             <Button onClick={() => navigate("/leave-requests/new")} size="md">
               Add Leave

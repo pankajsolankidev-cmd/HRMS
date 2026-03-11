@@ -74,7 +74,7 @@ export default function UserDropdown() {
         onClick={toggleDropdown}
         className="flex items-center text-gray-700 dropdown-toggle dark:text-gray-400"
       >
-        <div className="mr-3 flex h-11 w-11 items-center justify-center rounded-full bg-blue-600 text-white font-semibold text-sm shadow-md">
+        <div className="mr-3 flex h-11 w-11 items-center justify-center rounded-full bg-blue-400 dark:bg-slate-900 border text-white font-semibold text-sm shadow-md">
           {initials}
         </div>
 

@@ -58,6 +58,7 @@ export default function AppSidebar() {
         { icon: <FolderIcon />, name: "System", path: "/systems" },
         { icon: <CalendarIcon />, name: "Leaves", path: "/leave-requests" },
         { icon: <IconReceiptRupee />, name: "Salary", path: "/salary" },
+        { icon: <IconWallet />, name: "Expenses", path: "/expenses" },
         {
           icon: <IconCash />,
           name: "Payroll",
@@ -66,7 +67,6 @@ export default function AppSidebar() {
             { name: "Payroll History", path: "/payrolls/history" },
           ],
         },
-        { icon: <IconWallet />, name: "Expenses", path: "/expenses" },
         {
           icon: <IconBuilding />,
           name: "Organization",
