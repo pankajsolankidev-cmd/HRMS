@@ -82,13 +82,7 @@ export default function ForgetPassword() {
       </form>
 
       {key && (
-        <Button
-          onClick={() => navigate(`/reset-password/${key}`)}
-          className="mt-4 w-full py-2 rounded-lg border text-sm
-            border-gray-300 text-gray-700
-            hover:bg-gray-100
-            dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-        >
+        <Button onClick={() => navigate(`/reset-password/${key}`)}>
           Go to Reset Password
         </Button>
       )}
