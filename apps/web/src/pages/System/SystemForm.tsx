@@ -54,11 +54,20 @@ export default function SystemForm() {
         excludeAssigned: true,
       }),
   });
-  const { data: systemData, isLoading: systemLoading } = useQuery({
+  const {
+    data: systemData,
+    isLoading: systemLoading,
+    isError,
+  } = useQuery({
     queryKey: ["system", id],
     queryFn: () => getSystemById(id!),
     enabled: isEditMode,
   });
+  useEffect(() => {
+    if (isError) {
+      toast.error("Failed to load system data");
+    }
+  }, [isError]);
 
   const componentOptions = React.useMemo(() => {
     const baseOptions = (componentsData?.data ?? []).map((c: any) => ({

@@ -52,11 +52,16 @@ export default function PublicHolidayForm() {
     },
   });
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["public-holiday", id],
     queryFn: () => getPublicHolidayById(id!),
     enabled: isEditMode,
   });
+  useEffect(() => {
+    if (isError) {
+      toast.error("Failed to load public holiday data");
+    }
+  }, [isError]);
 
   useEffect(() => {
     if (data && isEditMode) {

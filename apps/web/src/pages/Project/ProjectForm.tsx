@@ -60,12 +60,16 @@ export default function ProjectForm() {
     },
   });
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["project", id],
     queryFn: () => getProjectById(id!),
     enabled: isEditMode,
   });
-
+  useEffect(() => {
+    if (isError) {
+      toast.error("Failed to load project data");
+    }
+  }, [isError]);
   useEffect(() => {
     if (data && isEditMode) {
       reset({

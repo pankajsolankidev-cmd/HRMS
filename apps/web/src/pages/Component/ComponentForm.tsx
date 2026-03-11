@@ -43,11 +43,16 @@ export default function ComponentForm() {
     },
   });
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["component", id],
     queryFn: () => getComponentById(id!),
     enabled: isEditMode,
   });
+  useEffect(() => {
+    if (isError) {
+      toast.error("Failed to load component data");
+    }
+  }, [isError]);
 
   useEffect(() => {
     if (data) {

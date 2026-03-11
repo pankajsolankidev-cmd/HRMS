@@ -6,6 +6,7 @@ import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import Skeleton from "@/components/common/SkeletonForm";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
+import { useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
 import { mapFormToAddLeavePayload } from "./EmployeeLeavePage";
@@ -17,11 +18,16 @@ export default function SelfLeavePage() {
   const queryClient = useQueryClient();
 
   const isEditMode = Boolean(id && id !== "new");
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["leave", id],
     queryFn: () => getLeaveById(id!),
     enabled: isEditMode,
   });
+  useEffect(() => {
+    if (isError) {
+      toast.error("Failed to load leave data");
+    }
+  }, [isError]);
 
   const addMutation = useMutation<unknown, unknown, AddLeavePayload>({
     mutationFn: addLeave,

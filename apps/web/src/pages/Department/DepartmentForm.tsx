@@ -26,11 +26,16 @@ export default function DepartmentForm() {
   const navigate = useNavigate();
 
   const isEditMode = Boolean(id && id !== "new");
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["department", id],
     queryFn: () => getDepartmentById(id!),
     enabled: isEditMode,
   });
+  useEffect(() => {
+    if (isError) {
+      toast.error("Failed to load Department data");
+    }
+  }, [isError]);
   const {
     register,
     reset,

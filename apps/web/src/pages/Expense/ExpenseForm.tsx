@@ -68,11 +68,16 @@ export default function ExpenseForm() {
     },
   });
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["expense", id],
     queryFn: () => getExpenseById(id!),
     enabled: isEditMode,
   });
+  useEffect(() => {
+    if (isError) {
+      toast.error("Failed to load expense data");
+    }
+  }, [isError]);
 
   useEffect(() => {
     if (data) {

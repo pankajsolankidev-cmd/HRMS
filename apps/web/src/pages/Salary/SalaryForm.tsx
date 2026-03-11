@@ -76,11 +76,20 @@ export default function SalaryForm() {
     value: String(emp.id),
   }));
 
-  const { data: salaryData, isLoading } = useQuery({
+  const {
+    data: salaryData,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["salary-structure", id],
     queryFn: () => getSalaryStructureById(id!),
     enabled: isEditMode,
   });
+  useEffect(() => {
+    if (isError) {
+      toast.error("Failed to load salary data");
+    }
+  }, [isError]);
 
   useEffect(() => {
     if (salaryData) {

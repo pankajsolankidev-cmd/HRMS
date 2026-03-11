@@ -65,11 +65,20 @@ export default function OrganizationForm() {
     },
   });
 
-  const { data: organizationData, isLoading } = useQuery({
+  const {
+    data: organizationData,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["organization"],
     queryFn: getOrganization,
     enabled: isEditMode,
   });
+  useEffect(() => {
+    if (isError) {
+      toast.error("Failed to load organization data");
+    }
+  }, [isError]);
 
   useEffect(() => {
     if (organizationData && isEditMode) {
