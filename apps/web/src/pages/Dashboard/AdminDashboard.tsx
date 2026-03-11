@@ -7,12 +7,24 @@ import {
   IconUsers,
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
+import type { AxiosError } from "axios";
+import { useEffect } from "react";
+import toast from "react-hot-toast";
 
 export default function AdminDashboard() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["dashboard"],
     queryFn: getDashboard,
+    retry: false,
   });
+  useEffect(() => {
+    if (isError) {
+      const err = error as AxiosError<{ message?: string }>;
+      toast.error(
+        err?.response?.data?.message ?? "Failed to load dashboard data",
+      );
+    }
+  }, [isError, error]);
 
   return (
     <Skeleton loading={isLoading}>
@@ -25,7 +37,7 @@ export default function AdminDashboard() {
                   Total Employees
                 </p>
                 <h2 className="text-4xl font-bold text-blue-600 dark:text-blue mt-2">
-                  {data?.totalEmployees}
+                  {data?.totalEmployees ?? 0}
                 </h2>
               </div>
               <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-900/40">
@@ -44,7 +56,7 @@ export default function AdminDashboard() {
                   Available Today
                 </p>
                 <h2 className="text-4xl font-bold text-emerald-600 mt-2">
-                  {data?.availableToday}
+                  {data?.availableToday ?? 0}
                 </h2>
               </div>
               <div className="p-3 rounded-xl bg-emerald-100 dark:bg-emerald-900/40">
@@ -63,7 +75,7 @@ export default function AdminDashboard() {
                   On Leave Today
                 </p>
                 <h2 className="text-4xl font-bold text-red-500 mt-2">
-                  {data?.onLeaveToday.count}
+                  {data?.onLeaveToday.count ?? 0}
                 </h2>
               </div>
               <div className="p-3 rounded-xl bg-red-100 dark:bg-red-900/40">
@@ -80,7 +92,9 @@ export default function AdminDashboard() {
           title="Employees On Leave Today"
           className="bg-white dark:bg-slate-900"
         >
-          {data?.onLeaveToday.employees.length === 0 ? (
+          {isError ? (
+            <p className="text-red-500">Failed to load employees on leave</p>
+          ) : data?.onLeaveToday?.employees?.length === 0 ? (
             <p className="text-gray-500 dark:text-gray-400">
               No employees on leave today
             </p>
@@ -113,7 +127,9 @@ export default function AdminDashboard() {
             title="Recent Leave Requests"
             className="bg-white dark:bg-slate-900"
           >
-            {data?.recentLeaves.length === 0 ? (
+            {isError ? (
+              <p className="text-red-500">Failed to load leave requests</p>
+            ) : data?.recentLeaves?.length === 0 ? (
               <p className="text-gray-500 dark:text-gray-400">
                 No recent leave requests
               </p>
@@ -151,7 +167,9 @@ export default function AdminDashboard() {
           </Card>
 
           <Card title="Recent Expenses" className="bg-white dark:bg-slate-900">
-            {data?.recentExpenses.length === 0 ? (
+            {isError ? (
+              <p className="text-red-500">Failed to load expenses</p>
+            ) : data?.recentExpenses?.length === 0 ? (
               <p className="text-gray-500 dark:text-gray-400">
                 No recent expenses
               </p>

@@ -10,12 +10,24 @@ import {
   IconTrendingUp,
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
+import type { AxiosError } from "axios";
+import { useEffect } from "react";
+import toast from "react-hot-toast";
 
 export default function EmployeeDashboard() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["employee-dashboard"],
     queryFn: getEmployeeDashboard,
+    retry: false,
   });
+  useEffect(() => {
+    if (isError) {
+      const err = error as AxiosError<{ message?: string }>;
+      toast.error(
+        err?.response?.data?.message ?? "Failed to load dashboard data",
+      );
+    }
+  }, [isError, error]);
 
   const {
     leaveBalance = {},
@@ -33,7 +45,7 @@ export default function EmployeeDashboard() {
               <div>
                 <p className="text-sm text-gray-500">Months Worked</p>
                 <h2 className="text-4xl font-bold text-purple-600 mt-2">
-                  {leaveBalance.monthsWorked}
+                  {leaveBalance.monthsWorked ?? 0}
                 </h2>
               </div>
               <IconClock size={26} className="text-purple-600" />
@@ -45,7 +57,7 @@ export default function EmployeeDashboard() {
               <div>
                 <p className="text-sm text-gray-500">Total Earned</p>
                 <h2 className="text-4xl font-bold text-blue-600 mt-2">
-                  {leaveBalance.totalEarned}
+                  {leaveBalance.totalEarned ?? 0}
                 </h2>
               </div>
               <IconBeach size={26} className="text-blue-600" />
@@ -57,7 +69,7 @@ export default function EmployeeDashboard() {
               <div>
                 <p className="text-sm text-gray-500">Monthly Accrual</p>
                 <h2 className="text-4xl font-bold text-emerald-600 mt-2">
-                  {leaveBalance.monthlyAccrual}
+                  {leaveBalance.monthlyAccrual ?? 0}
                 </h2>
               </div>
               <IconTrendingUp size={26} className="text-emerald-600" />
@@ -69,7 +81,7 @@ export default function EmployeeDashboard() {
               <div>
                 <p className="text-sm text-gray-500">Total Used</p>
                 <h2 className="text-4xl font-bold text-rose-600 mt-2">
-                  {leaveBalance.totalUsed}
+                  {leaveBalance.totalUsed ?? 0}
                 </h2>
               </div>
               <IconCalendarOff size={26} className="text-rose-600" />
@@ -81,7 +93,7 @@ export default function EmployeeDashboard() {
               <div>
                 <p className="text-sm text-gray-500">Remaining Leave</p>
                 <h2 className="text-4xl font-bold text-teal-600 mt-2">
-                  {leaveBalance.remaining}
+                  {leaveBalance.remaining ?? 0}
                 </h2>
               </div>
               <IconCalendarCheck size={26} className="text-teal-600" />
@@ -93,7 +105,7 @@ export default function EmployeeDashboard() {
               <div>
                 <p className="text-sm text-gray-500">Total Projects</p>
                 <h2 className="text-4xl font-bold text-amber-600 mt-2">
-                  {completedProjectCount}
+                  {completedProjectCount ?? 0}
                 </h2>
               </div>
               <IconChartLine size={26} className="text-amber-600" />
@@ -102,7 +114,9 @@ export default function EmployeeDashboard() {
         </div>
 
         <Card title="Upcoming Holiday" className="bg-white dark:bg-slate-900">
-          {upcomingHoliday ? (
+          {isError ? (
+            <p className="text-red-500">Failed to load holiday information</p>
+          ) : upcomingHoliday ? (
             <>
               <p className="text-lg font-semibold">{upcomingHoliday.title}</p>
               <p className="text-sm text-gray-500">
@@ -116,7 +130,9 @@ export default function EmployeeDashboard() {
         </Card>
 
         <Card title="Current Projects" className="bg-white dark:bg-slate-900">
-          {currentProjects.length === 0 ? (
+          {isError ? (
+            <p className="text-red-500">Failed to load project data</p>
+          ) : currentProjects.length === 0 ? (
             <p>No active project assigned</p>
           ) : (
             <div className="space-y-4">

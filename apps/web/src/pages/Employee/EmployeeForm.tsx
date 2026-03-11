@@ -104,11 +104,20 @@ export default function EmployeeForm() {
     queryFn: () => getEmployees(),
   });
 
-  const { data: employeeData, isLoading } = useQuery({
+  const {
+    data: employeeData,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["employee", id],
     queryFn: () => getEmployeeById(id!),
     enabled: isEditMode,
   });
+  useEffect(() => {
+    if (isError) {
+      toast.error("Failed to load Employee data");
+    }
+  }, [isError]);
 
   const positionOptions = (Array.isArray(positions) ? positions : []).map(
     (p: any) => ({

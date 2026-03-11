@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link, useLocation } from "react-router";
 
-import HorizontaLDots from "../assets/icons/horizontal-dots.svg?react";
-
 import {
   CalendarIcon,
   ChevronDownIcon,
@@ -16,6 +14,7 @@ import {
   IconBuilding,
   IconCalendarStar,
   IconCash,
+  IconDots,
   IconHistory,
   IconLayoutGrid,
   IconReceiptRupee,
@@ -133,7 +132,7 @@ export default function AppSidebar() {
             showText ? "justify-start" : "justify-center"
           }`}
         >
-          {showText ? "Menu" : <HorizontaLDots />}
+          {showText ? "Menu" : <IconDots />}
         </h2>
 
         <ul className="flex flex-col gap-2">

@@ -154,7 +154,7 @@ export default function App() {
       <Toaster
         position="top-right"
         toastOptions={{
-          duration: 2000,
+          duration: 3000,
           style: {
             marginTop: "15px",
             fontSize: "15px",
