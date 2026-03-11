@@ -146,7 +146,6 @@ export default function ProjectDetail() {
                   setOpen(true);
                 }}
                 size="md"
-                className="bg-black dark:bg-blue-500"
               >
                 Add Team Member
               </Button>
@@ -203,9 +202,9 @@ export default function ProjectDetail() {
               </Button>
 
               <Button
+                size="md"
                 onClick={assignEmployees}
                 disabled={assigning || selectedEmployees.length === 0}
-                className="bg-black text-white dark:bg-blue-600"
               >
                 Save
               </Button>

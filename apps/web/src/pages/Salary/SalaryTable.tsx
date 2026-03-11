@@ -207,11 +207,7 @@ export default function SalaryTable() {
                 </Button>
               )}
             </div>
-            <Button
-              onClick={() => navigate("/salary/new")}
-              size="md"
-              className="h-[42px] bg-black dark:bg-blue-500  whitespace-nowrap"
-            >
+            <Button onClick={() => navigate("/salary/new")} size="md">
               Add Salary
             </Button>
           </div>

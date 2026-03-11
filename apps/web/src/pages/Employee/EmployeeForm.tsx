@@ -420,10 +420,7 @@ export default function EmployeeForm() {
             </div>
 
             <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
-              <Button
-                disabled={saveMutation.isPending}
-                className="bg-black dark:bg-blue-500 text-white"
-              >
+              <Button disabled={saveMutation.isPending}>
                 {saveMutation.isPending
                   ? "Saving..."
                   : isEditMode

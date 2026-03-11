@@ -244,10 +244,7 @@ export default function ExpenseForm() {
             </div>
 
             <div className="flex justify-end gap-3  pt-6 dark:border-gray-700">
-              <Button
-                disabled={saveMutation.isPending}
-                className="bg-black dark:bg-blue-500 text-white"
-              >
+              <Button size="md" disabled={saveMutation.isPending}>
                 {saveMutation.isPending
                   ? "Processing..."
                   : isEditMode
@@ -255,10 +252,10 @@ export default function ExpenseForm() {
                     : "Save"}
               </Button>
               <Button
+                size="md"
                 type="button"
                 disabled={draftMutation.isPending}
                 onClick={handleSubmit(onDraftSubmit)}
-                className="bg-black dark:bg-blue-500 text-white"
               >
                 {draftMutation.isPending ? "Saving..." : "Draft"}
               </Button>

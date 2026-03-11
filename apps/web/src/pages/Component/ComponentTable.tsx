@@ -168,7 +168,7 @@ export default function ComponentTable() {
             <Button
               onClick={() => navigate("/components/new")}
               size="md"
-              className="h-[42px] bg-black dark:bg-blue-500 whitespace-nowrap"
+              className="h-[42px]"
             >
               Add Component
             </Button>

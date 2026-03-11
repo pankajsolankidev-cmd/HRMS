@@ -583,11 +583,7 @@ export default function LeaveTable() {
               )}
             </div>
 
-            <Button
-              onClick={() => navigate("/leave-requests/new")}
-              size="md"
-              className="h-[42px] bg-black dark:bg-blue-500 whitespace-nowrap"
-            >
+            <Button onClick={() => navigate("/leave-requests/new")} size="md">
               Add Leave
             </Button>
             {!isEmployee && (
@@ -595,7 +591,6 @@ export default function LeaveTable() {
                 <Button
                   onClick={() => navigate("/leave-requests/manual/new")}
                   size="md"
-                  className="h-[42px] bg-black dark:bg-blue-500 whitespace-nowrap"
                 >
                   Add Employee Leave
                 </Button>

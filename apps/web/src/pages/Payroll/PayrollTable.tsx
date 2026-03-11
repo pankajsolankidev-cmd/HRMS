@@ -340,19 +340,12 @@ export default function PayrollTable() {
               />
             </div>
 
-            <Button
-              className="bg-black dark:bg-blue-500 h-11"
-              onClick={handleSummaryProcess}
-            >
+            <Button className="h-[44px]" onClick={handleSummaryProcess}>
               {isFetching ? "Processing..." : "Process Payroll"}
             </Button>
-            <button
-              onClick={handleSummaryClear}
-              className="h-[45px] rounded-lg border px-6 text-sm
-               hover:bg-gray-200 dark:hover:bg-gray-700"
-            >
+            <Button className="h-[44px]" onClick={handleSummaryClear}>
               Clear
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -393,7 +386,7 @@ export default function PayrollTable() {
               />
             </div>
 
-            <Button className="bg-black h-11" onClick={handleLoad}>
+            <Button className="h-[44px]" onClick={handleLoad}>
               {isLoadingEmployees ? "Loading..." : "Load"}
             </Button>
           </div>
@@ -536,12 +529,9 @@ export default function PayrollTable() {
                   {historyEmployee.lastName}
                 </h2>
 
-                <button
-                  className="text-gray-500 hover:text-red-500 transition"
-                  onClick={() => setHistoryEmployee(null)}
-                >
+                <Button size="icon" onClick={() => setHistoryEmployee(null)}>
                   <IconX />
-                </button>
+                </Button>
               </div>
 
               <div className="flex-1 overflow-y-auto p-6">

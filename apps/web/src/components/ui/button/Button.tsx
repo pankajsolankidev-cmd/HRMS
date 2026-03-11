@@ -25,15 +25,15 @@ const Button: React.FC<ButtonProps> = ({
 }) => {
   const sizeClasses = {
     sm: "px-4 py-3 text-sm",
-    md: "px-5 py-3.5 text-sm",
+    md: "px-5 py-3.5 text-sm h-[42px]",
     icon: "h-7 w-7 p-0",
   };
 
   const variantClasses = {
     primary:
-      "bg-black dark:bg-blue-500 dark:hover:bg-blue-600 text-white shadow-theme-xs disabled:bg-black",
+      "bg-black dark:bg-blue-500 dark:hover:bg-blue-600 text-white shadow-theme-xs disabled:bg-black whitespace-nowrap",
     outline:
-      "bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03] dark:hover:text-gray-300",
+      "bg-white text-gray-700 ring-1 ring-inset ring-gray-300  hover:bg-gray-200 dark:hover:bg-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700  ",
   };
 
   return (

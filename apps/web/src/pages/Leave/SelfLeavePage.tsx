@@ -3,6 +3,7 @@ import { updateLeave } from "@/api/patch";
 import { addLeave, type AddLeavePayload } from "@/api/post";
 import Card from "@/components/common/Card";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import Skeleton from "@/components/common/SkeletonForm";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { toast } from "react-hot-toast";
@@ -52,10 +53,6 @@ export default function SelfLeavePage() {
     },
   });
 
-  if (isEditMode && isLoading) {
-    return <div className="p-6 text-gray-500">Loading leave details…</div>;
-  }
-
   const leave = data?.leave;
 
   const defaultValues: Partial<LeaveFormData> | undefined = isEditMode
@@ -90,14 +87,16 @@ export default function SelfLeavePage() {
       <PageBreadcrumb
         pageTitle={isEditMode ? "Edit Leave Request" : "Apply Leave"}
       />
-      <Card>
-        <LeaveForm
-          defaultValues={defaultValues}
-          loading={addMutation.isPending || updateMutation.isPending}
-          onBack={() => navigate("/leave-requests")}
-          onSubmit={handleSubmit}
-        />
-      </Card>
+      <Skeleton loading={isEditMode && isLoading}>
+        <Card>
+          <LeaveForm
+            defaultValues={defaultValues}
+            loading={addMutation.isPending || updateMutation.isPending}
+            onBack={() => navigate("/leave-requests")}
+            onSubmit={handleSubmit}
+          />
+        </Card>
+      </Skeleton>
     </>
   );
 }

@@ -206,11 +206,7 @@ export default function EmployeeTable() {
               )}
             </div>
 
-            <Button
-              onClick={() => navigate("/employees/new")}
-              size="md"
-              className="h-[42px] bg-black dark:bg-blue-500 whitespace-nowrap"
-            >
+            <Button onClick={() => navigate("/employees/new")} size="md">
               Add Employee
             </Button>
           </div>

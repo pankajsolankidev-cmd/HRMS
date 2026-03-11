@@ -79,11 +79,7 @@ export default function OrganizationTable() {
       <Card
         action={
           <div className="flex justify-end">
-            <Button
-              onClick={() => navigate("/organization/new")}
-              size="md"
-              className="h-[42px] bg-black dark:bg-blue-500  whitespace-nowrap"
-            >
+            <Button onClick={() => navigate("/organization/new")} size="md">
               Add Organization
             </Button>
           </div>

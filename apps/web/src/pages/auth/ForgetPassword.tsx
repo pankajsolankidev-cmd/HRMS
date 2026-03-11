@@ -1,5 +1,6 @@
 import { forgetPassword } from "@/api/post";
 import Input from "@/components/form/input/InputField";
+import Button from "@/components/ui/button/Button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
@@ -71,17 +72,17 @@ export default function ForgetPassword() {
           hint={errors.email?.message}
         />
 
-        <button
+        <Button
           type="submit"
           disabled={mutation.isPending}
-          className="w-full py-3 bg-black text-white rounded-lg disabled:opacity-50"
+          className="w-full py-3 rounded-lg disabled:opacity-50"
         >
           {mutation.isPending ? "Sending..." : "Send Reset Link"}
-        </button>
+        </Button>
       </form>
 
       {key && (
-        <button
+        <Button
           onClick={() => navigate(`/reset-password/${key}`)}
           className="mt-4 w-full py-2 rounded-lg border text-sm
             border-gray-300 text-gray-700
@@ -89,7 +90,7 @@ export default function ForgetPassword() {
             dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
         >
           Go to Reset Password
-        </button>
+        </Button>
       )}
 
       <div className="mt-6 text-center">

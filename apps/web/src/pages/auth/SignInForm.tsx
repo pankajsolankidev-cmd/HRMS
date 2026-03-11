@@ -143,7 +143,7 @@ export default function SignInForm() {
             <Button
               type="submit"
               disabled={signInMutation.isPending}
-              className="w-full py-3  text-white rounded-lg "
+              className="w-full py-3 text-white rounded-lg "
             >
               {signInMutation.isPending ? "Signing In..." : "Sign In"}
             </Button>

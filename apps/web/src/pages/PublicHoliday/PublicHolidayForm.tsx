@@ -167,10 +167,7 @@ export default function PublicHolidayForm() {
             />
 
             <div className="col-span-1 md:col-span-2 flex justify-end gap-3 pt-6">
-              <Button
-                disabled={saveMutation.isPending}
-                className="bg-black dark:bg-blue-500 text-white"
-              >
+              <Button disabled={saveMutation.isPending}>
                 {saveMutation.isPending
                   ? "Saving..."
                   : isEditMode

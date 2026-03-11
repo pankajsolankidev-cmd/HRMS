@@ -305,9 +305,7 @@ export default function LeaveForm({
       </div>
 
       <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
-        <Button className="bg-black dark:bg-blue-500" disabled={loading}>
-          {loading ? "Processing..." : "Save"}
-        </Button>
+        <Button disabled={loading}>{loading ? "Processing..." : "Save"}</Button>
         <Button
           type="button"
           variant="outline"

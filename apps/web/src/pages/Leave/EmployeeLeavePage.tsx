@@ -3,6 +3,7 @@ import { updateEmployeeLeave } from "@/api/patch";
 import { addEmployeeLeave, type AddLeavePayload } from "@/api/post";
 import ComponentCard from "@/components/common/Card";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import Skeleton from "@/components/common/SkeletonForm";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { toast } from "react-hot-toast";
@@ -81,10 +82,6 @@ export default function EmployeeLeavePage() {
     },
   });
 
-  if (isEditMode && isLoading) {
-    return <div className="p-6 text-gray-500">Loading leave details…</div>;
-  }
-
   const normalizedLeave =
     isEditMode && data
       ? isManualLeave
@@ -145,16 +142,18 @@ export default function EmployeeLeavePage() {
       <PageBreadcrumb
         pageTitle={isEditMode ? "Edit Employee Leave" : "Add Employee Leave"}
       />
-      <ComponentCard>
-        <LeaveForm
-          defaultValues={defaultValues}
-          showEmployeeSelect={true}
-          employeeOptions={employeeOptions}
-          loading={addMutation.isPending || updateMutation.isPending}
-          onBack={() => navigate("/leave-requests")}
-          onSubmit={handleSubmit}
-        />
-      </ComponentCard>
+      <Skeleton loading={isEditMode && isLoading}>
+        <ComponentCard>
+          <LeaveForm
+            defaultValues={defaultValues}
+            showEmployeeSelect={true}
+            employeeOptions={employeeOptions}
+            loading={addMutation.isPending || updateMutation.isPending}
+            onBack={() => navigate("/leave-requests")}
+            onSubmit={handleSubmit}
+          />
+        </ComponentCard>
+      </Skeleton>
     </>
   );
 }

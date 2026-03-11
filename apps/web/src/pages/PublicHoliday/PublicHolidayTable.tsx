@@ -283,16 +283,11 @@ export default function PublicHolidayTable() {
           <div className="flex justify-end gap-3 h-[42px]">
             {!isEmployee && (
               <>
-                <Button
-                  onClick={() => navigate("/holidays/new")}
-                  size="md"
-                  className=" bg-black text-white dark:bg-blue-500"
-                >
+                <Button onClick={() => navigate("/holidays/new")} size="md">
                   Add Holiday
                 </Button>
 
                 <Button
-                  className="hover:bg-gray-200 dark:hover:bg-gray-700"
                   onClick={() => downloadTemplate()}
                   size="md"
                   variant="outline"
@@ -304,7 +299,6 @@ export default function PublicHolidayTable() {
                 </Button>
 
                 <Button
-                  className="hover:bg-gray-200 dark:hover:bg-gray-700"
                   onClick={() => fileInputRef.current?.click()}
                   size="md"
                   variant="outline"
@@ -323,7 +317,7 @@ export default function PublicHolidayTable() {
             )}
 
             <Button
-              className="hover:bg-gray-200 dark:hover:bg-gray-700"
+              
               onClick={() => downloadPDF()}
               size="md"
               variant="outline"

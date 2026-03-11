@@ -130,7 +130,7 @@ export default function DepartmentTable() {
             <Button
               onClick={() => navigate("/departments/new")}
               size="md"
-              className="h-[42px] bg-black dark:bg-blue-500 whitespace-nowrap"
+              className="h-[42px]"
             >
               Add Department
             </Button>

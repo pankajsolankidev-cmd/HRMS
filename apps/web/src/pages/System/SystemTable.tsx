@@ -182,11 +182,7 @@ export default function SystemTable() {
               )}
             </div>
 
-            <Button
-              onClick={() => navigate("/systems/new")}
-              size="md"
-              className="h-[42px] bg-black dark:bg-blue-500  whitespace-nowrap"
-            >
+            <Button onClick={() => navigate("/systems/new")} size="md">
               Add System
             </Button>
           </div>

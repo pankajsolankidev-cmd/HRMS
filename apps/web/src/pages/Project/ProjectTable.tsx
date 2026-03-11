@@ -23,7 +23,7 @@ import type { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
-  
+
 type Project = {
   id: number;
   name: string;
@@ -232,11 +232,7 @@ export default function ProjectTable() {
                 </Button>
               )}
             </div>
-            <Button
-              onClick={() => navigate("/projects/new")}
-              size="md"
-              className="h-[42px] bg-black dark:bg-blue-500 whitespace-nowrap"
-            >
+            <Button onClick={() => navigate("/projects/new")} size="md">
               Add Projects
             </Button>
           </div>
