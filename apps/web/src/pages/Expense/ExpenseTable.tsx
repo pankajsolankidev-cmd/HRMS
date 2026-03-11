@@ -303,7 +303,7 @@ export default function ExpenseTable() {
       <PageBreadcrumb pageTitle="Expenses" />
 
       <div className="space-y-6">
-        <Can permission="expense.view_summary">
+        <Can permissions={["expense.view_summary"]}>
           <Card>
             <div className="space-y-4">
               <div className="flex flex-wrap items-end justify-end gap-3">

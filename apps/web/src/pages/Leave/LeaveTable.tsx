@@ -364,7 +364,7 @@ export default function LeaveTable() {
                 </button>
 
                 {canApprove && (
-                  <Can permission="leave.approve">
+                  <Can permissions={["leave.approve"]}>
                     <button
                       onClick={() => approve(row.id)}
                       className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
