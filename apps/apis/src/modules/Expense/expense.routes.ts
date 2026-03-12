@@ -21,6 +21,7 @@ import {
   createExpenseRequestHandler,
   approveExpenseHandler,
   rejectExpenseHandler,
+  createExpenseDirectHandler,
 } from "./expense.service";
 
 import { PERMISSIONS } from "../../db/schema/permissions.enums";
@@ -46,6 +47,19 @@ export default async function expenseRoutes(app: FastifyInstance) {
     },
     createExpenseHandler,
   );
+
+  app.post(
+  "/expenses/create",
+  {
+    ...secured,
+    preHandler: [verifyAccessToken, authorize(PERMISSIONS.EXPENSE_CREATE)],
+    schema: {
+      ...secured.schema,
+      ...createExpenseSchema,
+    },
+  },
+  createExpenseDirectHandler,
+);
 
   app.get(
     "/expenses/summary",
