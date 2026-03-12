@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { and, eq, ilike, desc, sql } from "drizzle-orm";
+import { and, eq, ilike, desc, sql, asc } from "drizzle-orm";
 
 import { db } from "../../db";
 import { projects } from "../../db/schema/projects.schema";
@@ -93,7 +93,15 @@ export async function createProjectHandler(
 }
 
 export async function getProjectsHandler(request: FastifyRequest) {
-  const query = request.query as any;
+  const query = request.query as {
+    search?: string;
+    status?: "ACTIVE" | "COMPLETED";
+    page?: number;
+    limit?: number;
+    sortBy?: "name" | "startDate" | "createdAt";
+    sortOrder?: "asc" | "desc";
+  };
+
   const conditions = [];
 
   request.log.info(
@@ -103,6 +111,8 @@ export async function getProjectsHandler(request: FastifyRequest) {
       status: query.status,
       page: query.page,
       limit: query.limit,
+      sortBy: query.sortBy,
+      sortOrder: query.sortOrder,
     },
     "Get projects request received",
   );
@@ -117,11 +127,23 @@ export async function getProjectsHandler(request: FastifyRequest) {
 
   const { page, limit, offset } = getPagination(query);
 
+  const orderByClauses = [];
+
+  if (!query.sortBy) {
+    orderByClauses.push(desc(projects.updatedAt));
+  } else {
+    orderByClauses.push(
+      query.sortOrder === "asc"
+        ? asc(projects[query.sortBy])
+        : desc(projects[query.sortBy]),
+    );
+  }
+
   let queryBuilder = db
     .select()
     .from(projects)
     .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(desc(projects.updatedAt))
+    .orderBy(...orderByClauses)
     .$dynamic();
 
   if (limit !== undefined && offset !== undefined) {

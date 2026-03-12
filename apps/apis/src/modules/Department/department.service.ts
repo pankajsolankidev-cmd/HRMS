@@ -44,7 +44,10 @@ export async function createDepartmentHandler(
       },
       "Failed to create department",
     );
-    throw err;
+
+    return reply.status(400).send({
+      message: "Unable to create department",
+    });
   }
 }
 
@@ -131,7 +134,15 @@ export async function getDepartmentsHandler(request: FastifyRequest) {
       },
       "Failed to fetch departments",
     );
-    throw err;
+
+    return {
+      data: [],
+      meta: {
+        page: 1,
+        limit: null,
+        total: 0,
+      },
+    };
   }
 }
 
@@ -185,7 +196,10 @@ export async function getDepartmentByIdHandler(
       },
       "Failed to fetch department",
     );
-    throw err;
+
+    return reply.status(400).send({
+      message: "Unable to fetch department",
+    });
   }
 }
 
@@ -242,7 +256,10 @@ export async function updateDepartmentHandler(
       },
       "Failed to update department",
     );
-    throw err;
+
+    return reply.status(400).send({
+      message: "Unable to update department",
+    });
   }
 }
 
@@ -322,7 +339,7 @@ export async function deleteDepartmentHandler(
       "Failed to delete department",
     );
 
-    return reply.status(500).send({
+    return reply.status(400).send({
       message: "Unable to delete department",
     });
   }

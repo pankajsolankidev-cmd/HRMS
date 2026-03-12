@@ -6,6 +6,7 @@ import { employees } from "../../db/schema/employees.schema";
 import { sendMessage } from "../../utils/api-response";
 import { AssignProjectEmployeesDto } from "@shared/types/src/Assign-Project-Employees/assign-project-employees.dto";
 import { projectEmployees } from "../../db/schema";
+import { hasAnyRole } from "../../utils/role.utils";
 
 export async function assignEmployeesToProjectHandler(
   request: FastifyRequest,
@@ -14,14 +15,41 @@ export async function assignEmployeesToProjectHandler(
   const { id: projectId } = request.params as { id: string };
   const body = request.body as AssignProjectEmployeesDto;
 
+  const user = request.user as { roles?: string[] };
+
+  if (!hasAnyRole(user.roles, ["HR", "ADMIN"])) {
+    return reply.status(403).send({
+      message: "Only HR or ADMIN can assign employees to a project",
+    });
+  }
+
+  const uniqueEmployeeIds = [...new Set(body.employeeIds)];
+
+  if (uniqueEmployeeIds.length !== body.employeeIds.length) {
+    return reply.status(400).send({
+      message: "Duplicate employeeIds are not allowed",
+    });
+  }
+
   return db.transaction(async (tx) => {
     const [project] = await tx
-      .select({ id: projects.id })
+      .select({
+        id: projects.id,
+        status: projects.status,
+      })
       .from(projects)
       .where(eq(projects.id, projectId));
 
     if (!project) {
-      return reply.status(404).send({ message: "Project not found" });
+      return reply.status(404).send({
+        message: "Project not found",
+      });
+    }
+
+    if (project.status === "COMPLETED") {
+      return reply.status(400).send({
+        message: "Cannot assign employees to a completed project",
+      });
     }
 
     const existingEmployees = await tx
@@ -29,12 +57,12 @@ export async function assignEmployeesToProjectHandler(
       .from(employees)
       .where(
         and(
-          inArray(employees.id, body.employeeIds),
+          inArray(employees.id, uniqueEmployeeIds),
           eq(employees.isActive, true),
         ),
       );
 
-    if (existingEmployees.length !== body.employeeIds.length) {
+    if (existingEmployees.length !== uniqueEmployeeIds.length) {
       return reply.status(400).send({
         message: "One or more employees are invalid or inactive",
       });
@@ -45,7 +73,7 @@ export async function assignEmployeesToProjectHandler(
       .where(eq(projectEmployees.projectId, projectId));
 
     await tx.insert(projectEmployees).values(
-      body.employeeIds.map((employeeId) => ({
+      uniqueEmployeeIds.map((employeeId) => ({
         projectId,
         employeeId,
       })),

@@ -311,8 +311,11 @@ export async function updateSalaryHandler(
       ? Number(payload.basicSalary)
       : Number(existing.basicSalary);
 
-  const tax = payload.tax !== undefined ? payload.tax : Number(existing.tax);
-  const pf = payload.pf !== undefined ? payload.pf : Number(existing.pf);
+  const tax =
+    payload.tax !== undefined ? Number(payload.tax) : Number(existing.tax);
+
+  const pf =
+    payload.pf !== undefined ? Number(payload.pf) : Number(existing.pf);
 
   const netSalary = calculateNetSalary({
     basicSalary,
