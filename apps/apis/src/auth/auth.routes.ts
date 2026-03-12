@@ -126,7 +126,7 @@ export default async function authRoutes(app: FastifyInstance) {
       });
     } catch (error) {
       request.log.error(error);
-      return reply.status(500).send({ error: "Signin failed" });
+      return reply.status(400).send({ error: "Signin failed" });
     }
   });
 
@@ -169,7 +169,7 @@ export default async function authRoutes(app: FastifyInstance) {
         });
       } catch (error) {
         request.log.error(error);
-        return reply.status(500).send({ error: "Failed to fetch session" });
+        return reply.status(400).send({ error: "Failed to fetch session" });
       }
     },
   );
@@ -181,7 +181,7 @@ export default async function authRoutes(app: FastifyInstance) {
       };
 
       if (!refreshToken) {
-        return reply.status(400).send({ error: "Missing refresh token" });
+        return reply.status(401).send({ error: "Missing refresh token" });
       }
 
       const decoded = jwt.verify(refreshToken, JWT_SECRET) as { id: string };
@@ -229,7 +229,7 @@ export default async function authRoutes(app: FastifyInstance) {
         return reply.send({ message: "Logged out successfully" });
       } catch (error) {
         request.log.error(error);
-        return reply.status(500).send({ error: "Logout failed" });
+        return reply.status(400).send({ error: "Logout failed" });
       }
     },
   );
