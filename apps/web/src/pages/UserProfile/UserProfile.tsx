@@ -35,7 +35,7 @@ const UserProfile = () => {
 
               <div>
                 <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-                  {employee.firstName} {employee.lastName}
+                  {employee?.firstName} {employee?.lastName}
                 </h1>
                 <p className="text-gray-500 dark:text-gray-400">
                   {employee?.email}
