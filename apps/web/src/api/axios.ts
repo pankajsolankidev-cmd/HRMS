@@ -7,11 +7,6 @@ const api = axios.create({
   withCredentials: true,
 });
 
-export const refreshApi = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  withCredentials: true,
-});
-
 api.interceptors.request.use((config) => {
   const token = Cookies.get("access");
 
