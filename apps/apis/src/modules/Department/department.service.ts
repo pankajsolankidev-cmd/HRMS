@@ -44,7 +44,7 @@ export async function createDepartmentHandler(
       "Failed to create department",
     );
 
-    return reply.status(500).send({
+    return reply.status(400).send({
       message: "Unable to create department",
     });
   }
@@ -196,7 +196,7 @@ export async function getDepartmentByIdHandler(
       "Failed to fetch department",
     );
 
-    return reply.status(500).send({
+    return reply.status(400).send({
       message: "Unable to fetch department",
     });
   }
@@ -256,7 +256,7 @@ export async function updateDepartmentHandler(
       "Failed to update department",
     );
 
-    return reply.status(500).send({
+    return reply.status(400).send({
       message: "Unable to update department",
     });
   }
@@ -313,7 +313,7 @@ export async function deleteDepartmentHandler(
       "Failed to delete department",
     );
 
-    return reply.status(500).send({
+    return reply.status(400).send({
       message: "Unable to delete department",
     });
   }
