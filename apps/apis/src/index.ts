@@ -38,7 +38,6 @@ import notificationRoutes from "./modules/notifications/notifications.routes";
 import holidayRoutes from "./modules/holiday/holiday.routes";
 import ajvKeywords from "ajv-keywords";
 import Ajv from "ajv";
-import redisPlugin from "./lib/redis";
 
 const app = Fastify({
   logger: true,
@@ -65,7 +64,7 @@ app.register(fastifyMultipart, {
 });
 
 app.register(cors, {
-  origin: ["http://localhost:5173", "http://192.168.1.35:5173"],
+  origin: ["http://localhost:5173", "http://192.168.1.34:5173"],
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 });
@@ -94,7 +93,6 @@ app.register(swaggerUI, {
   routePrefix: "/docs",
 });
 
-app.register(redisPlugin);
 app.register(authRoutes);
 
 app.register(employeeRoutes, {
