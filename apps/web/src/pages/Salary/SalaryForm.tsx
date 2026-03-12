@@ -19,21 +19,14 @@ import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
 
 const MAX_AMOUNT = 1_000_000;
-const TAX_AMOUNT = 1_000;
 const schema = z.object({
   employeeId: z.string().min(1, "Employee is required"),
   basicSalary: z
     .number()
     .min(1, "Basic salary must be greater than 0")
     .max(MAX_AMOUNT, "Amount is too large"),
-  tax: z
-    .number()
-    .min(1, "Tax must be greater than 0")
-    .max(TAX_AMOUNT, "Amount is too large"),
-  pf: z
-    .number()
-    .min(1, "PF must be greater than 0")
-    .max(TAX_AMOUNT, "Amount is too large"),
+  tax: z.number().min(1, "Tax must be greater than 0"),
+  pf: z.number().min(1, "PF must be greater than 0"),
   description: z.string().trim().optional(),
   appraisalDate: z.string().min(1, "Appraisal date is required"),
 });
