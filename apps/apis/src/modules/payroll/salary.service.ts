@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { and, eq, ilike, gte, lte, asc, desc, sql, SQL } from "drizzle-orm";
+import { and, or, eq, ilike, gte, lte, asc, desc, sql, SQL } from "drizzle-orm";
 
 import { db } from "../../db";
 import { employees, salary } from "../../db/schema";
@@ -107,7 +107,13 @@ export async function getSalariesHandler(request: FastifyRequest) {
   const conditions: SQL[] = [eq(employees.isActive, true)];
 
   if (query?.search) {
-    conditions.push(ilike(salary.description, `%${query.search}%`));
+    const searchCondition = or(
+      ilike(employees.firstName, `%${query.search}%`),
+      ilike(employees.lastName, `%${query.search}%`),
+    );
+    if (searchCondition) {
+      conditions.push(searchCondition);
+    }
   }
 
   if (query?.employeeId) {
@@ -138,7 +144,13 @@ export async function getSalariesHandler(request: FastifyRequest) {
   }
 
   let queryBuilder = db
-    .select()
+    .select({
+      salary,
+      employee: {
+        firstName: employees.firstName,
+        lastName: employees.lastName,
+      },
+    })
     .from(salary)
     .innerJoin(employees, eq(salary.employeeId, employees.id))
     .where(and(...conditions))

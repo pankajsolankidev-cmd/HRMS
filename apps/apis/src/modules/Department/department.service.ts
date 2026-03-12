@@ -8,6 +8,7 @@ import {
   CreateDepartmentDto,
   UpdateDepartmentDto,
 } from "@shared/types/src/Department/department.dto";
+import { employees } from "../../db/schema";
 
 export async function createDepartmentHandler(
   request: FastifyRequest,
@@ -277,22 +278,47 @@ export async function deleteDepartmentHandler(
   );
 
   try {
-    const deleted = await db
-      .delete(departments)
-      .where(eq(departments.id, id))
-      .returning({ id: departments.id });
+    const [department] = await db
+      .select({ id: departments.id })
+      .from(departments)
+      .where(eq(departments.id, id));
 
-    if (!deleted.length) {
+    if (!department) {
       request.log.warn(
         {
           action: "DELETE_DEPARTMENT",
           departmentId: id,
         },
-        "Department not found for delete",
+        "Department not found",
       );
 
-      return reply.status(404).send({ message: "Department not found" });
+      return reply.status(404).send({
+        message: "Department not found",
+      });
     }
+
+    const [employee] = await db
+      .select({ id: employees.id })
+      .from(employees)
+      .where(eq(employees.departmentId, id))
+      .limit(1);
+
+    if (employee) {
+      request.log.warn(
+        {
+          action: "DELETE_DEPARTMENT",
+          departmentId: id,
+        },
+        "Department has assigned employees",
+      );
+
+      return reply.status(400).send({
+        message:
+          "Department cannot be deleted because employees are assigned to it",
+      });
+    }
+
+    await db.delete(departments).where(eq(departments.id, id));
 
     request.log.info(
       {

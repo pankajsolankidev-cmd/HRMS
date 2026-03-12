@@ -88,6 +88,22 @@ export async function upsertOrganizationHandler(
       return sendMessage(reply, "Organization created successfully", 201);
     }
 
+    const uniqueWeekOff = [...new Set(weekOff)];
+
+    if (uniqueWeekOff.length !== weekOff.length) {
+      request.log.warn(
+        {
+          action: "UPSERT_ORGANIZATION",
+          weekOff,
+        },
+        "Duplicate weekOff days detected",
+      );
+
+      return reply.status(400).send({
+        message: "Duplicate weekOff days are not allowed",
+      });
+    }
+
     await db
       .update(organization)
       .set({
