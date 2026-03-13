@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, is } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
@@ -52,9 +52,10 @@ export default async function authRoutes(app: FastifyInstance) {
           email: users.email,
           username: users.username,
           password: users.password,
+          isActive: users.isActive,
         })
         .from(users)
-        .where(eq(users.email, email));
+        .where(and(eq(users.email, email), eq(users.isActive, true)));
 
       if (!user) {
         return reply.status(401).send({ error: "Invalid credentials" });
