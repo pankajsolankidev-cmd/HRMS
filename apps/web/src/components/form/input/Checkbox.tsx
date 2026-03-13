@@ -1,3 +1,4 @@
+import { IconCheck } from "@tabler/icons-react";
 import type React from "react";
 
 interface CheckboxProps {
@@ -19,59 +20,35 @@ const Checkbox: React.FC<CheckboxProps> = ({
 }) => {
   return (
     <label
-      className={`flex items-center space-x-3 group cursor-pointer ${
+      htmlFor={id}
+      className={`flex items-center gap-3 cursor-pointer select-none ${
         disabled ? "cursor-not-allowed opacity-60" : ""
       }`}
     >
-      <div className="relative w-5 h-5">
+      <div className="relative flex items-center justify-center w-5 h-5">
         <input
           id={id}
           type="checkbox"
-          className={`w-5 h-5 appearance-none cursor-pointer dark:border-gray-700 border border-gray-300 checked:border-transparent rounded-md checked:bg-brand-500 disabled:opacity-60 
-          ${className}`}
-          checked={checked ?? false}
-          onChange={(e) => onChange(e.target.checked)}
+          checked={checked}
           disabled={disabled}
+          onChange={(e) => onChange(e.target.checked)}
+          className={`peer w-5 h-5 appearance-none rounded-md border border-gray-300 dark:border-gray-700 
+          checked:bg-brand-500 checked:border-brand-500 transition ${className}`}
         />
+
         {checked && (
-          <svg
-            className="absolute transform -translate-x-1/2 -translate-y-1/2 pointer-events-none top-1/2 left-1/2"
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 14 14"
-            fill="none"
-          >
-            <path
-              d="M11.6666 3.5L5.24992 9.91667L2.33325 7"
-              stroke="white"
-              strokeWidth="1.94437"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        )}
-        {disabled && (
-          <svg
-            className="absolute transform -translate-x-1/2 -translate-y-1/2 pointer-events-none top-1/2 left-1/2"
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 14 14"
-            fill="none"
-          >
-            <path
-              d="M11.6666 3.5L5.24992 9.91667L2.33325 7"
-              stroke="#E4E7EC"
-              strokeWidth="2.33333"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <IconCheck
+            size={14}
+            stroke={3}
+            className={`absolute pointer-events-none ${
+              disabled ? "text-gray-300" : "text-white"
+            }`}
+          />
         )}
       </div>
+
       {label && (
-        <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
+        <span className="text-sm font-medium text-gray-800 dark:text-gray-200 leading-none">
           {label}
         </span>
       )}

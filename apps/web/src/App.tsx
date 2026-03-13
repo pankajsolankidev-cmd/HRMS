@@ -1,4 +1,7 @@
 import { AnimatePresence } from "framer-motion";
+import { useEffect } from "react";
+import { Toaster } from "react-hot-toast";
+import { useDispatch } from "react-redux";
 import {
   Navigate,
   Route,
@@ -6,18 +9,10 @@ import {
   Routes,
   useLocation,
 } from "react-router";
-
-import AppLayout from "./layout/AppLayout";
-import AuthLayout from "./layout/AuthPageLayout";
-
-import NotFound from "./pages/OtherPage/NotFound";
-import PublicRoute from "./pages/OtherPage/PublicRoute";
-
-import { useEffect } from "react";
-import { Toaster } from "react-hot-toast";
-import { useDispatch } from "react-redux";
 import { setAuth } from "./context/authSlice";
 import { useSocket } from "./context/useSocket";
+import AppLayout from "./layout/AppLayout";
+import AuthLayout from "./layout/AuthPageLayout";
 import SmallAuthLayout from "./layout/SmallAuthLayout";
 import ForgetPassword from "./pages/auth/ForgetPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
@@ -31,13 +26,15 @@ import EmployeeForm from "./pages/Employee/EmployeeForm";
 import EmployeeTable from "./pages/Employee/EmployeeTable";
 import ExpenseForm from "./pages/Expense/ExpenseForm";
 import ExpenseTable from "./pages/Expense/ExpenseTable";
-import EmployeeLeavePage from "./pages/Leaves/EmployeeLeavePage";
-import LeaveTable from "./pages/Leaves/LeaveTable";
-import SelfLeavePage from "./pages/Leaves/SelfLeavePage";
+import EmployeeLeavePage from "./pages/Leave/EmployeeLeavePage";
+import LeaveTable from "./pages/Leave/LeaveTable";
+import SelfLeavePage from "./pages/Leave/SelfLeavePage";
 import OrganizationForm from "./pages/Organization/OrganizationForm";
 import OrganizationTable from "./pages/Organization/OrganizationTable";
+import NotFound from "./pages/OtherPage/NotFound";
 import NotificationsPage from "./pages/OtherPage/NotificationsPage";
 import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
+import PublicRoute from "./pages/OtherPage/PublicRoute";
 import RootRedirect from "./pages/OtherPage/RootRedirect";
 import PayrollHistory from "./pages/Payroll/PayrollHistory";
 import PayrollTable from "./pages/Payroll/PayrollTable";
@@ -157,7 +154,7 @@ export default function App() {
       <Toaster
         position="top-right"
         toastOptions={{
-          duration: 2000,
+          duration: 3000,
           style: {
             marginTop: "15px",
             fontSize: "15px",

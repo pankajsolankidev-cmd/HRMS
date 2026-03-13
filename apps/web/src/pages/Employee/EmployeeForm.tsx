@@ -1,3 +1,20 @@
+import {
+  getDepartments,
+  getEmployeeById,
+  getEmployees,
+  getPositions,
+  getSystems,
+} from "@/api/get";
+import { addEmployee } from "@/api/post";
+import { updateEmployee } from "@/api/put";
+import Card from "@/components/common/Card";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import Skeleton from "@/components/common/SkeletonForm";
+import DatePicker from "@/components/form/date-picker";
+import Checkbox from "@/components/form/input/Checkbox";
+import Input from "@/components/form/input/InputField";
+import Select from "@/components/form/Select";
+import Button from "@/components/ui/button/Button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
@@ -6,25 +23,6 @@ import { Controller, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
-
-import {
-  getDepartments,
-  getEmployeeById,
-  getEmployees,
-  getPositions,
-  getSystems,
-} from "../../api/get";
-import { addEmployee } from "../../api/post";
-import { updateEmployee } from "../../api/put";
-
-import ComponentCard from "../../components/common/Card";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import Skeleton from "../../components/common/SkeletonForm";
-import DatePicker from "../../components/form/date-picker";
-import Checkbox from "../../components/form/input/Checkbox";
-import Input from "../../components/form/input/InputField";
-import Select from "../../components/form/Select";
-import Button from "../../components/ui/button/Button";
 
 const employeeSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required"),
@@ -106,11 +104,20 @@ export default function EmployeeForm() {
     queryFn: () => getEmployees(),
   });
 
-  const { data: employeeData, isLoading } = useQuery({
+  const {
+    data: employeeData,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["employee", id],
     queryFn: () => getEmployeeById(id!),
     enabled: isEditMode,
   });
+  useEffect(() => {
+    if (isError) {
+      toast.error("Failed to load Employee data");
+    }
+  }, [isError]);
 
   const positionOptions = (Array.isArray(positions) ? positions : []).map(
     (p: any) => ({
@@ -217,7 +224,7 @@ export default function EmployeeForm() {
         pageTitle={isEditMode ? "Edit Employee" : "Add Employee"}
       />
       <Skeleton loading={isEditMode && isLoading}>
-        <ComponentCard>
+        <Card>
           <form
             noValidate
             onSubmit={handleSubmit(onSubmit)}
@@ -422,10 +429,7 @@ export default function EmployeeForm() {
             </div>
 
             <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
-              <Button
-                disabled={saveMutation.isPending}
-                className="bg-black dark:bg-blue-500 text-white"
-              >
+              <Button disabled={saveMutation.isPending}>
                 {saveMutation.isPending
                   ? "Saving..."
                   : isEditMode
@@ -441,7 +445,7 @@ export default function EmployeeForm() {
               </Button>
             </div>
           </form>
-        </ComponentCard>
+        </Card>
       </Skeleton>
     </>
   );

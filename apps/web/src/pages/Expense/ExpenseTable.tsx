@@ -1,3 +1,20 @@
+import { deleteExpense } from "@/api/delete";
+import { getExpenses, getExpenseSummary } from "@/api/get";
+import { approveExpense, createExpense, rejectExpense } from "@/api/patch";
+import type { PaginatedResponse } from "@/api/types";
+import Can from "@/components/common/Can";
+import Card from "@/components/common/Card";
+import Chip from "@/components/common/Chip";
+import DeleteConfirm from "@/components/common/DeleteConfirmModal";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import PageMeta from "@/components/common/PageMeta";
+import DatePicker from "@/components/form/date-picker";
+import Input from "@/components/form/input/InputField";
+import DataTable, {
+  type Column,
+} from "@/components/tables/BasicTables/DataTable";
+import { useTableSort } from "@/components/tables/useTableSort";
+import Button from "@/components/ui/button/Button";
 import {
   IconCheck,
   IconDotsVertical,
@@ -8,29 +25,10 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import type { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router";
-
-import Can from "../../components/common/Can";
-import Card from "../../components/common/Card";
-import Input from "../../components/form/input/InputField";
-import DataTable, {
-  type Column,
-} from "../../components/tables/BasicTables/DataTable";
-import { useTableSort } from "../../components/tables/useTableSort";
-import Button from "../../components/ui/button/Button";
-
-import type { AxiosError } from "axios";
-import { deleteExpense } from "../../api/delete";
-import { getExpenses, getExpenseSummary } from "../../api/get";
-import { approveExpense, createExpense, rejectExpense } from "../../api/patch";
-import type { PaginatedResponse } from "../../api/types";
-import Chip from "../../components/common/Chip";
-import DeleteConfirm from "../../components/common/DeleteConfirmModal";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import PageMeta from "../../components/common/PageMeta";
-import DatePicker from "../../components/form/date-picker";
 
 type Expense = {
   id: number;
@@ -305,7 +303,7 @@ export default function ExpenseTable() {
       <PageBreadcrumb pageTitle="Expenses" />
 
       <div className="space-y-6">
-        <Can permission="expense.view_summary">
+        <Can permissions={["expense.view_summary"]}>
           <Card>
             <div className="space-y-4">
               <div className="flex flex-wrap items-end justify-end gap-3">
@@ -326,21 +324,16 @@ export default function ExpenseTable() {
                     }
                   }}
                 />
-                <button
+                <Button
                   onClick={() => setRun(true)}
                   disabled={isSummaryFetching || !fromDate || !toDate}
-                  className="h-[45px] rounded-lg bg-black px-6 text-sm text-white
-                     disabled:opacity-50 dark:bg-white dark:text-black"
+                  className="h-[44px] "
                 >
                   {isSummaryFetching ? "Fetching..." : "View Summary"}
-                </button>
-                <button
-                  onClick={handleClear}
-                  className="h-[45px] rounded-lg border px-6 text-sm
-               hover:bg-gray-200 dark:hover:bg-gray-700"
-                >
+                </Button>
+                <Button onClick={handleClear} className="h-[44px]">
                   Clear
-                </button>
+                </Button>
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="rounded-xl border bg-gray-50 p-4 dark:bg-gray-900 dark:border-gray-800">
@@ -393,7 +386,7 @@ export default function ExpenseTable() {
               <Button
                 onClick={() => navigate("/expenses/new")}
                 size="md"
-                className="h-[42px] bg-black dark:bg-blue-500 whitespace-nowrap"
+                className="h-[42px]"
               >
                 Add Expense
               </Button>
@@ -425,12 +418,12 @@ export default function ExpenseTable() {
           <div className="w-full max-w-lg rounded-2xl bg-white p-8 shadow-2xl dark:bg-gray-800 border dark:border-gray-700">
             <div className="mb-6 flex items-center justify-between border-b pb-3 dark:border-gray-700">
               <h3 className="text-lg font-bold">Expense Details</h3>
-              <button
+              <Button
                 onClick={() => setViewExpense(null)}
                 className="text-gray-400 hover:text-gray-600"
               >
                 <IconX size={25} />
-              </button>
+              </Button>
             </div>
             <div className="grid grid-cols-2 gap-y-6 text-sm">
               <div className="flex flex-col">

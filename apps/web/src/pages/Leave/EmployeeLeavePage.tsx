@@ -1,14 +1,16 @@
+import { getEmployees, getLeaveById, getManualLeaveById } from "@/api/get";
+import { updateEmployeeLeave } from "@/api/patch";
+import { addEmployeeLeave, type AddLeavePayload } from "@/api/post";
+import ComponentCard from "@/components/common/Card";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import Skeleton from "@/components/common/SkeletonForm";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { AxiosError } from "axios";
+import { useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { useLocation, useNavigate, useParams } from "react-router";
-
-import type { AxiosError } from "axios";
-import { getEmployees, getLeaveById, getManualLeaveById } from "../../api/get";
-import { updateEmployeeLeave } from "../../api/patch";
-import { addEmployeeLeave, type AddLeavePayload } from "../../api/post";
-import ComponentCard from "../../components/common/Card";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import LeaveForm, { type LeaveFormData } from "./LeaveFormTemplate";
+import type { LeaveFormData } from "./LeaveFormTemplate";
+import LeaveForm from "./LeaveFormTemplate";
 
 export const mapFormToAddLeavePayload = (
   data: LeaveFormData,
@@ -46,12 +48,17 @@ export default function EmployeeLeavePage() {
       value: emp.id,
     })) ?? [];
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: [isManualLeave ? "manual-leave" : "leave", id],
     queryFn: () =>
       isManualLeave ? getManualLeaveById(id!) : getLeaveById(id!),
     enabled: isEditMode,
   });
+  useEffect(() => {
+    if (isError) {
+      toast.error("Failed to load leave data");
+    }
+  }, [isError]);
 
   const addMutation = useMutation<
     unknown,
@@ -80,10 +87,6 @@ export default function EmployeeLeavePage() {
       toast.error(error?.response?.data?.message ?? "Something went wrong");
     },
   });
-
-  if (isEditMode && isLoading) {
-    return <div className="p-6 text-gray-500">Loading leave details…</div>;
-  }
 
   const normalizedLeave =
     isEditMode && data
@@ -145,16 +148,18 @@ export default function EmployeeLeavePage() {
       <PageBreadcrumb
         pageTitle={isEditMode ? "Edit Employee Leave" : "Add Employee Leave"}
       />
-      <ComponentCard>
-        <LeaveForm
-          defaultValues={defaultValues}
-          showEmployeeSelect={true}
-          employeeOptions={employeeOptions}
-          loading={addMutation.isPending || updateMutation.isPending}
-          onBack={() => navigate("/leave-requests")}
-          onSubmit={handleSubmit}
-        />
-      </ComponentCard>
+      <Skeleton loading={isEditMode && isLoading}>
+        <ComponentCard>
+          <LeaveForm
+            defaultValues={defaultValues}
+            showEmployeeSelect={true}
+            employeeOptions={employeeOptions}
+            loading={addMutation.isPending || updateMutation.isPending}
+            onBack={() => navigate("/leave-requests")}
+            onSubmit={handleSubmit}
+          />
+        </ComponentCard>
+      </Skeleton>
     </>
   );
 }

@@ -1,15 +1,15 @@
+import { getEmployeePayrollHistory } from "@/api/get";
+import Card from "@/components/common/Card";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import PageMeta from "@/components/common/PageMeta";
+import DataTable, {
+  type Column,
+} from "@/components/tables/BasicTables/DataTable";
+import { useTableSort } from "@/components/tables/useTableSort";
+import type { RootState } from "@/context";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { getEmployeePayrollHistory } from "../../api/get";
-import Card from "../../components/common/Card";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import PageMeta from "../../components/common/PageMeta";
-import DataTable, {
-  type Column,
-} from "../../components/tables/BasicTables/DataTable";
-import { useTableSort } from "../../components/tables/useTableSort";
-import type { RootState } from "../../context";
 
 type PayrollHistoryRow = {
   month: string;

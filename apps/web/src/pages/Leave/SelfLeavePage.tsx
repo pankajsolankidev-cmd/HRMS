@@ -1,13 +1,14 @@
+import { getLeaveById } from "@/api/get";
+import { updateLeave } from "@/api/patch";
+import { addLeave, type AddLeavePayload } from "@/api/post";
+import Card from "@/components/common/Card";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import Skeleton from "@/components/common/SkeletonForm";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { AxiosError } from "axios";
+import { useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
-
-import type { AxiosError } from "axios";
-import { getLeaveById } from "../../api/get";
-import { updateLeave } from "../../api/patch";
-import { addLeave, type AddLeavePayload } from "../../api/post";
-import Card from "../../components/common/Card";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import { mapFormToAddLeavePayload } from "./EmployeeLeavePage";
 import LeaveForm, { type LeaveFormData } from "./LeaveFormTemplate";
 
@@ -17,11 +18,16 @@ export default function SelfLeavePage() {
   const queryClient = useQueryClient();
 
   const isEditMode = Boolean(id && id !== "new");
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["leave", id],
     queryFn: () => getLeaveById(id!),
     enabled: isEditMode,
   });
+  useEffect(() => {
+    if (isError) {
+      toast.error("Failed to load leave data");
+    }
+  }, [isError]);
 
   const addMutation = useMutation<unknown, unknown, AddLeavePayload>({
     mutationFn: addLeave,
@@ -52,10 +58,6 @@ export default function SelfLeavePage() {
       );
     },
   });
-
-  if (isEditMode && isLoading) {
-    return <div className="p-6 text-gray-500">Loading leave details…</div>;
-  }
 
   const leave = data?.leave;
 
@@ -91,14 +93,16 @@ export default function SelfLeavePage() {
       <PageBreadcrumb
         pageTitle={isEditMode ? "Edit Leave Request" : "Apply Leave"}
       />
-      <Card>
-        <LeaveForm
-          defaultValues={defaultValues}
-          loading={addMutation.isPending || updateMutation.isPending}
-          onBack={() => navigate("/leave-requests")}
-          onSubmit={handleSubmit}
-        />
-      </Card>
+      <Skeleton loading={isEditMode && isLoading}>
+        <Card>
+          <LeaveForm
+            defaultValues={defaultValues}
+            loading={addMutation.isPending || updateMutation.isPending}
+            onBack={() => navigate("/leave-requests")}
+            onSubmit={handleSubmit}
+          />
+        </Card>
+      </Skeleton>
     </>
   );
 }

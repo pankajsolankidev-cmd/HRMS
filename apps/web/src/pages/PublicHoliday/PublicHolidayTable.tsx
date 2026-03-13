@@ -1,3 +1,20 @@
+import { deletePublicHoliday } from "@/api/delete";
+import {
+  downloadHolidayTemplate,
+  exportPublicHolidayPDF,
+  getPublicHolidays,
+} from "@/api/get";
+import { confirmHolidayImport, previewHolidayImport } from "@/api/post";
+import type { PaginatedResponse } from "@/api/types";
+import Card from "@/components/common/Card";
+import DeleteConfirm from "@/components/common/DeleteConfirmModal";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import DataTable, {
+  type Column,
+} from "@/components/tables/BasicTables/DataTable";
+import { useTableSort } from "@/components/tables/useTableSort";
+import Button from "@/components/ui/button/Button";
+import type { RootState } from "@/context";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
@@ -6,23 +23,7 @@ import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router";
-import { deletePublicHoliday } from "../../api/delete";
-import {
-  downloadHolidayTemplate,
-  exportPublicHolidayPDF,
-  getPublicHolidays,
-} from "../../api/get";
-import { confirmHolidayImport, previewHolidayImport } from "../../api/post";
-import type { PaginatedResponse } from "../../api/types";
-import Card from "../../components/common/Card";
-import DeleteConfirm from "../../components/common/DeleteConfirmModal";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import DataTable, {
-  type Column,
-} from "../../components/tables/BasicTables/DataTable";
-import { useTableSort } from "../../components/tables/useTableSort";
-import Button from "../../components/ui/button/Button";
-import type { RootState } from "../../context";
+
 type PublicHoliday = {
   id: number;
   title: string;
@@ -282,16 +283,11 @@ export default function PublicHolidayTable() {
           <div className="flex justify-end gap-3 h-[42px]">
             {!isEmployee && (
               <>
-                <Button
-                  onClick={() => navigate("/holidays/new")}
-                  size="md"
-                  className=" bg-black text-white dark:bg-blue-500"
-                >
+                <Button onClick={() => navigate("/holidays/new")} size="md">
                   Add Holiday
                 </Button>
 
                 <Button
-                  className="hover:bg-gray-200 dark:hover:bg-gray-700"
                   onClick={() => downloadTemplate()}
                   size="md"
                   variant="outline"
@@ -303,7 +299,6 @@ export default function PublicHolidayTable() {
                 </Button>
 
                 <Button
-                  className="hover:bg-gray-200 dark:hover:bg-gray-700"
                   onClick={() => fileInputRef.current?.click()}
                   size="md"
                   variant="outline"
@@ -322,7 +317,7 @@ export default function PublicHolidayTable() {
             )}
 
             <Button
-              className="hover:bg-gray-200 dark:hover:bg-gray-700"
+              
               onClick={() => downloadPDF()}
               size="md"
               variant="outline"

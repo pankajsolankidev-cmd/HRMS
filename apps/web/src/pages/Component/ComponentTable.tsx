@@ -1,25 +1,20 @@
+import { deleteComponent } from "@/api/delete";
+import { getComponents } from "@/api/get";
+import type { PaginatedResponse } from "@/api/types";
+import Card from "@/components/common/Card";
+import DeleteConfirm from "@/components/common/DeleteConfirmModal";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import Input from "@/components/form/input/InputField";
+import type { Column } from "@/components/tables/BasicTables/DataTable";
+import DataTable from "@/components/tables/BasicTables/DataTable";
+import { useTableSort } from "@/components/tables/useTableSort";
+import Button from "@/components/ui/button/Button";
 import { IconEdit, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
-
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import Input from "../../components/form/input/InputField";
-
-import DataTable, {
-  type Column,
-} from "../../components/tables/BasicTables/DataTable";
-
-import { deleteComponent } from "../../api/delete";
-import { getComponents } from "../../api/get";
-import type { PaginatedResponse } from "../../api/types";
-
-import Card from "../../components/common/Card";
-import DeleteConfirm from "../../components/common/DeleteConfirmModal";
-import { useTableSort } from "../../components/tables/useTableSort";
-import Button from "../../components/ui/button/Button";
 
 type Component = {
   id: number;
@@ -173,7 +168,7 @@ export default function ComponentTable() {
             <Button
               onClick={() => navigate("/components/new")}
               size="md"
-              className="h-[42px] bg-black dark:bg-blue-500 whitespace-nowrap"
+              className="h-[42px]"
             >
               Add Component
             </Button>

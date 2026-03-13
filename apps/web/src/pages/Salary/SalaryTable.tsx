@@ -1,22 +1,22 @@
+import { deleteSalaryStructure } from "@/api/delete";
+import { getSalaryStructures } from "@/api/get";
+import type { PaginatedResponse } from "@/api/types";
+import Card from "@/components/common/Card";
+import DeleteConfirm from "@/components/common/DeleteConfirmModal";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import PageMeta from "@/components/common/PageMeta";
+import Input from "@/components/form/input/InputField";
+import DataTable, {
+  type Column,
+} from "@/components/tables/BasicTables/DataTable";
+import { useTableSort } from "@/components/tables/useTableSort";
+import Button from "@/components/ui/button/Button";
 import { IconEdit, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
-import { deleteSalaryStructure } from "../../api/delete";
-import { getSalaryStructures } from "../../api/get";
-import type { PaginatedResponse } from "../../api/types";
-import Card from "../../components/common/Card";
-import DeleteConfirm from "../../components/common/DeleteConfirmModal";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import PageMeta from "../../components/common/PageMeta";
-import Input from "../../components/form/input/InputField";
-import DataTable, {
-  type Column,
-} from "../../components/tables/BasicTables/DataTable";
-import { useTableSort } from "../../components/tables/useTableSort";
-import Button from "../../components/ui/button/Button";
 
 export type SalaryStructure = {
   id: string;
@@ -207,11 +207,7 @@ export default function SalaryTable() {
                 </Button>
               )}
             </div>
-            <Button
-              onClick={() => navigate("/salary/new")}
-              size="md"
-              className="h-[42px] bg-black dark:bg-blue-500  whitespace-nowrap"
-            >
+            <Button onClick={() => navigate("/salary/new")} size="md">
               Add Salary
             </Button>
           </div>

@@ -1,3 +1,23 @@
+import { deleteLeave, deleteManualLeave } from "@/api/delete";
+import { getEmployees, getLeaves } from "@/api/get";
+import { approveLeave, rejectLeave } from "@/api/patch";
+import type { PaginatedResponse } from "@/api/types";
+import Can from "@/components/common/Can";
+import Card from "@/components/common/Card";
+import Chip from "@/components/common/Chip";
+import DeleteConfirm from "@/components/common/DeleteConfirmModal";
+import FilterCard from "@/components/common/FilterCard";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import PageMeta from "@/components/common/PageMeta";
+import DatePicker from "@/components/form/date-picker";
+import Input from "@/components/form/input/InputField";
+import Select from "@/components/form/Select";
+import DataTable, {
+  type Column,
+} from "@/components/tables/BasicTables/DataTable";
+import { useTableSort } from "@/components/tables/useTableSort";
+import Button from "@/components/ui/button/Button";
+import type { RootState } from "@/context";
 import {
   IconCheck,
   IconDotsVertical,
@@ -14,26 +34,6 @@ import { toast } from "react-hot-toast";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 
-import { deleteLeave, deleteManualLeave } from "../../api/delete";
-import { getEmployees, getLeaves } from "../../api/get";
-import { approveLeave, rejectLeave } from "../../api/patch";
-import type { PaginatedResponse } from "../../api/types";
-import Can from "../../components/common/Can";
-import Card from "../../components/common/Card";
-import Chip from "../../components/common/Chip";
-import DeleteConfirm from "../../components/common/DeleteConfirmModal";
-import FilterCard from "../../components/common/FilterCard";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import PageMeta from "../../components/common/PageMeta";
-import DatePicker from "../../components/form/date-picker";
-import Input from "../../components/form/input/InputField";
-import Select from "../../components/form/Select";
-import DataTable, {
-  type Column,
-} from "../../components/tables/BasicTables/DataTable";
-import { useTableSort } from "../../components/tables/useTableSort";
-import Button from "../../components/ui/button/Button";
-import type { RootState } from "../../context";
 export const LEAVE_TYPES = [
   { label: "Sick", value: "sick" },
   { label: "Casual", value: "casual" },
@@ -364,7 +364,7 @@ export default function LeaveTable() {
                 </button>
 
                 {canApprove && (
-                  <Can permission="leave.approve">
+                  <Can permissions={["leave.approve"]}>
                     <button
                       onClick={() => approve(row.id)}
                       className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
@@ -454,140 +454,138 @@ export default function LeaveTable() {
     <>
       <PageMeta title="Leaves" description="Manage leave requests" />
       <PageBreadcrumb pageTitle="Leaves" />
-      {!isEmployee && (
-        <FilterCard className="mb-5">
-          <div className="grid grid-cols-6 gap-4 w-full">
-            <div className="col-span-6 md:col-span-2">
-              <Select
-                options={LEAVE_TYPES}
-                placeholder="Select type"
-                value={type ?? ""}
-                onChange={(val) => {
-                  setType(val || undefined);
-                  setPage(1);
-                }}
-                className="w-full"
-              />
-            </div>
+      <FilterCard className="mb-5">
+        <div className="grid grid-cols-6 gap-4 w-full">
+          <div className="col-span-6 md:col-span-2">
+            <Select
+              options={LEAVE_TYPES}
+              placeholder="Select type"
+              value={type ?? ""}
+              onChange={(val) => {
+                setType(val || undefined);
+                setPage(1);
+              }}
+            />
+          </div>
 
-            <div className="col-span-6 md:col-span-2">
-              <Select
-                options={LEAVE_STATUS}
-                placeholder="Select status"
-                value={status ?? ""}
-                onChange={(val) => {
-                  setStatus(val || undefined);
-                  setPage(1);
-                }}
-                className="w-full"
-              />
-            </div>
+          <div className="col-span-6 md:col-span-2">
+            <Select
+              options={LEAVE_STATUS}
+              placeholder="Select status"
+              value={status ?? ""}
+              onChange={(val) => {
+                setStatus(val || undefined);
+                setPage(1);
+              }}
+            />
+          </div>
 
-            <div className="col-span-6 md:col-span-2">
-              <Select
-                options={employeeOptions}
-                placeholder="Select employee"
-                value={employeeId ?? ""}
-                onChange={(val) => {
-                  setEmployeeId(val || undefined);
-                  setPage(1);
-                }}
-                className="w-full"
-              />
-            </div>
-
-            <div className="col-span-6 md:col-span-2">
-              <Select
-                options={LEAVE_SOURCE_OPTIONS}
-                placeholder="Leave source"
-                value={createdByType ?? ""}
-                onChange={(val) => {
-                  setCreatedByType(val || undefined);
-                  setPage(1);
-                }}
-                className="w-full"
-              />
-            </div>
-
-            <div className="col-span-6 md:col-span-2">
-              <DatePicker
-                id="dateRange"
-                mode="range"
-                placeholder="Select date range"
-                value={
-                  fromDate && toDate
-                    ? [new Date(fromDate), new Date(toDate)]
-                    : undefined
-                }
-                onChange={(dates) => {
-                  if (dates?.length === 2) {
-                    setFromDate(dates[0].toLocaleDateString("en-CA"));
-                    setToDate(dates[1].toLocaleDateString("en-CA"));
+          {!isEmployee && (
+            <>
+              <div className="col-span-6 md:col-span-2">
+                <Select
+                  options={employeeOptions}
+                  placeholder="Select employee"
+                  value={employeeId ?? ""}
+                  onChange={(val) => {
+                    setEmployeeId(val || undefined);
                     setPage(1);
-                  } else {
-                    setFromDate(undefined);
-                    setToDate(undefined);
-                  }
-                }}
-              />
-            </div>
+                  }}
+                />
+              </div>
 
-            <div className="col-span-6 md:col-span-1 flex items-end">
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  setType(undefined);
-                  setStatus(undefined);
-                  setEmployeeId(undefined);
-                  setCreatedByType(undefined);
+              <div className="col-span-6 md:col-span-2">
+                <Select
+                  options={LEAVE_SOURCE_OPTIONS}
+                  placeholder="Leave source"
+                  value={createdByType ?? ""}
+                  onChange={(val) => {
+                    setCreatedByType(val || undefined);
+                    setPage(1);
+                  }}
+                />
+              </div>
+            </>
+          )}
+
+          <div className="col-span-6 md:col-span-2">
+            <DatePicker
+              id="dateRange"
+              mode="range"
+              placeholder="Select date range"
+              value={
+                fromDate && toDate
+                  ? [new Date(fromDate), new Date(toDate)]
+                  : undefined
+              }
+              onChange={(dates) => {
+                if (dates?.length === 2) {
+                  setFromDate(dates[0].toLocaleDateString("en-CA"));
+                  setToDate(dates[1].toLocaleDateString("en-CA"));
+                  setPage(1);
+                } else {
                   setFromDate(undefined);
                   setToDate(undefined);
-                  setSearch(undefined);
-                  setRawSearch("");
-                  setPage(1);
-                }}
-              >
-                Clear
-              </Button>
-            </div>
+                }
+              }}
+            />
           </div>
-        </FilterCard>
-      )}
+
+          <div className="col-span-6 md:col-span-1 flex items-end">
+            <Button
+              variant="outline"
+              className=""
+              onClick={() => {
+                setType(undefined);
+                setStatus(undefined);
+                setEmployeeId(undefined);
+                setCreatedByType(undefined);
+                setFromDate(undefined);
+                setToDate(undefined);
+                setSearch(undefined);
+                setRawSearch("");
+                setPage(1);
+              }}
+            >
+              Clear
+            </Button>
+          </div>
+        </div>
+      </FilterCard>
 
       <Card
         action={
           <div className="flex items-center justify-between gap-3">
-            <div className="relative w-full max-w-xs">
-              <div className="absolute left-3 top-3 text-gray-400">
-                <IconSearch size={18} stroke={2} />
-              </div>
-              <Input
-                placeholder="Search by name"
-                value={rawSearch}
-                onChange={(e) => setRawSearch(e.target.value)}
-                className="pl-10 pr-10 h-[42px] focus-visible:ring-0"
-              />
-              {rawSearch && (
-                <Button
-                  size="icon"
-                  variant="outline"
-                  onClick={() => {
-                    setRawSearch("");
-                    setSearch(undefined);
-                  }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full"
-                >
-                  <IconX size={16} />
-                </Button>
-              )}
-            </div>
+            {!isEmployee && (
+              <div className="relative w-full max-w-xs">
+                <div className="absolute left-3 top-3 text-gray-400">
+                  <IconSearch size={18} stroke={2} />
+                </div>
 
-            <Button
-              onClick={() => navigate("/leave-requests/new")}
-              size="md"
-              className="h-[42px] bg-black dark:bg-blue-500 whitespace-nowrap"
-            >
+                <Input
+                  placeholder="Search by name"
+                  value={rawSearch}
+                  onChange={(e) => setRawSearch(e.target.value)}
+                  className="pl-10 pr-10 h-[42px] focus-visible:ring-0"
+                />
+
+                {rawSearch && (
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => {
+                      setRawSearch("");
+                      setSearch(undefined);
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full"
+                  >
+                    <IconX size={16} />
+                  </Button>
+                )}
+              </div>
+            )}
+
+            <Button onClick={() => navigate("/leave-requests/new")} size="md">
               Add Leave
             </Button>
             {!isEmployee && (
@@ -595,7 +593,6 @@ export default function LeaveTable() {
                 <Button
                   onClick={() => navigate("/leave-requests/manual/new")}
                   size="md"
-                  className="h-[42px] bg-black dark:bg-blue-500 whitespace-nowrap"
                 >
                   Add Employee Leave
                 </Button>

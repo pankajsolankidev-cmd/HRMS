@@ -1,20 +1,19 @@
+import { getDepartmentById } from "@/api/get";
+import { addDepartment } from "@/api/post";
+import { updateDepartment } from "@/api/put";
+import Card from "@/components/common/Card";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import Skeleton from "@/components/common/SkeletonForm";
+import Input from "@/components/form/input/InputField";
+import Button from "@/components/ui/button/Button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
-import { z } from "zod";
-
-import { useEffect } from "react";
-import { getDepartmentById } from "../../api/get";
-import { addDepartment } from "../../api/post";
-import { updateDepartment } from "../../api/put";
-import ComponentCard from "../../components/common/Card";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import Skeleton from "../../components/common/SkeletonForm";
-import Input from "../../components/form/input/InputField";
-import Button from "../../components/ui/button/Button";
+import z from "zod";
 
 const departmentSchema = z.object({
   name: z.string().trim().min(1, "Department name is required"),
@@ -27,11 +26,16 @@ export default function DepartmentForm() {
   const navigate = useNavigate();
 
   const isEditMode = Boolean(id && id !== "new");
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["department", id],
     queryFn: () => getDepartmentById(id!),
     enabled: isEditMode,
   });
+  useEffect(() => {
+    if (isError) {
+      toast.error("Failed to load Department data");
+    }
+  }, [isError]);
   const {
     register,
     reset,
@@ -84,7 +88,7 @@ export default function DepartmentForm() {
         pageTitle={isEditMode ? "Edit Department" : "Add Department"}
       />
       <Skeleton loading={isEditMode && isLoading}>
-        <ComponentCard>
+        <Card>
           <form
             noValidate
             onSubmit={handleSubmit(onSubmit)}
@@ -100,10 +104,7 @@ export default function DepartmentForm() {
             />
 
             <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
-              <Button
-                disabled={saveMutation.isPending}
-                className="bg-black dark:bg-blue-500 text-white"
-              >
+              <Button disabled={saveMutation.isPending}>
                 {saveMutation.isPending
                   ? "Saving..."
                   : isEditMode
@@ -119,7 +120,7 @@ export default function DepartmentForm() {
               </Button>
             </div>
           </form>
-        </ComponentCard>
+        </Card>
       </Skeleton>
     </>
   );

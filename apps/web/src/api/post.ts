@@ -8,7 +8,7 @@ import type {
   CreateSystemDto,
 } from "@shared/types";
 import Cookies from "js-cookie";
-import api, { refreshApi } from "./axios";
+import api from "./axios";
 export const signInApi = async (data: { email: string; password: string }) => {
   const res = await api.post("/signin", data);
   return res.data;
@@ -23,7 +23,7 @@ export const logoutUser = async (refreshToken: string) => {
 
 export const refreshToken = async () => {
   const refreshToken = Cookies.get("refresh");
-  const res = await refreshApi.post("/auth/refresh", {
+  const res = await api.post("/auth/refresh", {
     refreshToken,
   });
   return res.data;

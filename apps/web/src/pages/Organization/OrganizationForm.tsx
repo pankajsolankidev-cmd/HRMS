@@ -1,3 +1,10 @@
+import { getOrganization } from "@/api/get";
+import { addOrganization } from "@/api/post";
+import ComponentCard from "@/components/common/Card";
+import DatePicker from "@/components/form/date-picker";
+import Input from "@/components/form/input/InputField";
+import MultiSelect from "@/components/form/MultiSelect";
+import Button from "@/components/ui/button/Button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
@@ -7,17 +14,9 @@ import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
 
-import { getOrganization } from "../../api/get";
-import { addOrganization } from "../../api/post";
-import ComponentCard from "../../components/common/Card";
-import DatePicker from "../../components/form/date-picker";
-import Input from "../../components/form/input/InputField";
-import MultiSelect from "../../components/form/MultiSelect";
-import Button from "../../components/ui/button/Button";
-
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import Skeleton from "@/components/common/SkeletonForm";
 import type { CreateOrganizationDto } from "@shared/types";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import Skeleton from "../../components/common/SkeletonForm";
 
 const WEEK_DAYS: CreateOrganizationDto["weekOff"][number][] = [
   "MONDAY",
@@ -66,11 +65,20 @@ export default function OrganizationForm() {
     },
   });
 
-  const { data: organizationData, isLoading } = useQuery({
+  const {
+    data: organizationData,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["organization"],
     queryFn: getOrganization,
     enabled: isEditMode,
   });
+  useEffect(() => {
+    if (isError) {
+      toast.error("Failed to load organization data");
+    }
+  }, [isError]);
 
   useEffect(() => {
     if (organizationData && isEditMode) {
@@ -193,10 +201,7 @@ export default function OrganizationForm() {
             </div>
 
             <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
-              <Button
-                disabled={saveMutation.isPending}
-                className="bg-black dark:bg-blue-500 text-white"
-              >
+              <Button size="md" disabled={saveMutation.isPending}>
                 {saveMutation.isPending
                   ? "Saving..."
                   : isEditMode

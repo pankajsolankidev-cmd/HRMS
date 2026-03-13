@@ -1,3 +1,13 @@
+import { getExpenseById } from "@/api/get";
+import { addExpense, addExpenseDraft, uploadFile } from "@/api/post";
+import { updateExpense } from "@/api/put";
+import Card from "@/components/common/Card";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import Skeleton from "@/components/common/SkeletonForm";
+import DatePicker from "@/components/form/date-picker";
+import FileInput from "@/components/form/input/FileInput";
+import Input from "@/components/form/input/InputField";
+import Button from "@/components/ui/button/Button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
@@ -6,18 +16,6 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
-
-import DatePicker from "../../components/form/date-picker";
-import FileInput from "../../components/form/input/FileInput";
-import Input from "../../components/form/input/InputField";
-import Button from "../../components/ui/button/Button";
-
-import { getExpenseById } from "../../api/get";
-import { addExpense, addExpenseDraft, uploadFile } from "../../api/post";
-import { updateExpense } from "../../api/put";
-import Card from "../../components/common/Card";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import Skeleton from "../../components/common/SkeletonForm";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const MAX_AMOUNT = 1_000_000;
@@ -70,11 +68,16 @@ export default function ExpenseForm() {
     },
   });
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["expense", id],
     queryFn: () => getExpenseById(id!),
     enabled: isEditMode,
   });
+  useEffect(() => {
+    if (isError) {
+      toast.error("Failed to load expense data");
+    }
+  }, [isError]);
 
   useEffect(() => {
     if (data) {
@@ -246,10 +249,7 @@ export default function ExpenseForm() {
             </div>
 
             <div className="flex justify-end gap-3  pt-6 dark:border-gray-700">
-              <Button
-                disabled={saveMutation.isPending}
-                className="bg-black dark:bg-blue-500 text-white"
-              >
+              <Button size="md" disabled={saveMutation.isPending}>
                 {saveMutation.isPending
                   ? "Processing..."
                   : isEditMode
@@ -257,10 +257,10 @@ export default function ExpenseForm() {
                     : "Save"}
               </Button>
               <Button
+                size="md"
                 type="button"
                 disabled={draftMutation.isPending}
                 onClick={handleSubmit(onDraftSubmit)}
-                className="bg-black dark:bg-blue-500 text-white"
               >
                 {draftMutation.isPending ? "Saving..." : "Draft"}
               </Button>

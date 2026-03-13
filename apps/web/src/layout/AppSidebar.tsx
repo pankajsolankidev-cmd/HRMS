@@ -2,9 +2,6 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link, useLocation } from "react-router";
 
-import GridIcon from "../assets/icons/grid.svg?react";
-import HorizontaLDots from "../assets/icons/horizontal-dots.svg?react";
-
 import {
   CalendarIcon,
   ChevronDownIcon,
@@ -17,7 +14,9 @@ import {
   IconBuilding,
   IconCalendarStar,
   IconCash,
+  IconDots,
   IconHistory,
+  IconLayoutGrid,
   IconReceiptRupee,
   IconWallet,
 } from "@tabler/icons-react";
@@ -42,7 +41,7 @@ export default function AppSidebar() {
 
   const MENU: NavItem[] = isEmployee
     ? [
-        { icon: <GridIcon />, name: "Dashboard", path: "/dashboard" },
+        { icon: <IconLayoutGrid />, name: "Dashboard", path: "/dashboard" },
         { icon: <CalendarIcon />, name: "Leaves", path: "/leave-requests" },
         { icon: <IconWallet />, name: "Expenses", path: "/expenses" },
         {
@@ -53,12 +52,13 @@ export default function AppSidebar() {
         { icon: <IconCalendarStar />, name: "Holidays", path: "/holidays" },
       ]
     : [
-        { icon: <GridIcon />, name: "Dashboard", path: "/dashboard" },
+        { icon: <IconLayoutGrid />, name: "Dashboard", path: "/dashboard" },
         { icon: <UserCircleIcon />, name: "Employees", path: "/employees" },
         { icon: <PuzzlePieceIcon />, name: "Component", path: "/components" },
         { icon: <FolderIcon />, name: "System", path: "/systems" },
         { icon: <CalendarIcon />, name: "Leaves", path: "/leave-requests" },
         { icon: <IconReceiptRupee />, name: "Salary", path: "/salary" },
+        { icon: <IconWallet />, name: "Expenses", path: "/expenses" },
         {
           icon: <IconCash />,
           name: "Payroll",
@@ -67,7 +67,6 @@ export default function AppSidebar() {
             { name: "Payroll History", path: "/payrolls/history" },
           ],
         },
-        { icon: <IconWallet />, name: "Expenses", path: "/expenses" },
         {
           icon: <IconBuilding />,
           name: "Organization",
@@ -133,7 +132,7 @@ export default function AppSidebar() {
             showText ? "justify-start" : "justify-center"
           }`}
         >
-          {showText ? "Menu" : <HorizontaLDots />}
+          {showText ? "Menu" : <IconDots />}
         </h2>
 
         <ul className="flex flex-col gap-2">

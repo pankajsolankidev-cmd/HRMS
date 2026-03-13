@@ -1,3 +1,7 @@
+import { signInApi } from "@/api/post";
+import Input from "@/components/form/input/InputField";
+import Button from "@/components/ui/button/Button";
+import { setAuth } from "@/context/authSlice";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -9,9 +13,6 @@ import { toast } from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router";
 import { z } from "zod";
-import { signInApi } from "../../api/post";
-import Input from "../../components/form/input/InputField";
-import { setAuth } from "../../context/authSlice";
 
 const signInSchema = z.object({
   email: z
@@ -129,7 +130,7 @@ export default function SignInForm() {
                 )}
               </span>
             </div>
-                
+
             <div className="flex justify-end">
               <Link
                 to="/forgot-password"
@@ -139,13 +140,13 @@ export default function SignInForm() {
               </Link>
             </div>
 
-            <button
+            <Button
               type="submit"
               disabled={signInMutation.isPending}
-              className="w-full py-3 bg-black text-white rounded-lg"
+              className="w-full py-3 text-white rounded-lg "
             >
               {signInMutation.isPending ? "Signing In..." : "Sign In"}
-            </button>
+            </Button>
           </form>
         </div>
       </div>

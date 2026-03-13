@@ -1,15 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-
-import Card from "../../components/common/Card";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
+import { getNotifications } from "@/api/get";
+import type { PaginatedResponse } from "@/api/types";
+import Card from "@/components/common/Card";
+import Chip from "@/components/common/Chip";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import DataTable, {
   type Column,
-} from "../../components/tables/BasicTables/DataTable";
-
-import { getNotifications } from "../../api/get";
-import type { PaginatedResponse } from "../../api/types";
-import { useTableSort } from "../../components/tables/useTableSort";
+} from "@/components/tables/BasicTables/DataTable";
+import { useTableSort } from "@/components/tables/useTableSort";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 
 type Notification = {
   id: string;
@@ -56,15 +55,14 @@ export default function NotificationsPage() {
       header: "Status",
       accessor: "isRead",
       cell: (row) => (
-        <span
-          className={`px-3 py-1 text-xs font-semibold rounded-full ${
+        <Chip
+          label={row.isRead ? "Read" : "Unread"}
+          className={
             row.isRead
               ? "bg-green-100 text-green-600 dark:bg-green-500/10 dark:text-green-300"
               : "bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400"
-          }`}
-        >
-          {row.isRead ? "Read" : "Unread"}
-        </span>
+          }
+        />
       ),
     },
     {

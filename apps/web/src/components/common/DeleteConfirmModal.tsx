@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Button from "../ui/button/Button";
 
 interface DeleteConfirmProps<T> {
   title?: string;
@@ -44,15 +45,15 @@ export default function DeleteConfirm<T>({
             </p>
 
             <div className="mt-6 flex justify-end gap-3">
-              <button
+              <Button
                 onClick={close}
                 disabled={loading}
-                className="rounded-lg border px-4 py-2 text-sm text-gray-700 dark:text-gray-300 disabled:opacity-50"
+                className="h-[42px] bg-black/60 dark:bg-red-600 dark:hover:bg-gray-300 text-black dark:bg-white dark:text-black"
               >
                 Cancel
-              </button>
+              </Button>
 
-              <button
+              <Button
                 onClick={() => {
                   if (value) {
                     onConfirm(value);
@@ -60,10 +61,10 @@ export default function DeleteConfirm<T>({
                   }
                 }}
                 disabled={loading}
-                className="rounded-lg bg-red-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+                className="h-[42px] rounded-lg bg-red-600 dark:bg-red-600 dark:hover:bg-red-600 px-4 py-2 text-sm text-white disabled:opacity-50"
               >
                 {loading ? "Deleting..." : "Delete"}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

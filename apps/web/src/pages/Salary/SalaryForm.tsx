@@ -1,3 +1,14 @@
+import { getEmployees, getSalaryStructureById } from "@/api/get";
+import { updateSalaryStructure } from "@/api/patch";
+import { addSalaryStructure } from "@/api/post";
+import type { PaginatedResponse } from "@/api/types";
+import ComponentCard from "@/components/common/Card";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import Skeleton from "@/components/common/SkeletonForm";
+import DatePicker from "@/components/form/date-picker";
+import Input from "@/components/form/input/InputField";
+import Select from "@/components/form/Select";
+import Button from "@/components/ui/button/Button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
@@ -7,35 +18,15 @@ import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
 
-import ComponentCard from "../../components/common/Card";
-import DatePicker from "../../components/form/date-picker";
-import Input from "../../components/form/input/InputField";
-import Select from "../../components/form/Select";
-import Button from "../../components/ui/button/Button";
-
-import { getEmployees, getSalaryStructureById } from "../../api/get";
-import { updateSalaryStructure } from "../../api/patch";
-import { addSalaryStructure } from "../../api/post";
-import type { PaginatedResponse } from "../../api/types";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import Skeleton from "../../components/common/SkeletonForm";
-
 const MAX_AMOUNT = 1_000_000;
-const TAX_AMOUNT = 1_000;
 const schema = z.object({
   employeeId: z.string().min(1, "Employee is required"),
   basicSalary: z
     .number()
     .min(1, "Basic salary must be greater than 0")
     .max(MAX_AMOUNT, "Amount is too large"),
-  tax: z
-    .number()
-    .min(1, "Tax must be greater than 0")
-    .max(TAX_AMOUNT, "Amount is too large"),
-  pf: z
-    .number()
-    .min(1, "PF must be greater than 0")
-    .max(TAX_AMOUNT, "Amount is too large"),
+  tax: z.number().min(1, "Tax must be greater than 0"),
+  pf: z.number().min(1, "PF must be greater than 0"),
   description: z.string().trim().optional(),
   appraisalDate: z.string().min(1, "Appraisal date is required"),
 });
@@ -78,11 +69,20 @@ export default function SalaryForm() {
     value: String(emp.id),
   }));
 
-  const { data: salaryData, isLoading } = useQuery({
+  const {
+    data: salaryData,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["salary-structure", id],
     queryFn: () => getSalaryStructureById(id!),
     enabled: isEditMode,
   });
+  useEffect(() => {
+    if (isError) {
+      toast.error("Failed to load salary data");
+    }
+  }, [isError]);
 
   useEffect(() => {
     if (salaryData) {
@@ -237,10 +237,7 @@ export default function SalaryForm() {
             </div>
 
             <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
-              <Button
-                disabled={saveMutation.isPending}
-                className="bg-black dark:bg-blue-500 text-white"
-              >
+              <Button disabled={saveMutation.isPending}>
                 {saveMutation.isPending
                   ? "Saving..."
                   : isEditMode

@@ -1,3 +1,12 @@
+import { getPublicHolidayById } from "@/api/get";
+import { addPublicHoliday } from "@/api/post";
+import { updatePublicHoliday } from "@/api/put";
+import ComponentCard from "@/components/common/Card";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import Skeleton from "@/components/common/SkeletonForm";
+import DatePicker from "@/components/form/date-picker";
+import Input from "@/components/form/input/InputField";
+import Button from "@/components/ui/button/Button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
@@ -6,16 +15,6 @@ import { Controller, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
-
-import { getPublicHolidayById } from "../../api/get";
-import { addPublicHoliday } from "../../api/post";
-import { updatePublicHoliday } from "../../api/put";
-import ComponentCard from "../../components/common/Card";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import Skeleton from "../../components/common/SkeletonForm";
-import DatePicker from "../../components/form/date-picker";
-import Input from "../../components/form/input/InputField";
-import Button from "../../components/ui/button/Button";
 
 const holidaySchema = z
   .object({
@@ -53,11 +52,16 @@ export default function PublicHolidayForm() {
     },
   });
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["public-holiday", id],
     queryFn: () => getPublicHolidayById(id!),
     enabled: isEditMode,
   });
+  useEffect(() => {
+    if (isError) {
+      toast.error("Failed to load public holiday data");
+    }
+  }, [isError]);
 
   useEffect(() => {
     if (data && isEditMode) {
@@ -168,10 +172,7 @@ export default function PublicHolidayForm() {
             />
 
             <div className="col-span-1 md:col-span-2 flex justify-end gap-3 pt-6">
-              <Button
-                disabled={saveMutation.isPending}
-                className="bg-black dark:bg-blue-500 text-white"
-              >
+              <Button disabled={saveMutation.isPending}>
                 {saveMutation.isPending
                   ? "Saving..."
                   : isEditMode
