@@ -17,7 +17,7 @@ import {
 import { addEmployee } from "../../api/post";
 import { updateEmployee } from "../../api/put";
 
-import ComponentCard from "../../components/common/ComponentCard";
+import ComponentCard from "../../components/common/Card";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import DatePicker from "../../components/form/date-picker";
 import Checkbox from "../../components/form/input/Checkbox";
@@ -234,7 +234,7 @@ export default function EmployeeForm() {
               <div className="grid gap-6 md:grid-cols-2">
                 <Input
                   label="First Name"
-                  placeholder="Enter Firstname"
+                  placeholder="Enter first name"
                   required
                   {...register("firstName")}
                   error={!!errors.firstName}
@@ -243,7 +243,7 @@ export default function EmployeeForm() {
 
                 <Input
                   label="Last Name"
-                  placeholder="Enter Lastname"
+                  placeholder="Enter last name"
                   required
                   {...register("lastName")}
                   error={!!errors.lastName}
@@ -265,7 +265,7 @@ export default function EmployeeForm() {
                   render={({ field }) => (
                     <Select
                       required
-                      placeholder="Select Position"
+                      placeholder="Select position"
                       label="Position"
                       options={positionOptions}
                       value={field.value ?? ""}
@@ -282,7 +282,7 @@ export default function EmployeeForm() {
                   render={({ field }) => (
                     <Select
                       label="Department"
-                      placeholder="Select Department"
+                      placeholder="Select department"
                       options={departmentOptions}
                       value={field.value ?? ""}
                       onChange={(val) =>
@@ -323,7 +323,7 @@ export default function EmployeeForm() {
                     render={({ field }) => (
                       <Select
                         label="Manager"
-                        placeholder="Select Manager"
+                        placeholder="Select manager"
                         options={managerOptions}
                         value={field.value ?? ""}
                         onChange={field.onChange}

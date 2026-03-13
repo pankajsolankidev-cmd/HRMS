@@ -2,6 +2,7 @@ import {
   IconCheck,
   IconDotsVertical,
   IconEdit,
+  IconSearch,
   IconUser,
 } from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -13,8 +14,9 @@ import toast from "react-hot-toast";
 import { getProjects } from "../../api/get";
 import { updateProject } from "../../api/put";
 import type { PaginatedResponse } from "../../api/types";
-import Card from "../../components/common/ComponentCard";
+import Card from "../../components/common/Card";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
+import Input from "../../components/form/input/InputField";
 import DataTable, {
   type Column,
 } from "../../components/tables/BasicTables/DataTable";
@@ -36,21 +38,31 @@ export default function ProjectTable() {
   const [limit, setLimit] = useState(10);
   const { sortBy, sortOrder, handleSort } = useTableSort<Project>();
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
+  const [rawSearch, setRawSearch] = useState("");
+  const [search, setSearch] = useState<string | undefined>();
   useEffect(() => {
     setPage(1);
   }, [sortBy, sortOrder]);
   const { data, isLoading, refetch, isError } = useQuery<
     PaginatedResponse<Project>
   >({
-    queryKey: ["projects", page, limit, sortBy, sortOrder ?? "all"],
+    queryKey: ["projects", page, limit, sortBy, sortOrder, search ?? "all"],
     queryFn: () =>
       getProjects({
         page,
         limit,
+        search,
         ...(sortBy && sortOrder ? { sortBy: sortBy as string, sortOrder } : {}),
       }),
     placeholderData: (prev) => prev,
   });
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(rawSearch.trim() || undefined);
+      setPage(1);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [rawSearch]);
 
   const { mutate: markCompleted } = useMutation({
     mutationFn: (id: number) =>
@@ -195,7 +207,31 @@ export default function ProjectTable() {
 
       <Card
         action={
-          <div className="flex justify-end">
+          <div className="flex items-center justify-between gap-3">
+            <div className="relative w-full max-w-xs">
+              <div className="absolute left-3 top-3 text-gray-400">
+                <IconSearch size={18} stroke={2} />
+              </div>
+              <Input
+                placeholder="Search by project name"
+                value={rawSearch}
+                onChange={(e) => setRawSearch(e.target.value)}
+                className="pl-10 pr-10 h-[42px] focus-visible:ring-0"
+              />
+              {rawSearch && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setRawSearch("");
+                    setSearch(undefined);
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0 rounded-full"
+                >
+                  ✕
+                </Button>
+              )}
+            </div>
             <Button
               onClick={() => navigate("/projects/new")}
               size="md"

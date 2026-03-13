@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
 
-import ComponentCard from "../../components/common/ComponentCard";
+import ComponentCard from "../../components/common/Card";
 import Input from "../../components/form/input/InputField";
 
 import { getComponentById } from "../../api/get";

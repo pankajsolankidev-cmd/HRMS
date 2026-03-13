@@ -10,7 +10,7 @@ import { getComponents, getSystemById } from "../../api/get";
 import { addSystem } from "../../api/post";
 import { updateSystem } from "../../api/put";
 import type { PaginatedResponse } from "../../api/types";
-import ComponentCard from "../../components/common/ComponentCard";
+import ComponentCard from "../../components/common/Card";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import Input from "../../components/form/input/InputField";
 import MultiSelect from "../../components/form/MultiSelect";
@@ -163,7 +163,9 @@ export default function SystemForm() {
                   onChange={field.onChange}
                   onBlur={field.onBlur}
                   placeholder={
-                    hasComponent ? "Select components" : "No components available"
+                    hasComponent
+                      ? "Select components"
+                      : "No components available"
                   }
                   required
                   error={!!errors.componentIds}

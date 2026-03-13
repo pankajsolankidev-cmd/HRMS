@@ -1,14 +1,15 @@
-import { IconEdit, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconSearch, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router";
 import { deleteDepartment } from "../../api/delete";
 import { getDepartments } from "../../api/get";
-import Card from "../../components/common/ComponentCard";
+import Card from "../../components/common/Card";
 import DeleteConfirm from "../../components/common/DeleteConfirmModal";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
+import Input from "../../components/form/input/InputField";
 import DataTable, {
   type Column,
 } from "../../components/tables/BasicTables/DataTable";
@@ -25,12 +26,21 @@ export default function DepartmentTable() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
+  const [rawSearch, setRawSearch] = useState("");
+  const [search, setSearch] = useState<string | undefined>();
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["departments", page, limit],
-    queryFn: () => getDepartments({ page, limit }),
+    queryKey: ["departments", page, limit, search],
+    queryFn: () => getDepartments({ page, limit, search }),
     placeholderData: (prev) => prev,
   });
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(rawSearch.trim() || undefined);
+      setPage(1);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [rawSearch]);
 
   const { mutate: removeDepartment, isPending } = useMutation({
     mutationFn: deleteDepartment,
@@ -93,7 +103,31 @@ export default function DepartmentTable() {
 
       <Card
         action={
-          <div className="flex justify-end">
+          <div className="flex items-center justify-between gap-3">
+            <div className="relative w-full max-w-xs">
+              <div className="absolute left-3 top-3 text-gray-400">
+                <IconSearch size={18} stroke={2} />
+              </div>
+              <Input
+                placeholder="Search by department name"
+                value={rawSearch}
+                onChange={(e) => setRawSearch(e.target.value)}
+                className="pl-10 pr-10 h-[42px] focus-visible:ring-0"
+              />
+              {rawSearch && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setRawSearch("");
+                    setSearch(undefined);
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0 rounded-full"
+                >
+                  ✕
+                </Button>
+              )}
+            </div>
             <Button
               onClick={() => navigate("/departments/new")}
               size="md"

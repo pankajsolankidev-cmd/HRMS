@@ -9,7 +9,7 @@ import { z } from "zod";
 
 import { getOrganization } from "../../api/get";
 import { addOrganization } from "../../api/post";
-import ComponentCard from "../../components/common/ComponentCard";
+import ComponentCard from "../../components/common/Card";
 import DatePicker from "../../components/form/date-picker";
 import Input from "../../components/form/input/InputField";
 import MultiSelect from "../../components/form/MultiSelect";

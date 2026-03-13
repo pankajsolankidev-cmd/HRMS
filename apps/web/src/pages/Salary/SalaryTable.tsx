@@ -7,7 +7,7 @@ import { useNavigate } from "react-router";
 import { deleteSalaryStructure } from "../../api/delete";
 import { getSalaryStructures } from "../../api/get";
 import type { PaginatedResponse } from "../../api/types";
-import Card from "../../components/common/ComponentCard";
+import Card from "../../components/common/Card";
 import DeleteConfirm from "../../components/common/DeleteConfirmModal";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";

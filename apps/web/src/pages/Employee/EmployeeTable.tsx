@@ -18,7 +18,7 @@ import { useSelector } from "react-redux";
 import { deleteEmployee } from "../../api/delete";
 import { getEmployees } from "../../api/get";
 import type { PaginatedResponse } from "../../api/types";
-import Card from "../../components/common/ComponentCard";
+import Card from "../../components/common/Card";
 import { useTableSort } from "../../components/tables/useTableSort";
 import type { RootState } from "../../context";
 

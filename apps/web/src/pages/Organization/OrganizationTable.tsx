@@ -3,7 +3,7 @@ import { IconEdit } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { getOrganization } from "../../api/get";
-import Card from "../../components/common/ComponentCard";
+import Card from "../../components/common/Card";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import DataTable, {
   type Column,
@@ -82,7 +82,7 @@ export default function OrganizationTable() {
             <Button
               onClick={() => navigate("/organization/new")}
               size="md"
-              className="bg-black dark:bg-blue-500  whitespace-nowrap"
+              className="h-[42px] bg-black dark:bg-blue-500  whitespace-nowrap"
             >
               Add Organization
             </Button>

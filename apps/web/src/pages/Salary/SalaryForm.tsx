@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
 
-import ComponentCard from "../../components/common/ComponentCard";
+import ComponentCard from "../../components/common/Card";
 import DatePicker from "../../components/form/date-picker";
 import Input from "../../components/form/input/InputField";
 import Select from "../../components/form/Select";
@@ -91,7 +91,9 @@ export default function SalaryForm() {
         tax: Number(salaryData.tax),
         pf: Number(salaryData.pf),
         description: salaryData.description || "",
-        appraisalDate: salaryData.appraisalDate ?? "",
+        appraisalDate: salaryData.appraisalDate
+          ? salaryData.appraisalDate.split("T")[0]
+          : "",
       });
     }
   }, [salaryData, reset]);

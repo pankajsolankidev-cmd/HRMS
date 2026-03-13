@@ -1,16 +1,16 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
-import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
 
+import { useEffect } from "react";
 import { getDepartmentById } from "../../api/get";
 import { addDepartment } from "../../api/post";
 import { updateDepartment } from "../../api/put";
-import ComponentCard from "../../components/common/ComponentCard";
+import ComponentCard from "../../components/common/Card";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
@@ -26,23 +26,21 @@ export default function DepartmentForm() {
   const navigate = useNavigate();
 
   const isEditMode = Boolean(id && id !== "new");
-
+  const { data, isLoading } = useQuery({
+    queryKey: ["department", id],
+    queryFn: () => getDepartmentById(id!),
+    enabled: isEditMode,
+  });
   const {
     register,
-    handleSubmit,
     reset,
+    handleSubmit,
     formState: { errors },
   } = useForm<DepartmentFormData>({
     resolver: zodResolver(departmentSchema),
     defaultValues: {
       name: "",
     },
-  });
-
-  const { data, isLoading } = useQuery({
-    queryKey: ["department", id],
-    queryFn: () => getDepartmentById(id!),
-    enabled: isEditMode,
   });
 
   useEffect(() => {

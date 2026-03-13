@@ -120,16 +120,16 @@ export default function SignInForm() {
 
               <span
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer"
+                className="absolute right-4 top-[38px] cursor-pointer"
               >
                 {showPassword ? (
-                  <EyeSlashIcon className="w-5 h-5 mt-6 text-gray-500" />
+                  <EyeSlashIcon className="w-5 h-5 text-gray-500" />
                 ) : (
-                  <EyeIcon className="w-5 h-5 mt-6 text-gray-500" />
+                  <EyeIcon className="w-5 h-5 text-gray-500" />
                 )}
               </span>
             </div>
-
+                
             <div className="flex justify-end">
               <Link
                 to="/forgot-password"

@@ -13,7 +13,7 @@ import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router";
 
 import Can from "../../components/common/Can";
-import Card from "../../components/common/ComponentCard";
+import Card from "../../components/common/Card";
 import Input from "../../components/form/input/InputField";
 import DataTable, {
   type Column,
@@ -101,7 +101,9 @@ export default function ExpenseTable() {
     queryClient.removeQueries({ queryKey: ["expense-summary"] });
   };
 
-  const { data, isLoading, isError } = useQuery<PaginatedResponse<Expense>>({
+  const { data, isLoading, isError, refetch } = useQuery<
+    PaginatedResponse<Expense>
+  >({
     queryKey: ["expenses", page, limit, sortBy, sortOrder, search ?? "all"],
     queryFn: () =>
       getExpenses({
@@ -123,7 +125,7 @@ export default function ExpenseTable() {
     mutationFn: deleteExpense,
     onSuccess: (res) => {
       toast.success(res.message ?? "Expense deleted successfully");
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      refetch();
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error?.response?.data?.message ?? "Something went wrong");
@@ -134,7 +136,7 @@ export default function ExpenseTable() {
     mutationFn: approveExpense,
     onSuccess: (res) => {
       toast.success(res.message ?? "Expense Approved");
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      refetch();
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error?.response?.data?.message ?? "Something went wrong");
@@ -147,7 +149,7 @@ export default function ExpenseTable() {
       toast.success(res.message ?? "Expense Rejected");
       setRejectId(null);
       setRejectionReason("");
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      refetch();
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error?.response?.data?.message ?? "Something went wrong");
@@ -158,7 +160,7 @@ export default function ExpenseTable() {
     mutationFn: createExpense,
     onSuccess: (res) => {
       toast.success(res.message ?? "Expense submitted for approval");
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      refetch();
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error?.response?.data?.message ?? "Something went wrong");
@@ -374,7 +376,7 @@ export default function ExpenseTable() {
                   <IconSearch size={18} stroke={2} />
                 </div>
                 <Input
-                  placeholder="Search by name"
+                  placeholder="Search by type"
                   value={rawSearch}
                   onChange={(e) => setRawSearch(e.target.value)}
                   className="pl-10 pr-10 h-[42px] focus-visible:ring-0"
@@ -491,7 +493,7 @@ export default function ExpenseTable() {
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
               placeholder="Reason..."
-              className="w-full rounded-md border p-2 text-sm dark:bg-gray-700 dark:border-gray-600 outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-md border p-2 text-sm dark:bg-gray-700 dark:border-gray-600 outline-none focus:ring-1 focus:ring-red-500"
               rows={3}
             />
             <div className="mt-4 flex justify-end gap-3">

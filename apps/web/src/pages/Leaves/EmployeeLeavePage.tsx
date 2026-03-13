@@ -6,7 +6,7 @@ import type { AxiosError } from "axios";
 import { getEmployees, getLeaveById, getManualLeaveById } from "../../api/get";
 import { updateEmployeeLeave } from "../../api/patch";
 import { addEmployeeLeave, type AddLeavePayload } from "../../api/post";
-import ComponentCard from "../../components/common/ComponentCard";
+import ComponentCard from "../../components/common/Card";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import LeaveForm, { type LeaveFormData } from "./LeaveFormTemplate";
 
