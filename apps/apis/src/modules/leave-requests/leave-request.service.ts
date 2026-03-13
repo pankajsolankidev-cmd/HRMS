@@ -32,7 +32,7 @@ import {
 
 import { sendMessage } from "../../utils/api-response";
 import { getPagination } from "../../utils/pagination";
-import { hasAnyRole, hasRole } from "../../utils/role.utils";
+import { hasContainedRole, hasRole } from "../../utils/role.utils";
 import { calculateLeaveTotalsSimple } from "./utils/leave-calculation";
 import { validatePastDatesOnly } from "./utils/past-date-validation";
 import { notifications } from "../../db/schema/notifications.schema";
@@ -232,7 +232,7 @@ export async function getAllLeaveRequestsHandler(request: FastifyRequest) {
     .map((r) => r.roleName)
     .filter((role): role is string => role !== null);
 
-  const isHRorAdmin = hasAnyRole(roleNames, ["HR", "ADMIN"]);
+  const isHRorAdmin = hasContainedRole(roleNames, ["HR", "ADMIN"]);
 
   if (!isHRorAdmin && query.employeeId) {
     request.log.warn(
@@ -438,7 +438,7 @@ export async function getLeaveRequestByIdHandler(
     .map((r) => r.roleName)
     .filter((role): role is string => role !== null);
 
-  const isHRorAdmin = hasAnyRole(roleNames, ["HR", "ADMIN"]);
+  const isHRorAdmin = hasContainedRole(roleNames, ["HR", "ADMIN"]);
 
   const conditions = [eq(leaveRequests.id, id)];
 
@@ -585,7 +585,7 @@ export async function updateLeaveRequestHandler(
     .map((r) => r.roleName)
     .filter((role): role is string => role !== null);
 
-  const isHRorAdmin = hasAnyRole(roleNames, ["HR", "ADMIN"]);
+  const isHRorAdmin = hasContainedRole(roleNames, ["HR", "ADMIN"]);
 
   const conditions = [
     eq(leaveRequests.id, id),
@@ -737,7 +737,7 @@ export async function deleteLeaveRequestHandler(
     .map((r) => r.roleName)
     .filter((role): role is string => role !== null);
 
-  const isHRorAdmin = hasAnyRole(roleNames, ["HR", "ADMIN"]);
+  const isHRorAdmin = hasContainedRole(roleNames, ["HR", "ADMIN"]);
 
   const conditions = [
     eq(leaveRequests.id, id),
@@ -1222,7 +1222,7 @@ export async function createManualLeaveRequestHandler(
     .map((r) => r.roleName)
     .filter((r): r is string => r !== null);
 
-  if (!hasAnyRole(roleNames, ["HR", "ADMIN"])) {
+  if (!hasContainedRole(roleNames, ["HR", "ADMIN"])) {
     request.log.warn(
       {
         action: "CREATE_MANUAL_LEAVE_REQUEST",
@@ -1368,7 +1368,7 @@ export async function updateManualLeaveRequestHandler(
     .map((r) => r.roleName)
     .filter((r): r is string => r !== null);
 
-  if (!hasAnyRole(roleNames, ["HR", "ADMIN"])) {
+  if (!hasContainedRole(roleNames, ["HR", "ADMIN"])) {
     request.log.warn(
       {
         action: "UPDATE_MANUAL_LEAVE_REQUEST",
@@ -1548,7 +1548,7 @@ export async function deleteManualLeaveRequestHandler(
     .map((r) => r.roleName)
     .filter((r): r is string => r !== null);
 
-  if (!hasAnyRole(roleNames, ["HR", "ADMIN"])) {
+  if (!hasContainedRole(roleNames, ["HR", "ADMIN"])) {
     request.log.warn(
       {
         action: "DELETE_MANUAL_LEAVE_REQUEST",
@@ -1622,7 +1622,7 @@ export async function getManualLeaveRequestByIdHandler(
     .map((r) => r.roleName)
     .filter((r): r is string => r !== null);
 
-  if (!hasAnyRole(roleNames, ["HR", "ADMIN"])) {
+  if (!hasContainedRole(roleNames, ["HR", "ADMIN"])) {
     request.log.warn(
       {
         action: "GET_MANUAL_LEAVE_REQUEST_BY_ID",

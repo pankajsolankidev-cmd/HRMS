@@ -7,7 +7,7 @@ import { PayrollMonth, PayrollMonthType } from "../../db/schema/payroll.enums";
 import { getPagination } from "../../utils/pagination";
 import { sendMessage } from "../../utils/api-response";
 import { calculateLeaveDeductionForPayroll } from "./utils/leave-deduction.utils";
-import { hasAnyRole, hasRole } from "../../utils/role.utils";
+import { hasContainedRole, hasRole } from "../../utils/role.utils";
 export async function getPayrollsHandler(request: FastifyRequest) {
   const userId = request.user!.id;
   const filters = request.query as PayrollFilterDto;
@@ -34,7 +34,7 @@ export async function getPayrollsHandler(request: FastifyRequest) {
       .map((r) => r.roleName)
       .filter((role): role is string => role !== null);
 
-    const isHRorAdmin = hasAnyRole(roleNames, ["HR", "ADMIN"]);
+    const isHRorAdmin = hasContainedRole(roleNames, ["HR", "ADMIN"]);
 
     if (!isHRorAdmin && filters?.employeeId) {
       request.log.warn(

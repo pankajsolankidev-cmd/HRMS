@@ -1,31 +1,8 @@
 const errorResponse = {
   type: "object",
+  required: ["error"],
   properties: {
     error: { type: "string" },
-  },
-};
-
-export const signUpSchema = {
-  tags: ["Auth"],
-  body: {
-    type: "object",
-    required: ["username", "email", "password"],
-    properties: {
-      username: { type: "string" },
-      email: { type: "string", format: "email" },
-      password: { type: "string", minLength: 6 },
-    },
-  },
-  response: {
-    201: {
-      type: "object",
-      properties: {
-        accessToken: { type: "string" },
-      },
-    },
-    400: errorResponse,
-    409: errorResponse,
-    500: errorResponse,
   },
 };
 
@@ -70,21 +47,17 @@ export const refreshTokenSchema = {
   tags: ["Auth"],
   body: {
     type: "object",
-    required: ["refreshToken"],
+    required: ["refreshToken", "userId"],
     properties: {
       refreshToken: { type: "string" },
+      userId: { type: "string" },
     },
   },
   response: {
     200: {
       type: "object",
       properties: {
-        id: { type: "string" },
-        username: { type: "string" },
-        email: { type: "string", format: "email" },
-
         accessToken: { type: "string" },
-
         roles: {
           type: "array",
           items: { type: "string" },
@@ -102,13 +75,6 @@ export const refreshTokenSchema = {
 
 export const logoutSchema = {
   tags: ["Auth"],
-  body: {
-    type: "object",
-    required: ["refreshToken"],
-    properties: {
-      refreshToken: { type: "string" },
-    },
-  },
   response: {
     200: {
       type: "object",
@@ -116,6 +82,7 @@ export const logoutSchema = {
         message: { type: "string" },
       },
     },
+    401: errorResponse,
     500: errorResponse,
   },
 };

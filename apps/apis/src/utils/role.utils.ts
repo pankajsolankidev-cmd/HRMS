@@ -3,7 +3,7 @@ export function hasRole(roles: string[] | undefined, role: string): boolean {
   return roles.includes(role);
 }
 
-export function hasAnyRole(
+export function hasContainedRole(
   roles: string[] | undefined,
   allowedRoles: string[],
 ): boolean {

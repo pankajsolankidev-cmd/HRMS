@@ -1,11 +1,12 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import jwt, { JwtPayload } from "jsonwebtoken";
+import redis from "../lib/redis";
 
 declare module "fastify" {
   interface FastifyRequest {
     user?: {
       id: string;
-      email: string;
+      email?: string;
       roles: string[];
       permissions: string[];
       iat: number;
@@ -17,26 +18,18 @@ declare module "fastify" {
 function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
-    throw new Error("invalid token");
+    throw new Error("JWT_SECRET not configured");
   }
   return secret;
 }
 
 function isValidJwtPayload(
   payload: string | JwtPayload,
-): payload is JwtPayload & {
-  id: string;
-  email: string;
-  roles: string[];
-  permissions: string[];
-} {
+): payload is JwtPayload & { id: string } {
   return (
     typeof payload === "object" &&
     payload !== null &&
-    typeof payload.id === "string" &&
-    typeof payload.email === "string" &&
-    Array.isArray(payload.roles) &&
-    Array.isArray(payload.permissions)
+    typeof payload.id === "string"
   );
 }
 
@@ -65,15 +58,25 @@ export async function verifyAccessToken(
 
     if (!isValidJwtPayload(decoded)) {
       return reply.status(401).send({
-        error: "Invalid token",
+        error: "Invalid token payload",
       });
     }
 
+    const session = await redis.get(`auth:${decoded.id}`);
+
+    if (!session) {
+      return reply.status(401).send({
+        error: "Session expired",
+      });
+    }
+
+    const data = JSON.parse(session);
+
     request.user = {
       id: decoded.id,
-      email: decoded.email,
-      roles: decoded.roles,
-      permissions: decoded.permissions,
+      email: data.email,
+      roles: data.roles ?? [],
+      permissions: data.permissions ?? [],
       iat: decoded.iat ?? 0,
       exp: decoded.exp ?? 0,
     };
