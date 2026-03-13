@@ -19,52 +19,99 @@ import {
 } from "./holiday.schema";
 
 import { verifyAccessToken } from "../../middlewares/auth.middlewares";
+import { authorize } from "../../middlewares/authorize.middleware";
+import { PERMISSIONS } from "../../db/schema/permissions.enums";
 
 export default async function holidayRoutes(app: FastifyInstance) {
   const secured = {
-    preHandler: [verifyAccessToken],
     schema: {
       security: [{ bearerAuth: [] }],
+      tags: ["Holidays"],
     },
   };
 
   app.post(
     "/holidays",
-    { ...secured, schema: { ...secured.schema, ...createHolidaySchema } },
+    {
+      ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.HOLIDAY_CREATE)],
+      schema: { ...secured.schema, ...createHolidaySchema },
+    },
     createHolidayHandler,
   );
 
   app.get(
     "/holidays",
-    { ...secured, schema: { ...secured.schema, ...getHolidaysSchema } },
+    {
+      ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.HOLIDAY_VIEW)],
+      schema: { ...secured.schema, ...getHolidaysSchema },
+    },
     getHolidaysHandler,
   );
 
   app.get(
     "/holidays/:id",
-    { ...secured, schema: { ...secured.schema, ...getHolidayByIdSchema } },
+    {
+      ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.HOLIDAY_VIEW)],
+      schema: { ...secured.schema, ...getHolidayByIdSchema },
+    },
     getHolidayByIdHandler,
   );
 
   app.put(
     "/holidays/:id",
-    { ...secured, schema: { ...secured.schema, ...updateHolidaySchema } },
+    {
+      ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.HOLIDAY_UPDATE)],
+      schema: { ...secured.schema, ...updateHolidaySchema },
+    },
     updateHolidayHandler,
   );
 
-  app.delete("/holidays/:id", { ...secured }, deleteHolidayHandler);
+  app.delete(
+    "/holidays/:id",
+    {
+      ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.HOLIDAY_DELETE)],
+    },
+    deleteHolidayHandler,
+  );
 
-  app.post("/holidays/upload/check", { ...secured }, checkHolidayExcelHandler);
+  app.post(
+    "/holidays/upload/check",
+    {
+      ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.HOLIDAY_CREATE)],
+    },
+    checkHolidayExcelHandler,
+  );
 
   app.post(
     "/holidays/upload/confirm",
-    { ...secured },
+    {
+      ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.HOLIDAY_CREATE)],
+    },
     confirmHolidayUploadHandler,
   );
+
   app.get(
     "/holidays/upload/template",
-    { ...secured },
+    {
+      ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.HOLIDAY_EXPORT)],
+    },
     downloadHolidayTemplateHandler,
   );
-  app.get("/holidays/export/pdf", { ...secured }, exportHolidaysPdfHandler);
+
+  app.get(
+    "/holidays/export/pdf",
+    {
+      ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.HOLIDAY_EXPORT)],
+    },
+    exportHolidaysPdfHandler,
+  );
 }

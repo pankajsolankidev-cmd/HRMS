@@ -21,20 +21,28 @@ import { authorize } from "../../middlewares/authorize.middleware";
 import { PERMISSIONS } from "../../db/schema/permissions.enums";
 
 export async function payrollRoutes(app: FastifyInstance) {
+  const secured = {
+    schema: {
+      security: [{ bearerAuth: [] }],
+      tags: ["Payroll"],
+    },
+  };
+
   app.get(
     "/payrolls",
     {
-      schema: getPayrollsSchema,
+      ...secured,
+      schema: { ...secured.schema, ...getPayrollsSchema },
       preHandler: [verifyAccessToken],
     },
     getPayrollsHandler,
   );
 
-
   app.delete(
     "/payrolls/:id",
     {
-      schema: deletePayrollSchema,
+      ...secured,
+      schema: { ...secured.schema, ...deletePayrollSchema },
       preHandler: [verifyAccessToken, authorize(PERMISSIONS.PAYROLL_DELETE)],
     },
     deletePayrollHandler,
@@ -43,7 +51,8 @@ export async function payrollRoutes(app: FastifyInstance) {
   app.get(
     "/payrolls/summary",
     {
-      schema: payrollSummarySchema,
+      ...secured,
+      schema: { ...secured.schema, ...payrollSummarySchema },
       preHandler: [
         verifyAccessToken,
         authorize(PERMISSIONS.PAYROLL_VIEW_SUMMARY),
@@ -55,7 +64,8 @@ export async function payrollRoutes(app: FastifyInstance) {
   app.get(
     "/payrolls/bulk/employee",
     {
-      schema: employeeBulkPayrollSchema,
+      ...secured,
+      schema: { ...secured.schema, ...employeeBulkPayrollSchema },
       preHandler: [verifyAccessToken, authorize(PERMISSIONS.PAYROLL_PROCESS)],
     },
     employeeBulkPayrollHandler,
@@ -64,7 +74,8 @@ export async function payrollRoutes(app: FastifyInstance) {
   app.post(
     "/payrolls/bulk/process",
     {
-      schema: processBulkPayrollSchema,
+      ...secured,
+      schema: { ...secured.schema, ...processBulkPayrollSchema },
       preHandler: [verifyAccessToken, authorize(PERMISSIONS.PAYROLL_PROCESS)],
     },
     processBulkPayrollHandler,

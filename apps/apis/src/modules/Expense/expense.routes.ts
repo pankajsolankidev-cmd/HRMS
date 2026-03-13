@@ -28,7 +28,6 @@ import { PERMISSIONS } from "../../db/schema/permissions.enums";
 
 export default async function expenseRoutes(app: FastifyInstance) {
   const secured = {
-    preHandler: [verifyAccessToken],
     schema: {
       security: [{ bearerAuth: [] }],
       tags: ["Expenses"],
@@ -49,23 +48,26 @@ export default async function expenseRoutes(app: FastifyInstance) {
   );
 
   app.post(
-  "/expenses/create",
-  {
-    ...secured,
-    preHandler: [verifyAccessToken, authorize(PERMISSIONS.EXPENSE_CREATE)],
-    schema: {
-      ...secured.schema,
-      ...createExpenseSchema,
+    "/expenses/create",
+    {
+      ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.EXPENSE_CREATE)],
+      schema: {
+        ...secured.schema,
+        ...createExpenseSchema,
+      },
     },
-  },
-  createExpenseDirectHandler,
-);
+    createExpenseDirectHandler,
+  );
 
   app.get(
     "/expenses/summary",
     {
       ...secured,
-      preHandler: [verifyAccessToken],
+      preHandler: [
+        verifyAccessToken,
+        authorize(PERMISSIONS.EXPENSE_VIEW_SUMMARY),
+      ],
       schema: {
         ...secured.schema,
         ...getExpenseSummarySchema,
@@ -104,10 +106,7 @@ export default async function expenseRoutes(app: FastifyInstance) {
     "/expenses/:id",
     {
       ...secured,
-      preHandler: [
-        verifyAccessToken
-       
-      ],
+      preHandler: [verifyAccessToken],
       schema: {
         ...secured.schema,
         ...updateExpenseSchema,
@@ -120,13 +119,9 @@ export default async function expenseRoutes(app: FastifyInstance) {
     "/expenses/:id",
     {
       ...secured,
-      preHandler: [
-        verifyAccessToken,
-        
-      ],
+      preHandler: [verifyAccessToken],
       schema: {
         ...secured.schema,
-        tags: ["Expenses"],
         params: {
           type: "object",
           required: ["id"],
@@ -146,13 +141,10 @@ export default async function expenseRoutes(app: FastifyInstance) {
       preHandler: [verifyAccessToken, authorize(PERMISSIONS.EXPENSE_SUBMIT)],
       schema: {
         ...secured.schema,
-        tags: ["Expenses"],
         params: {
           type: "object",
           required: ["id"],
-          properties: {
-            id: { type: "string" },
-          },
+          properties: { id: { type: "string" } },
         },
       },
     },
@@ -166,13 +158,10 @@ export default async function expenseRoutes(app: FastifyInstance) {
       preHandler: [verifyAccessToken, authorize(PERMISSIONS.EXPENSE_APPROVE)],
       schema: {
         ...secured.schema,
-        tags: ["Expenses"],
         params: {
           type: "object",
           required: ["id"],
-          properties: {
-            id: { type: "string" },
-          },
+          properties: { id: { type: "string" } },
         },
       },
     },
@@ -186,13 +175,10 @@ export default async function expenseRoutes(app: FastifyInstance) {
       preHandler: [verifyAccessToken, authorize(PERMISSIONS.EXPENSE_APPROVE)],
       schema: {
         ...secured.schema,
-        tags: ["Expenses"],
         params: {
           type: "object",
           required: ["id"],
-          properties: {
-            id: { type: "string" },
-          },
+          properties: { id: { type: "string" } },
         },
         body: {
           type: "object",

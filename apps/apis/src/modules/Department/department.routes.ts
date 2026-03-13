@@ -16,10 +16,11 @@ import {
 } from "./department.schema";
 
 import { verifyAccessToken } from "../../middlewares/auth.middlewares";
+import { authorize } from "../../middlewares/authorize.middleware";
+import { PERMISSIONS } from "../../db/schema/permissions.enums";
 
 export default async function departmentRoutes(app: FastifyInstance) {
   const secured = {
-    preHandler: [verifyAccessToken],
     schema: {
       security: [{ bearerAuth: [] }],
     },
@@ -29,6 +30,7 @@ export default async function departmentRoutes(app: FastifyInstance) {
     "/departments",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.DEPARTMENT_CREATE)],
       schema: {
         ...secured.schema,
         ...createDepartmentSchema,
@@ -41,6 +43,7 @@ export default async function departmentRoutes(app: FastifyInstance) {
     "/departments",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.DEPARTMENT_VIEW)],
       schema: {
         ...secured.schema,
         ...getDepartmentsSchema,
@@ -53,6 +56,7 @@ export default async function departmentRoutes(app: FastifyInstance) {
     "/departments/:id",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.DEPARTMENT_VIEW)],
       schema: {
         ...secured.schema,
         ...getDepartmentByIdSchema,
@@ -65,6 +69,7 @@ export default async function departmentRoutes(app: FastifyInstance) {
     "/departments/:id",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.DEPARTMENT_UPDATE)],
       schema: {
         ...secured.schema,
         ...updateDepartmentSchema,
@@ -77,6 +82,7 @@ export default async function departmentRoutes(app: FastifyInstance) {
     "/departments/:id",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.DEPARTMENT_DELETE)],
       schema: {
         ...secured.schema,
         tags: ["Departments"],

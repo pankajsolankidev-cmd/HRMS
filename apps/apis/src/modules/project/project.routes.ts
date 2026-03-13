@@ -15,12 +15,14 @@ import {
 } from "./project.schema";
 
 import { verifyAccessToken } from "../../middlewares/auth.middlewares";
+import { authorize } from "../../middlewares/authorize.middleware";
+import { PERMISSIONS } from "../../db/schema/permissions.enums";
 
 export default async function projectRoutes(app: FastifyInstance) {
   const secured = {
-    preHandler: [verifyAccessToken],
     schema: {
       security: [{ bearerAuth: [] }],
+      tags: ["Projects"],
     },
   };
 
@@ -28,6 +30,7 @@ export default async function projectRoutes(app: FastifyInstance) {
     "/projects",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.PROJECT_CREATE)],
       schema: {
         ...secured.schema,
         ...createProjectSchema,
@@ -40,6 +43,7 @@ export default async function projectRoutes(app: FastifyInstance) {
     "/projects",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.PROJECT_VIEW)],
       schema: {
         ...secured.schema,
         ...getProjectsSchema,
@@ -52,6 +56,7 @@ export default async function projectRoutes(app: FastifyInstance) {
     "/projects/:id",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.PROJECT_VIEW)],
       schema: {
         ...secured.schema,
         ...getProjectByIdSchema,
@@ -64,6 +69,7 @@ export default async function projectRoutes(app: FastifyInstance) {
     "/projects/:id",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.PROJECT_UPDATE)],
       schema: {
         ...secured.schema,
         ...updateProjectSchema,
@@ -71,6 +77,4 @@ export default async function projectRoutes(app: FastifyInstance) {
     },
     updateProjectHandler,
   );
-
- 
 }

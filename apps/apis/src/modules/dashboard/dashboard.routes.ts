@@ -1,11 +1,18 @@
 import type { FastifyInstance } from "fastify";
-import { getDashboardSummaryHandler, getEmployeeDashboardHandler } from "./dashboard.service";
+import {
+  getDashboardSummaryHandler,
+  getEmployeeDashboardHandler,
+} from "./dashboard.service";
 import { verifyAccessToken } from "../../middlewares/auth.middlewares";
-import { getDashboardSummarySchema, getEmployeeDashboardSchema } from "./dashboard.schema";
+import { authorize } from "../../middlewares/authorize.middleware";
+import { PERMISSIONS } from "../../db/schema/permissions.enums";
+import {
+  getDashboardSummarySchema,
+  getEmployeeDashboardSchema,
+} from "./dashboard.schema";
 
 export default async function dashboardRoutes(app: FastifyInstance) {
   const secured = {
-    preHandler: [verifyAccessToken],
     schema: {
       security: [{ bearerAuth: [] }],
     },
@@ -15,6 +22,10 @@ export default async function dashboardRoutes(app: FastifyInstance) {
     "/dashboard/summary",
     {
       ...secured,
+      preHandler: [
+        verifyAccessToken,
+        authorize(PERMISSIONS.DASHBOARD_VIEW_ADMIN),
+      ],
       schema: {
         ...secured.schema,
         ...getDashboardSummarySchema,
@@ -22,15 +33,20 @@ export default async function dashboardRoutes(app: FastifyInstance) {
     },
     getDashboardSummaryHandler,
   );
+
   app.get(
-  "/employee/dashboard/summary",
-  {
-    ...secured,
-    schema: {
-      ...secured.schema,
-      ...getEmployeeDashboardSchema,
+    "/employee/dashboard/summary",
+    {
+      ...secured,
+      preHandler: [
+        verifyAccessToken,
+        authorize(PERMISSIONS.DASHBOARD_VIEW_EMPLOYEE),
+      ],
+      schema: {
+        ...secured.schema,
+        ...getEmployeeDashboardSchema,
+      },
     },
-  },
-  getEmployeeDashboardHandler,
-);
+    getEmployeeDashboardHandler,
+  );
 }
