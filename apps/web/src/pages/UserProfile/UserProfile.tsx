@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getProfile } from "../../api/get";
+import Chip from "../../components/common/Chip";
 
 const UserProfile = () => {
   const { data, isLoading, isError } = useQuery({
@@ -45,13 +46,15 @@ const UserProfile = () => {
               </p>
 
               <div className="mt-2 flex gap-3">
-                <span className="px-3 py-1 text-xs font-semibold bg-indigo-100 text-indigo-600 rounded-full">
-                  {employee?.position?.name || "No Position"}
-                </span>
+                <Chip
+                  label={employee?.position?.name || "No Position"}
+                  className="px-3 py-1 text-xs font-semibold bg-indigo-100 text-indigo-600 rounded-full"
+                />
 
-                <span className="px-3 py-1 text-xs font-semibold bg-green-100 text-green-600 rounded-full">
-                  Active Employee
-                </span>
+                <Chip
+                  label="Active Employee"
+                  className="px-3 py-1 text-xs font-semibold bg-green-100 text-green-600 rounded-full"
+                />
               </div>
             </div>
           </div>

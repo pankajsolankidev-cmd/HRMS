@@ -205,10 +205,10 @@ export default function PublicHolidayTable() {
                 loading={isPending}
                 onConfirm={(id) => removeHoliday(id)}
               >
-                {(askDelete) => (
+                {(onDelete) => (
                   <IconTrash
                     size={18}
-                    onClick={() => askDelete(row.id)}
+                    onClick={() => onDelete(row.id)}
                     className="cursor-pointer text-red-600 dark:text-red-400"
                   />
                 )}

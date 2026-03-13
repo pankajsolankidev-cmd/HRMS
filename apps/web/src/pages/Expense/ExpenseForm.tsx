@@ -17,6 +17,7 @@ import { addExpense, addExpenseDraft, uploadFile } from "../../api/post";
 import { updateExpense } from "../../api/put";
 import Card from "../../components/common/Card";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
+import Skeleton from "../../components/common/SkeletonForm";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const MAX_AMOUNT = 1_000_000;
@@ -159,127 +160,121 @@ export default function ExpenseForm() {
     }
   };
 
-  if (isEditMode && isLoading) {
-    return (
-      <div className="p-6 text-gray-500 dark:text-gray-400">
-        Loading expense details...
-      </div>
-    );
-  }
-
   return (
     <>
       <PageBreadcrumb pageTitle={isEditMode ? "Edit Expense" : "Add Expense"} />
-      <Card>
-        <form
-          noValidate
-          onSubmit={handleSubmit(onSubmit)}
-          className="space-y-6"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input
-              required
-              label="Expense Type"
-              placeholder="e.g. Travel, Food, Internet"
-              {...register("expenseType")}
-              error={!!errors.expenseType}
-              hint={errors.expenseType?.message}
-            />
+      <Skeleton loading={isEditMode && isLoading}>
+        <Card>
+          <form
+            noValidate
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-6"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Input
+                required
+                label="Expense Type"
+                placeholder="e.g. Travel, Food, Internet"
+                {...register("expenseType")}
+                error={!!errors.expenseType}
+                hint={errors.expenseType?.message}
+              />
 
-            <Input
-              required
-              label="Amount"
-              type="number"
-              step="0.01"
-              placeholder="0.00"
-              {...register("amount", { valueAsNumber: true })}
-              error={!!errors.amount}
-              hint={errors.amount?.message}
-            />
+              <Input
+                required
+                label="Amount"
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                {...register("amount", { valueAsNumber: true })}
+                error={!!errors.amount}
+                hint={errors.amount?.message}
+              />
 
-            <Controller
-              name="expenseDate"
-              control={control}
-              render={({ field }) => (
-                <DatePicker
-                  required
-                  disableFuture
-                  id="expenseDate"
-                  label="Expense Date"
-                  placeholder="Select expense date"
-                  value={field.value}
-                  onChange={(dates) => {
-                    if (dates?.length) {
-                      setValue(
-                        "expenseDate",
-                        dates[0].toLocaleDateString("en-CA"),
-                        {
-                          shouldValidate: true,
-                        },
-                      );
+              <Controller
+                name="expenseDate"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    required
+                    disableFuture
+                    id="expenseDate"
+                    label="Expense Date"
+                    placeholder="Select expense date"
+                    value={field.value}
+                    onChange={(dates) => {
+                      if (dates?.length) {
+                        setValue(
+                          "expenseDate",
+                          dates[0].toLocaleDateString("en-CA"),
+                          {
+                            shouldValidate: true,
+                          },
+                        );
+                      }
+                    }}
+                    error={!!errors.expenseDate}
+                    hint={errors.expenseDate?.message}
+                  />
+                )}
+              />
+
+              <Input
+                label="Description"
+                placeholder="Add short description"
+                {...register("description")}
+                error={!!errors.description}
+                hint={errors.description?.message}
+              />
+
+              <div className="md:col-span-1">
+                <FileInput
+                  label="File Attachment"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setValue("file", file, { shouldValidate: true });
                     }
                   }}
-                  error={!!errors.expenseDate}
-                  hint={errors.expenseDate?.message}
                 />
-              )}
-            />
-
-            <Input
-              label="Description"
-              placeholder="Add short description"
-              {...register("description")}
-              error={!!errors.description}
-              hint={errors.description?.message}
-            />
-
-            <div className="md:col-span-1">
-              <FileInput
-                label="File Attachment"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    setValue("file", file, { shouldValidate: true });
-                  }
-                }}
-              />
-              {errors.file && (
-                <p className="mt-1 text-xs text-red-600">
-                  {errors.file.message as string}
-                </p>
-              )}
+                {errors.file && (
+                  <p className="mt-1 text-xs text-red-600">
+                    {errors.file.message as string}
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
 
-          <div className="flex justify-end gap-3  pt-6 dark:border-gray-700">
-            <Button
-              disabled={saveMutation.isPending}
-              className="bg-black dark:bg-blue-500 text-white"
-            >
-              {saveMutation.isPending
-                ? "Processing..."
-                : isEditMode
-                  ? "Update"
-                  : "Save"}
-            </Button>
-            <Button
-              type="button"
-              disabled={draftMutation.isPending}
-              onClick={handleSubmit(onDraftSubmit)}
-              className="bg-black dark:bg-blue-500 text-white"
-            >
-              {draftMutation.isPending ? "Saving..." : "Draft"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate("/expenses")}
-            >
-              Back
-            </Button>
-          </div>
-        </form>
-      </Card>
+            <div className="flex justify-end gap-3  pt-6 dark:border-gray-700">
+              <Button
+                disabled={saveMutation.isPending}
+                className="bg-black dark:bg-blue-500 text-white"
+              >
+                {saveMutation.isPending
+                  ? "Processing..."
+                  : isEditMode
+                    ? "Update"
+                    : "Save"}
+              </Button>
+              <Button
+                type="button"
+                disabled={draftMutation.isPending}
+                onClick={handleSubmit(onDraftSubmit)}
+                className="bg-black dark:bg-blue-500 text-white"
+              >
+                {draftMutation.isPending ? "Saving..." : "Draft"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate("/expenses")}
+              >
+                Back
+              </Button>
+            </div>
+          </form>
+        </Card>
+      </Skeleton>
     </>
   );
 }

@@ -17,6 +17,7 @@ import Button from "../../components/ui/button/Button";
 
 import type { CreateOrganizationDto } from "@shared/types";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
+import Skeleton from "../../components/common/SkeletonForm";
 
 const WEEK_DAYS: CreateOrganizationDto["weekOff"][number][] = [
   "MONDAY",
@@ -114,113 +115,106 @@ export default function OrganizationForm() {
     text: day,
   }));
 
-  if (isEditMode && isLoading) {
-    return (
-      <div className="p-6 text-gray-500 dark:text-gray-400">
-        Loading organization data...
-      </div>
-    );
-  }
-
   return (
     <>
       <PageBreadcrumb
         pageTitle={isEditMode ? "Edit Organization" : "Add Organization"}
       />
+      <Skeleton loading={isEditMode && isLoading}>
+        <ComponentCard>
+          <form
+            noValidate
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-6"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Input
+                required
+                label="Name"
+                placeholder="Enter organization name"
+                {...register("name")}
+                error={!!errors.name}
+                hint={errors.name?.message}
+              />
 
-      <ComponentCard>
-        <form
-          noValidate
-          onSubmit={handleSubmit(onSubmit)}
-          className="space-y-6"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input
-              required
-              label="Name"
-              placeholder="Enter organization name"
-              {...register("name")}
-              error={!!errors.name}
-              hint={errors.name?.message}
-            />
+              <Controller
+                name="workingHours.start"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    placeholder="Office Start Time"
+                    id="start-time"
+                    mode="time"
+                    label="Office Start Time"
+                    value={field.value}
+                    onChange={(_, dateStr) => field.onChange(dateStr)}
+                    error={!!errors.workingHours?.start}
+                    hint={errors.workingHours?.start?.message}
+                    required
+                  />
+                )}
+              />
 
-            <Controller
-              name="workingHours.start"
-              control={control}
-              render={({ field }) => (
-                <DatePicker
-                  placeholder="Office Start Time"
-                  id="start-time"
-                  mode="time"
-                  label="Office Start Time"
-                  value={field.value}
-                  onChange={(_, dateStr) => field.onChange(dateStr)}
-                  error={!!errors.workingHours?.start}
-                  hint={errors.workingHours?.start?.message}
-                  required
-                />
-              )}
-            />
+              <Controller
+                name="workingHours.end"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    placeholder="Office End Time"
+                    id="end-time"
+                    mode="time"
+                    label="Office End Time"
+                    value={field.value}
+                    onChange={(_, dateStr) => field.onChange(dateStr)}
+                    error={!!errors.workingHours?.end}
+                    hint={errors.workingHours?.end?.message}
+                    required
+                  />
+                )}
+              />
 
-            <Controller
-              name="workingHours.end"
-              control={control}
-              render={({ field }) => (
-                <DatePicker
-                  placeholder="Office End Time"
-                  id="end-time"
-                  mode="time"
-                  label="Office End Time"
-                  value={field.value}
-                  onChange={(_, dateStr) => field.onChange(dateStr)}
-                  error={!!errors.workingHours?.end}
-                  hint={errors.workingHours?.end?.message}
-                  required
-                />
-              )}
-            />
+              <Controller
+                name="weekOff"
+                control={control}
+                render={({ field }) => (
+                  <MultiSelect
+                    label="Week Off"
+                    options={weekDayOptions}
+                    value={field.value ?? []}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    placeholder="Select week off days"
+                    required
+                    error={!!errors.weekOff}
+                    hint={errors.weekOff?.message}
+                  />
+                )}
+              />
+            </div>
 
-            <Controller
-              name="weekOff"
-              control={control}
-              render={({ field }) => (
-                <MultiSelect
-                  label="Week Off"
-                  options={weekDayOptions}
-                  value={field.value ?? []}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  placeholder="Select week off days"
-                  required
-                  error={!!errors.weekOff}
-                  hint={errors.weekOff?.message}
-                />
-              )}
-            />
-          </div>
+            <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
+              <Button
+                disabled={saveMutation.isPending}
+                className="bg-black dark:bg-blue-500 text-white"
+              >
+                {saveMutation.isPending
+                  ? "Saving..."
+                  : isEditMode
+                    ? "Update"
+                    : "Save"}
+              </Button>
 
-          <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
-            <Button
-              disabled={saveMutation.isPending}
-              className="bg-black dark:bg-blue-500 text-white"
-            >
-              {saveMutation.isPending
-                ? "Saving..."
-                : isEditMode
-                  ? "Update"
-                  : "Save"}
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate("/organization")}
-            >
-              Back
-            </Button>
-          </div>
-        </form>
-      </ComponentCard>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate("/organization")}
+              >
+                Back
+              </Button>
+            </div>
+          </form>
+        </ComponentCard>
+      </Skeleton>
     </>
   );
 }

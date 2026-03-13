@@ -12,6 +12,7 @@ import { addPublicHoliday } from "../../api/post";
 import { updatePublicHoliday } from "../../api/put";
 import ComponentCard from "../../components/common/Card";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
+import Skeleton from "../../components/common/SkeletonForm";
 import DatePicker from "../../components/form/date-picker";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
@@ -97,106 +98,98 @@ export default function PublicHolidayForm() {
     saveMutation.mutate(formData);
   };
 
-  if (isEditMode && isLoading) {
-    return (
-      <div className="p-6 text-gray-500 dark:text-gray-400">
-        Loading holiday data...
-      </div>
-    );
-  }
-
   return (
     <>
       <PageBreadcrumb pageTitle={isEditMode ? "Edit Holiday" : "Add Holiday"} />
+      <Skeleton loading={isEditMode && isLoading}>
+        <ComponentCard>
+          <form
+            noValidate
+            onSubmit={handleSubmit(onSubmit)}
+            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          >
+            <Input
+              required
+              label="Holiday Title"
+              placeholder="Enter holiday title"
+              {...register("title")}
+              error={!!errors.title}
+              hint={errors.title?.message}
+            />
 
-      <ComponentCard>
-        <form
-          noValidate
-          onSubmit={handleSubmit(onSubmit)}
-          className="grid grid-cols-1 md:grid-cols-2 gap-6"
-        >
-          <Input
-            required
-            label="Holiday Title"
-            placeholder="Enter holiday title"
-            {...register("title")}
-            error={!!errors.title}
-            hint={errors.title?.message}
-          />
+            <Controller
+              name="fromDate"
+              control={control}
+              render={({ field }) => (
+                <DatePicker
+                  placeholder="Select date"
+                  id="fromDate"
+                  label="From Date"
+                  required
+                  value={field.value ? new Date(field.value) : null}
+                  onChange={(dates) => {
+                    field.onChange(
+                      dates?.[0] ? dates[0].toLocaleDateString("en-CA") : "",
+                    );
+                  }}
+                  error={!!errors.fromDate}
+                  hint={errors.fromDate?.message}
+                />
+              )}
+            />
 
-          <Controller
-            name="fromDate"
-            control={control}
-            render={({ field }) => (
-              <DatePicker
-                placeholder="Select date"
-                id="fromDate"
-                label="From Date"
-                required
-                value={field.value ? new Date(field.value) : null}
-                onChange={(dates) => {
-                  field.onChange(
-                    dates?.[0] ? dates[0].toLocaleDateString("en-CA") : "",
-                  );
-                }}
-                error={!!errors.fromDate}
-                hint={errors.fromDate?.message}
-              />
-            )}
-          />
+            <Controller
+              name="toDate"
+              control={control}
+              render={({ field }) => (
+                <DatePicker
+                  placeholder="Select date"
+                  id="toDate"
+                  label="To Date"
+                  required
+                  value={field.value ? new Date(field.value) : null}
+                  onChange={(dates) => {
+                    field.onChange(
+                      dates?.[0] ? dates[0].toLocaleDateString("en-CA") : "",
+                    );
+                  }}
+                  error={!!errors.toDate}
+                  hint={errors.toDate?.message}
+                />
+              )}
+            />
 
-          <Controller
-            name="toDate"
-            control={control}
-            render={({ field }) => (
-              <DatePicker
-                placeholder="Select date"
-                id="toDate"
-                label="To Date"
-                required
-                value={field.value ? new Date(field.value) : null}
-                onChange={(dates) => {
-                  field.onChange(
-                    dates?.[0] ? dates[0].toLocaleDateString("en-CA") : "",
-                  );
-                }}
-                error={!!errors.toDate}
-                hint={errors.toDate?.message}
-              />
-            )}
-          />
+            <Input
+              label="Description"
+              placeholder="Enter holiday description"
+              {...register("description")}
+              error={!!errors.description}
+              hint={errors.description?.message}
+            />
 
-          <Input
-            label="Description"
-            placeholder="Enter holiday description"
-            {...register("description")}
-            error={!!errors.description}
-            hint={errors.description?.message}
-          />
+            <div className="col-span-1 md:col-span-2 flex justify-end gap-3 pt-6">
+              <Button
+                disabled={saveMutation.isPending}
+                className="bg-black dark:bg-blue-500 text-white"
+              >
+                {saveMutation.isPending
+                  ? "Saving..."
+                  : isEditMode
+                    ? "Update"
+                    : "Save"}
+              </Button>
 
-          {/* Buttons full width */}
-          <div className="col-span-1 md:col-span-2 flex justify-end gap-3 pt-6">
-            <Button
-              disabled={saveMutation.isPending}
-              className="bg-black dark:bg-blue-500 text-white"
-            >
-              {saveMutation.isPending
-                ? "Saving..."
-                : isEditMode
-                  ? "Update"
-                  : "Save"}
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate("/holidays")}
-            >
-              Back
-            </Button>
-          </div>
-        </form>
-      </ComponentCard>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate("/holidays")}
+              >
+                Back
+              </Button>
+            </div>
+          </form>
+        </ComponentCard>
+      </Skeleton>
     </>
   );
 }

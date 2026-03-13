@@ -14,6 +14,7 @@ import { getComponentById } from "../../api/get";
 import { addComponent } from "../../api/post";
 import { updateComponent } from "../../api/put";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
+import Skeleton from "../../components/common/SkeletonForm";
 import Button from "../../components/ui/button/Button";
 
 const componentSchema = z.object({
@@ -88,77 +89,70 @@ export default function ComponentForm() {
     saveMutation.mutate(formData);
   };
 
-  if (isEditMode && isLoading) {
-    return (
-      <div className="p-6 text-gray-500 dark:text-gray-400">
-        Loading component...
-      </div>
-    );
-  }
-
   return (
     <>
       <PageBreadcrumb
         pageTitle={isEditMode ? "Edit Component" : "Add Component"}
       />
-
-      <ComponentCard>
-        <form
-          noValidate
-          onSubmit={handleSubmit(onSubmit)}
-          className="space-y-6"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input
-              required
-              label="Component Name"
-              placeholder="Enter component name"
-              {...register("name")}
-              error={!!errors.name}
-              hint={errors.name?.message}
-            />
-
-            <Input
-              required
-              label="Component Code"
-              placeholder="Enter component code"
-              {...register("code")}
-              error={!!errors.code}
-              hint={errors.code?.message}
-            />
-
-            <div className="md:col-span-2">
+      <Skeleton loading={isEditMode && isLoading}>
+        <ComponentCard>
+          <form
+            noValidate
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-6"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Input
-                label="Description"
-                placeholder="Enter description"
-                {...register("description")}
-                error={!!errors.description}
-                hint={errors.description?.message}
+                required
+                label="Component Name"
+                placeholder="Enter component name"
+                {...register("name")}
+                error={!!errors.name}
+                hint={errors.name?.message}
               />
-            </div>
-          </div>
 
-          <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
-            <Button
-              disabled={saveMutation.isPending}
-              className="bg-black dark:bg-blue-500 text-white"
-            >
-              {saveMutation.isPending
-                ? "Saving..."
-                : isEditMode
-                  ? "Update"
-                  : "Save"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate("/components")}
-            >
-              Back
-            </Button>
-          </div>
-        </form>
-      </ComponentCard>
+              <Input
+                required
+                label="Component Code"
+                placeholder="Enter component code"
+                {...register("code")}
+                error={!!errors.code}
+                hint={errors.code?.message}
+              />
+
+              <div className="md:col-span-2">
+                <Input
+                  label="Description"
+                  placeholder="Enter description"
+                  {...register("description")}
+                  error={!!errors.description}
+                  hint={errors.description?.message}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
+              <Button
+                disabled={saveMutation.isPending}
+                className="bg-black dark:bg-blue-500 text-white"
+              >
+                {saveMutation.isPending
+                  ? "Saving..."
+                  : isEditMode
+                    ? "Update"
+                    : "Save"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate("/components")}
+              >
+                Back
+              </Button>
+            </div>
+          </form>
+        </ComponentCard>
+      </Skeleton>
     </>
   );
 }

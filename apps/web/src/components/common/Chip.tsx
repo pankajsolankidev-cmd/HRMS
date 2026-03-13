@@ -1,12 +1,13 @@
 interface ChipProps {
   label: string;
+  className?: string;
 }
 
-export default function Chip({ label }: ChipProps) {
+export default function Chip({ label, className = "" }: ChipProps) {
   return (
     <span
-      className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium
-                 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+      className={`rounded-full px-2.5 py-1 text-xs font-medium
+        ${className}`}
     >
       {label}
     </span>

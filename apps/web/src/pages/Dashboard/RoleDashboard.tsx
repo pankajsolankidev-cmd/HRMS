@@ -13,6 +13,4 @@ export default function RoleDashboard() {
   if (roles.includes("ADMIN") || roles.includes("HR")) {
     return <AdminDashboard />;
   }
-
-  return <div>No dashboard available</div>;
 }

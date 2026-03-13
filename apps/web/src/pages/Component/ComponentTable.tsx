@@ -1,4 +1,4 @@
-import { IconEdit, IconSearch, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { useEffect, useState } from "react";
@@ -97,13 +97,13 @@ export default function ComponentTable() {
       header: "Code",
       accessor: "code",
       cell: (row) => (
-        <div className="text-gray-600 dark:text-gray-400">{row.code}</div>
+        <div className="text-gray-800 dark:text-white/90">{row.code}</div>
       ),
     },
     {
       header: "Description",
       cell: (row) => (
-        <div className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="text-sm text-gray-800 dark:text-white/90">
           {row.description}
         </div>
       ),
@@ -125,10 +125,10 @@ export default function ComponentTable() {
             loading={isPending}
             onConfirm={(id) => removeComponent(id)}
           >
-            {(askDelete) => (
+            {(onDelete) => (
               <IconTrash
                 size={18}
-                onClick={() => askDelete(row.id)}
+                onClick={() => onDelete(row.id)}
                 className="cursor-pointer text-red-600 dark:text-red-400"
               />
             )}
@@ -157,15 +157,15 @@ export default function ComponentTable() {
               />
               {rawSearch && (
                 <Button
-                  size="sm"
+                  size="icon"
                   variant="outline"
                   onClick={() => {
                     setRawSearch("");
                     setSearch(undefined);
                   }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0 rounded-full"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full"
                 >
-                  ✕
+                  <IconX size={16} />
                 </Button>
               )}
             </div>

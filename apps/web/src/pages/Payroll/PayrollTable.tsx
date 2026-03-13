@@ -1,4 +1,4 @@
-import { IconEdit, IconHistory } from "@tabler/icons-react";
+import { IconEdit, IconHistory, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { useEffect, useState } from "react";
@@ -542,7 +542,7 @@ export default function PayrollTable() {
                   className="text-gray-500 hover:text-red-500 transition"
                   onClick={() => setHistoryEmployee(null)}
                 >
-                  ✕
+                  <IconX />
                 </button>
               </div>
 
