@@ -54,6 +54,7 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
     "/leave-requests",
     {
       ...secured,
+      preHandler: [verifyAccessToken],
       schema: { ...secured.schema, ...getAllLeaveRequestsSchema },
     },
     getAllLeaveRequestsHandler,
