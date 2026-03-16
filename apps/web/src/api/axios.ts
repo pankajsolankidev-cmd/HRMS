@@ -1,5 +1,6 @@
 import axios from "axios";
 import Cookies from "js-cookie";
+import createAuthRefreshInterceptor from "axios-auth-refresh";
 import { refreshToken } from "./post";
 
 const api = axios.create({
@@ -9,44 +10,27 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   const token = Cookies.get("access");
-
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-
   return config;
 });
 
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+const refreshAuthLogic = async (failedRequest: any) => {
+  try {
+    const { accessToken } = await refreshToken();
+    Cookies.set("access", accessToken);
+    api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+    failedRequest.response.config.headers["Authorization"] = `Bearer ${accessToken}`;
+    return Promise.resolve();
+  } catch (err) {
+    Cookies.remove("access");
+    Cookies.remove("refresh");
+    window.location.href = "/signin";
+    return Promise.reject(err);
+  }
+};
 
-    const accessToken = Cookies.get("access");
-
-    if (
-      error.response?.status === 401 &&
-      accessToken &&
-      !originalRequest._retry
-    ) {
-      originalRequest._retry = true;
-
-      try {
-        const { accessToken: newAccessToken } = await refreshToken();
-
-        Cookies.set("access", newAccessToken);
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-
-        return api(originalRequest);
-      } catch (err) {
-        Cookies.remove("access");
-        Cookies.remove("refresh");
-        window.location.href = "/signin";
-      }
-    }
-
-    return Promise.reject(error);
-  },
-);
+createAuthRefreshInterceptor(api, refreshAuthLogic);
 
 export default api;

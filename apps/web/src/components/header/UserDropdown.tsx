@@ -60,12 +60,12 @@ export default function UserDropdown() {
   };
   const initials = email
     ? email
-        .split("@")[0]
-        .split(/[\.\_\-]/)
-        .map((word) => word.charAt(0))
-        .join("")
-        .substring(0, 2)
-        .toUpperCase()
+      .split("@")[0]
+      .split(/[\.\_\-]/)
+      .map((word) => word.charAt(0))
+      .join("")
+      .substring(0, 2)
+      .toUpperCase()
     : "US";
 
   return (
@@ -83,9 +83,8 @@ export default function UserDropdown() {
         </span>
         <IconChevronDown
           size={18}
-          className={`text-gray-500 dark:text-gray-400 transition-transform duration-200 ${
-            isOpen ? "rotate-180" : ""
-          }`}
+          className={`text-gray-500 dark:text-gray-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""
+            }`}
         />
       </button>
 
