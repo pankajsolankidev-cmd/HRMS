@@ -40,7 +40,7 @@ import ajvKeywords from "ajv-keywords";
 import Ajv from "ajv";
 
 const app = Fastify({
-  logger: true,
+  logger: false,
   ajv: {
     customOptions: {
       coerceTypes: true,
@@ -149,3 +149,5 @@ async function start() {
 }
 
 start();
+
+export default app;
