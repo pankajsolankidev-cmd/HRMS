@@ -1,5 +1,4 @@
 export * from "./users.schema";
-export * from "./refresh-tokens.schema";
 export * from "./password-reset-tokens.schema";
 export * from "./employees.schema";
 export * from "./systems.schema";

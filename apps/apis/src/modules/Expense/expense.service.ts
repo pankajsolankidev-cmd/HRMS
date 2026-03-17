@@ -151,6 +151,138 @@ export async function createExpenseHandler(
   }
 }
 
+export async function createExpenseDirectHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const body = request.body as CreateExpenseDto;
+  const userId = request.user!.id;
+
+  request.log.info(
+    {
+      action: "CREATE_EXPENSE_DIRECT",
+      expenseType: body.expenseType,
+      amount: body.amount,
+    },
+    "Direct create expense request received",
+  );
+
+  try {
+    const expenseDate = new Date(body.expenseDate);
+
+    if (isNaN(expenseDate.getTime())) {
+      request.log.warn(
+        {
+          action: "CREATE_EXPENSE_DIRECT",
+          expenseDate: body.expenseDate,
+        },
+        "Invalid expense date format",
+      );
+
+      return sendMessage(
+        reply,
+        "Invalid expenseDate. Use format yyyy-mm-dd",
+        400,
+      );
+    }
+
+    expenseDate.setHours(0, 0, 0, 0);
+
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
+    if (expenseDate > today) {
+      request.log.warn(
+        {
+          action: "CREATE_EXPENSE_DIRECT",
+          expenseDate: body.expenseDate,
+        },
+        "Expense date is in the future",
+      );
+
+      return sendMessage(reply, "Expense date cannot be in the future", 400);
+    }
+
+    const [employee] = await db
+      .select({
+        id: employees.id,
+        firstName: employees.firstName,
+        lastName: employees.lastName,
+      })
+      .from(employees)
+      .where(eq(employees.userId, userId));
+
+    if (!employee) {
+      request.log.warn(
+        {
+          action: "CREATE_EXPENSE_DIRECT",
+          userId,
+        },
+        "Employee profile not found",
+      );
+
+      return sendMessage(reply, "Employee profile not found", 400);
+    }
+
+    await db.insert(expenses).values({
+      employeeId: employee.id,
+      expenseType: body.expenseType,
+      amount: body.amount.toFixed(2),
+      expenseDate: body.expenseDate,
+      description: body.description ?? null,
+      file: body.file ?? null,
+      status: "CREATED",
+    });
+
+    const fullName = `${employee.firstName} ${employee.lastName}`;
+    const message = `New expense submitted by ${fullName}`;
+
+    const adminUsers = await db
+      .select({
+        userId: userRoles.userId,
+      })
+      .from(userRoles)
+      .innerJoin(roles, eq(userRoles.roleId, roles.id))
+      .where(or(eq(roles.name, "ADMIN"), eq(roles.name, "HR")));
+
+    for (const admin of adminUsers) {
+      await db.insert(notifications).values({
+        userId: admin.userId,
+        type: "expenses",
+        message,
+      });
+    }
+
+    const io = getIO();
+
+    io.to("admin_room").emit("new_notification", {
+      message,
+    });
+
+    request.log.info(
+      {
+        action: "CREATE_EXPENSE_DIRECT",
+        employeeId: employee.id,
+        amount: body.amount,
+      },
+      "Expense created directly with CREATED status",
+    );
+
+    return sendMessage(reply, "Expense created successfully", 201);
+  } catch (err: any) {
+    request.log.error(
+      {
+        action: "CREATE_EXPENSE_DIRECT",
+        err,
+        userId,
+      },
+      "Unexpected error while creating expense",
+    );
+
+    return sendMessage(reply, "Unable to create expense", 400);
+  }
+}
+
 export async function getExpensesHandler(
   request: FastifyRequest,
   reply: FastifyReply,
@@ -251,7 +383,13 @@ export async function getExpensesHandler(
     }
 
     let queryBuilder = db
-      .select()
+      .select({
+        expenses,
+        employee: {
+          firstName: employees.firstName,
+          lastName: employees.lastName,
+        },
+      })
       .from(expenses)
       .innerJoin(employees, eq(expenses.employeeId, employees.id))
       .where(
@@ -507,9 +645,9 @@ export async function updateExpenseHandler(
     };
 
     if (body.amount !== undefined) {
-      const amount = Number(body.amount);
+      const amount = parseFloat(String(body.amount));
 
-      if (isNaN(amount)) {
+      if (Number.isNaN(amount)) {
         return reply.code(400).send({
           message: "Amount must be a valid number",
         });
@@ -517,7 +655,6 @@ export async function updateExpenseHandler(
 
       updateData.amount = amount.toFixed(2);
     }
-
     Object.keys(updateData).forEach(
       (key) => updateData[key] === undefined && delete updateData[key],
     );

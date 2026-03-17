@@ -4,6 +4,8 @@ import {
   getOrganizationHandler,
 } from "./organization.service";
 import { verifyAccessToken } from "../../middlewares/auth.middlewares";
+import { authorize } from "../../middlewares/authorize.middleware";
+import { PERMISSIONS } from "../../db/schema/permissions.enums";
 import {
   getOrganizationSchema,
   upsertOrganizationSchema,
@@ -11,9 +13,9 @@ import {
 
 export default async function organizationRoutes(app: FastifyInstance) {
   const secured = {
-    preHandler: [verifyAccessToken],
     schema: {
       security: [{ bearerAuth: [] }],
+      tags: ["Organization"],
     },
   };
 
@@ -21,6 +23,10 @@ export default async function organizationRoutes(app: FastifyInstance) {
     "/organization",
     {
       ...secured,
+      preHandler: [
+        verifyAccessToken,
+        authorize(PERMISSIONS.ORGANIZATION_UPDATE),
+      ],
       schema: {
         ...secured.schema,
         ...upsertOrganizationSchema,
@@ -33,6 +39,7 @@ export default async function organizationRoutes(app: FastifyInstance) {
     "/organization",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.ORGANIZATION_VIEW)],
       schema: {
         ...secured.schema,
         ...getOrganizationSchema,

@@ -43,55 +43,49 @@ async function seed() {
     allPermissions.map((p) => [p.name, p.id]),
   );
 
+  const ALL_PERMS = Object.values(PERMISSIONS);
+
   const rolePermissionMap: Record<string, string[]> = {
     [ROLES.EMPLOYEE]: [
       PERMISSIONS.LEAVE_CREATE,
-
       PERMISSIONS.EXPENSE_CREATE,
-     
       PERMISSIONS.EXPENSE_SUBMIT,
+      PERMISSIONS.DASHBOARD_VIEW_EMPLOYEE,
+      PERMISSIONS.HOLIDAY_VIEW,
+      PERMISSIONS.PROJECT_VIEW,
     ],
 
-    [ROLES.HR]: [
-      PERMISSIONS.LEAVE_VIEW_ALL,
-      PERMISSIONS.LEAVE_UPDATE_ALL,
-      PERMISSIONS.LEAVE_DELETE_ALL,
-      PERMISSIONS.LEAVE_APPROVE,
-
-      PERMISSIONS.EXPENSE_VIEW_ALL,
-      PERMISSIONS.EXPENSE_UPDATE_ALL,
-      PERMISSIONS.EXPENSE_DELETE_ALL,
-      PERMISSIONS.EXPENSE_APPROVE,
-      PERMISSIONS.EXPENSE_VIEW_SUMMARY,
-
-      PERMISSIONS.EMPLOYEE_VIEW,
-      PERMISSIONS.EMPLOYEE_UPDATE,
-
-      PERMISSIONS.LEAVE_CREATE,
-     
-    ],
-
-    [ROLES.ADMIN]: Object.values(PERMISSIONS),
+    [ROLES.HR]: ALL_PERMS,
+    [ROLES.ADMIN]: ALL_PERMS,
   };
 
   for (const roleName in rolePermissionMap) {
     const roleId = roleMap[roleName];
+    if (!roleId) continue;
+
+    const targetPermNames = rolePermissionMap[roleName];
+    const targetPermIds = targetPermNames.map((name) => permissionMap[name]);
 
     const existingRolePerms = await db
       .select()
       .from(rolePermissions)
       .where(eq(rolePermissions.roleId, roleId));
 
-    for (const permName of rolePermissionMap[roleName]) {
-      const permissionId = permissionMap[permName];
+    const existingPermIds = new Set(
+      existingRolePerms.map((rp) => rp.permissionId),
+    );
 
-      if (!existingRolePerms.find((rp) => rp.permissionId === permissionId)) {
+    for (const permissionId of targetPermIds) {
+      if (!existingPermIds.has(permissionId)) {
         await db.insert(rolePermissions).values({
           roleId,
           permissionId,
         });
 
-        console.log(`🔗 Mapped ${roleName} → ${permName}`);
+        const pName = Object.keys(permissionMap).find(
+          (key) => permissionMap[key] === permissionId,
+        );
+        console.log(`🔗 Mapped ${roleName} → ${pName}`);
       }
     }
   }
@@ -99,6 +93,7 @@ async function seed() {
   console.log("🌱 Seeding completed successfully");
   process.exit(0);
 }
+
 seed().catch((err) => {
   console.error("❌ Seeding failed", err);
   process.exit(1);

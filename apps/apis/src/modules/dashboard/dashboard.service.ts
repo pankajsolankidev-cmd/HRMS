@@ -11,7 +11,7 @@ import {
 } from "../../db/schema";
 import { expenses } from "../../db/schema/expenses";
 import { LeaveStatus } from "../../db/schema/leave.enums";
-import { hasAnyRole } from "../../utils/role.utils";
+import { hasContainedRole } from "../../utils/role.utils";
 import { holidays } from "../../db/schema/holidays.schema";
 export async function getDashboardSummaryHandler(
   request: FastifyRequest,
@@ -41,7 +41,7 @@ export async function getDashboardSummaryHandler(
       .map((r) => r.roleName)
       .filter((role): role is string => role !== null);
 
-    const isHRorAdmin = hasAnyRole(roleNames, ["HR", "ADMIN"]);
+    const isHRorAdmin = hasContainedRole(roleNames, ["HR", "ADMIN"]);
 
     if (!isHRorAdmin) {
       return reply.code(403).send({

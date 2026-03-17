@@ -9,7 +9,6 @@ import {
   users,
   userRoles,
   roles,
-  refreshTokens,
   departments,
   systems,
   components,

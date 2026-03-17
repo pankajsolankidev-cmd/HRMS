@@ -2,7 +2,14 @@ import dotenv from "dotenv";
 
 dotenv.config({ path: ".env" });
 
-import Fastify from "fastify";
+import Fastify, { FastifyInstance } from "fastify";
+import { Redis } from "ioredis";
+
+declare module "fastify" {
+  interface FastifyInstance {
+    redis: Redis;
+  }
+}
 import cors from "@fastify/cors";
 import swagger from "@fastify/swagger";
 import swaggerUI from "@fastify/swagger-ui";
@@ -57,7 +64,7 @@ app.register(fastifyMultipart, {
 });
 
 app.register(cors, {
-  origin: ["http://localhost:5173", "http://192.168.1.35:5173"],
+  origin: ["http://localhost:5173", "http://192.168.1.34:5173"],
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 });
@@ -112,6 +119,17 @@ app.register(holidayRoutes);
 
 app.get("/health", async () => {
   return { status: "API is running 🚀" };
+});
+
+app.get("/redis-test", async (request, reply) => {
+  await app.redis.set("hrms:test", "working");
+
+  const value = await app.redis.get("hrms:test");
+
+  return {
+    message: "Redis test success",
+    value,
+  };
 });
 
 async function start() {
