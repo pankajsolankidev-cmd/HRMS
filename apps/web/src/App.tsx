@@ -52,25 +52,6 @@ import { getSession } from "./api/get";
 import Cookies from "js-cookie";
 
 function AppRoutes() {
-  useSocket();
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    const loadSession = async () => {
-      const accessToken = Cookies.get("access");
-
-      if (!accessToken) return;
-
-      try {
-        const data = await getSession();
-        dispatch(setAuth(data));
-      } catch {
-        dispatch(setAuth(null));
-      }
-    };
-
-    loadSession();
-  }, [dispatch]);
 
   return (
     <Routes>
@@ -161,6 +142,25 @@ function AnimatedRoutes() {
 }
 
 export default function App() {
+  useSocket();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const loadSession = async () => {
+      const accessToken = Cookies.get("access");
+
+      if (!accessToken) return;
+
+      try {
+        const data = await getSession();
+        dispatch(setAuth(data));
+      } catch {
+        dispatch(setAuth(null));
+      }
+    };
+
+    loadSession();
+  }, [dispatch]);
   return (
     <Router>
       <Toaster
