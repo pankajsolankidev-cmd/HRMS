@@ -62,16 +62,24 @@ export async function verifyAccessToken(
       });
     }
 
-    const cached = await redis.get(`rbac:${decoded.id}`);
+    const roles: string[] = (decoded as any).roles || [];
 
-    let roles: string[] = [];
-    let permissions: string[] = [];
+    const permissionSet = new Set<string>();
 
-    if (cached) {
-      const data = JSON.parse(cached);
-      roles = data.roles ?? [];
-      permissions = data.permissions ?? [];
+    for (const role of roles) {
+      const key = `role_permission_${role.toLowerCase()}`;
+
+      const data = await redis.get(key);
+      if (!data) continue;
+
+      const perms: string[] = JSON.parse(data);
+
+      for (const p of perms) {
+        permissionSet.add(p);
+      }
     }
+
+    const permissions = Array.from(permissionSet);
 
     request.user = {
       id: decoded.id,

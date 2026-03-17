@@ -27,6 +27,7 @@ function generateAccessToken(payload: {
   id: string;
   email?: string;
   username?: string;
+  roles: string[];
 }) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: "1m" });
 }
@@ -96,19 +97,22 @@ export default async function authRoutes(app: FastifyInstance) {
         id: user.id,
         email: user.email,
         username: user.username,
+        roles: rolesArr,
       });
 
       const refreshToken = generateRefreshToken({
         id: user.id,
       });
 
-      await redis.set(
-        `rbac:${user.id}`,
-        JSON.stringify({
-          roles: rolesArr,
-          permissions: permissionsArr,
-        }),
-      );
+      for (const role of rolesArr) {
+        const roleKey = `role_permission_${role.toLowerCase()}`;
+
+        const rolePermissions = rows
+          .filter((r) => r.roleName === role)
+          .map((r) => r.permissionName);
+
+        await redis.set(roleKey, JSON.stringify(rolePermissions));
+      }
 
       return reply.send({
         id: user.id,
@@ -149,19 +153,27 @@ export default async function authRoutes(app: FastifyInstance) {
           return reply.status(401).send({ error: "User not found" });
         }
 
-        const cached = await redis.get(`rbac:${authUser.id}`);
+        const roles: string[] = authUser.roles || [];
+        const permissionSet = new Set<string>();
+        for (const role of roles) {
+          const key = `role_permission_${role.toLowerCase()}`;
 
-        let roles: string[] = [];
-        let permissions: string[] = [];
+          const data = await redis.get(key);
+          if (!data) continue;
 
-        if (cached) {
-          const data = JSON.parse(cached);
-          roles = data.roles ?? [];
-          permissions = data.permissions ?? [];
+          const permissions: string[] = JSON.parse(data);
+
+          for (const p of permissions) {
+            permissionSet.add(p);
+          }
         }
 
+        const permissions = Array.from(permissionSet);
+
         return reply.send({
-          user,
+          id: user.id,
+          email: user.email,
+          username: user.username,
           roles,
           permissions,
         });
@@ -184,25 +196,48 @@ export default async function authRoutes(app: FastifyInstance) {
 
       const decoded = jwt.verify(refreshToken, JWT_SECRET) as { id: string };
 
-      const cached = await redis.get(`rbac:${decoded.id}`);
+      const rows = await db
+        .select({
+          roleName: roles.name,
+        })
+        .from(userRoles)
+        .innerJoin(roles, eq(userRoles.roleId, roles.id))
+        .where(eq(userRoles.userId, decoded.id));
 
-      let roles: string[] = [];
-      let permissions: string[] = [];
+      const roleSet = new Set<string>();
 
-      if (cached) {
-        const data = JSON.parse(cached);
-        roles = data.roles ?? [];
-        permissions = data.permissions ?? [];
+      for (const row of rows) {
+        if (row.roleName) roleSet.add(row.roleName);
       }
+
+      const rolesArr = Array.from(roleSet);
+
+      const permissionSet = new Set<string>();
+
+      for (const role of rolesArr) {
+        const key = `role_permission_${role.toLowerCase()}`;
+
+        const data = await redis.get(key);
+        if (!data) continue;
+
+        const permissions: string[] = JSON.parse(data);
+
+        for (const p of permissions) {
+          permissionSet.add(p);
+        }
+      }
+
+      const permissionsArr = Array.from(permissionSet);
 
       const newAccessToken = generateAccessToken({
         id: decoded.id,
+        roles: rolesArr,
       });
 
       return reply.send({
         accessToken: newAccessToken,
-        roles,
-        permissions,
+        roles: rolesArr,
+        permissions: permissionsArr,
       });
     } catch (error) {
       return reply.status(401).send({ error: "Invalid refresh token" });
