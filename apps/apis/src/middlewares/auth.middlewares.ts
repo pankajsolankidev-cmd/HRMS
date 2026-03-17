@@ -62,24 +62,26 @@ export async function verifyAccessToken(
       });
     }
 
-    const session = await redis.get(`auth:${decoded.id}`);
+    const cached = await redis.get(`rbac:${decoded.id}`);
 
-    if (!session) {
-      return reply.status(401).send({
-        error: "Session expired",
-      });
+    let roles: string[] = [];
+    let permissions: string[] = [];
+
+    if (cached) {
+      const data = JSON.parse(cached);
+      roles = data.roles ?? [];
+      permissions = data.permissions ?? [];
     }
-
-    const data = JSON.parse(session);
 
     request.user = {
       id: decoded.id,
-      email: data.email,
-      roles: data.roles ?? [],
-      permissions: data.permissions ?? [],
+      roles,
+      permissions,
       iat: decoded.iat ?? 0,
       exp: decoded.exp ?? 0,
     };
+
+    return;
   } catch {
     return reply.status(401).send({
       error: "Invalid or expired token",
