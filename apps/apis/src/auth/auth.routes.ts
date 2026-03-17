@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, is } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
@@ -27,8 +27,9 @@ function generateAccessToken(payload: {
   id: string;
   email?: string;
   username?: string;
+  roles: string[];
 }) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "15m" });
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: "1m" });
 }
 
 function generateRefreshToken(payload: { id: string }) {
@@ -52,9 +53,10 @@ export default async function authRoutes(app: FastifyInstance) {
           email: users.email,
           username: users.username,
           password: users.password,
+          isActive: users.isActive,
         })
         .from(users)
-        .where(eq(users.email, email));
+        .where(and(eq(users.email, email), eq(users.isActive, true)));
 
       if (!user) {
         return reply.status(401).send({ error: "Invalid credentials" });
@@ -95,25 +97,22 @@ export default async function authRoutes(app: FastifyInstance) {
         id: user.id,
         email: user.email,
         username: user.username,
+        roles: rolesArr,
       });
 
       const refreshToken = generateRefreshToken({
         id: user.id,
       });
 
-      await redis.set(
-        `auth:${user.id}`,
-        JSON.stringify({
-          id: user.id,
-          roles: rolesArr,
-          permissions: permissionsArr,
-          refreshToken,
-          email: user.email,
-          username: user.username,
-        }),
-        "EX",
-        60 * 60 * 24 * 7,
-      );
+      for (const role of rolesArr) {
+        const roleKey = `role_permission_${role.toLowerCase()}`;
+
+        const rolePermissions = rows
+          .filter((r) => r.roleName === role)
+          .map((r) => r.permissionName);
+
+        await redis.set(roleKey, JSON.stringify(rolePermissions));
+      }
 
       return reply.send({
         id: user.id,
@@ -154,18 +153,29 @@ export default async function authRoutes(app: FastifyInstance) {
           return reply.status(401).send({ error: "User not found" });
         }
 
-        const session = await redis.get(`auth:${authUser.id}`);
+        const roles: string[] = authUser.roles || [];
+        const permissionSet = new Set<string>();
+        for (const role of roles) {
+          const key = `role_permission_${role.toLowerCase()}`;
 
-        if (!session) {
-          return reply.status(401).send({ error: "Session expired" });
+          const data = await redis.get(key);
+          if (!data) continue;
+
+          const permissions: string[] = JSON.parse(data);
+
+          for (const p of permissions) {
+            permissionSet.add(p);
+          }
         }
 
-        const data = JSON.parse(session);
+        const permissions = Array.from(permissionSet);
 
         return reply.send({
-          user,
-          roles: data.roles,
-          permissions: data.permissions,
+          id: user.id,
+          email: user.email,
+          username: user.username,
+          roles,
+          permissions,
         });
       } catch (error) {
         request.log.error(error);
@@ -186,33 +196,54 @@ export default async function authRoutes(app: FastifyInstance) {
 
       const decoded = jwt.verify(refreshToken, JWT_SECRET) as { id: string };
 
-      const session = await redis.get(`auth:${decoded.id}`);
+      const rows = await db
+        .select({
+          roleName: roles.name,
+        })
+        .from(userRoles)
+        .innerJoin(roles, eq(userRoles.roleId, roles.id))
+        .where(eq(userRoles.userId, decoded.id));
 
-      if (!session) {
-        return reply.status(401).send({ error: "Session expired" });
+      const roleSet = new Set<string>();
+
+      for (const row of rows) {
+        if (row.roleName) roleSet.add(row.roleName);
       }
 
-      const data = JSON.parse(session);
+      const rolesArr = Array.from(roleSet);
 
-      if (data.refreshToken !== refreshToken) {
-        return reply.status(401).send({ error: "Invalid refresh token" });
+      const permissionSet = new Set<string>();
+
+      for (const role of rolesArr) {
+        const key = `role_permission_${role.toLowerCase()}`;
+
+        const data = await redis.get(key);
+        if (!data) continue;
+
+        const permissions: string[] = JSON.parse(data);
+
+        for (const p of permissions) {
+          permissionSet.add(p);
+        }
       }
+
+      const permissionsArr = Array.from(permissionSet);
 
       const newAccessToken = generateAccessToken({
         id: decoded.id,
-        email: data.email,
-        username: data.username,
+        roles: rolesArr,
       });
 
       return reply.send({
         accessToken: newAccessToken,
-        roles: data.roles,
-        permissions: data.permissions,
+        roles: rolesArr,
+        permissions: permissionsArr,
       });
     } catch (error) {
       return reply.status(401).send({ error: "Invalid refresh token" });
     }
   });
+
   app.post(
     "/auth/logout",
     { preHandler: [verifyAccessToken] },
@@ -223,8 +254,6 @@ export default async function authRoutes(app: FastifyInstance) {
         if (!user?.id) {
           return reply.status(401).send({ error: "Unauthorized" });
         }
-
-        await redis.del(`auth:${user.id}`);
 
         return reply.send({ message: "Logged out successfully" });
       } catch (error) {

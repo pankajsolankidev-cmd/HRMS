@@ -15,6 +15,7 @@ export default async function profileRoutes(app: FastifyInstance) {
     "/profile",
     {
       ...secured,
+      preHandler: [verifyAccessToken],
       schema: {
         ...secured.schema,
         ...getProfileSchema,

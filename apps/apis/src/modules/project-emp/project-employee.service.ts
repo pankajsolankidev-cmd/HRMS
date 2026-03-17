@@ -6,7 +6,8 @@ import { employees } from "../../db/schema/employees.schema";
 import { sendMessage } from "../../utils/api-response";
 import { AssignProjectEmployeesDto } from "@shared/types/src/Assign-Project-Employees/assign-project-employees.dto";
 import { projectEmployees } from "../../db/schema";
-import { hasAnyRole } from "../../utils/role.utils";
+import { hasContainedRole } from "../../utils/role.utils";
+
 
 export async function assignEmployeesToProjectHandler(
   request: FastifyRequest,
@@ -17,7 +18,7 @@ export async function assignEmployeesToProjectHandler(
 
   const user = request.user as { roles?: string[] };
 
-  if (!hasAnyRole(user.roles, ["HR", "ADMIN"])) {
+  if (!hasContainedRole(user.roles, ["HR", "ADMIN"])) {
     return reply.status(403).send({
       message: "Only HR or ADMIN can assign employees to a project",
     });

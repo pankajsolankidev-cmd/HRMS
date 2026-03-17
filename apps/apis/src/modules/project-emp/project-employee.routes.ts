@@ -13,12 +13,14 @@ import {
 } from "./project-employee.schema";
 
 import { verifyAccessToken } from "../../middlewares/auth.middlewares";
+import { authorize } from "../../middlewares/authorize.middleware";
+import { PERMISSIONS } from "../../db/schema/permissions.enums";
 
 export default async function projectEmployeeRoutes(app: FastifyInstance) {
   const secured = {
-    preHandler: [verifyAccessToken],
     schema: {
       security: [{ bearerAuth: [] }],
+      tags: ["Project Assignments"],
     },
   };
 
@@ -26,6 +28,7 @@ export default async function projectEmployeeRoutes(app: FastifyInstance) {
     "/projects/:id/employees",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.PROJECT_ASSIGN)],
       schema: {
         ...secured.schema,
         ...assignProjectEmployeesSchema,
@@ -38,6 +41,7 @@ export default async function projectEmployeeRoutes(app: FastifyInstance) {
     "/projects/:id/employees",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.PROJECT_VIEW)],
       schema: {
         ...secured.schema,
         ...getProjectEmployeesSchema,
@@ -50,6 +54,7 @@ export default async function projectEmployeeRoutes(app: FastifyInstance) {
     "/projects/:id/employees/:employeeId",
     {
       ...secured,
+      preHandler: [verifyAccessToken, authorize(PERMISSIONS.PROJECT_ASSIGN)],
       schema: {
         ...secured.schema,
         ...removeProjectEmployeeSchema,

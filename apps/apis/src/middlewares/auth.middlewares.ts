@@ -62,24 +62,34 @@ export async function verifyAccessToken(
       });
     }
 
-    const session = await redis.get(`auth:${decoded.id}`);
+    const roles: string[] = (decoded as any).roles || [];
 
-    if (!session) {
-      return reply.status(401).send({
-        error: "Session expired",
-      });
+    const permissionSet = new Set<string>();
+
+    for (const role of roles) {
+      const key = `role_permission_${role.toLowerCase()}`;
+
+      const data = await redis.get(key);
+      if (!data) continue;
+
+      const perms: string[] = JSON.parse(data);
+
+      for (const p of perms) {
+        permissionSet.add(p);
+      }
     }
 
-    const data = JSON.parse(session);
+    const permissions = Array.from(permissionSet);
 
     request.user = {
       id: decoded.id,
-      email: data.email,
-      roles: data.roles ?? [],
-      permissions: data.permissions ?? [],
+      roles,
+      permissions,
       iat: decoded.iat ?? 0,
       exp: decoded.exp ?? 0,
     };
+
+    return;
   } catch {
     return reply.status(401).send({
       error: "Invalid or expired token",
