@@ -30,7 +30,7 @@ const UserProfile = () => {
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 flex items-center justify-between">
             <div className="flex items-center gap-6">
               <div className="w-20 h-20 rounded-full bg-indigo-600 text-white flex items-center justify-center text-2xl font-bold shadow-md">
-                {initials?.toUpperCase()}
+                {initials}
               </div>
 
               <div>
@@ -123,11 +123,10 @@ const UserProfile = () => {
                 <div className="flex justify-between">
                   <span className="text-gray-500">Generate Offer Letter</span>
                   <span
-                    className={`font-medium ${
-                      employee?.documents?.generateOfferLetter
+                    className={`font-medium ${employee?.documents?.generateOfferLetter
                         ? "text-green-600"
                         : "text-red-500"
-                    }`}
+                      }`}
                   >
                     {employee?.documents?.generateOfferLetter ? "Yes" : "No"}
                   </span>
@@ -138,11 +137,10 @@ const UserProfile = () => {
                     Generate Appointment Letter
                   </span>
                   <span
-                    className={`font-medium ${
-                      employee?.documents?.generateAppointmentLetter
+                    className={`font-medium ${employee?.documents?.generateAppointmentLetter
                         ? "text-green-600"
                         : "text-red-500"
-                    }`}
+                      }`}
                   >
                     {employee?.documents?.generateAppointmentLetter
                       ? "Yes"

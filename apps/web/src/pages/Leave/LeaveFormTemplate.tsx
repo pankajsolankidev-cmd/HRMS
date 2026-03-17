@@ -201,7 +201,7 @@ export default function LeaveForm({
             <DatePicker
               id="fromDate"
               disableFuture={showEmployeeSelect}
-              disablePast={!showEmployeeSelect}
+              disablePast={false}
               placeholder="Select from date"
               required
               label="From Date"
@@ -227,7 +227,7 @@ export default function LeaveForm({
               <DatePicker
                 id="toDate"
                 disableFuture={showEmployeeSelect}
-                disablePast={!showEmployeeSelect}
+                disablePast={false}
                 placeholder="Select to date"
                 required
                 label="To Date"

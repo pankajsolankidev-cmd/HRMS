@@ -192,3 +192,7 @@ export const downloadHolidayTemplate = async () => {
   });
   return response.data;
 };
+export const getSession = async () => {
+  const res = await api.get("/auth/session");
+  return res.data;
+};

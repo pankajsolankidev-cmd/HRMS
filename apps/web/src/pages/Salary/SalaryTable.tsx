@@ -71,9 +71,9 @@ export default function SalaryTable() {
     placeholderData: (prev) => prev,
   });
   const tableData =
-    data?.data.map(({ salary, employees }: any) => ({
+    data?.data.map(({ salary, employee }: any) => ({
       ...salary,
-      employeeName: `${employees.firstName} ${employees.lastName}`,
+      employeeName: `${employee.firstName} ${employee.lastName}`,
     })) ?? [];
 
   const total = data?.meta?.total ?? 0;

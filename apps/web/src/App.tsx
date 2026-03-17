@@ -48,17 +48,10 @@ import SalaryTable from "./pages/Salary/SalaryTable";
 import SystemForm from "./pages/System/SystemForm";
 import SystemTable from "./pages/System/SystemTable";
 import UserProfile from "./pages/UserProfile/UserProfile";
+import { getSession } from "./api/get";
+import Cookies from "js-cookie";
 
 function AppRoutes() {
-  useSocket();
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    const savedAuth = localStorage.getItem("auth");
-    if (savedAuth) {
-      dispatch(setAuth(JSON.parse(savedAuth)));
-    }
-  }, [dispatch]);
 
   return (
     <Routes>
@@ -149,6 +142,25 @@ function AnimatedRoutes() {
 }
 
 export default function App() {
+  useSocket();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const loadSession = async () => {
+      const accessToken = Cookies.get("access");
+
+      if (!accessToken) return;
+
+      try {
+        const data = await getSession();
+        dispatch(setAuth(data));
+      } catch {
+        dispatch(setAuth(null));
+      }
+    };
+
+    loadSession();
+  }, [dispatch]);
   return (
     <Router>
       <Toaster

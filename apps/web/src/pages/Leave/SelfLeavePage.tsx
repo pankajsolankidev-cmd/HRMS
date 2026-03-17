@@ -39,7 +39,7 @@ export default function SelfLeavePage() {
     onError: (error: any) => {
       toast.error(
         error?.response?.data?.message ??
-          "Something went wrong. Please try again.",
+        "Something went wrong. Please try again.",
       );
     },
   });
@@ -54,15 +54,16 @@ export default function SelfLeavePage() {
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(
         error?.response?.data?.message ??
-          "Something went wrong. Please try again.",
+        "Something went wrong. Please try again.",
       );
     },
   });
 
   const leave = data?.leave;
 
-  const defaultValues: Partial<LeaveFormData> | undefined = isEditMode
-    ? {
+  const defaultValues: Partial<LeaveFormData> | undefined =
+    isEditMode && leave
+      ? {
         fromDate: leave.fromDate,
         toDate: leave.toDate,
         type: leave.type,
@@ -73,7 +74,7 @@ export default function SelfLeavePage() {
         fromHourType: leave.fromHour === 4 ? "first_half" : "full_day",
         toHourType: leave.toHour === 4 ? "first_half" : "full_day",
       }
-    : undefined;
+      : undefined;
 
   const handleSubmit = (data: LeaveFormData) => {
     const payload = mapFormToAddLeavePayload(data);
