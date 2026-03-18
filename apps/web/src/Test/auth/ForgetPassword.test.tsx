@@ -1,14 +1,14 @@
 import { forgetPassword } from "@/api/post";
+import ForgetPassword from "@/pages/auth/ForgetPassword";
 import { screen, waitFor } from "@testing-library/react";
 import { toast } from "react-hot-toast";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import ForgetPassword from "../../pages/auth/ForgetPassword";
 import {
   clickButton,
   mockPending,
   renderWithProviders,
   typeInput,
-} from "./AuthUtils";
+} from "../AuthUtils";
 
 vi.mock("@/api/post", () => ({
   forgetPassword: vi.fn(),

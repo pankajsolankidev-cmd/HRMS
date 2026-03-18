@@ -1,16 +1,16 @@
 import { signInApi } from "@/api/post";
+import SignInForm from "@/pages/auth/SignInForm";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Cookies from "js-cookie";
 import { toast } from "react-hot-toast";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import SignInForm from "../../pages/auth/SignInForm";
 import {
   clickButton,
   mockPending,
   renderWithProviders,
   typeInput,
-} from "./AuthUtils";
+} from "../AuthUtils";
 
 vi.mock("@/api/post", () => ({
   signInApi: vi.fn(),

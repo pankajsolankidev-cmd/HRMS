@@ -1,14 +1,14 @@
 import { resetPassword } from "@/api/post";
+import ResetPassword from "@/pages/auth/ResetPassword";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import ResetPassword from "../../pages/auth/ResetPassword";
 import {
   clickButton,
   mockPending,
   renderWithProviders,
   typeInput,
-} from "./AuthUtils";
+} from "../AuthUtils";
 
 vi.mock("@/api/post", () => ({
   resetPassword: vi.fn(),
