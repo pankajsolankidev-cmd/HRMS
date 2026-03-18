@@ -11,9 +11,9 @@ export default mergeConfig(
       coverage: {
         provider: "v8",
         reporter: ["text", "json", "html"],
-        include: ["src/pages/Component/**/*.{ts,tsx}"],
+        include: ["src/pages/**/*.{ts,tsx}"],
         exclude: ["**/*.test.tsx", "**/*.spec.tsx"],
       },
     },
-  })
+  }),
 );
