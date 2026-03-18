@@ -1,11 +1,10 @@
 import { deleteSystem } from "@/api/delete";
 import { getSystems } from "@/api/get";
 import SystemTable from "@/pages/System/SystemTable";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { BrowserRouter } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { renderWithProviders } from "../AuthUtils";
 
 vi.mock("@/api/get", () => ({
   getSystems: vi.fn(),
@@ -41,21 +40,6 @@ vi.mock("react-router", async () => {
     useNavigate: () => mockNavigate,
   };
 });
-
-const createQueryClient = () =>
-  new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-    },
-  });
-
-const renderWithProviders = (ui: React.ReactElement) => {
-  return render(
-    <QueryClientProvider client={createQueryClient()}>
-      <BrowserRouter>{ui}</BrowserRouter>
-    </QueryClientProvider>,
-  );
-};
 
 describe("SystemTable", () => {
   beforeEach(() => {
@@ -100,10 +84,13 @@ describe("SystemTable", () => {
   });
 
   it("navigate to edit page", async () => {
-    renderWithProviders(<SystemTable />);
+    const { container } = renderWithProviders(<SystemTable />);
 
-    const icons = await screen.findAllByRole("img");
-    fireEvent.click(icons[0]);
+    await screen.findByText("System A");
+
+    const editIcon = container.querySelector(".tabler-icon-edit");
+
+    fireEvent.click(editIcon!);
 
     expect(mockNavigate).toHaveBeenCalledWith("/systems/1");
   });
@@ -111,10 +98,13 @@ describe("SystemTable", () => {
   it("delete system", async () => {
     (deleteSystem as any).mockResolvedValue({ message: "Deleted" });
 
-    renderWithProviders(<SystemTable />);
+    const { container } = renderWithProviders(<SystemTable />);
 
-    const icons = await screen.findAllByRole("img");
-    fireEvent.click(icons[1]);
+    await screen.findByText("System A");
+
+    const deleteIcon = container.querySelector(".tabler-icon-trash");
+
+    fireEvent.click(deleteIcon!);
 
     await waitFor(() => {
       expect(deleteSystem).toHaveBeenCalled();
