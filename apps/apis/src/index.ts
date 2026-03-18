@@ -132,6 +132,10 @@ app.get("/redis-test", async (request, reply) => {
   };
 });
 
+if (process.env.NODE_ENV !== "test") {
+  start();
+}
+
 async function start() {
   try {
     await app.listen({
@@ -147,7 +151,5 @@ async function start() {
     process.exit(1);
   }
 }
-
-start();
 
 export default app;
