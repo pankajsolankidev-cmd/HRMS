@@ -3,7 +3,7 @@ import UserProfile from "@/pages/UserProfile/UserProfile";
 import { screen, waitFor } from "@testing-library/react";
 import toast from "react-hot-toast";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { renderWithProviders } from "../AuthUtils"; // your common file
+import { renderWithProviders } from "../AuthUtils";
 
 vi.mock("@/api/get", () => ({
   getProfile: vi.fn(),
