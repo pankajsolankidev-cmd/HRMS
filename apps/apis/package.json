@@ -7,7 +7,9 @@
     "dev": "ts-node-dev src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
@@ -23,6 +25,7 @@
     "@fastify/multipart": "^9.3.0",
     "@fastify/redis": "^7.2.0",
     "@fastify/sensible": "^6.0.4",
+    "@fastify/static": "^9.0.0",
     "@fastify/swagger": "^9.6.1",
     "@fastify/swagger-ui": "^5.2.3",
     "@shared/types": "workspace:*",
@@ -53,8 +56,12 @@
     "@types/node": "^24.10.4",
     "@types/pdfkit": "^0.17.5",
     "@types/pg": "^8.16.0",
+    "@types/supertest": "^7.2.0",
+    "@vitest/coverage-v8": "^4.1.0",
     "drizzle-kit": "^0.31.8",
+    "supertest": "^7.2.2",
     "ts-node-dev": "^2.0.0",
-    "typescript": "~5.9.3"
+    "typescript": "~5.9.3",
+    "vitest": "^4.1.0"
   }
 }
