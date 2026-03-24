@@ -64,12 +64,20 @@ app.register(fastifyMultipart, {
 });
 
 app.register(cors, {
-  origin: ["http://localhost:5173", "http://192.168.1.34:5173"],
+  origin: ["http://localhost:5173", "http://192.168.1.35:5173"],
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 });
 
 app.register(cookie);
+
+import fastifyStatic from "@fastify/static";
+import path from "path";
+
+app.register(fastifyStatic, {
+  root: path.join(process.cwd(), "storage"),
+  prefix: "/files/",
+});
 
 app.register(swagger, {
   openapi: {
@@ -150,6 +158,10 @@ async function start() {
     app.log.error(err);
     process.exit(1);
   }
+}
+
+if (process.env.NODE_ENV !== "test") {
+  start();
 }
 
 export default app;

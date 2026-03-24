@@ -12,6 +12,14 @@ import * as XLSX from "xlsx";
 import PDFDocument from "pdfkit";
 import { PassThrough } from "stream";
 import { organization } from "../../db/schema";
+import {
+  ensureStorageDir,
+  FILE_NAME,
+  FILE_PATH,
+  fileExists,
+} from "../../utils/pdf-storage";
+import fs from "fs";
+import { deleteFileIfExists } from "../../utils/pdf-storage";
 
 function parseExcelDate(value: any): string | null {
   if (!value) return null;
@@ -107,6 +115,8 @@ export async function createHolidayHandler(
       fromDate: body.fromDate,
       toDate: body.toDate,
     });
+
+    deleteFileIfExists();
 
     request.log.info(
       {
@@ -273,6 +283,7 @@ export async function updateHolidayHandler(
     if (!updated) {
       return reply.status(404).send({ message: "Holiday not found" });
     }
+    deleteFileIfExists();
 
     return sendMessage(reply, "Holiday updated successfully");
   } catch (err) {
@@ -296,6 +307,7 @@ export async function deleteHolidayHandler(
     if (!deleted.length) {
       return reply.status(404).send({ message: "Holiday not found" });
     }
+    deleteFileIfExists();
 
     return sendMessage(reply, "Holiday deleted successfully");
   } catch (err) {
@@ -423,6 +435,8 @@ export async function confirmHolidayUploadHandler(
       await tx.insert(holidays).values(body.holidays);
     });
 
+    deleteFileIfExists();
+
     return sendMessage(reply, "Holidays uploaded successfully");
   } catch (err) {
     request.log.error({ action: "CONFIRM_HOLIDAY_UPLOAD", err });
@@ -475,6 +489,14 @@ export async function downloadHolidayTemplateHandler(
 
 export async function exportHolidaysPdfHandler(request: any, reply: any) {
   try {
+    ensureStorageDir();
+
+    
+    if (fileExists()) {
+      return reply.sendFile(FILE_NAME);
+    }
+
+  
     const holidaysData = await db
       .select()
       .from(holidays)
@@ -482,18 +504,8 @@ export async function exportHolidaysPdfHandler(request: any, reply: any) {
 
     const [org] = await db.select().from(organization);
 
-    const stream = new PassThrough();
-    const doc = new PDFDocument({
-      size: "A4",
-      margin: 0,
-    });
-
-    reply
-      .header("Content-Type", "application/pdf")
-      .header(
-        "Content-Disposition",
-        "attachment; filename=holiday-calendar.pdf",
-      );
+    const doc = new PDFDocument({ size: "A4", margin: 0 });
+    const stream = fs.createWriteStream(FILE_PATH);
 
     doc.pipe(stream);
 
@@ -506,61 +518,43 @@ export async function exportHolidaysPdfHandler(request: any, reply: any) {
 
     doc.fillOpacity(1);
 
-    for (let i = 0; i < 40; i++) {
-      doc
-        .circle(Math.random() * pageWidth, Math.random() * pageHeight, 2)
-        .fill(["#FFD93D", "#6BCB77", "#4D96FF", "#FF6B6B"][i % 4]);
-    }
-
     doc
-      .fillColor("#333333")
       .font("Helvetica-Bold")
       .fontSize(28)
+      .fillColor("#333")
       .text("Holiday Calendar", 0, 70, { align: "center" });
 
     doc
       .fontSize(16)
-      .fillColor("#555555")
-      .text(org?.name || "Company Name", 0, 110, {
-        align: "center",
-      });
+      .fillColor("#555")
+      .text(org?.name || "Company Name", 0, 110, { align: "center" });
 
     let y = 170;
-    const cardWidth = pageWidth - 120;
-    const rowHeight = 45;
 
-    holidaysData.forEach((holiday) => {
-      doc.roundedRect(60, y, cardWidth, 40, 10).fill("#FFFFFF");
-
-      doc.roundedRect(60, y, 6, 40, 3).fill("#FF6B6B");
+    holidaysData.forEach((h) => {
+      doc.roundedRect(60, y, 450, 40, 10).fill("#FFF");
 
       doc
-        .fillColor("#333333")
-        .font("Helvetica-Bold")
+        .fillColor("#333")
         .fontSize(13)
-        .text(holiday.title, 80, y + 10);
+        .text(h.title, 80, y + 10);
 
       doc
-        .font("Helvetica")
+        .fillColor("#666")
         .fontSize(11)
-        .fillColor("#666666")
-        .text(`${holiday.fromDate}  to  ${holiday.toDate}`, 350, y + 12);
+        .text(`${h.fromDate} to ${h.toDate}`, 350, y + 12);
 
-      y += rowHeight;
+      y += 45;
     });
-
-    doc
-      .fontSize(9)
-      .fillColor("#777777")
-      .text(
-        `Generated on ${new Date().toISOString().split("T")[0]}`,
-        60,
-        pageHeight - 40,
-      );
 
     doc.end();
 
-    return reply.send(stream);
+    await new Promise<void>((resolve, reject) => {
+      stream.on("finish", () => resolve());
+      stream.on("error", reject);
+    });
+
+    return reply.sendFile(FILE_NAME);
   } catch (err) {
     request.log.error({ action: "EXPORT_HOLIDAYS_PDF", err });
     return reply.status(500).send({ message: "Failed to generate PDF" });
