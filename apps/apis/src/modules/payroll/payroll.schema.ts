@@ -28,9 +28,9 @@ export const processPayrollSchema = {
       employeeId: { type: "string", format: "uuid" },
       month: { type: "string", enum: PayrollMonth },
       year: { type: "number" },
-      deductions: { type: "number", minimum: 0 },
+      deductions: { type: "number" },
       deductionReason: { type: "string" },
-      bonus: { type: "number", minimum: 0 },
+      bonus: { type: "number" },
       bonusDescription: { type: "string" },
       file: { type: "string" },
     },
@@ -145,9 +145,9 @@ export const processBulkPayrollSchema = {
           required: ["employeeId"],
           properties: {
             employeeId: { type: "string", format: "uuid" },
-            deductions: { type: "number", minimum: 0 },
+            deductions: { type: "number" },
             deductionReason: { type: "string" },
-            bonus: { type: "number", minimum: 0 },
+            bonus: { type: "number" },
             bonusDescription: { type: "string" },
           },
           additionalProperties: false,
@@ -167,25 +167,9 @@ export const processBulkPayrollSchema = {
 
     409: {
       type: "object",
-      required: ["message", "employees"],
+      required: ["message"],
       properties: {
         message: { type: "string" },
-        employees: {
-          type: "array",
-          items: { type: "string" },
-        },
-      },
-    },
-
-    422: {
-      type: "object",
-      required: ["message", "employees"],
-      properties: {
-        message: { type: "string" },
-        employees: {
-          type: "array",
-          items: { type: "string" },
-        },
       },
     },
 
