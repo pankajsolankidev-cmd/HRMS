@@ -23,6 +23,7 @@ import { positions } from "../../db/schema/positions.schema";
 
 import { sendMessage } from "../../utils/api-response";
 import { getPagination } from "../../utils/pagination";
+import { inArray } from "drizzle-orm";
 
 const DEFAULT_EMPLOYEE_PASSWORD: string = (() => {
   const pwd = process.env.DEFAULT_EMPLOYEE_PASSWORD;
@@ -244,9 +245,37 @@ export async function getEmployeesHandler(request: FastifyRequest) {
       );
     }
 
+    const baseQuery = db
+      .select({ id: employees.id })
+      .from(employees)
+      .where(and(...conditions))
+      .orderBy(...orderByClauses)
+      .$dynamic();
+
+    let paginatedBaseQuery = baseQuery;
+
+    if (limit !== undefined && offset !== undefined) {
+      paginatedBaseQuery = paginatedBaseQuery.limit(limit).offset(offset);
+    }
+
+    const baseEmployees = await paginatedBaseQuery;
+
+    const employeeIds = baseEmployees.map((e) => e.id);
+
+    if (employeeIds.length === 0) {
+      return {
+        data: [],
+        meta: {
+          page,
+          limit: limit ?? null,
+          total: 0,
+        },
+      };
+    }
+
     const manager = alias(employees, "manager");
 
-    let queryBuilder = db
+    const rows = await db
       .select({
         id: employees.id,
         firstName: employees.firstName,
@@ -305,15 +334,8 @@ export async function getEmployeesHandler(request: FastifyRequest) {
       .leftJoin(systems, eq(systems.id, employees.systemId))
       .leftJoin(systemComponents, eq(systemComponents.systemId, systems.id))
       .leftJoin(components, eq(components.id, systemComponents.componentId))
-      .where(conditions.length ? and(...conditions) : undefined)
-      .orderBy(...orderByClauses)
-      .$dynamic();
-
-    if (limit !== undefined && offset !== undefined) {
-      queryBuilder = queryBuilder.limit(limit).offset(offset);
-    }
-
-    const rows = await queryBuilder;
+      .where(and(...conditions, inArray(employees.id, employeeIds)))
+      .orderBy(...orderByClauses);
 
     const employeeMap = new Map<string, any>();
 
@@ -354,12 +376,13 @@ export async function getEmployeesHandler(request: FastifyRequest) {
       }
     }
 
-    const data = Array.from(employeeMap.values());
+    const data = employeeIds.map((id) => employeeMap.get(id));
 
     const [{ count }] = await db
       .select({ count: sql<number>`count(*)` })
       .from(employees)
       .where(and(...conditions));
+
     request.log.info(
       {
         action: "GET_EMPLOYEES",

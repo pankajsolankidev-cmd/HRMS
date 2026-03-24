@@ -10,12 +10,15 @@ declare module "fastify" {
     redis: Redis;
   }
 }
+
 import cors from "@fastify/cors";
 import swagger from "@fastify/swagger";
 import swaggerUI from "@fastify/swagger-ui";
 import cookie from "@fastify/cookie";
 import fastifyMultipart from "@fastify/multipart";
 import fastifySensible from "@fastify/sensible";
+import fastifyStatic from "@fastify/static";
+import path from "path";
 
 import authRoutes from "../src/auth/auth.routes";
 import employeeRoutes from "./modules/employees/employee.routes";
@@ -33,14 +36,16 @@ import projectRoutes from "./modules/project/project.routes";
 import projectEmployeeRoutes from "./modules/project-emp/project-employee.routes";
 import profileRoutes from "./modules/profile/profile.route";
 import dashboardRoutes from "./modules/dashboard/dashboard.routes";
-import { registerSocket } from "./utils/socket";
 import notificationRoutes from "./modules/notifications/notifications.routes";
 import holidayRoutes from "./modules/holiday/holiday.routes";
+
+import { registerSocket } from "./utils/socket";
+
 import ajvKeywords from "ajv-keywords";
 import Ajv from "ajv";
 
 const app = Fastify({
-  logger: false,
+  logger: true,
   ajv: {
     customOptions: {
       coerceTypes: true,
@@ -70,9 +75,6 @@ app.register(cors, {
 });
 
 app.register(cookie);
-
-import fastifyStatic from "@fastify/static";
-import path from "path";
 
 app.register(fastifyStatic, {
   root: path.join(process.cwd(), "storage"),
@@ -108,6 +110,7 @@ app.register(employeeRoutes, {
     security: [{ bearerAuth: [] }],
   },
 });
+
 app.register(systemRoutes);
 app.register(componentRoutes);
 app.register(leaveRequestRoutes);
@@ -129,9 +132,8 @@ app.get("/health", async () => {
   return { status: "API is running 🚀" };
 });
 
-app.get("/redis-test", async (request, reply) => {
+app.get("/redis-test", async () => {
   await app.redis.set("hrms:test", "working");
-
   const value = await app.redis.get("hrms:test");
 
   return {
@@ -140,18 +142,14 @@ app.get("/redis-test", async (request, reply) => {
   };
 });
 
-if (process.env.NODE_ENV !== "test") {
-  start();
-}
-
 async function start() {
   try {
+    registerSocket(app);
+
     await app.listen({
       port: Number(process.env.PORT) || 4000,
       host: "0.0.0.0",
     });
-
-    registerSocket(app);
 
     app.log.info("Server started successfully 🚀");
   } catch (err) {
