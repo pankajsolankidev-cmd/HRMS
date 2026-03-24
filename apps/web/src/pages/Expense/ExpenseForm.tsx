@@ -123,7 +123,7 @@ export default function ExpenseForm() {
 
       if (formData.file instanceof File) {
         const uploadedFile = await uploadFile(formData.file);
-        filePath = uploadedFile.path;
+        filePath = uploadedFile.fileName;
       }
 
       const payload = {
@@ -146,7 +146,7 @@ export default function ExpenseForm() {
 
       if (formData.file instanceof File) {
         const uploadedFile = await uploadFile(formData.file);
-        filePath = uploadedFile.path;
+        filePath = uploadedFile.fileName;
       }
 
       const payload = {

@@ -371,7 +371,7 @@ export default function LeaveTable() {
                 </button>
                 {row.file && (
                   <button
-                    onClick={() => downloadFile(row.id)}
+                    onClick={() => downloadFile(row.id as string)}
                     className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
                   >
                     <IconDownload size={16} /> Download File

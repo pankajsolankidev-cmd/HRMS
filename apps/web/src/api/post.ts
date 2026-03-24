@@ -80,8 +80,7 @@ export const uploadFile = async (file: File) => {
     },
   });
   return res.data as {
-    path?: string;
-    url?: string;
+    fileName?: string;
   };
 };
 

@@ -202,3 +202,9 @@ export const downloadLeaveFile = async (id: string) => {
   });
   return res.data;
 };
+export const downloadExpenseFile = async (id: string) => {
+  const res = await api.get(`/expenses/${id}/download`, {
+    responseType: "blob",
+  });
+  return res.data;
+};

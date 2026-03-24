@@ -124,7 +124,7 @@ export default function EmployeeLeavePage() {
 
       if (data.file instanceof File) {
         const uploadedFile = await uploadFile(data.file);
-        filePath = uploadedFile.path;
+        filePath = uploadedFile.fileName;
       }
 
       const basePayload = mapFormToAddLeavePayload(data, filePath);
