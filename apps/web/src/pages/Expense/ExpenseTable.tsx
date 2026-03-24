@@ -182,6 +182,7 @@ export default function ExpenseTable() {
     },
     {
       header: "Amount",
+      align: "right",
       accessor: "amount",
       sortable: true,
       cell: (row) => (
@@ -202,6 +203,7 @@ export default function ExpenseTable() {
     },
     {
       header: "Status",
+      align: "center",
       accessor: "status",
       cell: (row) => {
         const statusStyles =

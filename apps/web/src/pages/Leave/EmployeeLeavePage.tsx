@@ -1,6 +1,6 @@
 import { getEmployees, getLeaveById, getManualLeaveById } from "@/api/get";
 import { updateEmployeeLeave } from "@/api/patch";
-import { addEmployeeLeave, type AddLeavePayload } from "@/api/post";
+import { addEmployeeLeave, uploadFile, type AddLeavePayload } from "@/api/post";
 import ComponentCard from "@/components/common/Card";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import Skeleton from "@/components/common/SkeletonForm";
@@ -118,29 +118,40 @@ export default function EmployeeLeavePage() {
         }
       : undefined;
 
-  const handleSubmit = (data: LeaveFormData) => {
-    const basePayload = mapFormToAddLeavePayload(data);
+  const handleSubmit = async (data: LeaveFormData) => {
+    try {
+      let filePath: string | undefined = undefined;
 
-    if (isEditMode) {
-      updateMutation.mutate({
-        id: id!,
-        payload: {
-          ...basePayload,
-          employeeId: data.employeeId!,
-        },
+      if (data.file instanceof File) {
+        const uploadedFile = await uploadFile(data.file);
+        filePath = uploadedFile.path;
+      }
+
+      const basePayload = mapFormToAddLeavePayload(data, filePath);
+
+      if (isEditMode) {
+        updateMutation.mutate({
+          id: id!,
+          payload: {
+            ...basePayload,
+            employeeId: data.employeeId!,
+          },
+        });
+        return;
+      }
+
+      if (!data.employeeId) {
+        toast.error("Please select an employee");
+        return;
+      }
+
+      addMutation.mutate({
+        ...basePayload,
+        employeeId: data.employeeId,
       });
-      return;
+    } catch (error) {
+      toast.error("File upload failed. Please try again.");
     }
-
-    if (!data.employeeId) {
-      toast.error("Please select an employee");
-      return;
-    }
-
-    addMutation.mutate({
-      ...basePayload,
-      employeeId: data.employeeId,
-    });
   };
 
   return (

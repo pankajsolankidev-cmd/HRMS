@@ -49,50 +49,9 @@ export default function DataTable<T>({
 }: DataTableProps<T>) {
   return (
     <div className="relative overflow-visible rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-      {onLimitChange && (
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20">
-          <div className="flex items-center gap-3">
-            <span className="text-lg  text-gray-700 dark:text-gray-300 whitespace-nowrap">
-              Show
-            </span>
-
-            <div className="relative">
-              <select
-                value={limit}
-                onChange={(e) => onLimitChange(Number(e.target.value))}
-                className={`
-            appearance-none
-            h-10 min-w-[70px] rounded-lg border border-gray-300 bg-white 
-            px-4 pr-10 text-sm font-medium outline-none transition-all
-            focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10
-            dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200
-            cursor-pointer
-          `}
-              >
-                {[5, 10, 50, 100].map((v) => (
-                  <option key={v} value={v} className="dark:bg-gray-900">
-                    {v}
-                  </option>
-                ))}
-              </select>
-
-              <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                <IconChevronDown
-                  size={18}
-                  className="pointer-events-none text-gray-400 dark:text-gray-500"
-                />
-              </div>
-            </div>
-            <span className="text-lg  text-gray-700 dark:text-gray-300 whitespace-nowrap">
-              entries
-            </span>
-          </div>
-        </div>
-      )}
-
-      <div className="w-full ">
+      <div className="w-full max-h-[400px] overflow-y-auto">
         <Table>
-          <TableHeader className="border-b border-gray-100 dark:border-gray-800 whitespace-nowrap">
+          <TableHeader className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-800 whitespace-nowrap">
             <TableRow className="bg-gray-50 dark:bg-gray-800/50">
               {columns.map((col, index) => {
                 const isSortable = col.sortable && col.accessor && onSort;
@@ -225,31 +184,63 @@ export default function DataTable<T>({
         </Table>
       </div>
 
-      {onPageChange && total > 0 && (
+      {(onPageChange || onLimitChange) && total > 0 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-gray-100 dark:border-gray-800">
-          <div className="flex items-center gap-4">
+          {onLimitChange && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                Show
+              </span>
+
+              <div className="relative">
+                <select
+                  value={limit}
+                  onChange={(e) => onLimitChange(Number(e.target.value))}
+                  className="appearance-none h-9 min-w-[70px] rounded-lg border border-gray-300 bg-white px-3 pr-8 text-sm outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200"
+                >
+                  {[5, 10, 50, 100].map((v) => (
+                    <option key={v} value={v}>
+                      {v}
+                    </option>
+                  ))}
+                </select>
+
+                <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-gray-400">
+                  <IconChevronDown size={16} />
+                </div>
+              </div>
+
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                entries
+              </span>
+            </div>
+          )}
+
+          {onPageChange && (
             <span className="text-sm text-gray-500">
               Showing {(page - 1) * limit + 1} – {Math.min(page * limit, total)}{" "}
               of {total}
             </span>
-          </div>
+          )}
 
-          <div className="flex gap-2">
-            <button
-              disabled={page === 1}
-              onClick={() => onPageChange(page - 1)}
-              className="rounded border px-3 py-1 text-sm disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            >
-              Prev
-            </button>
-            <button
-              disabled={page * limit >= total}
-              onClick={() => onPageChange(page + 1)}
-              className="rounded border px-3 py-1 text-sm disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            >
-              Next
-            </button>
-          </div>
+          {onPageChange && (
+            <div className="flex gap-2">
+              <button
+                disabled={page === 1}
+                onClick={() => onPageChange(page - 1)}
+                className="rounded border px-3 py-1 text-sm disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-800"
+              >
+                Prev
+              </button>
+              <button
+                disabled={page * limit >= total}
+                onClick={() => onPageChange(page + 1)}
+                className="rounded border px-3 py-1 text-sm disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-800"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

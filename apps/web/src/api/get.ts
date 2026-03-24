@@ -196,3 +196,9 @@ export const getSession = async () => {
   const res = await api.get("/auth/session");
   return res.data;
 };
+export const downloadLeaveFile = async (id: string) => {
+  const res = await api.get(`/leave-requests/${id}/download`, {
+    responseType: "blob",
+  });
+  return res.data;
+};
