@@ -32,7 +32,7 @@ import SelfLeavePage from "./pages/Leave/SelfLeavePage";
 import OrganizationForm from "./pages/Organization/OrganizationForm";
 import OrganizationTable from "./pages/Organization/OrganizationTable";
 import NotFound from "./pages/OtherPage/NotFound";
-import NotificationsPage from "./pages/OtherPage/NotificationsPage";
+import NotificationsPage from "./pages/Notification/NotificationsTable";
 import ProtectedRoute from "./pages/OtherPage/ProtectedRoute";
 import PublicRoute from "./pages/OtherPage/PublicRoute";
 import RootRedirect from "./pages/OtherPage/RootRedirect";

@@ -22,6 +22,7 @@ import {
   approveExpenseHandler,
   rejectExpenseHandler,
   createExpenseDirectHandler,
+  downloadExpenseFileHandler,
 } from "./expense.service";
 
 import { PERMISSIONS } from "../../db/schema/permissions.enums";
@@ -191,5 +192,10 @@ export default async function expenseRoutes(app: FastifyInstance) {
       },
     },
     rejectExpenseHandler,
+  );
+  app.get(
+    "/expenses/:id/download",
+    { preHandler: [verifyAccessToken] },
+    downloadExpenseFileHandler,
   );
 }

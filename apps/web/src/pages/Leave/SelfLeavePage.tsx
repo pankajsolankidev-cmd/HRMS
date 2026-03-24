@@ -1,6 +1,6 @@
 import { getLeaveById } from "@/api/get";
 import { updateLeave } from "@/api/patch";
-import { addLeave, type AddLeavePayload } from "@/api/post";
+import { addLeave, uploadFile, type AddLeavePayload } from "@/api/post";
 import Card from "@/components/common/Card";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import Skeleton from "@/components/common/SkeletonForm";
@@ -39,7 +39,7 @@ export default function SelfLeavePage() {
     onError: (error: any) => {
       toast.error(
         error?.response?.data?.message ??
-        "Something went wrong. Please try again.",
+          "Something went wrong. Please try again.",
       );
     },
   });
@@ -54,7 +54,7 @@ export default function SelfLeavePage() {
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(
         error?.response?.data?.message ??
-        "Something went wrong. Please try again.",
+          "Something went wrong. Please try again.",
       );
     },
   });
@@ -64,28 +64,39 @@ export default function SelfLeavePage() {
   const defaultValues: Partial<LeaveFormData> | undefined =
     isEditMode && leave
       ? {
-        fromDate: leave.fromDate,
-        toDate: leave.toDate,
-        type: leave.type,
-        dayType: leave.dayType,
-        reason: leave.reason,
-        fromHour: leave.fromHour,
-        toHour: leave.toHour,
-        fromHourType: leave.fromHour === 4 ? "first_half" : "full_day",
-        toHourType: leave.toHour === 4 ? "first_half" : "full_day",
-      }
+          fromDate: leave.fromDate,
+          toDate: leave.toDate,
+          type: leave.type,
+          dayType: leave.dayType,
+          reason: leave.reason,
+          fromHour: leave.fromHour,
+          toHour: leave.toHour,
+          fromHourType: leave.fromHour === 4 ? "first_half" : "full_day",
+          toHourType: leave.toHour === 4 ? "first_half" : "full_day",
+        }
       : undefined;
 
-  const handleSubmit = (data: LeaveFormData) => {
-    const payload = mapFormToAddLeavePayload(data);
+  const handleSubmit = async (data: LeaveFormData) => {
+    try {
+      let filePath: string | undefined = undefined;
 
-    if (isEditMode) {
-      updateMutation.mutate({
-        id: id!,
-        payload,
-      });
-    } else {
-      addMutation.mutate(payload);
+      if (data.file instanceof File) {
+        const uploadedFile = await uploadFile(data.file);
+        filePath = uploadedFile.fileName;
+      }
+
+      const payload = mapFormToAddLeavePayload(data, filePath);
+
+      if (isEditMode) {
+        updateMutation.mutate({
+          id: id!,
+          payload,
+        });
+      } else {
+        addMutation.mutate(payload);
+      }
+    } catch (error) {
+      toast.error("File upload failed. Please try again.");
     }
   };
 

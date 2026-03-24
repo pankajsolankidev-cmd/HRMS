@@ -15,5 +15,5 @@ export default mergeConfig(
         exclude: ["**/*.test.tsx", "**/*.spec.tsx"],
       },
     },
-  })
+  }),
 );
