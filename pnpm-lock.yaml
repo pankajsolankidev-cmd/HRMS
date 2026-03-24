@@ -7359,6 +7359,8 @@ snapshots:
   stackback@0.0.2: {}
 
   standard-as-callback@2.1.0: {}
+
+  standard-as-callback@2.1.0: {}
   statuses@2.0.2: {}
 
   std-env@4.0.0: {}
