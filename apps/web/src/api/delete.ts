@@ -34,7 +34,7 @@ export const deleteManualLeave = async (id: string) => {
   return res.data;
 };
 
-export const deleteExpense = async (id: number) => {
+export const deleteExpense = async (id: string) => {
   const res = await api.delete(`/expenses/${id}`);
   return res.data;
 };

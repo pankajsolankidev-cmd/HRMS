@@ -77,6 +77,7 @@ export default function PayrollHistory() {
     },
     {
       header: "Leave Deduction",
+      align: "right",
       accessor: "leaveDeduction",
       cell: (row) => (
         <span className="text-red-600">
@@ -86,6 +87,7 @@ export default function PayrollHistory() {
     },
     {
       header: "Bonus",
+      align: "right",
       accessor: "bonus",
       cell: (row) => (
         <span className="text-green-600">
@@ -95,6 +97,7 @@ export default function PayrollHistory() {
     },
     {
       header: "Deduction",
+      align: "right",
       accessor: "deductions",
       cell: (row) => (
         <span className="text-red-600">
@@ -104,6 +107,7 @@ export default function PayrollHistory() {
     },
     {
       header: "Net Salary",
+      align: "right",
       accessor: "netSalary",
       cell: (row) => (
         <span className="font-semibold text-green-600">

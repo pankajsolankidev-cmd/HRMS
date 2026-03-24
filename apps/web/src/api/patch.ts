@@ -73,7 +73,7 @@ export const rejectLeave = async ({
   return res.data;
 };
 
-export const approveExpense = async (id: number) => {
+export const approveExpense = async (id: string) => {
   const res = await api.patch(`/expenses/${id}/approve`);
   return res.data;
 };
@@ -82,14 +82,14 @@ export const rejectExpense = async ({
   id,
   reason,
 }: {
-  id: number;
+  id: string;
   reason?: string;
 }) => {
   const res = await api.patch(`/expenses/${id}/reject`, { reason });
   return res.data;
 };
 
-export const createExpense = async (id: number) => {
+export const createExpense = async (id: string) => {
   const res = await api.patch(`/expenses/${id}/create`);
   return res.data;
 };

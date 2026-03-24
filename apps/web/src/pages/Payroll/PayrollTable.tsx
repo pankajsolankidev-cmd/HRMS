@@ -238,6 +238,7 @@ export default function PayrollTable() {
     },
     {
       header: "Tax",
+      align: "right",
       accessor: "tax",
       cell: (row) => (
         <span className="font-medium  text-red-600 dark:text-red-400">
@@ -247,6 +248,7 @@ export default function PayrollTable() {
     },
     {
       header: "Pf",
+      align: "right",
       accessor: "pf",
       cell: (row) => (
         <span className="font-medium  text-red-600 dark:text-red-400">
@@ -256,6 +258,7 @@ export default function PayrollTable() {
     },
     {
       header: "Bonus",
+      align: "right",
       accessor: "bonus",
       cell: (row) => (
         <span className="font-medium  text-green-600 dark:text-green-400">
@@ -265,6 +268,7 @@ export default function PayrollTable() {
     },
     {
       header: "Deductions",
+      align: "right",
       accessor: "deductions",
       cell: (row) => (
         <span className="font-medium  text-red-600 dark:text-red-400">
@@ -274,6 +278,7 @@ export default function PayrollTable() {
     },
     {
       header: "Net Salary",
+      align: "right",
       accessor: "salaryNet",
       cell: (row) => (
         <span className="font-medium  text-green-600 dark:text-green-400">

@@ -103,6 +103,7 @@ export default function SystemTable() {
     },
     {
       header: "Components",
+      align: "center",
       cell: (row) => (
         <div className="flex flex-wrap gap-2">
           {row.components?.length ? (
