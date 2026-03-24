@@ -79,9 +79,11 @@ export default function AppSidebar() {
         },
       ];
 
-  const isActive = (path?: string) =>
-    path &&
-    (location.pathname === path || location.pathname.startsWith(path + "/"));
+  const isActive = (path?: string) => {
+    if (!path) return false;
+
+    return location.pathname === path;
+  };
 
   useEffect(() => {
     const parent = MENU.find((nav) =>
