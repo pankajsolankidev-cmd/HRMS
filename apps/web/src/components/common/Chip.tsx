@@ -6,7 +6,9 @@ interface ChipProps {
 export default function Chip({ label, className = "" }: ChipProps) {
   return (
     <span
-      className={`rounded-full px-2.5 py-1 text-xs font-medium
+      className={`inline-flex items-center justify-center
+        min-w-[90px] h-[28px] px-3
+        rounded-full text-xs font-medium
         ${className}`}
     >
       {label}

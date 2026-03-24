@@ -103,6 +103,7 @@ export default function SalaryTable() {
     },
     {
       header: "Basic Salary",
+      align: "right",
       accessor: "basicSalary",
       sortable: true,
       cell: (row) => (
@@ -113,6 +114,7 @@ export default function SalaryTable() {
     },
     {
       header: "Tax",
+      align: "right",
       accessor: "tax",
       cell: (row) => (
         <span className="font-medium text-red-600 dark:text-red-400">
@@ -122,6 +124,7 @@ export default function SalaryTable() {
     },
     {
       header: "PF",
+      align: "right",
       accessor: "pf",
       cell: (row) => (
         <span className="font-medium text-red-600 dark:text-red-400">
@@ -135,6 +138,7 @@ export default function SalaryTable() {
     },
     {
       header: "Net Salary",
+      align: "right",
       accessor: "netSalary",
       cell: (row) => (
         <span className="font-medium text-green-600 dark:text-green-400">

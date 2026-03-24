@@ -1,5 +1,5 @@
 import { deleteExpense } from "@/api/delete";
-import { getExpenses, getExpenseSummary } from "@/api/get";
+import { downloadExpenseFile, getExpenses, getExpenseSummary } from "@/api/get";
 import { approveExpense, createExpense, rejectExpense } from "@/api/patch";
 import type { PaginatedResponse } from "@/api/types";
 import Can from "@/components/common/Can";
@@ -18,6 +18,7 @@ import Button from "@/components/ui/button/Button";
 import {
   IconCheck,
   IconDotsVertical,
+  IconDownload,
   IconEdit,
   IconEye,
   IconSearch,
@@ -26,15 +27,17 @@ import {
 } from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
+import { saveAs } from "file-saver";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router";
 
 type Expense = {
-  id: number;
+  id: string;
   expenseType: string;
   amount: number | string;
   expenseDate: string;
+  file?: string;
   rejectionReason?: string;
   status: "DRAFT" | "CREATED" | "APPROVED" | "REJECTED";
   description?: string;
@@ -48,9 +51,9 @@ export default function ExpenseTable() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
 
-  const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [viewExpense, setViewExpense] = useState<Expense | null>(null);
-  const [rejectId, setRejectId] = useState<number | null>(null);
+  const [rejectId, setRejectId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
 
   const { sortBy, sortOrder, handleSort } = useTableSort<Expense>();
@@ -161,6 +164,20 @@ export default function ExpenseTable() {
       toast.error(error?.response?.data?.message ?? "Something went wrong");
     },
   });
+  const { mutate: downloadFile } = useMutation({
+    mutationFn: downloadExpenseFile,
+    onSuccess: (blob: Blob) => {
+      const extension = blob.type.split("/")[1] || "file";
+      saveAs(blob, `Expense.${extension}`);
+      toast.success("File downloaded successfully");
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(
+        error?.response?.data?.message ??
+          "Failed to download file. Please try again.",
+      );
+    },
+  });
 
   const columns: Column<Expense>[] = [
     {
@@ -182,6 +199,7 @@ export default function ExpenseTable() {
     },
     {
       header: "Amount",
+      align: "right",
       accessor: "amount",
       sortable: true,
       cell: (row) => (
@@ -202,6 +220,7 @@ export default function ExpenseTable() {
     },
     {
       header: "Status",
+      align: "center",
       accessor: "status",
       cell: (row) => {
         const statusStyles =
@@ -241,6 +260,14 @@ export default function ExpenseTable() {
               >
                 <IconEye size={16} /> View Details
               </button>
+              {row.file && (
+                <button
+                  onClick={() => downloadFile(row.id)}
+                  className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-900/60"
+                >
+                  <IconDownload size={16} /> Download File
+                </button>
+              )}
 
               {row.status === "DRAFT" && (
                 <>
@@ -256,7 +283,7 @@ export default function ExpenseTable() {
                   >
                     <IconEdit size={16} /> Edit
                   </button>
-                  <DeleteConfirm<Number>
+                  <DeleteConfirm<string>
                     title="Delete Expense"
                     description="Are you sure you want to delete this expense?"
                     loading={isPending}
