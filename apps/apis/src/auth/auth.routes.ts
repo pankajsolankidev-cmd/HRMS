@@ -29,7 +29,7 @@ function generateAccessToken(payload: {
   username?: string;
   roles: string[];
 }) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "1m" });
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: "15m" });
 }
 
 function generateRefreshToken(payload: { id: string }) {
