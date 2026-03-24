@@ -117,5 +117,6 @@ _.seed
 docker-data/
 
 uploads/
+storage/
 
 
