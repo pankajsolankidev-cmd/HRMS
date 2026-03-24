@@ -35,9 +35,7 @@ const MONTHS = [
 export default function PayrollTable() {
   const queryClient = useQueryClient();
   const today = new Date();
-
   const previousDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-
   const previousMonth = previousDate
     .toLocaleString("en-US", { month: "long" })
     .toUpperCase();
@@ -61,30 +59,24 @@ export default function PayrollTable() {
   const [appliedMonth, setAppliedMonth] = useState<string | null>(null);
   const [appliedYear, setAppliedYear] = useState<number | null>(null);
   const [employees, setEmployees] = useState<any[]>([]);
-  const [selectedMonth, setSelectedMonth] = useState<string>(previousMonth);
-  const [selectedYear, setSelectedYear] = useState<number>(previousYear);
+
   const [editingEmployee, setEditingEmployee] = useState<any | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [historyEmployee, setHistoryEmployee] = useState<any | null>(null);
-  const [appliedTableMonth, setAppliedTableMonth] = useState(
-    previousMonth || null,
-  );
-  const [appliedTableYear, setAppliedTableYear] = useState(
-    previousYear || null,
-  );
+
   const { data: summaryData, isFetching } = useQuery({
     queryKey: ["payroll-summary", appliedMonth, appliedYear],
     queryFn: () => getPayrollSummary(appliedMonth!, appliedYear!),
     enabled: Boolean(appliedMonth && appliedYear),
   });
   const { data: bulkData, isFetching: isLoadingEmployees } = useQuery({
-    queryKey: ["bulk-payroll", appliedTableMonth, appliedTableYear],
+    queryKey: ["bulk-payroll", previousMonth, previousYear],
     queryFn: () =>
       getPayrollPreview({
-        month: appliedTableMonth!,
-        year: appliedTableYear!,
+        month: previousMonth,
+        year: previousYear,
       }),
-    enabled: Boolean(appliedTableMonth && appliedTableYear),
+    enabled: true,
   });
   useEffect(() => {
     if (bulkData?.data) {
@@ -183,11 +175,6 @@ export default function PayrollTable() {
 
     setAppliedMonth(null);
     setAppliedYear(null);
-  };
-
-  const handleLoad = () => {
-    setAppliedTableMonth(selectedMonth);
-    setAppliedTableYear(selectedYear);
   };
 
   const columns: Column<any>[] = [
@@ -370,33 +357,13 @@ export default function PayrollTable() {
         </div>
       </Card>
 
-      <Card
-        action={
-          <div className="flex items-end gap-3">
-            <div className="w-40">
-              <Select
-                options={MONTHS}
-                value={selectedMonth ?? ""}
-                onChange={(v) => setSelectedMonth(v)}
-                placeholder="Month"
-              />
-            </div>
-
-            <div className="w-32">
-              <Select
-                options={YEAR_OPTIONS}
-                value={selectedYear?.toString() ?? ""}
-                onChange={(v) => setSelectedYear(Number(v))}
-                placeholder="Year"
-              />
-            </div>
-
-            <Button className="h-[44px]" onClick={handleLoad}>
-              {isLoadingEmployees ? "Loading..." : "Load"}
-            </Button>
-          </div>
-        }
-      >
+      <Card>
+        <div className="flex justify-between items-center mb-4">
+          <div />
+          <p className="text-xl text-gray-500 font-medium">
+            {previousMonth} - {previousYear}
+          </p>
+        </div>
         <DataTable
           columns={columns}
           data={employees}
@@ -430,8 +397,8 @@ export default function PayrollTable() {
 
               const payload: any = { adjustments };
 
-              if (selectedMonth) payload.month = selectedMonth;
-              if (selectedYear) payload.year = selectedYear;
+              payload.month = previousMonth;
+              payload.year = previousYear;
 
               submitBulk(payload);
             }}
