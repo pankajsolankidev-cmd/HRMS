@@ -17,7 +17,7 @@ import type { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-const MONTHS = [
+export const MONTHS = [
   { label: "January", value: "JANUARY" },
   { label: "February", value: "FEBRUARY" },
   { label: "March", value: "MARCH" },
@@ -144,6 +144,12 @@ export default function PayrollTable() {
             bonusDescription: formData.bonusDescription,
             deductions: Number(formData.deduction),
             deductionReason: formData.deductionReason,
+            salaryNet:
+              Number(emp.salaryNet || 0) -
+              Number(emp.bonus || 0) +
+              Number(formData.bonus || 0) +
+              Number(emp.deductions || 0) -
+              Number(formData.deduction || 0),
           }
         : emp,
     );
