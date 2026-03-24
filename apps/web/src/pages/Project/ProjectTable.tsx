@@ -126,6 +126,7 @@ export default function ProjectTable() {
     },
     {
       header: "Status",
+      align: "center",
       cell: (row) => (
         <Chip
           label={row.status}

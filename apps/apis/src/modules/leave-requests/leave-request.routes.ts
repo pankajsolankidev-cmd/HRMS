@@ -12,6 +12,7 @@ import {
   updateManualLeaveRequestHandler,
   deleteManualLeaveRequestHandler,
   getManualLeaveRequestByIdHandler,
+  downloadLeaveFileHandler,
 } from "./leave-request.service";
 
 import {
@@ -148,5 +149,10 @@ export default async function leaveRequestRoutes(app: FastifyInstance) {
       schema: { ...secured.schema, ...getManualLeaveRequestByIdSchema },
     },
     getManualLeaveRequestByIdHandler,
+  );
+  app.get(
+    "/leave-requests/:id/download",
+    { preHandler: [verifyAccessToken] },
+    downloadLeaveFileHandler,
   );
 }

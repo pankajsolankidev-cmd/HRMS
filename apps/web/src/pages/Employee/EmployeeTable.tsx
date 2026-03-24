@@ -119,6 +119,7 @@ export default function EmployeeTable() {
     },
     {
       header: "Position",
+      align: "center",
       cell: (row) => (
         <Chip
           label={row.position}
@@ -186,7 +187,7 @@ export default function EmployeeTable() {
                 <IconSearch size={18} stroke={2} />
               </div>
               <Input
-                placeholder="Search by name, email..."
+                placeholder="Search by name, email"
                 value={rawSearch}
                 onChange={(e) => setRawSearch(e.target.value)}
                 className="pl-10 pr-10 h-[42px] focus-visible:ring-0"

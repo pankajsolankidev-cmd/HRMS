@@ -11,6 +11,10 @@ import { employees, roles, userRoles } from "../../db/schema";
 import { PERMISSIONS } from "../../db/schema/permissions.enums";
 import { notifications } from "../../db/schema/notifications.schema";
 import { getIO } from "../../utils/socket";
+import { hasContainedRole } from "../../utils/role.utils";
+import fs from "fs";
+import path from "path";
+import mime from "mime-types";
 
 interface AuthUser {
   id: string;
@@ -18,6 +22,89 @@ interface AuthUser {
   iat: number;
   exp: number;
   permissions?: string[];
+}
+const UPLOAD_DIR = path.join(process.cwd(), "uploads");
+
+export async function downloadExpenseFileHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const userId = request.user!.id;
+  const { id } = request.params as { id: string };
+
+  request.log.info(
+    {
+      action: "DOWNLOAD_EXPENSE_FILE",
+      userId,
+      expenseId: id,
+    },
+    "Download expense file request received",
+  );
+
+  try {
+    const [expense] = await db
+      .select({
+        file: expenses.file,
+        employeeId: expenses.employeeId,
+      })
+      .from(expenses)
+      .where(eq(expenses.id, id));
+
+    if (!expense || !expense.file) {
+      return reply.code(404).send({ message: "File not found" });
+    }
+
+    const userRolesRows = await db
+      .select({ roleName: roles.name })
+      .from(userRoles)
+      .leftJoin(roles, eq(userRoles.roleId, roles.id))
+      .where(eq(userRoles.userId, userId));
+
+    const roleNames = userRolesRows
+      .map((r) => r.roleName)
+      .filter((r): r is string => r !== null);
+
+    const isHRorAdmin = hasContainedRole(roleNames, ["HR", "ADMIN"]);
+
+    if (!isHRorAdmin) {
+      const [employee] = await db
+        .select({ id: employees.id })
+        .from(employees)
+        .where(eq(employees.userId, userId));
+
+      if (!employee || employee.id !== expense.employeeId) {
+        return reply.code(403).send({ message: "Unauthorized" });
+      }
+    }
+
+    const safeFileName = path.basename(expense.file);
+    const filePath = path.join(UPLOAD_DIR, safeFileName);
+
+    if (!fs.existsSync(filePath)) {
+      return reply.code(404).send({ message: "File missing on server" });
+    }
+
+    const contentType = mime.lookup(filePath) || "application/octet-stream";
+
+    reply.header("Content-Type", contentType);
+    reply.header(
+      "Content-Disposition",
+      `attachment; filename="${safeFileName}"`,
+    );
+
+    return reply.send(fs.createReadStream(filePath));
+  } catch (err: any) {
+    request.log.error(
+      {
+        action: "DOWNLOAD_EXPENSE_FILE",
+        err,
+        userId,
+      },
+      "Error while downloading expense file",
+    );
+
+    return reply.code(400).send({ message: "Unable to download file" });
+  }
 }
 
 export async function createExpenseHandler(
@@ -92,6 +179,7 @@ export async function createExpenseHandler(
 
       return sendMessage(reply, "Employee profile not found", 400);
     }
+    const fileName = body.file && body.file.trim() !== "" ? body.file : null;
 
     await db.insert(expenses).values({
       employeeId: employee.id,
@@ -99,7 +187,7 @@ export async function createExpenseHandler(
       amount: body.amount.toFixed(2),
       expenseDate: body.expenseDate,
       description: body.description ?? null,
-      file: body.file ?? null,
+      file: fileName,
     });
 
     const fullName = `${employee.firstName} ${employee.lastName}`;
@@ -223,6 +311,7 @@ export async function createExpenseDirectHandler(
 
       return sendMessage(reply, "Employee profile not found", 400);
     }
+    const fileName = body.file && body.file.trim() !== "" ? body.file : null;
 
     await db.insert(expenses).values({
       employeeId: employee.id,
@@ -230,7 +319,7 @@ export async function createExpenseDirectHandler(
       amount: body.amount.toFixed(2),
       expenseDate: body.expenseDate,
       description: body.description ?? null,
-      file: body.file ?? null,
+      file: fileName,
       status: "CREATED",
     });
 
@@ -598,6 +687,17 @@ export async function updateExpenseHandler(
       });
     }
 
+    const [employee] = await db
+      .select({ id: employees.id })
+      .from(employees)
+      .where(eq(employees.userId, userId));
+
+    if (!employee || employee.id !== existing.employeeId) {
+      return reply.code(403).send({
+        message: "Unauthorized",
+      });
+    }
+
     if (body.expenseDate) {
       const expenseDate = new Date(body.expenseDate);
 
@@ -637,24 +737,32 @@ export async function updateExpenseHandler(
       }
     }
 
+    const fileName =
+      body.file !== undefined
+        ? body.file.trim() !== ""
+          ? body.file
+          : null
+        : undefined;
+
     const updateData: any = {
       expenseType: body.expenseType,
       description: body.description,
-      file: body.file,
       expenseDate: body.expenseDate,
+      file: fileName,
     };
 
     if (body.amount !== undefined) {
-      const amount = parseFloat(String(body.amount));
+      const amount = Number(body.amount);
 
-      if (Number.isNaN(amount)) {
+      if (Number.isNaN(amount) || amount <= 0) {
         return reply.code(400).send({
-          message: "Amount must be a valid number",
+          message: "Amount must be a valid positive number",
         });
       }
 
       updateData.amount = amount.toFixed(2);
     }
+
     Object.keys(updateData).forEach(
       (key) => updateData[key] === undefined && delete updateData[key],
     );

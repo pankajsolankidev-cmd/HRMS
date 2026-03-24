@@ -38,6 +38,89 @@ import { validatePastDatesOnly } from "./utils/past-date-validation";
 import { notifications } from "../../db/schema/notifications.schema";
 import { getIO } from "../../utils/socket";
 import { users } from "../../db/schema";
+import fs from "fs";
+import path from "path";
+import mime from "mime-types";
+
+const UPLOAD_DIR = path.join(process.cwd(), "uploads");
+
+export async function downloadLeaveFileHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const userId = request.user!.id;
+  const { id } = request.params as { id: string };
+
+  request.log.info(
+    {
+      action: "DOWNLOAD_LEAVE_FILE",
+      userId,
+      leaveRequestId: id,
+    },
+    "Download leave file request received",
+  );
+
+  try {
+    const [leave] = await db
+      .select({
+        file: leaveRequests.file,
+        employeeId: leaveRequests.employeeId,
+      })
+      .from(leaveRequests)
+      .where(eq(leaveRequests.id, id));
+
+    if (!leave || !leave.file) {
+      return reply.code(404).send({ message: "File not found" });
+    }
+
+    const userRolesRows = await db
+      .select({ roleName: roles.name })
+      .from(userRoles)
+      .leftJoin(roles, eq(userRoles.roleId, roles.id))
+      .where(eq(userRoles.userId, userId));
+
+    const roleNames = userRolesRows
+      .map((r) => r.roleName)
+      .filter((r): r is string => r !== null);
+
+    const isHRorAdmin = hasContainedRole(roleNames, ["HR", "ADMIN"]);
+
+    if (!isHRorAdmin) {
+      const [employee] = await db
+        .select({ id: employees.id })
+        .from(employees)
+        .where(eq(employees.userId, userId));
+
+      if (!employee || employee.id !== leave.employeeId) {
+        return reply.code(403).send({ message: "Unauthorized" });
+      }
+    }
+
+    const filePath = path.join(UPLOAD_DIR, leave.file);
+
+    if (!fs.existsSync(filePath)) {
+      return reply.code(404).send({ message: "File missing on server" });
+    }
+
+    const contentType = mime.lookup(filePath) || "application/octet-stream";
+
+    reply.header("Content-Type", contentType);
+    reply.header("Content-Disposition", `attachment; filename="${leave.file}"`);
+
+    return reply.send(fs.createReadStream(filePath));
+  } catch (err: any) {
+    request.log.error(
+      {
+        action: "DOWNLOAD_LEAVE_FILE",
+        err,
+        userId,
+      },
+      "Error while downloading file",
+    );
+
+    return reply.code(400).send({ message: "Unable to download file" });
+  }
+}
 
 function validateFutureDates(fromDate: string, toDate: string) {
   const today = new Date();
@@ -137,6 +220,7 @@ export async function createLeaveRequestHandler(
       message: "Leave request overlaps with existing leave",
     });
   }
+  const fileName = body.file && body.file.trim() !== "" ? body.file : null;
 
   await db.insert(leaveRequests).values({
     employeeId: employee.id,
@@ -150,7 +234,7 @@ export async function createLeaveRequestHandler(
     totalHours,
     totalDays: totalDays.toString(),
     reason: body.reason,
-    file: body.file,
+    file: fileName,
     status: LeaveStatus.Pending,
   });
 
@@ -642,11 +726,8 @@ export async function updateLeaveRequestHandler(
     .where(
       and(
         eq(leaveRequests.employeeId, existingLeave.employeeId),
-
         not(eq(leaveRequests.id, id)),
-
         not(eq(leaveRequests.status, LeaveStatus.Rejected)),
-
         lte(leaveRequests.fromDate, finalToDate),
         gte(leaveRequests.toDate, finalFromDate),
       ),
@@ -659,18 +740,32 @@ export async function updateLeaveRequestHandler(
     });
   }
 
+  const fileName =
+    body.file !== undefined
+      ? body.file.trim() !== ""
+        ? body.file
+        : null
+      : undefined;
+
+  const updateData: any = {
+    ...body,
+    fromDate: finalFromDate,
+    toDate: finalToDate,
+    dayType: finalDayType,
+    fromHour: finalFromHour,
+    toHour: finalToHour,
+    totalHours,
+    totalDays: totalDays.toString(),
+    file: fileName,
+  };
+
+  Object.keys(updateData).forEach(
+    (key) => updateData[key] === undefined && delete updateData[key],
+  );
+
   const [updated] = await db
     .update(leaveRequests)
-    .set({
-      ...body,
-      fromDate: finalFromDate,
-      toDate: finalToDate,
-      dayType: finalDayType,
-      fromHour: finalFromHour,
-      toHour: finalToHour,
-      totalHours,
-      totalDays: totalDays.toString(),
-    })
+    .set(updateData)
     .where(and(...conditions))
     .returning();
 
@@ -1151,8 +1246,6 @@ export async function rejectLeaveRequestHandler(
     });
   }
 
-  // 🔔 NOTIFICATION LOGIC
-
   const [approver] = await db
     .select({
       firstName: employees.firstName,
@@ -1306,6 +1399,8 @@ export async function createManualLeaveRequestHandler(
     return sendMessage(reply, "Leave dates overlap with existing leave", 400);
   }
 
+  const fileName = body.file && body.file.trim() !== "" ? body.file : null;
+
   await db.insert(leaveRequests).values({
     employeeId: employee.id,
     createdBy: userId,
@@ -1318,7 +1413,7 @@ export async function createManualLeaveRequestHandler(
     totalHours,
     totalDays: totalDays.toString(),
     reason: body.reason,
-    file: body.file,
+    file: fileName,
     status: LeaveStatus.Approved,
     approvedBy: userId,
     approvedAt: new Date(),
@@ -1449,12 +1544,16 @@ export async function updateManualLeaveRequestHandler(
     return sendMessage(reply, validation.message!, 400);
   }
 
+  const finalDayType = body.dayType ?? existingLeave.dayType;
+  const finalFromHour = body.fromHour ?? existingLeave.fromHour;
+  const finalToHour = body.toHour ?? existingLeave.toHour;
+
   const { totalHours, totalDays } = calculateLeaveTotalsSimple({
     fromDate: finalFromDate,
     toDate: finalToDate,
-    dayType: body.dayType ?? existingLeave.dayType,
-    fromHour: body.fromHour ?? existingLeave.fromHour,
-    toHour: body.toHour ?? existingLeave.toHour,
+    dayType: finalDayType,
+    fromHour: finalFromHour,
+    toHour: finalToHour,
   });
 
   const overlappingLeave = await db
@@ -1463,11 +1562,8 @@ export async function updateManualLeaveRequestHandler(
     .where(
       and(
         eq(leaveRequests.employeeId, finalEmployeeId),
-
         not(eq(leaveRequests.id, id)),
-
         not(eq(leaveRequests.status, LeaveStatus.Rejected)),
-
         lte(leaveRequests.fromDate, finalToDate),
         gte(leaveRequests.toDate, finalFromDate),
       ),
@@ -1490,6 +1586,11 @@ export async function updateManualLeaveRequestHandler(
     return sendMessage(reply, "Updated dates overlap with existing leave", 400);
   }
 
+  let finalFile = existingLeave.file;
+  if (body.file !== undefined) {
+    finalFile = body.file.trim() !== "" ? body.file : null;
+  }
+
   await db
     .update(leaveRequests)
     .set({
@@ -1497,13 +1598,13 @@ export async function updateManualLeaveRequestHandler(
       fromDate: finalFromDate,
       toDate: finalToDate,
       type: body.type ?? existingLeave.type,
-      dayType: body.dayType ?? existingLeave.dayType,
-      fromHour: body.fromHour ?? existingLeave.fromHour,
-      toHour: body.toHour ?? existingLeave.toHour,
+      dayType: finalDayType,
+      fromHour: finalFromHour,
+      toHour: finalToHour,
       totalHours,
       totalDays: totalDays.toString(),
       reason: body.reason ?? existingLeave.reason,
-      file: body.file ?? existingLeave.file,
+      file: finalFile,
       updatedAt: new Date(),
     })
     .where(eq(leaveRequests.id, id));
