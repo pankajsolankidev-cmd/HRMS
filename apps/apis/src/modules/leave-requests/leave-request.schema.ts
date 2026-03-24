@@ -208,6 +208,7 @@ export const getLeaveRequestByIdSchema = {
       },
       required: ["data"],
     },
+    403: errorResponse,
     404: errorResponse,
   },
 };
