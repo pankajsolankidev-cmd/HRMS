@@ -450,25 +450,25 @@ export async function processBulkPayrollHandler(
     "Process bulk payroll request received",
   );
 
-  const currentYear = now.getFullYear();
-  const currentMonthIndex = now.getMonth() + 1;
-  const requestedMonthIndex = PayrollMonth.indexOf(resolvedMonth) + 1;
+  const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
-  if (
-    resolvedYear > currentYear ||
-    (resolvedYear === currentYear && requestedMonthIndex > currentMonthIndex)
-  ) {
+  const allowedMonth = PayrollMonth[prevMonthDate.getMonth()];
+  const allowedYear = prevMonthDate.getFullYear();
+
+  if (resolvedMonth !== allowedMonth || resolvedYear !== allowedYear) {
     request.log.warn(
       {
         action: "PROCESS_BULK_PAYROLL",
-        month: resolvedMonth,
-        year: resolvedYear,
+        requestedMonth: resolvedMonth,
+        requestedYear: resolvedYear,
+        allowedMonth,
+        allowedYear,
       },
-      "Attempted to process future payroll",
+      "Only previous month payroll is allowed",
     );
 
     return reply.code(400).send({
-      message: "Future month payroll cannot be processed",
+      message: `Payroll can only be processed for ${allowedMonth} ${allowedYear}`,
     });
   }
 
@@ -479,13 +479,13 @@ export async function processBulkPayrollHandler(
     );
 
     return reply.code(400).send({
-      message: "No employees selected for payroll processing",
+      message: "No employees provided for payroll processing",
     });
   }
 
   try {
     const processedBy = request.user!.id;
-    const monthIndex = requestedMonthIndex;
+    const monthIndex = PayrollMonth.indexOf(resolvedMonth) + 1;
     const employeeIds = adjustments.map((a) => a.employeeId);
 
     const alreadyProcessed = await db
@@ -516,8 +516,7 @@ export async function processBulkPayrollHandler(
       );
 
       return reply.code(409).send({
-        message: `Payroll already processed for ${resolvedMonth} ${resolvedYear}`,
-        employees: alreadyProcessed.map((e) => `${e.firstName} ${e.lastName}`),
+        message: `Payroll already processed for ${resolvedMonth} ${resolvedYear} for some employees`,
       });
     }
 
@@ -534,8 +533,6 @@ export async function processBulkPayrollHandler(
 
     const salaryMap = new Map(salaryRows.map((r) => [r.employeeId, r]));
 
-    const invalidEmployees: string[] = [];
-
     for (const adj of adjustments) {
       const row = salaryMap.get(adj.employeeId);
       if (!row) continue;
@@ -544,9 +541,12 @@ export async function processBulkPayrollHandler(
       const deductions = Number(adj.deductions ?? 0);
       const bonus = Number(adj.bonus ?? 0);
 
+      const fullName = `${row.firstName} ${row.lastName}`;
+
       if (deductions < 0 || bonus < 0) {
-        invalidEmployees.push(`${row.firstName} ${row.lastName}`);
-        continue;
+        return reply.code(400).send({
+          message: `Bonus or deductions cannot be negative for ${fullName}`,
+        });
       }
 
       const { leaveDeduction } = await calculateLeaveDeductionForPayroll({
@@ -559,23 +559,10 @@ export async function processBulkPayrollHandler(
       const finalNetSalary = salaryNet - leaveDeduction - deductions + bonus;
 
       if (finalNetSalary < 0) {
-        invalidEmployees.push(`${row.firstName} ${row.lastName}`);
+        return reply.code(400).send({
+          message: `Final salary cannot be negative for ${fullName}`,
+        });
       }
-    }
-
-    if (invalidEmployees.length > 0) {
-      request.log.warn(
-        {
-          action: "PROCESS_BULK_PAYROLL",
-          invalidEmployeeCount: invalidEmployees.length,
-        },
-        "Invalid payroll data detected",
-      );
-
-      return reply.code(422).send({
-        message: "Invalid payroll data for selected employees",
-        employees: invalidEmployees,
-      });
     }
 
     await db.transaction(async (tx) => {
