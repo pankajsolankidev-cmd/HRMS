@@ -411,7 +411,7 @@ export default function LeaveTable() {
 
                     <DeleteConfirm<string>
                       title="Delete Leave Request"
-                      description="Are you sure you want to delete this leave request?"
+                      description={`Are you sure you want to delete ${row.employee.firstName} ${row.employee.lastName}'s leave request?`}
                       loading={isDeletePending}
                       onConfirm={() =>
                         isSelfLeave

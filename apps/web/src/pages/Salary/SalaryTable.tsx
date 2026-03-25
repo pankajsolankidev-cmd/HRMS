@@ -159,7 +159,7 @@ export default function SalaryTable() {
 
           <DeleteConfirm<string>
             title="Delete Salary Structure"
-            description="Are you sure you want to delete this employee's salary record?"
+            description={`Are you sure you want to delete ${row.employeeName}'s salary?`}
             loading={isPending}
             onConfirm={(id) => removeSalary(id)}
           >

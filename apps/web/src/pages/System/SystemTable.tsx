@@ -133,7 +133,7 @@ export default function SystemTable() {
 
           <DeleteConfirm<number>
             title="Delete System"
-            description="Are you sure you want to delete this system?"
+            description={`Are you sure you want to delete ${row.name}?`}
             loading={isPending}
             onConfirm={(id) => removeSystem(id)}
           >

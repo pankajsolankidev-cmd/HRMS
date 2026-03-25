@@ -202,7 +202,7 @@ export default function PublicHolidayTable() {
               />
               <DeleteConfirm<number>
                 title="Delete Holiday"
-                description="Are you sure you want to delete this holiday?"
+                description={`Are you sure you want to delete ${row.title} holiday?`}
                 loading={isPending}
                 onConfirm={(id) => removeHoliday(id)}
               >
@@ -317,7 +317,6 @@ export default function PublicHolidayTable() {
             )}
 
             <Button
-              
               onClick={() => downloadPDF()}
               size="md"
               variant="outline"

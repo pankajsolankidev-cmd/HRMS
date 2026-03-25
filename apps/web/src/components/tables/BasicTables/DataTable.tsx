@@ -188,10 +188,6 @@ export default function DataTable<T>({
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-gray-100 dark:border-gray-800">
           {onLimitChange && (
             <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                Show
-              </span>
-
               <div className="relative">
                 <select
                   value={limit}
@@ -209,18 +205,13 @@ export default function DataTable<T>({
                   <IconChevronDown size={16} />
                 </div>
               </div>
-
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                entries
-              </span>
+              {onPageChange && (
+                <span className="text-sm text-gray-500">
+                  Showing {(page - 1) * limit + 1} –{" "}
+                  {Math.min(page * limit, total)} of {total}
+                </span>
+              )}
             </div>
-          )}
-
-          {onPageChange && (
-            <span className="text-sm text-gray-500">
-              Showing {(page - 1) * limit + 1} – {Math.min(page * limit, total)}{" "}
-              of {total}
-            </span>
           )}
 
           {onPageChange && (

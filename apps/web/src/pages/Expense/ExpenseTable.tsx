@@ -285,7 +285,7 @@ export default function ExpenseTable() {
                   </button>
                   <DeleteConfirm<string>
                     title="Delete Expense"
-                    description="Are you sure you want to delete this expense?"
+                    description={`Are you sure you want to delete ${row.employeeName}'s expense?`}
                     loading={isPending}
                     onConfirm={() => remove(row.id)}
                   >

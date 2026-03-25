@@ -116,7 +116,7 @@ export default function ComponentTable() {
 
           <DeleteConfirm<number>
             title="Delete Component"
-            description="Are you sure you want to delete this component?"
+            description={`Are you sure you want to delete ${row.name}?`}
             loading={isPending}
             onConfirm={(id) => removeComponent(id)}
           >
