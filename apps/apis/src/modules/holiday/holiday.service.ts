@@ -331,11 +331,31 @@ export async function checkHolidayExcelHandler(
     const workbook = XLSX.read(buffer, { type: "buffer" });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
-    const rows = XLSX.utils.sheet_to_json<any>(sheet);
+    const rawData: any[][] = XLSX.utils.sheet_to_json(sheet, {
+      header: 1,
+      defval: "",
+    });
 
-    if (!rows.length) {
+    if (!rawData.length) {
       return reply.status(400).send({ message: "Excel file is empty" });
     }
+
+    const headers = rawData[0].map((h) => h.toString().trim());
+
+    const requiredHeaders = ["title", "fromDate", "toDate"];
+
+    const missingHeaders = requiredHeaders.filter((h) => !headers.includes(h));
+
+    if (missingHeaders.length) {
+      return reply.status(400).send({
+        message: `Missing required columns: ${missingHeaders.join(", ")}`,
+      });
+    }
+
+    const headerIndexMap: Record<string, number> = {};
+    headers.forEach((h, i) => {
+      headerIndexMap[h] = i;
+    });
 
     const existingHolidays = await db.select().from(holidays);
 
@@ -343,14 +363,20 @@ export async function checkHolidayExcelHandler(
     const errorRows: any[] = [];
     const excelRangeSet = new Set<string>();
 
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
-      const rowNumber = i + 2;
+    for (let i = 1; i < rawData.length; i++) {
+      const row = rawData[i];
+      const rowNumber = i + 1;
 
-      const title = row.title?.toString().trim();
-      const fromDate = parseExcelDate(row.fromDate);
-      const toDate = parseExcelDate(row.toDate);
-      const description = row.description?.toString().trim();
+      if (
+        row.every((cell) => cell === "" || cell === null || cell === undefined)
+      ) {
+        continue;
+      }
+
+      const title = row[headerIndexMap["title"]]?.toString().trim();
+      const fromDate = parseExcelDate(row[headerIndexMap["fromDate"]]);
+      const toDate = parseExcelDate(row[headerIndexMap["toDate"]]);
+      const description = row[headerIndexMap["description"]]?.toString().trim();
 
       if (!title || !fromDate || !toDate) {
         errorRows.push({
@@ -380,7 +406,7 @@ export async function checkHolidayExcelHandler(
 
       excelRangeSet.add(rangeKey);
 
-      const overlap = existingHolidays.find((h) =>
+      const overlap = existingHolidays.some((h) =>
         isDateRangeOverlap(h.fromDate, h.toDate, fromDate, toDate),
       );
 
@@ -401,7 +427,7 @@ export async function checkHolidayExcelHandler(
     }
 
     return reply.send({
-      totalRows: rows.length,
+      totalRows: rawData.length - 1,
       validCount: validRows.length,
       errorCount: errorRows.length,
       validRows,
@@ -491,12 +517,10 @@ export async function exportHolidaysPdfHandler(request: any, reply: any) {
   try {
     ensureStorageDir();
 
-    
     if (fileExists()) {
       return reply.sendFile(FILE_NAME);
     }
 
-  
     const holidaysData = await db
       .select()
       .from(holidays)
