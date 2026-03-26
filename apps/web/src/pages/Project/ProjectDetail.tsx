@@ -42,7 +42,9 @@ export default function ProjectDetail() {
   });
   const { data: employeeList, isLoading: loadingEmployees } = useQuery({
     queryKey: ["employees"],
-    queryFn: () => getEmployees(),
+    queryFn: () => getEmployees({
+        excludeAssigned: true,
+      }),
     enabled: open,
   });
   const { mutate: assignEmployees, isPending: assigning } = useMutation({

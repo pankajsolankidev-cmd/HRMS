@@ -15,7 +15,6 @@ export default function AdminDashboard() {
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["dashboard"],
     queryFn: getDashboard,
-    retry: false,
   });
   useEffect(() => {
     if (isError) {

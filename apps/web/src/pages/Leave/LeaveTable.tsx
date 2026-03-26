@@ -217,7 +217,9 @@ export default function LeaveTable() {
 
   const { data: employeesData } = useQuery({
     queryKey: ["employees", "all"],
-    queryFn: () => getEmployees(),
+    queryFn: () => getEmployees({
+        excludeAssigned: true,
+      }),
   });
 
   const employeeOptions =
@@ -249,6 +251,7 @@ export default function LeaveTable() {
 
   const total = data?.meta?.total ?? 0;
   const isEmployee = roles.includes("EMPLOYEE");
+  const isAdmin = roles.includes("ADMIN");
 
   const { mutate: downloadFile } = useMutation({
     mutationFn: downloadLeaveFile,
@@ -602,9 +605,16 @@ export default function LeaveTable() {
               </div>
             )}
 
-            <Button onClick={() => navigate("/leave-requests/new")} size="md">
-              Add Leave
-            </Button>
+            {!isAdmin && (
+              <>
+                <Button
+                  onClick={() => navigate("/leave-requests/new")}
+                  size="md"
+                >
+                  Add Leave
+                </Button>
+              </>
+            )}
             {!isEmployee && (
               <>
                 <Button

@@ -15,6 +15,7 @@ import DataTable, {
 } from "@/components/tables/BasicTables/DataTable";
 import { useTableSort } from "@/components/tables/useTableSort";
 import Button from "@/components/ui/button/Button";
+import type { RootState } from "@/context";
 import {
   IconCheck,
   IconDotsVertical,
@@ -30,6 +31,7 @@ import type { AxiosError } from "axios";
 import { saveAs } from "file-saver";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 
 type Expense = {
@@ -50,7 +52,7 @@ export default function ExpenseTable() {
   const [search, setSearch] = useState<string | undefined>();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-
+  const { roles } = useSelector((state: RootState) => state.auth);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [viewExpense, setViewExpense] = useState<Expense | null>(null);
   const [rejectId, setRejectId] = useState<string | null>(null);
@@ -76,6 +78,7 @@ export default function ExpenseTable() {
   const [fromDate, setFromDate] = useState<string>(today);
   const [toDate, setToDate] = useState<string>(today);
   const [run, setRun] = useState(false);
+  const isAdmin = roles.includes("ADMIN");
 
   const {
     data: summaryData,
@@ -410,13 +413,17 @@ export default function ExpenseTable() {
                 )}
               </div>
 
-              <Button
-                onClick={() => navigate("/expenses/new")}
-                size="md"
-                className="h-[42px]"
-              >
-                Add Expense
-              </Button>
+              {!isAdmin && (
+                <>
+                  <Button
+                    onClick={() => navigate("/expenses/new")}
+                    size="md"
+                    className="h-[42px]"
+                  >
+                    Add Expense
+                  </Button>
+                </>
+              )}
             </div>
           }
         >

@@ -69,7 +69,7 @@ export default function PayrollTable() {
     queryFn: () => getPayrollSummary(appliedMonth!, appliedYear!),
     enabled: Boolean(appliedMonth && appliedYear),
   });
-  const { data: bulkData, isFetching: isLoadingEmployees } = useQuery({
+  const { data: bulkData } = useQuery({
     queryKey: ["bulk-payroll", previousMonth, previousYear],
     queryFn: () =>
       getPayrollPreview({

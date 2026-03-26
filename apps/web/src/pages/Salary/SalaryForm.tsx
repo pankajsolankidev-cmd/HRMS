@@ -26,7 +26,7 @@ const schema = z.object({
     .min(1, "Basic salary must be greater than 0")
     .max(MAX_AMOUNT, "Amount is too large"),
   tax: z.number().min(1, "Tax must be greater than 0"),
-  pf: z.number().min(1, "PF must be greater than 0"),
+  pf: z.number().optional(),
   description: z.string().trim().optional(),
   appraisalDate: z.string().min(1, "Appraisal date is required"),
 });
@@ -61,7 +61,9 @@ export default function SalaryForm() {
 
   const { data: employeesData } = useQuery<PaginatedResponse<any>>({
     queryKey: ["employees", "lookup"],
-    queryFn: () => getEmployees(),
+    queryFn: () => getEmployees({
+        excludeAssigned: true,
+      }),
   });
 
   const employeeOptions = (employeesData?.data ?? []).map((emp: any) => ({
@@ -187,7 +189,6 @@ export default function SalaryForm() {
                 hint={errors.tax?.message}
               />
               <Input
-                required
                 label="PF"
                 type="number"
                 placeholder="0"

@@ -114,6 +114,7 @@ export default function LeaveForm({
     register,
     handleSubmit,
     control,
+    reset,
     setValue,
     formState: { errors },
   } = useForm<LeaveFormData>({
@@ -128,6 +129,11 @@ export default function LeaveForm({
       ...defaultValues,
     },
   });
+  useEffect(() => {
+    if (defaultValues) {
+      reset(defaultValues);
+    }
+  }, [defaultValues, reset]);
 
   const dayType = useWatch({ control, name: "dayType" });
   const fromDate = useWatch({ control, name: "fromDate" });

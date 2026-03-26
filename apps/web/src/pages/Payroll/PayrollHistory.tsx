@@ -44,7 +44,9 @@ export default function PayrollHistory() {
 
   const { data: employeesData } = useQuery({
     queryKey: ["employees"],
-    queryFn: () => getEmployees(),
+    queryFn: () => getEmployees({
+        excludeAssigned: true,
+      }),
   });
 
   const employeeOptions =

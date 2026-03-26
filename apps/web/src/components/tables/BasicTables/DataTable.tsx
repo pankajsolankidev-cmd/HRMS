@@ -65,7 +65,7 @@ export default function DataTable<T>({
                     key={index}
                     isHeader
                     onClick={
-                      isSortable
+                      isSortable && data.length > 0
                         ? () => onSort(col.accessor as keyof T)
                         : undefined
                     }
@@ -90,7 +90,7 @@ export default function DataTable<T>({
                     >
                       <span>{col.header}</span>
 
-                      {isSortable && (
+                      {isSortable && data.length > 0 && (
                         <div className="flex flex-col leading-none">
                           <span
                             className={`text-[8px] ${
