@@ -43,6 +43,7 @@ import { registerSocket } from "./utils/socket";
 
 import ajvKeywords from "ajv-keywords";
 import Ajv from "ajv";
+import { sentryPlugin } from "./plugins/sentry";
 
 const app = Fastify({
   logger: true,
@@ -110,7 +111,7 @@ app.register(employeeRoutes, {
     security: [{ bearerAuth: [] }],
   },
 });
-
+app.register(sentryPlugin);
 app.register(systemRoutes);
 app.register(componentRoutes);
 app.register(leaveRequestRoutes);
@@ -130,6 +131,10 @@ app.register(holidayRoutes);
 
 app.get("/health", async () => {
   return { status: "API is running 🚀" };
+});
+
+app.get("/test-error", async () => {
+  throw new Error("Sentry test error 🚀");
 });
 
 app.get("/redis-test", async () => {

@@ -28,6 +28,7 @@
     "@fastify/static": "^9.0.0",
     "@fastify/swagger": "^9.6.1",
     "@fastify/swagger-ui": "^5.2.3",
+    "@sentry/node": "^10.45.0",
     "@shared/types": "workspace:*",
     "ajv": "^8.18.0",
     "ajv-formats": "^3.0.1",
