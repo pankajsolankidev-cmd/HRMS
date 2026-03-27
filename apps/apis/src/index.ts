@@ -69,8 +69,12 @@ app.register(fastifyMultipart, {
   },
 });
 
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(",") 
+  : ["http://localhost:5173", "http://192.168.1.35:5173"];
+
 app.register(cors, {
-  origin: ["http://localhost:5173", "http://192.168.1.35:5173"],
+  origin: allowedOrigins,
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 });
