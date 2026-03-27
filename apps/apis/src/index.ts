@@ -20,7 +20,7 @@ import fastifySensible from "@fastify/sensible";
 import fastifyStatic from "@fastify/static";
 import path from "path";
 
-import authRoutes from "../src/auth/auth.routes";
+import authRoutes from "./auth/auth.routes";
 import employeeRoutes from "./modules/employees/employee.routes";
 import systemRoutes from "./modules/systems/system.routes";
 import componentRoutes from "./modules/components/component.routes";
