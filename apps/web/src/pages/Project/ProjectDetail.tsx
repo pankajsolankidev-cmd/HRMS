@@ -42,8 +42,9 @@ export default function ProjectDetail() {
   });
   const { data: employeeList, isLoading: loadingEmployees } = useQuery({
     queryKey: ["employees"],
-    queryFn: () => getEmployees({
-        excludeAssigned: true,
+    queryFn: () =>
+      getEmployees({
+        excludeAdmin: true,
       }),
     enabled: open,
   });

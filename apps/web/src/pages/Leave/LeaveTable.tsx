@@ -217,8 +217,9 @@ export default function LeaveTable() {
 
   const { data: employeesData } = useQuery({
     queryKey: ["employees", "all"],
-    queryFn: () => getEmployees({
-        excludeAssigned: true,
+    queryFn: () =>
+      getEmployees({
+        excludeAdmin: true,
       }),
   });
 

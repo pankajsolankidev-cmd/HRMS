@@ -61,8 +61,9 @@ export default function SalaryForm() {
 
   const { data: employeesData } = useQuery<PaginatedResponse<any>>({
     queryKey: ["employees", "lookup"],
-    queryFn: () => getEmployees({
-        excludeAssigned: true,
+    queryFn: () =>
+      getEmployees({
+        excludeAdmin: true,
       }),
   });
 
