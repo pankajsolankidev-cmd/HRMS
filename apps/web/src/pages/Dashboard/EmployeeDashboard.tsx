@@ -18,7 +18,6 @@ export default function EmployeeDashboard() {
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["employee-dashboard"],
     queryFn: getEmployeeDashboard,
-    retry: false,
   });
   useEffect(() => {
     if (isError) {
@@ -43,7 +42,9 @@ export default function EmployeeDashboard() {
           <Card className="bg-purple-50 dark:bg-slate-900">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-sm text-gray-500">Months Worked</p>
+                <p className="text-sm text-gray-500">
+                  Months Worked Since Joined
+                </p>
                 <h2 className="text-4xl font-bold text-purple-600 mt-2">
                   {leaveBalance.monthsWorked ?? 0}
                 </h2>

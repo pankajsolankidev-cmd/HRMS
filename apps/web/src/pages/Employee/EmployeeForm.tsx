@@ -101,7 +101,10 @@ export default function EmployeeForm() {
   });
   const { data: employees } = useQuery({
     queryKey: ["employees"],
-    queryFn: () => getEmployees(),
+    queryFn: () =>
+      getEmployees({
+        excludeAdmin: true,
+      }),
   });
 
   const {

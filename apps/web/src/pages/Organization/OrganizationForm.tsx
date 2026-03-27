@@ -1,22 +1,23 @@
 import { getOrganization } from "@/api/get";
 import { addOrganization } from "@/api/post";
 import ComponentCard from "@/components/common/Card";
-import DatePicker from "@/components/form/date-picker";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import Skeleton from "@/components/common/SkeletonForm";
 import Input from "@/components/form/input/InputField";
 import MultiSelect from "@/components/form/MultiSelect";
 import Button from "@/components/ui/button/Button";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { LocalizationProvider, MobileTimePicker } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import type { CreateOrganizationDto } from "@shared/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
+import dayjs from "dayjs";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router";
 import { z } from "zod";
-
-import PageBreadcrumb from "@/components/common/PageBreadCrumb";
-import Skeleton from "@/components/common/SkeletonForm";
-import type { CreateOrganizationDto } from "@shared/types";
 
 const WEEK_DAYS: CreateOrganizationDto["weekOff"][number][] = [
   "MONDAY",
@@ -74,6 +75,7 @@ export default function OrganizationForm() {
     queryFn: getOrganization,
     enabled: isEditMode,
   });
+
   useEffect(() => {
     if (isError) {
       toast.error("Failed to load organization data");
@@ -95,7 +97,6 @@ export default function OrganizationForm() {
 
   const saveMutation = useMutation({
     mutationFn: (payload: CreateOrganizationDto) => addOrganization(payload),
-
     onSuccess: (res) => {
       toast.success(
         res?.message ??
@@ -105,7 +106,6 @@ export default function OrganizationForm() {
       );
       navigate("/organization");
     },
-
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(
         error?.response?.data?.message ??
@@ -130,94 +130,152 @@ export default function OrganizationForm() {
       />
       <Skeleton loading={isEditMode && isLoading}>
         <ComponentCard>
-          <form
-            noValidate
-            onSubmit={handleSubmit(onSubmit)}
-            className="space-y-6"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input
-                required
-                label="Name"
-                placeholder="Enter organization name"
-                {...register("name")}
-                error={!!errors.name}
-                hint={errors.name?.message}
-              />
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <form
+              noValidate
+              onSubmit={handleSubmit(onSubmit)}
+              className="space-y-6"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Input
+                  required
+                  label="Name"
+                  placeholder="Enter organization name"
+                  {...register("name")}
+                  error={!!errors.name}
+                  hint={errors.name?.message}
+                />
 
-              <Controller
-                name="workingHours.start"
-                control={control}
-                render={({ field }) => (
-                  <DatePicker
-                    placeholder="Office Start Time"
-                    id="start-time"
-                    mode="time"
-                    label="Office Start Time"
-                    value={field.value}
-                    onChange={(_, dateStr) => field.onChange(dateStr)}
-                    error={!!errors.workingHours?.start}
-                    hint={errors.workingHours?.start?.message}
-                    required
-                  />
-                )}
-              />
+                <Controller
+                  name="weekOff"
+                  control={control}
+                  render={({ field }) => (
+                    <MultiSelect
+                      label="Week Off"
+                      options={weekDayOptions}
+                      value={field.value ?? []}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      placeholder="Select week off days"
+                      required
+                      error={!!errors.weekOff}
+                      hint={errors.weekOff?.message}
+                    />
+                  )}
+                />
 
-              <Controller
-                name="workingHours.end"
-                control={control}
-                render={({ field }) => (
-                  <DatePicker
-                    placeholder="Office End Time"
-                    id="end-time"
-                    mode="time"
-                    label="Office End Time"
-                    value={field.value}
-                    onChange={(_, dateStr) => field.onChange(dateStr)}
-                    error={!!errors.workingHours?.end}
-                    hint={errors.workingHours?.end?.message}
-                    required
-                  />
-                )}
-              />
+                <Controller
+                  name="workingHours.start"
+                  control={control}
+                  render={({ field }) => {
+                    const hasError = !!errors.workingHours?.start;
+                    return (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Office Start Time{" "}
+                          <span className="text-red-500">*</span>
+                        </label>
 
-              <Controller
-                name="weekOff"
-                control={control}
-                render={({ field }) => (
-                  <MultiSelect
-                    label="Week Off"
-                    options={weekDayOptions}
-                    value={field.value ?? []}
-                    onChange={field.onChange}
-                    onBlur={field.onBlur}
-                    placeholder="Select week off days"
-                    required
-                    error={!!errors.weekOff}
-                    hint={errors.weekOff?.message}
-                  />
-                )}
-              />
-            </div>
+                        <MobileTimePicker
+                          ampm={false}
+                          value={
+                            field.value ? dayjs(field.value, "HH:mm") : null
+                          }
+                          onChange={(value) => {
+                            field.onChange(value ? value.format("HH:mm") : "");
+                          }}
+                          slotProps={{
+                            textField: {
+                              fullWidth: true,
+                              size: "small",
+                              error: hasError,
+                              InputProps: {
+                                sx: {
+                                  height: "45px",
+                                  borderRadius: "8px",
+                                  backgroundColor: "#ffffff",
+                                },
+                              },
+                            },
+                          }}
+                        />
 
-            <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
-              <Button size="md" disabled={saveMutation.isPending}>
-                {saveMutation.isPending
-                  ? "Saving..."
-                  : isEditMode
-                    ? "Update"
-                    : "Save"}
-              </Button>
+                        {hasError && (
+                          <p className="text-red-500 text-xs mt-2">
+                            {errors.workingHours?.start?.message}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  }}
+                />
 
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate("/organization")}
-              >
-                Back
-              </Button>
-            </div>
-          </form>
+                <Controller
+                  name="workingHours.end"
+                  control={control}
+                  render={({ field }) => {
+                    const hasError = !!errors.workingHours?.end;
+                    return (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Office End Time{" "}
+                          <span className="text-red-500">*</span>
+                        </label>
+
+                        <MobileTimePicker
+                          ampm={false}
+                          value={
+                            field.value ? dayjs(field.value, "HH:mm") : null
+                          }
+                          onChange={(value) => {
+                            field.onChange(value ? value.format("HH:mm") : "");
+                          }}
+                          slotProps={{
+                            textField: {
+                              fullWidth: true,
+                              size: "small",
+                              error: hasError,
+                              InputProps: {
+                                sx: {
+                                  height: "45px",
+                                  borderRadius: "8px",
+                                  backgroundColor: "#ffffff",
+                                },
+                              },
+                            },
+                          }}
+                        />
+
+                        {hasError && (
+                          <p className="text-red-500 text-xs mt-2">
+                            {errors.workingHours?.end?.message}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  }}
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-6 dark:border-gray-700">
+                <Button size="md" disabled={saveMutation.isPending}>
+                  {saveMutation.isPending
+                    ? "Saving..."
+                    : isEditMode
+                      ? "Update"
+                      : "Save"}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate("/organization")}
+                >
+                  Back
+                </Button>
+              </div>
+            </form>
+          </LocalizationProvider>
         </ComponentCard>
       </Skeleton>
     </>

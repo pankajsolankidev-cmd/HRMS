@@ -13,4 +13,5 @@ export type ListQueryParams = {
   sortOrder?: "asc" | "desc";
   search?: string;
   excludeAssigned?: boolean;
+  excludeAdmin?: boolean;
 };

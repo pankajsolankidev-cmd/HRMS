@@ -38,7 +38,10 @@ export default function EmployeeLeavePage() {
 
   const { data: employeesData } = useQuery({
     queryKey: ["employees", "all"],
-    queryFn: () => getEmployees(),
+    queryFn: () =>
+      getEmployees({
+        excludeAdmin: true,
+      }),
     enabled: !isEditMode,
   });
 
