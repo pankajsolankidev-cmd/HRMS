@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { eq, and, asc, desc, sql } from "drizzle-orm";
+import { eq, and, asc, desc, sql,notExists } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 import { db } from "../../db";
@@ -204,6 +204,7 @@ export async function getEmployeesHandler(request: FastifyRequest) {
     limit?: number;
     sortBy?: "firstName" | "createdAt";
     sortOrder?: "asc" | "desc";
+    excludeAdmin?: boolean | string;
   };
 
   request.log.info(
@@ -220,6 +221,26 @@ export async function getEmployeesHandler(request: FastifyRequest) {
 
   try {
     const conditions = [eq(employees.isActive, true)];
+
+    const excludeAdmin =
+      query.excludeAdmin === true || query.excludeAdmin === "true";
+
+    if (excludeAdmin) {
+      conditions.push(
+        notExists(
+          db
+            .select()
+            .from(userRoles)
+            .innerJoin(roles, eq(userRoles.roleId, roles.id))
+            .where(
+              and(
+                eq(userRoles.userId, employees.userId),
+               sql`LOWER(${roles.name}) = 'admin'`,
+              ),
+            ),
+        ),
+      );
+    }
 
     if (query?.search) {
       conditions.push(
