@@ -6,7 +6,7 @@ import { getPagination } from "../../utils/pagination";
 import {
   CreateHolidayDto,
   UpdateHolidayDto,
-} from "@shared/types/src/Holiday/holiday.dto";
+} from "@shared/types/src/holiday/holiday.dto";
 import { holidays } from "../../db/schema/holidays.schema";
 import * as XLSX from "xlsx";
 import PDFDocument from "pdfkit";
