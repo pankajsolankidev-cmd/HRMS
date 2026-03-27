@@ -3,7 +3,7 @@ services:
     name: hrm-api
     runtime: node
     plan: free
-    buildCommand: pnpm install && pnpm build --filter apis
+    buildCommand: pnpm install && pnpm --filter @shared/types build && pnpm --filter apis build
     startCommand: pnpm start --filter apis
     envVars:
       - key: NODE_ENV

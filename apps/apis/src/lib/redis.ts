@@ -1,13 +1,11 @@
 import Redis from "ioredis";
 
+let redis: Redis;
+
 let connectionOptions: any;
 
 if (process.env.REDIS_URL) {
   connectionOptions = process.env.REDIS_URL;
-  if (connectionOptions.startsWith("rediss://")) {
-    // ioredis handles rediss:// connection strings, but we might need to specify tls options if it fails
-    // However, usually rediss:// is enough. For Upstash, it works out of the box.
-  }
 } else {
   connectionOptions = {
     host: process.env.REDIS_HOST,
@@ -18,14 +16,19 @@ if (process.env.REDIS_URL) {
   }
 }
 
-const redis = new Redis(connectionOptions);
+if (!(global as any).redisInstance) {
+  console.log("Initializing shared Redis client...");
+  (global as any).redisInstance = new Redis(connectionOptions);
+  
+  (global as any).redisInstance.on("connect", () => {
+    console.log("Connected to Redis successfully 🚀");
+  });
 
-redis.on("connect", () => {
-  console.log("Redis connected");
-});
+  (global as any).redisInstance.on("error", (err: any) => {
+    console.error("Redis error:", err);
+  });
+}
 
-redis.on("error", (err) => {
-  console.error("Redis error:", err);
-});
+redis = (global as any).redisInstance;
 
 export default redis;

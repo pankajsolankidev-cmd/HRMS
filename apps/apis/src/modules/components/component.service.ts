@@ -4,8 +4,8 @@ import { and, eq, ilike, asc, desc, sql, isNull } from "drizzle-orm";
 import { db } from "../../db";
 import { components } from "../../db/schema/components.schema";
 
-import type { CreateComponentDto } from "@shared/types/src/components/create-component.dto";
-import type { UpdateComponentDto } from "@shared/types/src/components/update-component.dto";
+import type { CreateComponentDto } from "@shared/types";
+import type { UpdateComponentDto } from "@shared/types";
 
 import { sendMessage } from "../../utils/api-response";
 import { getPagination } from "../../utils/pagination";
