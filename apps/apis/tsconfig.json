@@ -3,6 +3,13 @@
   "compilerOptions": {
     "module": "CommonJS",
     "moduleResolution": "node",
-    "outDir": "dist"
-  }
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "drizzle.config.ts",
+    "vitest.config.ts"
+  ]
 }
