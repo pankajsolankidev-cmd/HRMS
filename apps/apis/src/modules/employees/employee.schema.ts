@@ -125,6 +125,7 @@ export const getEmployeesSchema = {
         type: "string",
         enum: ["asc", "desc"],
       },
+      excludeAdmin: { type: "boolean" },
     },
     additionalProperties: false,
   },

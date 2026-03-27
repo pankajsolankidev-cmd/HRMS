@@ -43,6 +43,7 @@ import { registerSocket } from "./utils/socket";
 
 import ajvKeywords from "ajv-keywords";
 import Ajv from "ajv";
+import { sentryPlugin } from "./plugins/sentry";
 
 const app = Fastify({
   logger: true,
@@ -68,8 +69,12 @@ app.register(fastifyMultipart, {
   },
 });
 
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(",") 
+  : ["http://localhost:5173", "http://192.168.1.35:5173"];
+
 app.register(cors, {
-  origin: ["http://localhost:5173", "http://192.168.1.35:5173"],
+  origin: allowedOrigins,
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 });
@@ -110,7 +115,7 @@ app.register(employeeRoutes, {
     security: [{ bearerAuth: [] }],
   },
 });
-
+app.register(sentryPlugin);
 app.register(systemRoutes);
 app.register(componentRoutes);
 app.register(leaveRequestRoutes);
@@ -130,6 +135,10 @@ app.register(holidayRoutes);
 
 app.get("/health", async () => {
   return { status: "API is running 🚀" };
+});
+
+app.get("/test-error", async () => {
+  throw new Error("Sentry test error 🚀");
 });
 
 app.get("/redis-test", async () => {
