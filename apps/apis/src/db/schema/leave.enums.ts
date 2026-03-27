@@ -1,24 +1,7 @@
 import { pgEnum } from "drizzle-orm/pg-core";
+import { LeaveDayType, LeaveStatus, LeaveType } from "@shared/types";
 
-export const LeaveType = {
-  Sick: "sick",
-  Casual: "casual",
-  Marriage: "marriage",
-  Wfh: "wfh",
-} as const;
-
-export const LeaveDayType = {
-  FullDay: "full_day",
-  FirstHalf: "first_half",
-  SecondHalf: "second_half",
-  MultipleDays: "multiple_days",
-} as const;
-
-export const LeaveStatus = {
-  Pending: "pending",
-  Approved: "approved",
-  Rejected: "rejected",
-} as const;
+export { LeaveDayType, LeaveStatus, LeaveType };
 
 export const leaveTypeEnum = pgEnum(
   "leave_type",

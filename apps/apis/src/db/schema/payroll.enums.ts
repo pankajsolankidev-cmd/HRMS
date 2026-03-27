@@ -1,16 +1,3 @@
-export const PayrollMonth = [
-  "JANUARY",
-  "FEBRUARY",
-  "MARCH",
-  "APRIL",
-  "MAY",
-  "JUNE",
-  "JULY",
-  "AUGUST",
-  "SEPTEMBER",
-  "OCTOBER",
-  "NOVEMBER",
-  "DECEMBER",
-] as const;
+import { PayrollMonth, PayrollMonthType } from "@shared/types";
 
-export type PayrollMonthType = (typeof PayrollMonth)[number];
+export { PayrollMonth, PayrollMonthType };

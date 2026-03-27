@@ -1,4 +1,4 @@
-import { PayrollMonthType } from "../../../../apps/apis/src/db/schema/payroll.enums";
+import { PayrollMonthType } from "./payroll.enums";
 
 export type ProcessPayrollDto = {
   employeeId: string;

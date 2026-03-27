@@ -1,7 +1,4 @@
-import {
-  LeaveDayType,
-  LeaveType,
-} from "../../../../apps/apis/src/db/schema/leave.enums";
+import { LeaveDayType, LeaveType } from "./leave.enums";
 
 export type CreateLeaveRequestDto = {
   fromDate: string;
