@@ -11,6 +11,7 @@ if (process.env.REDIS_URL) {
     host: process.env.REDIS_HOST,
     port: Number(process.env.REDIS_PORT),
   };
+
   if (process.env.REDIS_TLS === "true") {
     connectionOptions.tls = { rejectUnauthorized: false };
   }
@@ -18,15 +19,30 @@ if (process.env.REDIS_URL) {
 
 if (!(global as any).redisInstance) {
   console.log("Initializing shared Redis client...");
-  (global as any).redisInstance = new Redis(connectionOptions);
-  
-  (global as any).redisInstance.on("connect", () => {
+
+  const client = new Redis(connectionOptions, {
+    maxRetriesPerRequest: null,
+    enableReadyCheck: false,
+    retryStrategy(times) {
+      if (times > 5) return null;
+      return Math.min(times * 200, 2000);
+    },
+    connectTimeout: 10000,
+    lazyConnect: true,
+  });
+
+  client.on("connect", () => {
     console.log("Connected to Redis successfully 🚀");
   });
 
-  (global as any).redisInstance.on("error", (err: any) => {
+  client.on("error", (err: any) => {
     console.error("Redis error:", err);
   });
+
+
+  client.connect();
+
+  (global as any).redisInstance = client;
 }
 
 redis = (global as any).redisInstance;
