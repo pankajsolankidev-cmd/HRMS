@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 
-dotenv.config({ path: ".env" });
+dotenv.config();
 
 import Fastify, { FastifyInstance } from "fastify";
 import { Redis } from "ioredis";
@@ -19,6 +19,7 @@ import fastifyMultipart from "@fastify/multipart";
 import fastifySensible from "@fastify/sensible";
 import fastifyStatic from "@fastify/static";
 import path from "path";
+import fs from "fs";
 
 import authRoutes from "./auth/auth.routes";
 import employeeRoutes from "./modules/employees/employee.routes";
@@ -61,6 +62,22 @@ const app = Fastify({
   },
 });
 
+const redis = new Redis(process.env.REDIS_URL!, {
+  maxRetriesPerRequest: null,
+  enableReadyCheck: false,
+  connectTimeout: 10000,
+});
+
+redis.on("connect", () => {
+  console.log("Redis connected ✅");
+});
+
+redis.on("error", (err) => {
+  console.error("Redis error ❌", err.message);
+});
+
+app.decorate("redis", redis);
+
 app.register(fastifySensible);
 
 app.register(fastifyMultipart, {
@@ -68,10 +85,6 @@ app.register(fastifyMultipart, {
     fileSize: 10 * 1024 * 1024,
   },
 });
-
-const allowedOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(",") 
-  : ["http://localhost:5173", "http://192.168.1.35:5173"];
 
 app.register(cors, {
   origin: true,
@@ -81,8 +94,14 @@ app.register(cors, {
 
 app.register(cookie);
 
+const storagePath = path.resolve(__dirname, "../storage");
+
+if (!fs.existsSync(storagePath)) {
+  fs.mkdirSync(storagePath, { recursive: true });
+}
+
 app.register(fastifyStatic, {
-  root: path.join(process.cwd(), "storage"),
+  root: storagePath,
   prefix: "/files/",
 });
 
@@ -115,6 +134,7 @@ app.register(employeeRoutes, {
     security: [{ bearerAuth: [] }],
   },
 });
+
 app.register(sentryPlugin);
 app.register(systemRoutes);
 app.register(componentRoutes);
@@ -133,14 +153,12 @@ app.register(dashboardRoutes);
 app.register(notificationRoutes);
 app.register(holidayRoutes);
 
+// ✅ Health check
 app.get("/health", async () => {
   return { status: "API is running 🚀" };
 });
 
-app.get("/test-error", async () => {
-  throw new Error("Sentry test error 🚀");
-});
-
+// ✅ Redis test
 app.get("/redis-test", async () => {
   await app.redis.set("hrms:test", "working");
   const value = await app.redis.get("hrms:test");
@@ -151,6 +169,7 @@ app.get("/redis-test", async () => {
   };
 });
 
+// ❗ Important: start server
 async function start() {
   try {
     registerSocket(app);
