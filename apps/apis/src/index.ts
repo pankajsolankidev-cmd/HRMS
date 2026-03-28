@@ -74,7 +74,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
   : ["http://localhost:5173", "http://192.168.1.35:5173"];
 
 app.register(cors, {
-  origin: allowedOrigins,
+  origin: true,
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 });
