@@ -10,18 +10,12 @@ on:
 jobs:
   sonarcloud:
     name: SonarCloud Scan
-    runs-on: ubuntu-latest   # better than windows
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run tests (optional but recommended)
-        run: npm test || true
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
