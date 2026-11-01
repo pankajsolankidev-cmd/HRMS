@@ -17,7 +17,7 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
 
 type Component = {
-  id: number;
+  id: string;
   name: string;
   description: string;
   code: string;
@@ -114,7 +114,7 @@ export default function ComponentTable() {
             className="cursor-pointer text-blue-600 dark:text-blue-400"
           />
 
-          <DeleteConfirm<number>
+          <DeleteConfirm<string>
             title="Delete Component"
             description={`Are you sure you want to delete ${row.name}?`}
             loading={isPending}

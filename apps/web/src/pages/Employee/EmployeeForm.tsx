@@ -1,12 +1,14 @@
 import {
+  addEmployee,
+  updateEmployee,
   getDepartments,
   getEmployeeById,
   getEmployees,
   getPositions,
   getSystems,
-} from "@/api/get";
-import { addEmployee } from "@/api/post";
-import { updateEmployee } from "@/api/put";
+} from "@/api";
+
+
 import Card from "@/components/common/Card";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import Skeleton from "@/components/common/SkeletonForm";

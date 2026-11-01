@@ -1,163 +1,46 @@
-import type {
-  CreateComponentDto,
-  CreateEmployeeDto,
-  CreateExpenseDto,
-  CreateOrganizationDto,
-  CreateProjectDto,
-  CreateSalaryDto,
-  CreateSystemDto,
-} from "@shared/types";
-import Cookies from "js-cookie";
-import api from "./axios";
-export const signInApi = async (data: { email: string; password: string }) => {
-  const res = await api.post("/signin", data);
-  return res.data;
-};
+export {
+  signInApi,
+  logoutUser,
+  refreshToken,
+  forgetPassword,
+  resetPassword,
+} from "./services/auth.service";
 
-export const logoutUser = async (refreshToken: string) => {
-  const res = await api.post("/auth/logout", {
-    refreshToken,
-  });
-  return res.data;
-};
+export { addEmployee } from "./services/employee.service";
 
-export const refreshToken = async () => {
-  const refreshToken = Cookies.get("refresh");
-  const res = await api.post("/auth/refresh", {
-    refreshToken,
-  });
-  return res.data;
-};
+export {
+  addComponent,
+  addSystem,
+} from "./services/system.service";
 
-export const forgetPassword = async (email: string) => {
-  const res = await api.post("/auth/forgot-password", { email });
-  return res.data;
-};
+export { addSalaryStructure } from "./services/salary.service";
 
-export const resetPassword = async (params: {
-  key: string;
-  newPassword: string;
-}) => {
-  const { key, newPassword } = params;
-  const res = await api.post("/auth/reset-password", {
-    key,
-    newPassword,
-  });
-  return res.data;
-};
+export { processBulkPayroll } from "./services/payroll.service";
 
-export const addEmployee = async (payload: CreateEmployeeDto) => {
-  const res = await api.post("/employees", payload);
-  return res.data;
-};
+export { uploadFile } from "./services/file.service";
 
-export const addComponent = async (payload: CreateComponentDto) => {
-  const res = await api.post("/components", payload);
-  return res.data;
-};
+export {
+  addLeave,
+  addEmployeeLeave,
+  type AddLeavePayload,
+} from "./services/leave.service";
 
-export const addSystem = async (payload: CreateSystemDto) => {
-  const res = await api.post("/systems", payload);
-  return res.data;
-};
+export {
+  addExpense,
+  addExpenseDraft,
+} from "./services/expense.service";
 
-export const addSalaryStructure = async (payload: CreateSalaryDto) => {
-  const res = await api.post("/salary", payload);
-  return res.data;
-};
+export {
+  addProject,
+  assignEmployeeToProject,
+} from "./services/project.service";
 
-export const processBulkPayroll = async (payload: any) => {
-  const { data } = await api.post("/payrolls/bulk/process", payload);
-  return data;
-};
+export { addDepartment } from "./services/department.service";
 
-export const uploadFile = async (file: File) => {
-  const formData = new FormData();
-  formData.append("file", file);
-  const res = await api.post("/files/upload", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
-  return res.data as {
-    fileName?: string;
-  };
-};
+export { addOrganization } from "./services/organization.service";
 
-export type AddLeavePayload = {
-  fromDate: string;
-  toDate: string;
-  type: "sick" | "casual" | "marriage" | "wfh";
-  dayType: "full_day" | "first_half" | "second_half" | "multiple_days";
-  reason: string;
-  file?: string;
-  fromHour: number;
-  toHour: number;
-};
-
-export const addLeave = async (payload: AddLeavePayload) => {
-  const res = await api.post("/leave-requests", payload);
-  return res.data;
-};
-
-export const addEmployeeLeave = async (
-  payload: AddLeavePayload & { employeeId: string },
-) => {
-  const res = await api.post("/leave-requests/manual", payload);
-  return res.data.message;
-};
-
-export const addExpense = async (payload: CreateExpenseDto) => {
-  const res = await api.post("/expenses/create", payload);
-  return res.data;
-};
-export const addExpenseDraft = async (payload: CreateExpenseDto) => {
-  const res = await api.post("/expenses", payload);
-  return res.data;
-};
-export const addProject = async (payload: CreateProjectDto) => {
-  const res = await api.post("/projects", payload);
-  return res.data;
-};
-
-export const assignEmployeeToProject = async (params: {
-  projectId: string;
-  employeeIds: string[];
-}) => {
-  const { projectId, employeeIds } = params;
-  const res = await api.post(`/projects/${projectId}/employees`, {
-    employeeIds,
-  });
-  return res.data;
-};
-
-export const addDepartment = async (payload: { name: string }) => {
-  const res = await api.post("/departments", payload);
-  return res.data;
-};
-
-export const addOrganization = async (payload: CreateOrganizationDto) => {
-  const res = await api.post("/organization", payload);
-  return res.data;
-};
-
-export const addPublicHoliday = async (payload: any) => {
-  const res = await api.post("/holidays", payload);
-  return res.data;
-};
-
-export const previewHolidayImport = async (file: File) => {
-  const formData = new FormData();
-  formData.append("file", file);
-  const response = await api.post("/holidays/upload/check", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
-  return response.data;
-};
-
-export const confirmHolidayImport = async (holidays: any[]) => {
-  const response = await api.post("/holidays/upload/confirm", { holidays });
-  return response.data;
-};
+export {
+  addPublicHoliday,
+  previewHolidayImport,
+  confirmHolidayImport,
+} from "./services/holiday.service";

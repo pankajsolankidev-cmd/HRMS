@@ -1,10 +1,11 @@
 {
-  "name": "tailadmin-react",
+  "name": "web",
   "private": true,
   "version": "2.0.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "start": "vite",
     "prebuild": "pnpm --filter @shared/types build",
     "build": "tsc -b && vite build",
     "lint": "eslint .",

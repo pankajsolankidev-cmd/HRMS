@@ -4,9 +4,12 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "dev:web": "pnpm --filter web dev",
-    "dev:api": "pnpm --filter api dev",
     "dev": "pnpm -r --parallel dev",
+    "start": "pnpm dev",
+    "dev:web": "pnpm --filter web dev",
+    "start:web": "pnpm --filter web dev",
+    "dev:api": "pnpm --filter apis dev",
+    "start:api": "pnpm --filter apis dev",
     "build": "pnpm -r build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -1,6 +1,6 @@
-import { deleteEmployee } from "@/api/delete";
-import { getEmployees } from "@/api/get";
-import type { PaginatedResponse } from "@/api/types";
+import { employeeService, type PaginatedResponse } from "@/api";
+
+
 import Card from "@/components/common/Card";
 import Chip from "@/components/common/Chip";
 import DeleteConfirm from "@/components/common/DeleteConfirmModal";
@@ -21,7 +21,7 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 
 type Employee = {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -61,7 +61,7 @@ export default function EmployeeTable() {
   >({
     queryKey: ["employees", page, limit, sortBy, sortOrder, search ?? "all"],
     queryFn: () =>
-      getEmployees({
+      employeeService.getAll({
         page,
         limit,
         ...(sortBy && sortOrder ? { sortBy: sortBy as string, sortOrder } : {}),
@@ -71,7 +71,7 @@ export default function EmployeeTable() {
   });
 
   const { mutate: removeEmployee, isPending } = useMutation({
-    mutationFn: deleteEmployee,
+    mutationFn: (id: string) => employeeService.delete(id),
     onSuccess: (res) => {
       toast.success(res?.message ?? "Employee Deleted successfully");
       refetch();
@@ -86,7 +86,7 @@ export default function EmployeeTable() {
 
   const employees: Employee[] =
     data?.data?.map((u: any) => ({
-      id: u.id,
+      id: String(u.id),
       firstName: u.firstName,
       lastName: u.lastName,
       email: u.email,
@@ -153,7 +153,7 @@ export default function EmployeeTable() {
                 className="cursor-pointer text-blue-600 dark:text-blue-400"
               />
 
-              <DeleteConfirm<number>
+              <DeleteConfirm<string>
                 title="Delete Employee"
                 description={`Are you sure you want to delete ${row.firstName} ${row.lastName}?`}
                 loading={isPending}

@@ -15,7 +15,7 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
 
 type Department = {
-  id: number;
+  id: string;
   name: string;
   createdAt: string;
   updatedAt: string;
@@ -77,7 +77,7 @@ export default function DepartmentTable() {
             className="cursor-pointer text-blue-600 dark:text-blue-400"
           />
 
-          <DeleteConfirm<number>
+          <DeleteConfirm<string>
             title="Delete Department"
             description={`Are you sure you want to delete ${row.name} department?`}
             loading={isPending}

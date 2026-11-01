@@ -25,7 +25,7 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 
 type PublicHoliday = {
-  id: number;
+  id: string;
   title: string;
   description?: string;
   fromDate: string;
@@ -200,7 +200,7 @@ export default function PublicHolidayTable() {
                 onClick={() => navigate(`/holidays/${row.id}`)}
                 className="cursor-pointer text-blue-600 dark:text-blue-400"
               />
-              <DeleteConfirm<number>
+              <DeleteConfirm<string>
                 title="Delete Holiday"
                 description={`Are you sure you want to delete ${row.title} holiday?`}
                 loading={isPending}

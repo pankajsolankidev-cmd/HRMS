@@ -26,7 +26,7 @@ type SystemComponent = {
 };
 
 type System = {
-  id: number;
+  id: string;
   name: string;
   description: string;
   components: SystemComponent[];
@@ -131,7 +131,7 @@ export default function SystemTable() {
             className="cursor-pointer text-blue-600 dark:text-blue-400"
           />
 
-          <DeleteConfirm<number>
+          <DeleteConfirm<string>
             title="Delete System"
             description={`Are you sure you want to delete ${row.name}?`}
             loading={isPending}

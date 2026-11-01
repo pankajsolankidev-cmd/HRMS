@@ -25,7 +25,7 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
 
 type Project = {
-  id: number;
+  id: string;
   name: string;
   clientName: string;
   startDate: string;
@@ -38,7 +38,7 @@ export default function ProjectTable() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const { sortBy, sortOrder, handleSort } = useTableSort<Project>();
-  const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [rawSearch, setRawSearch] = useState("");
   const [search, setSearch] = useState<string | undefined>();
   useEffect(() => {
@@ -66,9 +66,9 @@ export default function ProjectTable() {
   }, [rawSearch]);
 
   const { mutate: markCompleted } = useMutation({
-    mutationFn: (id: number) =>
+    mutationFn: (id: string) =>
       updateProject({
-        id: String(id),
+        id,
         payload: { status: "COMPLETED" },
       }),
     onSuccess: (res) => {
