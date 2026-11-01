@@ -1,0 +1,239 @@
+import { IconChevronDown } from "@tabler/icons-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "../../ui/table";
+
+export type Column<T> = {
+  header: React.ReactNode;
+  accessor?: keyof T;
+  sortable?: boolean;
+  align?: "left" | "center" | "right";
+  cell: (row: T) => React.ReactNode;
+};
+
+export interface DataTableProps<T> {
+  columns: Column<T>[];
+  data: T[];
+
+  isLoading?: boolean;
+  isError?: boolean;
+
+  sortBy?: keyof T;
+  sortOrder?: "asc" | "desc";
+  onSort?: (field: keyof T) => void;
+
+  page?: number;
+  limit?: number;
+  total?: number;
+  onPageChange?: (page: number) => void;
+  onLimitChange?: (limit: number) => void;
+}
+
+export default function DataTable<T>({
+  columns,
+  data,
+  isLoading,
+  isError,
+  sortBy,
+  sortOrder,
+  onSort,
+  page = 1,
+  limit = 10,
+  total = 0,
+  onPageChange,
+  onLimitChange,
+}: DataTableProps<T>) {
+  return (
+    <div className="relative overflow-visible rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+      <div className="w-full max-h-[400px] overflow-y-auto">
+        <Table>
+          <TableHeader className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-800 whitespace-nowrap">
+            <TableRow className="bg-gray-50 dark:bg-gray-800/50">
+              {columns.map((col, index) => {
+                const isSortable = col.sortable && col.accessor && onSort;
+                const isActive =
+                  sortBy !== undefined &&
+                  sortOrder !== undefined &&
+                  sortBy === col.accessor;
+
+                return (
+                  <TableCell
+                    key={index}
+                    isHeader
+                    onClick={
+                      isSortable && data.length > 0
+                        ? () => onSort(col.accessor as keyof T)
+                        : undefined
+                    }
+                    className={`
+                      px-6 py-4 text-${col.align ?? "left"}
+                      text-sm font-semibold uppercase 
+                      ${
+                        isSortable
+                          ? "cursor-pointer select-none"
+                          : "text-gray-500 dark:text-gray-400"
+                      }
+                    `}
+                  >
+                    <div
+                      className={`flex items-center gap-2 ${
+                        col.align === "center"
+                          ? "justify-center"
+                          : col.align === "right"
+                            ? "justify-end"
+                            : "justify-start"
+                      }`}
+                    >
+                      <span>{col.header}</span>
+
+                      {isSortable && data.length > 0 && (
+                        <div className="flex flex-col leading-none">
+                          <span
+                            className={`text-[8px] ${
+                              isActive && sortOrder === "asc"
+                                ? "text-gray-900 dark:text-white"
+                                : "text-gray-300 dark:text-gray-600"
+                            }`}
+                          >
+                            ▲
+                          </span>
+                          <span
+                            className={`text-[8px] ${
+                              isActive && sortOrder === "desc"
+                                ? "text-gray-900 dark:text-white"
+                                : "text-gray-300 dark:text-gray-600"
+                            }`}
+                          >
+                            ▼
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                );
+              })}
+            </TableRow>
+          </TableHeader>
+
+          <TableBody className="divide-y divide-gray-100 dark:divide-gray-800 whitespace-nowrap">
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="p-0">
+                  <div className="flex items-center justify-center min-h-[200px] w-full">
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-black dark:border-gray-600 dark:border-t-white" />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : isError ? (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="p-0">
+                  <div className="flex items-center justify-center min-h-[200px] w-full">
+                    <p className="text-red-600 dark:text-red-400 font-medium">
+                      Failed to load data
+                    </p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : data.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="p-0">
+                  <div className="flex items-center justify-center min-h-[250px] w-full">
+                    <div className="text-center space-y-2">
+                      <p className="font-medium text-gray-600 dark:text-gray-300">
+                        No data available
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        Try adjusting your search or filters
+                      </p>
+                    </div>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              data.map((row, rowIndex) => (
+                <TableRow
+                  key={rowIndex}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-800/40"
+                >
+                  {columns.map((col, colIndex) => (
+                    <TableCell
+                      key={colIndex}
+                      className="px-6 py-5 align-middle"
+                    >
+                      <div
+                        className={`flex w-full ${
+                          col.align === "center"
+                            ? "justify-center"
+                            : col.align === "right"
+                              ? "justify-end"
+                              : "justify-start"
+                        }`}
+                      >
+                        {col.cell(row)}
+                      </div>
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {(onPageChange || onLimitChange) && total > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-gray-100 dark:border-gray-800">
+          {onLimitChange && (
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <select
+                  value={limit}
+                  onChange={(e) => onLimitChange(Number(e.target.value))}
+                  className="appearance-none h-9 min-w-[70px] rounded-lg border border-gray-300 bg-white px-3 pr-8 text-sm outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200"
+                >
+                  {[5, 10, 50, 100].map((v) => (
+                    <option key={v} value={v}>
+                      {v}
+                    </option>
+                  ))}
+                </select>
+
+                <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-gray-400">
+                  <IconChevronDown size={16} />
+                </div>
+              </div>
+              {onPageChange && (
+                <span className="text-sm text-gray-500">
+                  Showing {(page - 1) * limit + 1} –{" "}
+                  {Math.min(page * limit, total)} of {total}
+                </span>
+              )}
+            </div>
+          )}
+
+          {onPageChange && (
+            <div className="flex gap-2">
+              <button
+                disabled={page === 1}
+                onClick={() => onPageChange(page - 1)}
+                className="rounded border px-3 py-1 text-sm disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-800"
+              >
+                Prev
+              </button>
+              <button
+                disabled={page * limit >= total}
+                onClick={() => onPageChange(page + 1)}
+                className="rounded border px-3 py-1 text-sm disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-800"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

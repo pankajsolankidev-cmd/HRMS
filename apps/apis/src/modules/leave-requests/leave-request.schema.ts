@@ -1,0 +1,409 @@
+import {
+  LeaveType,
+  LeaveDayType,
+  LeaveStatus,
+} from "../../db/schema/leave.enums";
+
+const employeeMiniWithUserIdSchema = {
+  anyOf: [
+    {
+      type: "object",
+      properties: {
+        id: { type: "string", format: "uuid" },
+        userId: { type: "string", format: "uuid" },
+        firstName: { type: "string" },
+        lastName: { type: "string" },
+      },
+      required: ["id", "userId", "firstName", "lastName"],
+    },
+    { type: "null" },
+  ],
+};
+
+const userMiniSchema = {
+  anyOf: [
+    {
+      type: "object",
+      properties: {
+        id: { type: "string", format: "uuid" },
+        firstName: { type: "string" },
+        lastName: { type: "string" },
+      },
+      required: ["id", "firstName", "lastName"],
+    },
+    { type: "null" },
+  ],
+};
+
+const errorResponse = {
+  type: "object",
+  properties: {
+    message: { type: "string" },
+  },
+  required: ["message"],
+};
+
+const leaveRequestIdParams = {
+  type: "object",
+  required: ["id"],
+  properties: {
+    id: { type: "string", format: "uuid" },
+  },
+};
+
+const employeeObjectSchema = {
+  type: "object",
+  properties: {
+    id: { type: "string", format: "uuid" },
+    userId: { type: "string", format: "uuid" },
+    firstName: { type: "string" },
+    lastName: { type: "string" },
+  },
+  required: ["id", "firstName", "lastName"],
+};
+
+const leaveObjectSchema = {
+  type: "object",
+  properties: {
+    id: { type: "string", format: "uuid" },
+    createdBy: { type: "string", format: "uuid" },
+    fromDate: { type: "string", format: "date" },
+    toDate: { type: "string", format: "date" },
+
+    type: { type: "string", enum: Object.values(LeaveType) },
+    dayType: { type: "string", enum: Object.values(LeaveDayType) },
+
+    fromHour: { type: "number" },
+    toHour: { type: "number" },
+
+    totalHours: { type: "number" },
+    totalDays: { type: "string" },
+
+    status: { type: "string", enum: Object.values(LeaveStatus) },
+
+    reason: { type: "string" },
+    rejectionReason: { type: ["string", "null"] },
+
+    approvedBy: { type: ["string", "null"], format: "uuid" },
+    approvedAt: { type: ["string", "null"], format: "date-time" },
+
+    rejectedBy: { type: ["string", "null"], format: "uuid" },
+    rejectedAt: { type: ["string", "null"], format: "date-time" },
+
+    file: { type: "string" },
+
+    createdAt: { type: "string", format: "date-time" },
+    updatedAt: { type: "string", format: "date-time" },
+  },
+};
+
+export const createLeaveRequestSchema = {
+  tags: ["Leave Requests"],
+  body: {
+    type: "object",
+    required: ["fromDate", "toDate", "type", "dayType", "fromHour", "toHour"],
+    properties: {
+      fromDate: { type: "string", format: "date" },
+      toDate: { type: "string", format: "date" },
+
+      type: { type: "string", enum: Object.values(LeaveType) },
+      dayType: { type: "string", enum: Object.values(LeaveDayType) },
+
+      fromHour: { type: "number", minimum: 0, maximum: 24 },
+      toHour: { type: "number", minimum: 0, maximum: 24 },
+
+      reason: { type: "string" },
+      file: { type: "string" },
+    },
+    additionalProperties: false,
+  },
+  response: {
+    201: {
+      type: "object",
+      properties: {
+        message: { type: "string" },
+      },
+      required: ["message"],
+    },
+    400: errorResponse,
+    500: errorResponse,
+  },
+};
+
+export const getAllLeaveRequestsSchema = {
+  tags: ["Leave Requests"],
+  querystring: {
+    type: "object",
+    properties: {
+      search: { type: "string" },
+
+      status: { type: "string", enum: Object.values(LeaveStatus) },
+      type: { type: "string", enum: Object.values(LeaveType) },
+
+      employeeId: { type: "string", format: "uuid" },
+      fromDate: { type: "string", format: "date" },
+      toDate: { type: "string", format: "date" },
+      page: { type: "number", minimum: 1 },
+      limit: { type: "number", minimum: 1, maximum: 50 },
+      sortBy: { type: "string", enum: ["createdAt", "fromDate"] },
+      sortOrder: { type: "string", enum: ["asc", "desc"] },
+      createdByType: {
+        type: "string",
+        enum: ["all", "manual", "self"],
+      },
+    },
+    additionalProperties: false,
+  },
+  response: {
+    200: {
+      type: "object",
+      properties: {
+        data: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              leave: leaveObjectSchema,
+              employee: employeeObjectSchema,
+              createdByEmployee: employeeMiniWithUserIdSchema,
+              approvedByUser: userMiniSchema,
+              rejectedByUser: userMiniSchema,
+            },
+            required: ["leave", "employee"],
+          },
+        },
+        meta: {
+          type: "object",
+          properties: {
+            page: { type: "number" },
+            limit: { type: "number" },
+            total: { type: "number" },
+          },
+          required: ["page", "limit", "total"],
+        },
+      },
+      required: ["data", "meta"],
+    },
+  },
+};
+
+export const getLeaveRequestByIdSchema = {
+  tags: ["Leave Requests"],
+  params: leaveRequestIdParams,
+  response: {
+    200: {
+      type: "object",
+      properties: {
+        data: {
+          type: "object",
+          properties: {
+            leave: leaveObjectSchema,
+            employee: employeeObjectSchema,
+            createdByEmployee: employeeMiniWithUserIdSchema,
+            approvedByUser: userMiniSchema,
+            rejectedByUser: userMiniSchema,
+          },
+          required: ["leave", "employee"],
+        },
+      },
+      required: ["data"],
+    },
+    403: errorResponse,
+    404: errorResponse,
+  },
+};
+
+export const updateLeaveRequestSchema = {
+  tags: ["Leave Requests"],
+  params: leaveRequestIdParams,
+  body: {
+    type: "object",
+    properties: {
+      fromDate: { type: "string", format: "date" },
+      toDate: { type: "string", format: "date" },
+
+      type: { type: "string", enum: Object.values(LeaveType) },
+      dayType: { type: "string", enum: Object.values(LeaveDayType) },
+
+      fromHour: { type: "number", minimum: 0, maximum: 24 },
+      toHour: { type: "number", minimum: 0, maximum: 24 },
+
+      reason: { type: "string" },
+      file: { type: "string" },
+    },
+    additionalProperties: false,
+  },
+  response: {
+    200: {
+      type: "object",
+      properties: {
+        message: { type: "string" },
+      },
+      required: ["message"],
+    },
+    404: errorResponse,
+    500: errorResponse,
+  },
+};
+
+export const deleteLeaveRequestSchema = {
+  tags: ["Leave Requests"],
+  params: leaveRequestIdParams,
+  response: {
+    200: {
+      type: "object",
+      properties: {
+        message: { type: "string" },
+      },
+      required: ["message"],
+    },
+    404: errorResponse,
+    500: errorResponse,
+  },
+};
+
+export const createManualLeaveRequestSchema = {
+  tags: ["Leave Requests"],
+  body: {
+    type: "object",
+    required: [
+      "employeeId",
+      "fromDate",
+      "toDate",
+      "type",
+      "dayType",
+      "fromHour",
+      "toHour",
+    ],
+    properties: {
+      employeeId: { type: "string", format: "uuid" },
+
+      fromDate: { type: "string", format: "date" },
+      toDate: { type: "string", format: "date" },
+
+      type: { type: "string", enum: Object.values(LeaveType) },
+      dayType: { type: "string", enum: Object.values(LeaveDayType) },
+
+      fromHour: { type: "number", minimum: 0, maximum: 24 },
+      toHour: { type: "number", minimum: 0, maximum: 24 },
+
+      reason: { type: "string" },
+      file: { type: "string" },
+    },
+    additionalProperties: false,
+  },
+  response: {
+    201: {
+      type: "object",
+      properties: {
+        message: { type: "string" },
+      },
+      required: ["message"],
+    },
+    400: errorResponse,
+    403: errorResponse,
+    404: errorResponse,
+    500: errorResponse,
+  },
+};
+
+export const approveLeaveRequestSchema = {
+  tags: ["Leave Requests"],
+  params: leaveRequestIdParams,
+  response: {
+    200: {
+      type: "object",
+      properties: {
+        message: { type: "string" },
+      },
+      required: ["message"],
+    },
+    403: errorResponse,
+    404: errorResponse,
+    500: errorResponse,
+  },
+};
+
+export const rejectLeaveRequestSchema = {
+  tags: ["Leave Requests"],
+  params: leaveRequestIdParams,
+  body: {
+    type: "object",
+    properties: {
+      rejectionReason: { type: "string" },
+    },
+    additionalProperties: false,
+  },
+  response: {
+    200: {
+      type: "object",
+      properties: {
+        message: { type: "string" },
+      },
+      required: ["message"],
+    },
+    403: errorResponse,
+    404: errorResponse,
+    500: errorResponse,
+  },
+};
+
+export const updateManualLeaveRequestSchema = {
+  tags: ["Leave Requests"],
+  params: leaveRequestIdParams,
+  body: {
+    type: "object",
+    properties: {
+      employeeId: { type: "string", format: "uuid" },
+      fromDate: { type: "string", format: "date" },
+      toDate: { type: "string", format: "date" },
+      type: { type: "string", enum: Object.values(LeaveType) },
+      dayType: { type: "string", enum: Object.values(LeaveDayType) },
+      fromHour: { type: "number", minimum: 0, maximum: 24 },
+      toHour: { type: "number", minimum: 0, maximum: 24 },
+      reason: { type: "string" },
+      file: { type: "string" },
+    },
+    additionalProperties: false,
+  },
+  response: {
+    200: { type: "object", properties: { message: { type: "string" } } },
+    400: errorResponse,
+    403: errorResponse,
+    404: errorResponse,
+  },
+};
+
+export const deleteManualLeaveRequestSchema = {
+  tags: ["Leave Requests"],
+  params: leaveRequestIdParams,
+  response: {
+    200: { type: "object", properties: { message: { type: "string" } } },
+    403: errorResponse,
+    404: errorResponse,
+  },
+};
+
+export const getManualLeaveRequestByIdSchema = {
+  tags: ["Leave Requests"],
+  params: leaveRequestIdParams,
+  response: {
+    200: {
+      type: "object",
+      properties: {
+        data: {
+          type: "object",
+          properties: {
+            leave: leaveObjectSchema,
+            employee: employeeObjectSchema,
+            createdByEmployee: employeeMiniWithUserIdSchema,
+          },
+          required: ["leave", "employee"],
+        },
+      },
+      required: ["data"],
+    },
+    403: errorResponse,
+    404: errorResponse,
+  },
+};

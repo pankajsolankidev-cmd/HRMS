@@ -1,0 +1,62 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1771326374985,
+      "tag": "0000_faulty_abomination",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1771405916570,
+      "tag": "0001_groovy_wrecker",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771825381643,
+      "tag": "0002_chubby_yellowjacket",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1772021153032,
+      "tag": "0003_nosy_the_twelve",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1772528121522,
+      "tag": "0004_bumpy_namor",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1772530765653,
+      "tag": "0005_curious_morg",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1772707585187,
+      "tag": "0006_majestic_white_queen",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1773398368687,
+      "tag": "0007_fresh_crusher_hogan",
+      "breakpoints": true
+    }
+  ]
+}

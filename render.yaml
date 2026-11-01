@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: hrm-api
+    runtime: node
+    plan: free
+    buildCommand: pnpm install && pnpm --filter @shared/types build && pnpm --filter apis build
+    startCommand: pnpm start --filter apis
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: 5432
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_SSL
+        value: "true"
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        value: "http://localhost:5173" # Update this to your frontend URL
