@@ -1,5 +1,11 @@
+import type {
+  CreateLeaveRequestDto,
+  CreateManualLeaveRequestDto,
+  LeaveRequestEntity,
+  UpdateLeaveRequestDto,
+} from "@shared/types";
 import { axiosClient } from "../client/axiosClient";
-import { API_ENDPOINTS } from "../endpoints";
+import { API_ENDPOINTS, type ResourceId } from "../endpoints";
 import type {
   AddLeavePayload,
   ListQueryParams,
@@ -9,40 +15,50 @@ import type {
 } from "../types";
 
 export const leaveService = {
-  getAll: async (params?: ListQueryParams) => {
-    const res = await axiosClient.get<PaginatedResponse<any>>(
+  getAll: async <T = LeaveRequestEntity>(
+    params?: ListQueryParams,
+  ): Promise<PaginatedResponse<T>> => {
+    const res = await axiosClient.get<PaginatedResponse<T>>(
       API_ENDPOINTS.LEAVES.BASE,
       { params },
     );
     return res.data;
   },
 
-  getById: async (id: string) => {
+  getById: async <T = any>(id: ResourceId): Promise<T> => {
     const res = await axiosClient.get(API_ENDPOINTS.LEAVES.BY_ID(id));
     return res.data?.data ?? res.data;
   },
 
-  getManualById: async (id: string) => {
+  getManualById: async <T = any>(id: ResourceId): Promise<T> => {
     const res = await axiosClient.get(API_ENDPOINTS.LEAVES.MANUAL_BY_ID(id));
     return res.data?.data ?? res.data;
   },
 
-  create: async (payload: AddLeavePayload) => {
+  create: async (payload: CreateLeaveRequestDto | AddLeavePayload) => {
     const res = await axiosClient.post(API_ENDPOINTS.LEAVES.BASE, payload);
     return res.data;
   },
 
-  createManual: async (payload: AddLeavePayload & { employeeId: string }) => {
+  createManual: async (
+    payload: CreateManualLeaveRequestDto | (AddLeavePayload & { employeeId: string }),
+  ) => {
     const res = await axiosClient.post(API_ENDPOINTS.LEAVES.MANUAL, payload);
     return res.data?.message ?? res.data;
   },
 
-  update: async (id: string, payload: UpdateLeavePayload) => {
+  update: async (
+    id: ResourceId,
+    payload: UpdateLeaveRequestDto | UpdateLeavePayload,
+  ) => {
     const res = await axiosClient.patch(API_ENDPOINTS.LEAVES.BY_ID(id), payload);
     return res.data;
   },
 
-  updateManual: async (id: string, payload: UpdateEmployeeLeavePayload) => {
+  updateManual: async (
+    id: ResourceId,
+    payload: UpdateEmployeeLeavePayload,
+  ) => {
     const res = await axiosClient.patch(
       API_ENDPOINTS.LEAVES.MANUAL_BY_ID(id),
       payload,
@@ -50,29 +66,29 @@ export const leaveService = {
     return res.data;
   },
 
-  approve: async (id: string) => {
+  approve: async (id: ResourceId) => {
     const res = await axiosClient.patch(API_ENDPOINTS.LEAVES.APPROVE(id));
     return res.data;
   },
 
-  reject: async (id: string, rejectionReason?: string) => {
+  reject: async (id: ResourceId, rejectionReason?: string) => {
     const res = await axiosClient.patch(API_ENDPOINTS.LEAVES.REJECT(id), {
       rejectionReason,
     });
     return res.data;
   },
 
-  delete: async (id: string) => {
+  delete: async (id: ResourceId) => {
     const res = await axiosClient.delete(API_ENDPOINTS.LEAVES.BY_ID(id));
     return res.data;
   },
 
-  deleteManual: async (id: string) => {
+  deleteManual: async (id: ResourceId) => {
     const res = await axiosClient.delete(API_ENDPOINTS.LEAVES.MANUAL_BY_ID(id));
     return res.data;
   },
 
-  downloadFile: async (id: string) => {
+  downloadFile: async (id: ResourceId) => {
     const res = await axiosClient.get(API_ENDPOINTS.LEAVES.DOWNLOAD(id), {
       responseType: "blob",
     });
@@ -90,14 +106,14 @@ export const updateLeave = ({
   id,
   payload,
 }: {
-  id: string;
+  id: ResourceId;
   payload: UpdateLeavePayload;
 }) => leaveService.update(id, payload);
 export const updateEmployeeLeave = ({
   id,
   payload,
 }: {
-  id: string;
+  id: ResourceId;
   payload: UpdateEmployeeLeavePayload;
 }) => leaveService.updateManual(id, payload);
 export const approveLeave = leaveService.approve;
@@ -105,7 +121,7 @@ export const rejectLeave = ({
   id,
   rejectionReason,
 }: {
-  id: string;
+  id: ResourceId;
   rejectionReason?: string;
 }) => leaveService.reject(id, rejectionReason);
 export const deleteLeave = leaveService.delete;

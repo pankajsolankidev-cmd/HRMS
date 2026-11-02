@@ -1,6 +1,9 @@
 import type {
+  ComponentEntity,
   CreateComponentDto,
   CreateSystemDto,
+  PositionEntity,
+  SystemEntity,
   UpdateComponentDto,
   UpdateSystemDto,
 } from "@shared/types";
@@ -10,16 +13,20 @@ import type { ListQueryParams, PaginatedResponse } from "../types";
 
 export const systemService = {
   // Systems
-  getSystems: async (params?: ListQueryParams) => {
-    const res = await axiosClient.get<PaginatedResponse<any>>(
+  getSystems: async <T = SystemEntity>(
+    params?: ListQueryParams,
+  ): Promise<PaginatedResponse<T>> => {
+    const res = await axiosClient.get<PaginatedResponse<T>>(
       API_ENDPOINTS.SYSTEMS.BASE,
       { params },
     );
     return res.data;
   },
 
-  getSystemById: async (id: ResourceId) => {
-    const res = await axiosClient.get(API_ENDPOINTS.SYSTEMS.BY_ID(id));
+  getSystemById: async <T = SystemEntity>(id: ResourceId): Promise<T> => {
+    const res = await axiosClient.get<T>(
+      API_ENDPOINTS.SYSTEMS.BY_ID(id),
+    );
     return res.data;
   },
 
@@ -39,16 +46,20 @@ export const systemService = {
   },
 
   // Components
-  getComponents: async (params?: ListQueryParams) => {
-    const res = await axiosClient.get<PaginatedResponse<any>>(
+  getComponents: async <T = ComponentEntity>(
+    params?: ListQueryParams,
+  ): Promise<PaginatedResponse<T>> => {
+    const res = await axiosClient.get<PaginatedResponse<T>>(
       API_ENDPOINTS.COMPONENTS.BASE,
       { params },
     );
     return res.data;
   },
 
-  getComponentById: async (id: ResourceId) => {
-    const res = await axiosClient.get(API_ENDPOINTS.COMPONENTS.BY_ID(id));
+  getComponentById: async <T = ComponentEntity>(id: ResourceId): Promise<T> => {
+    const res = await axiosClient.get<T>(
+      API_ENDPOINTS.COMPONENTS.BY_ID(id),
+    );
     return res.data;
   },
 
@@ -71,11 +82,12 @@ export const systemService = {
   },
 
   // Positions
-  getPositions: async (params?: ListQueryParams) => {
-    const res = await axiosClient.get<PaginatedResponse<any>>(
-      API_ENDPOINTS.POSITIONS.BASE,
-      { params },
-    );
+  getPositions: async <T = PositionEntity>(
+    params?: ListQueryParams,
+  ): Promise<PaginatedResponse<T> | T[]> => {
+    const res = await axiosClient.get<
+      PaginatedResponse<T> | T[]
+    >(API_ENDPOINTS.POSITIONS.BASE, { params });
     return res.data;
   },
 };
@@ -91,8 +103,7 @@ export const updateSystem = ({
   id: ResourceId;
   payload: UpdateSystemDto;
 }) => systemService.updateSystem(id, payload);
-export const deleteSystem = (id: ResourceId) =>
-  systemService.deleteSystem(id);
+export const deleteSystem = (id: ResourceId) => systemService.deleteSystem(id);
 
 export const getComponents = systemService.getComponents;
 export const getComponentById = systemService.getComponentById;

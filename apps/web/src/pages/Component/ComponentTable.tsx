@@ -19,7 +19,7 @@ import { useNavigate } from "react-router";
 type Component = {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   code: string;
 };
 

@@ -1,19 +1,27 @@
-import type { CreateEmployeeDto, UpdateEmployeeDto } from "@shared/types";
+import type {
+  CreateEmployeeDto,
+  EmployeeEntity,
+  UpdateEmployeeDto,
+} from "@shared/types";
 import { axiosClient } from "../client/axiosClient";
 import { API_ENDPOINTS, type ResourceId } from "../endpoints";
 import type { ListQueryParams, PaginatedResponse } from "../types";
 
 export const employeeService = {
-  getAll: async (params?: ListQueryParams) => {
-    const res = await axiosClient.get<PaginatedResponse<any>>(
+  getAll: async (
+    params?: ListQueryParams,
+  ): Promise<PaginatedResponse<EmployeeEntity>> => {
+    const res = await axiosClient.get<PaginatedResponse<EmployeeEntity>>(
       API_ENDPOINTS.EMPLOYEES.BASE,
       { params },
     );
     return res.data;
   },
 
-  getById: async (id: ResourceId) => {
-    const res = await axiosClient.get(API_ENDPOINTS.EMPLOYEES.BY_ID(id));
+  getById: async (id: ResourceId): Promise<EmployeeEntity> => {
+    const res = await axiosClient.get<EmployeeEntity>(
+      API_ENDPOINTS.EMPLOYEES.BY_ID(id),
+    );
     return res.data;
   },
 

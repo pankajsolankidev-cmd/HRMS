@@ -1,19 +1,27 @@
-import type { CreateProjectDto, UpdateProjectDto } from "@shared/types";
+import type {
+  CreateProjectDto,
+  ProjectEntity,
+  UpdateProjectDto,
+} from "@shared/types";
 import { axiosClient } from "../client/axiosClient";
 import { API_ENDPOINTS, type ResourceId } from "../endpoints";
 import type { ListQueryParams, PaginatedResponse } from "../types";
 
 export const projectService = {
-  getAll: async (params?: ListQueryParams) => {
-    const res = await axiosClient.get<PaginatedResponse<any>>(
+  getAll: async <T = ProjectEntity>(
+    params?: ListQueryParams,
+  ): Promise<PaginatedResponse<T>> => {
+    const res = await axiosClient.get<PaginatedResponse<T>>(
       API_ENDPOINTS.PROJECTS.BASE,
       { params },
     );
     return res.data;
   },
 
-  getById: async (id: ResourceId) => {
-    const res = await axiosClient.get(API_ENDPOINTS.PROJECTS.BY_ID(id));
+  getById: async <T = ProjectEntity>(id: ResourceId): Promise<T> => {
+    const res = await axiosClient.get<T>(
+      API_ENDPOINTS.PROJECTS.BY_ID(id),
+    );
     return res.data;
   },
 

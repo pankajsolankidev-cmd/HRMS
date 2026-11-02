@@ -1,27 +1,36 @@
+import type {
+  CreateHolidayDto,
+  HolidayEntity,
+  UpdateHolidayDto,
+} from "@shared/types";
 import { axiosClient } from "../client/axiosClient";
 import { API_ENDPOINTS, type ResourceId } from "../endpoints";
 import type { ListQueryParams, PaginatedResponse } from "../types";
 
 export const holidayService = {
-  getAll: async (params?: ListQueryParams) => {
-    const res = await axiosClient.get<PaginatedResponse<any>>(
+  getAll: async (
+    params?: ListQueryParams,
+  ): Promise<PaginatedResponse<HolidayEntity>> => {
+    const res = await axiosClient.get<PaginatedResponse<HolidayEntity>>(
       API_ENDPOINTS.HOLIDAYS.BASE,
       { params },
     );
     return res.data;
   },
 
-  getById: async (id: ResourceId) => {
-    const res = await axiosClient.get(API_ENDPOINTS.HOLIDAYS.BY_ID(id));
+  getById: async (id: ResourceId): Promise<HolidayEntity> => {
+    const res = await axiosClient.get<HolidayEntity>(
+      API_ENDPOINTS.HOLIDAYS.BY_ID(id),
+    );
     return res.data;
   },
 
-  create: async (payload: any) => {
+  create: async (payload: CreateHolidayDto) => {
     const res = await axiosClient.post(API_ENDPOINTS.HOLIDAYS.BASE, payload);
     return res.data;
   },
 
-  update: async (id: ResourceId, payload: any) => {
+  update: async (id: ResourceId, payload: UpdateHolidayDto) => {
     const res = await axiosClient.put(API_ENDPOINTS.HOLIDAYS.BY_ID(id), payload);
     return res.data;
   },
@@ -58,7 +67,7 @@ export const holidayService = {
     return res.data;
   },
 
-  confirmImport: async (holidays: any[]) => {
+  confirmImport: async (holidays: CreateHolidayDto[]) => {
     const res = await axiosClient.post(API_ENDPOINTS.HOLIDAYS.CONFIRM_IMPORT, {
       holidays,
     });
@@ -70,7 +79,7 @@ export const holidayService = {
 export const getPublicHolidays = holidayService.getAll;
 export const getPublicHolidayById = holidayService.getById;
 export const addPublicHoliday = holidayService.create;
-export const updatePublicHoliday = (id: ResourceId, payload: any) =>
+export const updatePublicHoliday = (id: ResourceId, payload: UpdateHolidayDto) =>
   holidayService.update(id, payload);
 export const deletePublicHoliday = (id: ResourceId) =>
   holidayService.delete(id);

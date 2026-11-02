@@ -28,8 +28,8 @@ type SystemComponent = {
 type System = {
   id: string;
   name: string;
-  description: string;
-  components: SystemComponent[];
+  description?: string;
+  components?: SystemComponent[];
 };
 
 export default function SystemTable() {

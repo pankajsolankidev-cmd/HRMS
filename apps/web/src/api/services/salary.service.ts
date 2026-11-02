@@ -1,19 +1,27 @@
-import type { CreateSalaryDto, UpdateSalaryDto } from "@shared/types";
+import type {
+  CreateSalaryDto,
+  SalaryStructureEntity,
+  UpdateSalaryDto,
+} from "@shared/types";
 import { axiosClient } from "../client/axiosClient";
-import { API_ENDPOINTS } from "../endpoints";
+import { API_ENDPOINTS, type ResourceId } from "../endpoints";
 import type { ListQueryParams, PaginatedResponse } from "../types";
 
 export const salaryService = {
-  getAll: async (params?: ListQueryParams) => {
-    const res = await axiosClient.get<PaginatedResponse<any>>(
+  getAll: async (
+    params?: ListQueryParams,
+  ): Promise<PaginatedResponse<SalaryStructureEntity>> => {
+    const res = await axiosClient.get<PaginatedResponse<SalaryStructureEntity>>(
       API_ENDPOINTS.SALARY.BASE,
       { params },
     );
     return res.data;
   },
 
-  getById: async (id: string) => {
-    const res = await axiosClient.get(API_ENDPOINTS.SALARY.BY_ID(id));
+  getById: async (id: ResourceId): Promise<SalaryStructureEntity> => {
+    const res = await axiosClient.get<SalaryStructureEntity>(
+      API_ENDPOINTS.SALARY.BY_ID(id),
+    );
     return res.data;
   },
 
@@ -22,12 +30,12 @@ export const salaryService = {
     return res.data;
   },
 
-  update: async (id: string, payload: UpdateSalaryDto) => {
+  update: async (id: ResourceId, payload: UpdateSalaryDto) => {
     const res = await axiosClient.put(API_ENDPOINTS.SALARY.BY_ID(id), payload);
     return res.data;
   },
 
-  delete: async (id: string) => {
+  delete: async (id: ResourceId) => {
     const res = await axiosClient.delete(API_ENDPOINTS.SALARY.BY_ID(id));
     return res.data;
   },

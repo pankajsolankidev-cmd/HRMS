@@ -1,11 +1,12 @@
+import type {
+  PayrollEntity,
+  PayrollSummaryDto,
+  ProcessPayrollDto,
+  UpdatePayrollDto,
+} from "@shared/types";
 import { axiosClient } from "../client/axiosClient";
 import { API_ENDPOINTS, type ResourceId } from "../endpoints";
-
-export type PayrollSummaryResponse = {
-  employeesProcessed: number;
-  avgSalary: number;
-  netPayroll: number;
-};
+import type { PaginatedResponse } from "../types";
 
 export const payrollService = {
   getPreview: async (params?: { month?: string; year?: number }) => {
@@ -15,25 +16,33 @@ export const payrollService = {
     return res.data;
   },
 
-  getHistory: async (params?: { employeeId?: string }) => {
-    const res = await axiosClient.get(API_ENDPOINTS.PAYROLL.BASE, { params });
+  getHistory: async <T = PayrollEntity>(params?: {
+    employeeId?: string;
+  }): Promise<PaginatedResponse<T>> => {
+    const res = await axiosClient.get<PaginatedResponse<T>>(
+      API_ENDPOINTS.PAYROLL.BASE,
+      { params },
+    );
     return res.data;
   },
 
-  getSummary: async (month: string, year: number): Promise<PayrollSummaryResponse> => {
-    const res = await axiosClient.get<PayrollSummaryResponse>(
+  getSummary: async (month: string, year: number): Promise<PayrollSummaryDto> => {
+    const res = await axiosClient.get<PayrollSummaryDto>(
       API_ENDPOINTS.PAYROLL.SUMMARY,
       { params: { month, year } },
     );
     return res.data;
   },
 
-  processBulk: async (payload: any) => {
-    const res = await axiosClient.post(API_ENDPOINTS.PAYROLL.BULK_PROCESS, payload);
+  processBulk: async (payload: ProcessPayrollDto[] | any) => {
+    const res = await axiosClient.post(
+      API_ENDPOINTS.PAYROLL.BULK_PROCESS,
+      payload,
+    );
     return res.data;
   },
 
-  update: async (id: ResourceId, payload: any) => {
+  update: async (id: ResourceId, payload: UpdatePayrollDto | any) => {
     const res = await axiosClient.patch(API_ENDPOINTS.PAYROLL.BY_ID(id), payload);
     return res.data;
   },

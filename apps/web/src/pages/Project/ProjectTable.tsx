@@ -27,9 +27,9 @@ import { useNavigate } from "react-router";
 type Project = {
   id: string;
   name: string;
-  clientName: string;
+  clientName?: string;
   startDate: string;
-  expectedEndDate: string;
+  expectedEndDate?: string;
   status: "ACTIVE" | "COMPLETED";
 };
 

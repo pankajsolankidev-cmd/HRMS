@@ -1,15 +1,16 @@
+import type {
+  AuthSessionDto,
+  AuthSignInDto,
+  SignInResponseDto,
+} from "@shared/types";
 import { axiosClient } from "../client/axiosClient";
 import { tokenService } from "../client/tokenService";
 import { API_ENDPOINTS } from "../endpoints";
-import type {
-  ResetPasswordPayload,
-  SignInCredentials,
-  SignInResponse,
-} from "../types";
+import type { ResetPasswordPayload } from "../types";
 
 export const authService = {
-  signIn: async (credentials: SignInCredentials): Promise<SignInResponse> => {
-    const res = await axiosClient.post<SignInResponse>(
+  signIn: async (credentials: AuthSignInDto): Promise<SignInResponseDto> => {
+    const res = await axiosClient.post<SignInResponseDto>(
       API_ENDPOINTS.AUTH.SIGN_IN,
       credentials,
     );
@@ -28,8 +29,10 @@ export const authService = {
     return tokenService.refreshAccessToken();
   },
 
-  getSession: async () => {
-    const res = await axiosClient.get(API_ENDPOINTS.AUTH.SESSION);
+  getSession: async (): Promise<AuthSessionDto> => {
+    const res = await axiosClient.get<AuthSessionDto>(
+      API_ENDPOINTS.AUTH.SESSION,
+    );
     return res.data;
   },
 

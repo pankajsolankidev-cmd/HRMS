@@ -1,10 +1,12 @@
-import type { CreateOrganizationDto } from "@shared/types";
+import type { CreateOrganizationDto, OrganizationEntity } from "@shared/types";
 import { axiosClient } from "../client/axiosClient";
 import { API_ENDPOINTS } from "../endpoints";
 
 export const organizationService = {
-  get: async () => {
-    const res = await axiosClient.get(API_ENDPOINTS.ORGANIZATION.BASE);
+  get: async (): Promise<OrganizationEntity> => {
+    const res = await axiosClient.get<OrganizationEntity>(
+      API_ENDPOINTS.ORGANIZATION.BASE,
+    );
     return res.data;
   },
 
